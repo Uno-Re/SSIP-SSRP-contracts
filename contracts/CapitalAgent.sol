@@ -1,0 +1,201 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "./interfaces/ISalesPolicy.sol";
+import "./interfaces/IExchangeAgent.sol";
+import "./interfaces/ISingleSidedInsurancePool.sol";
+import "./interfaces/IRiskPool.sol";
+import "./interfaces/ICapitalAgent.sol";
+
+contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
+    using Counters for Counters.Counter;
+
+    address public owner;
+    address public exchangeAgent;
+    address public UNO_TOKEN;
+    address public USDT_TOKEN;
+
+    struct PoolInfo {
+        uint256 totalCapital;
+        bool exist;
+    }
+
+    struct PolicyInfo {
+        uint256 utilizedAmount;
+        bool exist;
+    }
+
+    mapping(address => PoolInfo) public poolInfo;
+    address[] public poolList;
+    Counters.Counter private poolIds;
+
+    uint256 public totalCapitalStaked;
+
+    mapping(address => PolicyInfo) public policyInfo;
+    address[] public policyList;
+    Counters.Counter private policyIds;
+
+    uint256 public totalUtilizedAmount;
+
+    uint256 public MCR;
+    uint256 public MLR;
+
+    uint256 public CALC_PRECISION = 1e18;
+
+    event LogAddPool(address indexed _ssip);
+    event LogAddPolicy(address indexed _salesPolicy);
+    event LogUpdatePoolCapital(address indexed _ssip, uint256 _poolCapital, uint256 _totalCapital);
+    event LogUpdatePolicyCoverage(
+        address indexed _policy,
+        uint256 _amount,
+        uint256 _policyUtilized,
+        uint256 _totalUtilizedAmount
+    );
+    event LogUpdatePolicyExpired(address indexed _policy, uint256 _policyTokenId);
+    event LogMarkToClaimPolicy(address indexed _policy, uint256 _policyTokenId);
+
+    constructor(
+        address _exchangeAgent,
+        address _UNO_TOKEN,
+        address _USDT_TOKEN
+    ) {
+        owner = msg.sender;
+        exchangeAgent = _exchangeAgent;
+        UNO_TOKEN = _UNO_TOKEN;
+        USDT_TOKEN = _USDT_TOKEN;
+    }
+
+    modifier onlyOwner() {
+        require(owner == msg.sender, "UnoRe: Capital Agent Forbidden");
+        _;
+    }
+
+    receive() external payable {}
+
+    function addPool(address _ssip) external override {
+        require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
+        poolList.push(_ssip);
+
+        poolInfo[_ssip] = PoolInfo({totalCapital: 0, exist: true});
+
+        poolIds.increment();
+
+        emit LogAddPool(_ssip);
+    }
+
+    function addPolicy(address _policy) external override nonReentrant {
+        require(!policyInfo[_policy].exist, "UnoRe: already exist policy");
+        policyList.push(_policy);
+
+        policyInfo[_policy] = PolicyInfo({utilizedAmount: 0, exist: true});
+
+        policyIds.increment();
+
+        emit LogAddPolicy(_policy);
+    }
+
+    function SSIPWithdraw(uint256 _withdrawAmount) external override nonReentrant {
+        require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
+        require(_checkCapitalByMCR(_withdrawAmount), "UnoRe: minimum capital underflow");
+        _updatePoolCapital(msg.sender, _withdrawAmount, false);
+    }
+
+    function SSIPPolicyCaim(uint256 _withdrawAmount) external override nonReentrant {
+        require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
+        _updatePoolCapital(msg.sender, _withdrawAmount, false);
+    }
+
+    function SSIPStaking(uint256 _stakingAmount) external override nonReentrant {
+        require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
+        _updatePoolCapital(msg.sender, _stakingAmount, true);
+    }
+
+    function checkCapitalByMCR(uint256 _withdrawAmount) external view override returns (bool) {
+        return _checkCapitalByMCR(_withdrawAmount);
+    }
+
+    function policySale(uint256 _coverageAmount) external override nonReentrant {
+        require(policyInfo[msg.sender].exist, "UnoRe: no exist policy");
+        require(_checkCoverageByMLR(_coverageAmount), "UnoRe: maximum leverage overflow");
+        _updatePolicyCoverage(msg.sender, _coverageAmount, true);
+    }
+
+    function updatePolicyStatus(address _policyAddr, uint256 _policyId) external override nonReentrant {
+        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt, ) = ISalesPolicy(_policyAddr).getPolicyData(
+            _policyId
+        );
+        bool isExpired = block.timestamp >= _coverageDuration + _coverStartAt;
+        if (isExpired) {
+            _updatePolicyCoverage(_policyAddr, _coverageAmount, false);
+            ISalesPolicy(_policyAddr).updatePolicyExpired(_policyId);
+            emit LogUpdatePolicyExpired(_policyAddr, _policyId);
+        }
+    }
+
+    function markToClaimPolicy(address _policy, uint256 _policyId) external onlyOwner nonReentrant {
+        (uint256 _coverageAmount, , , ) = ISalesPolicy(_policy).getPolicyData(_policyId);
+        _updatePolicyCoverage(_policy, _coverageAmount, false);
+        ISalesPolicy(_policy).markToClaim(_policyId);
+        emit LogMarkToClaimPolicy(_policy, _policyId);
+    }
+
+    function _updatePoolCapital(
+        address _pool,
+        uint256 _amount,
+        bool isAdd
+    ) private {
+        if (!isAdd) {
+            require(poolInfo[_pool].totalCapital >= _amount, "UnoRe: pool capital overflow");
+        }
+        poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
+        totalCapitalStaked = isAdd ? totalCapitalStaked + _amount : totalCapitalStaked - _amount;
+        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked);
+    }
+
+    function _updatePolicyCoverage(
+        address _policy,
+        uint256 _amount,
+        bool isAdd
+    ) private {
+        if (!isAdd) {
+            require(policyInfo[_policy].utilizedAmount >= _amount, "UnoRe: policy coverage overflow");
+        }
+        policyInfo[_policy].utilizedAmount = isAdd
+            ? policyInfo[_policy].utilizedAmount + _amount
+            : policyInfo[_policy].utilizedAmount - _amount;
+        totalUtilizedAmount = isAdd ? totalUtilizedAmount + _amount : totalUtilizedAmount - _amount;
+        emit LogUpdatePolicyCoverage(_policy, _amount, policyInfo[_policy].utilizedAmount, totalUtilizedAmount);
+    }
+
+    function _checkCapitalByMCR(uint256 _withdrawAmount) private view returns (bool) {
+        return totalCapitalStaked - _withdrawAmount >= (totalCapitalStaked * MCR) / CALC_PRECISION;
+    }
+
+    function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
+        uint256 totalCapitalStakedInUSDT = IExchangeAgent(exchangeAgent).getNeededTokenAmount(
+            UNO_TOKEN,
+            USDT_TOKEN,
+            totalCapitalStaked
+        );
+        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStakedInUSDT * MLR) / CALC_PRECISION;
+    }
+
+    function setMCR(uint256 _MCR) external onlyOwner nonReentrant {
+        require(_MCR > 0, "UnoRe: zero mcr");
+        MCR = _MCR;
+    }
+
+    function setMLR(uint256 _MLR) external onlyOwner nonReentrant {
+        require(_MLR > 0, "UnoRe: zero mcr");
+        MLR = _MLR;
+    }
+
+    function setExchangeAgent(address _exchangeAgent) external onlyOwner nonReentrant {
+        require(_exchangeAgent != address(0), "UnoRe: zero address");
+        exchangeAgent = _exchangeAgent;
+    }
+}

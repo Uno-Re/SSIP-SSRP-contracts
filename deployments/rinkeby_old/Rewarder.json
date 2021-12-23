@@ -1,0 +1,83 @@
+{
+  "address": "0x084118E0Ef4A35951ec263c8d5a48a9347dc833a",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_rewardToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_SSRP",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "unoAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "onUnoReward",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xe05e064fc39a8927d9ec01bf31583d48ac6f5980b5862753d9010ef7e05d582f",
+  "receipt": {
+    "to": null,
+    "from": "0x5569BDF4e02cec3fE459796e3d0e741616029fA4",
+    "contractAddress": "0x084118E0Ef4A35951ec263c8d5a48a9347dc833a",
+    "transactionIndex": 0,
+    "gasUsed": "299128",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xa3b19920a114a394215e75159245897a0651da631482d780a29e97c3633f7172",
+    "transactionHash": "0xe05e064fc39a8927d9ec01bf31583d48ac6f5980b5862753d9010ef7e05d582f",
+    "logs": [],
+    "blockNumber": 9847997,
+    "cumulativeGasUsed": "299128",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5",
+    "0xF38967853760446CD79f62D153135c63C57fe550"
+  ],
+  "solcInputHash": "a302a98cb43be6499dcfc6647a3755e5",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_rewardToken\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_SSRP\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"unoAmount\",\"type\":\"uint256\"}],\"name\":\"onUnoReward\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Rewarder.sol\":\"Rewarder\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":500},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `recipient`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address recipient, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `sender` to `recipient` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(\\n        address sender,\\n        address recipient,\\n        uint256 amount\\n    ) external returns (bool);\\n\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n}\\n\",\"keccak256\":\"0x027b891937d20ccf213fdb9c31531574256de774bda99d3a70ecef6e1913ed2a\",\"license\":\"MIT\"},\"contracts/Rewarder.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.0;\\nimport \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\nimport \\\"./interfaces/IRewarder.sol\\\";\\nimport \\\"./libraries/TransferHelper.sol\\\";\\n\\ncontract Rewarder is IRewarder {\\n    address private immutable rewardToken;\\n    address private immutable SSRP;\\n\\n    constructor(address _rewardToken, address _SSRP) {\\n        rewardToken = _rewardToken;\\n        SSRP = _SSRP;\\n    }\\n\\n    function onUnoReward(address to, uint256 unoAmount) external override onlySSRP returns (uint256) {\\n        uint256 rewardBalance = IERC20(rewardToken).balanceOf(address(this));\\n        if (unoAmount > rewardBalance) {\\n            TransferHelper.safeTransfer(rewardToken, to, rewardBalance);\\n            return rewardBalance;\\n        } else {\\n            TransferHelper.safeTransfer(rewardToken, to, unoAmount);\\n            return unoAmount;\\n        }\\n    }\\n\\n    modifier onlySSRP() {\\n        require(msg.sender == SSRP, \\\"Only SSRP can call this function.\\\");\\n        _;\\n    }\\n}\\n\",\"keccak256\":\"0x9c6809eb8a6706c67ddb7be135fbc9deab6d3f147d2536a1c8c27d3d320a242d\",\"license\":\"MIT\"},\"contracts/interfaces/IRewarder.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.0;\\n\\ninterface IRewarder {\\n    function onUnoReward(address to, uint256 unoAmount) external returns (uint256);\\n}\\n\",\"keccak256\":\"0x3fe7e544d46abae30dea597623fed4caab210f35ca065351e628d2e1a0048c57\",\"license\":\"MIT\"},\"contracts/libraries/TransferHelper.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0-or-later\\npragma solidity 0.8.0;\\n\\n// from Uniswap TransferHelper library\\nlibrary TransferHelper {\\n    function safeApprove(\\n        address token,\\n        address to,\\n        uint256 value\\n    ) internal {\\n        // bytes4(keccak256(bytes('approve(address,uint256)')));\\n        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x095ea7b3, to, value));\\n        require(success && (data.length == 0 || abi.decode(data, (bool))), \\\"TransferHelper::safeApprove: approve failed\\\");\\n    }\\n\\n    function safeTransfer(\\n        address token,\\n        address to,\\n        uint256 value\\n    ) internal {\\n        // bytes4(keccak256(bytes('transfer(address,uint256)')));\\n        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));\\n        require(success && (data.length == 0 || abi.decode(data, (bool))), \\\"TransferHelper::safeTransfer: transfer failed\\\");\\n    }\\n\\n    function safeTransferFrom(\\n        address token,\\n        address from,\\n        address to,\\n        uint256 value\\n    ) internal {\\n        // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));\\n        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));\\n        require(success && (data.length == 0 || abi.decode(data, (bool))), \\\"TransferHelper::transferFrom: transferFrom failed\\\");\\n    }\\n\\n    function safeTransferETH(address to, uint256 value) internal {\\n        (bool success, ) = to.call{value: value}(new bytes(0));\\n        require(success, \\\"TransferHelper::safeTransferETH: ETH transfer failed\\\");\\n    }\\n}\\n\",\"keccak256\":\"0xb7650ccd26cfa42968350d9c477f55f98059d74e0f173a1da45b06c2607e705d\",\"license\":\"GPL-3.0-or-later\"}},\"version\":1}",
+  "bytecode": "0x60c060405234801561001057600080fd5b5060405161053938038061053983398101604081905261002f91610069565b6001600160601b0319606092831b8116608052911b1660a05261009b565b80516001600160a01b038116811461006457600080fd5b919050565b6000806040838503121561007b578182fd5b6100848361004d565b91506100926020840161004d565b90509250929050565b60805160601c60a05160601c6104676100d26000396000606601526000818160c60152818161015a015261018c01526104676000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80636ccb36b714610030575b600080fd5b61004361003e3660046102bf565b610059565b6040516100509190610428565b60405180910390f35b6000336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146100ac5760405162461bcd60e51b81526004016100a39061039a565b60405180910390fd5b6040516370a0823160e01b81526000906001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016906370a08231906100fb90309060040161036d565b60206040518083038186803b15801561011357600080fd5b505afa158015610127573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061014b919061031c565b905080831115610187576101807f000000000000000000000000000000000000000000000000000000000000000085836101bd565b90506101b7565b6101b27f000000000000000000000000000000000000000000000000000000000000000085856101bd565b829150505b92915050565b600080846001600160a01b031663a9059cbb85856040516024016101e2929190610381565b6040516020818303038152906040529060e01b6020820180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff83818316178352505050506040516102309190610334565b6000604051808303816000865af19150503d806000811461026d576040519150601f19603f3d011682016040523d82523d6000602084013e610272565b606091505b509150915081801561029c57508051158061029c57508080602001905181019061029c91906102f5565b6102b85760405162461bcd60e51b81526004016100a3906103db565b5050505050565b600080604083850312156102d1578182fd5b82356001600160a01b03811681146102e7578283fd5b946020939093013593505050565b600060208284031215610306578081fd5b81518015158114610315578182fd5b9392505050565b60006020828403121561032d578081fd5b5051919050565b60008251815b81811015610354576020818601810151858301520161033a565b818111156103625782828501525b509190910192915050565b6001600160a01b0391909116815260200190565b6001600160a01b03929092168252602082015260400190565b60208082526021908201527f4f6e6c7920535352502063616e2063616c6c20746869732066756e6374696f6e6040820152601760f91b606082015260800190565b6020808252602d908201527f5472616e7366657248656c7065723a3a736166655472616e736665723a20747260408201526c185b9cd9995c8819985a5b1959609a1b606082015260800190565b9081526020019056fea264697066735822122026a951d2e4e0bf5faa321b54a6192bffca81fad8b6b138fcbb4641edfa11929164736f6c63430008000033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061002b5760003560e01c80636ccb36b714610030575b600080fd5b61004361003e3660046102bf565b610059565b6040516100509190610428565b60405180910390f35b6000336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146100ac5760405162461bcd60e51b81526004016100a39061039a565b60405180910390fd5b6040516370a0823160e01b81526000906001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016906370a08231906100fb90309060040161036d565b60206040518083038186803b15801561011357600080fd5b505afa158015610127573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061014b919061031c565b905080831115610187576101807f000000000000000000000000000000000000000000000000000000000000000085836101bd565b90506101b7565b6101b27f000000000000000000000000000000000000000000000000000000000000000085856101bd565b829150505b92915050565b600080846001600160a01b031663a9059cbb85856040516024016101e2929190610381565b6040516020818303038152906040529060e01b6020820180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff83818316178352505050506040516102309190610334565b6000604051808303816000865af19150503d806000811461026d576040519150601f19603f3d011682016040523d82523d6000602084013e610272565b606091505b509150915081801561029c57508051158061029c57508080602001905181019061029c91906102f5565b6102b85760405162461bcd60e51b81526004016100a3906103db565b5050505050565b600080604083850312156102d1578182fd5b82356001600160a01b03811681146102e7578283fd5b946020939093013593505050565b600060208284031215610306578081fd5b81518015158114610315578182fd5b9392505050565b60006020828403121561032d578081fd5b5051919050565b60008251815b81811015610354576020818601810151858301520161033a565b818111156103625782828501525b509190910192915050565b6001600160a01b0391909116815260200190565b6001600160a01b03929092168252602082015260400190565b60208082526021908201527f4f6e6c7920535352502063616e2063616c6c20746869732066756e6374696f6e6040820152601760f91b606082015260800190565b6020808252602d908201527f5472616e7366657248656c7065723a3a736166655472616e736665723a20747260408201526c185b9cd9995c8819985a5b1959609a1b606082015260800190565b9081526020019056fea264697066735822122026a951d2e4e0bf5faa321b54a6192bffca81fad8b6b138fcbb4641edfa11929164736f6c63430008000033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

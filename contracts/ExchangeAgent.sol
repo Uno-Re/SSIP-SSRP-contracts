@@ -1,0 +1,239 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.0;
+
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IUniswapFactory.sol";
+import "./interfaces/IUniswapRouter02.sol";
+import "./interfaces/ITwapOraclePriceFeedFactory.sol";
+import "./interfaces/ITwapOraclePriceFeed.sol";
+import "./interfaces/IExchangeAgent.sol";
+import "./libraries/TransferHelper.sol";
+
+contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
+    address public immutable override USDT_TOKEN;
+    address public immutable UNISWAP_FACTORY;
+    address public immutable TWAP_ORACLE_PRICE_FEED_FACTORY;
+    address public immutable UNISWAP_ROUTER;
+    address public immutable WETH;
+    uint256 public slippage;
+    uint256 private constant SLIPPAGE_PRECISION = 100;
+
+    mapping(address => bool) public whiteList;
+    address public owner;
+
+    event ConvertedTokenToToken(
+        address indexed _dexAddress,
+        address indexed _convertToken,
+        address indexed _convertedToken,
+        uint256 _convertAmount,
+        uint256 _desiredAmount,
+        uint256 _convertedAmount
+    );
+
+    event ConvertedTokenToETH(
+        address indexed _dexAddress,
+        address indexed _convertToken,
+        uint256 _convertAmount,
+        uint256 _desiredAmount,
+        uint256 _convertedAmount
+    );
+
+    constructor(
+        address _usdtToken,
+        address _WETH,
+        address _twapOraclePriceFeedFactory,
+        address _uniswapRouter,
+        address _uniswapFactory
+    ) {
+        USDT_TOKEN = _usdtToken;
+        UNISWAP_FACTORY = _uniswapFactory;
+        TWAP_ORACLE_PRICE_FEED_FACTORY = _twapOraclePriceFeedFactory;
+        UNISWAP_ROUTER = _uniswapRouter;
+        WETH = _WETH;
+        owner = msg.sender;
+        whiteList[msg.sender] = true;
+        slippage = 5 * SLIPPAGE_PRECISION;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "UnoRe: ExchangeAgent Forbidden");
+        _;
+    }
+
+    modifier onlyWhiteList() {
+        require(whiteList[msg.sender], "UnoRe: ExchangeAgent Forbidden");
+        _;
+    }
+
+    receive() external payable {}
+
+    function addWhiteList(address _whiteListAddress) external onlyOwner {
+        require(_whiteListAddress != address(0), "UnoRe: zero address");
+        require(!whiteList[_whiteListAddress], "UnoRe: white list already");
+        whiteList[_whiteListAddress] = true;
+    }
+
+    function setSlippage(uint256 _slippage) external onlyOwner {
+        require(_slippage > 0, "UnoRe: zero slippage");
+        slippage = _slippage * SLIPPAGE_PRECISION;
+    }
+
+    // estimate token amount for amount in USDT
+    function getTokenAmountForUSDT(address _token, uint256 _usdtAmount) external view override returns (uint256) {
+        return _getNeededTokenAmount(USDT_TOKEN, _token, _usdtAmount);
+    }
+
+    // estimate ETH amount for amount in USDT
+    function getETHAmountForUSDT(uint256 _usdtAmount) external view override returns (uint256) {
+        return _getNeededTokenAmount(USDT_TOKEN, WETH, _usdtAmount);
+    }
+
+    function getETHAmountForToken(address _token, uint256 _tokenAmount) external view override returns (uint256) {
+        return _getNeededTokenAmount(_token, WETH, _tokenAmount);
+    }
+
+    function getNeededTokenAmount(
+        address _token0,
+        address _token1,
+        uint256 _token0Amount
+    ) external view override returns (uint256) {
+        return _getNeededTokenAmount(_token0, _token1, _token0Amount);
+    }
+
+    function convertForToken(
+        address _token0,
+        address _token1,
+        uint256 _token0Amount
+    ) external override onlyWhiteList nonReentrant returns (uint256) {
+        uint256 twapPrice = 0;
+        if (_token0 != address(0)) {
+            require(IERC20(_token0).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
+            TransferHelper.safeTransferFrom(_token0, msg.sender, address(this), _token0Amount);
+            twapPrice = _getNeededTokenAmount(_token0, _token1, _token0Amount);
+        } else {
+            twapPrice = _getNeededTokenAmount(WETH, _token1, _token0Amount);
+        }
+        require(twapPrice > 0, "UnoRe: no pairs");
+        uint256 desiredAmount = (twapPrice * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
+
+        uint256 convertedAmount = _convertTokenForToken(UNISWAP_ROUTER, _token0, _token1, _token0Amount, desiredAmount);
+        return convertedAmount;
+    }
+
+    function convertForETH(address _token, uint256 _convertAmount)
+        external
+        override
+        onlyWhiteList
+        nonReentrant
+        returns (uint256)
+    {
+        require(IERC20(_token).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
+        if (_token != address(0)) {
+            TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
+        }
+        uint256 twapPriceInUSDT = _getNeededTokenAmount(_token, WETH, _convertAmount);
+        require(twapPriceInUSDT > 0, "UnoRe: no pairs");
+        uint256 desiredAmount = (twapPriceInUSDT * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
+
+        uint256 convertedAmount = _convertTokenForETH(UNISWAP_ROUTER, _token, _convertAmount, desiredAmount);
+        return convertedAmount;
+    }
+
+    function _convertTokenForToken(
+        address _dexAddress,
+        address _token0,
+        address _token1,
+        uint256 _convertAmount,
+        uint256 _desiredAmount
+    ) private returns (uint256) {
+        IUniswapRouter02 _dexRouter = IUniswapRouter02(_dexAddress);
+        address _factory = _dexRouter.factory();
+        uint256 usdtBalanceBeforeSwap = IERC20(_token1).balanceOf(msg.sender);
+        address inpToken = _dexRouter.WETH();
+        if (_token0 != address(0)) {
+            inpToken = _token0;
+            TransferHelper.safeApprove(_token0, address(_dexRouter), _convertAmount);
+        }
+        if (IUniswapFactory(_factory).getPair(inpToken, _token1) != address(0)) {
+            address[] memory path = new address[](2);
+            path[0] = inpToken;
+            path[1] = _token1;
+            if (_token0 == address(0)) {
+                _dexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _convertAmount}(
+                    _desiredAmount,
+                    path,
+                    msg.sender,
+                    block.timestamp
+                );
+            } else {
+                _dexRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                    _convertAmount,
+                    _desiredAmount,
+                    path,
+                    msg.sender,
+                    block.timestamp
+                );
+            }
+        }
+        uint256 usdtBalanceAfterSwap = IERC20(_token1).balanceOf(msg.sender);
+        emit ConvertedTokenToToken(
+            _dexAddress,
+            _token0,
+            _token1,
+            _convertAmount,
+            _desiredAmount,
+            usdtBalanceAfterSwap - usdtBalanceBeforeSwap
+        );
+        return usdtBalanceAfterSwap - usdtBalanceBeforeSwap;
+    }
+
+    function _convertTokenForETH(
+        address _dexAddress,
+        address _token,
+        uint256 _convertAmount,
+        uint256 _desiredAmount
+    ) private returns (uint256) {
+        IUniswapRouter02 _dexRouter = IUniswapRouter02(_dexAddress);
+        address _factory = _dexRouter.factory();
+        uint256 ethBalanceBeforeSwap = address(msg.sender).balance;
+        TransferHelper.safeApprove(_token, address(_dexRouter), _convertAmount);
+        if (IUniswapFactory(_factory).getPair(_token, WETH) != address(0)) {
+            address[] memory path = new address[](2);
+            path[0] = _token;
+            path[1] = WETH;
+            _dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                _convertAmount,
+                _desiredAmount,
+                path,
+                msg.sender,
+                block.timestamp
+            );
+        }
+        uint256 ethBalanceAfterSwap = address(msg.sender).balance;
+        emit ConvertedTokenToETH(_dexAddress, _token, _convertAmount, _desiredAmount, ethBalanceAfterSwap - ethBalanceBeforeSwap);
+        return ethBalanceAfterSwap - ethBalanceBeforeSwap;
+    }
+
+    /**
+     * @dev Get expected _token1 amount for _inputAmount of _token0
+     * _desiredAmount should consider decimals based on _token1
+     */
+    function _getNeededTokenAmount(
+        address _token0,
+        address _token1,
+        uint256 _token0Amount
+    ) private view returns (uint256) {
+        address pair = IUniswapFactory(UNISWAP_FACTORY).getPair(_token0, _token1);
+        require(pair != address(0), "There's no pair");
+
+        address twapOraclePriceFeed = ITwapOraclePriceFeedFactory(TWAP_ORACLE_PRICE_FEED_FACTORY).getTwapOraclePriceFeed(
+            _token0,
+            _token1
+        );
+
+        uint256 expectedToken1Amount = ITwapOraclePriceFeed(twapOraclePriceFeed).consult(_token0, _token0Amount);
+
+        return expectedToken1Amount;
+    }
+}
