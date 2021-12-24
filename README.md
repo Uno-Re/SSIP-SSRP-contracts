@@ -2,24 +2,24 @@
 Main topic of discussion was to finalize the implementation logic for Cover Portal which will be utilized to faciltate the sales of insurance policies. There will be two categories of assets.
 
 ### contract deployment(rinkeby):
-- SingleSidedReinsurancePool(SSRP) : 0xaF40Fcbd1137Eb82ECdc78aFde9176545c9C6B19
+- SingleSidedReinsurancePool(SSRP) : 0xA8a49A457d5cd42d01A935002f7d593127Bf661F
 
-- SSRP RiskPool(SSRP LP token): 0xaCA36F753A69da780Dd18493155a210e29093631
-- SSRP Rewarder: 0x0C576dc5C29996b69E6e1C5c039761D7B32787b6
-- SyntheticSSRP: 0xF57A9eF1990EB0A40abD175596373eDF78bf8449
-- SyntheticSSRP Rewarder(reward currency - mockUSDT(it will be changed to USDC in the future)): 0xFcdaC452270db054FaEe28FCF411C73EE230994D 
-
-
-- SingleSidedInsurancePool(SSIP) : 0xAD666Ad822a104D9A91bBf49e425A60486e3e3e3
-
-- SSIP RiskPool(SSIP LP token): 0xe970Dc5ED05B295a35d60E4239Bc2cfB7D8eAAaA
-- SSIP Rewarder: 0xb16179577b52F5908C716f1b5911645860384A1D
-- SyntheticSSIP: 0xC22551eB58f1C3bA23b6b3f5B0717CC345A7faff
-- SyntheticSSIP Rewarder(reward currency - mockUSDT for now): 0x3957d020b71F98D21885aC79FEe8E0f3A4f8534C 
+- SSRP RiskPool(SSRP LP token): 0xc72E6e25FBAe57576D0bfD728Fe664446C49A0bB
+- SSRP Rewarder: 0x7f8702562936647541aF148933752cEe1642B861
+- SyntheticSSRP: 0x4088bbFf60e2257bEC4019dF01965a9c60AfEE29
+- SyntheticSSRP Rewarder(reward currency - mockUSDT(it will be changed to USDC in the future)): 0x324dcD59641Ca175Ad7CDf81B841C7A4693697F5 
 
 
-- SyntheticSSIPFactory: 0xdCA26fa2b8fC3d16a7CE5c15d3C003D6045e34BB
-- SyntheticSSRPFactory: 0xF172Ec9E978A5233557b9B10cCF6233c3F070158
+- SingleSidedInsurancePool(SSIP) : 0x9dfA34Ac43D62d5ec7DAf51842caf28A196D1614
+
+- SSIP RiskPool(SSIP LP token): 0xAFBdC1d4335dA9F0DdBF504D00Bdd6148059B611
+- SSIP Rewarder: 0x96a57F8E8B849007c51ec6B81f691d809910cc1C
+- SyntheticSSIP: 0xC1eF6C497EEAfd7509634460f183a891225dE27c
+- SyntheticSSIP Rewarder(reward currency - mockUSDT for now): 0x5F464899464333Df30c6455E2b18297B5B38A556 
+
+
+- SyntheticSSIPFactory: 0x2Cb164A07f80ccb921621e1076CC19e341D30fbF
+- SyntheticSSRPFactory: 0xCf26883fE4E3E2A197088D9ED905b2104180C3F1
 
 
 - RiskPoolFactory: 0x800932A00DF17afa45F9aDb6F0DE39074b90e428
@@ -27,17 +27,17 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
 
 
-- SalesPolicyFactory: 0x5e2Ed2352b77034C7721F577DDA862178908EFfB
-- SalesPolicy for protocol 0: 0x007Bf7A12a4f5080886C4442feb2A9ecb5Ce3af3
+- SalesPolicyFactory: 0x4Aa3aEb01D5a0365971B01BA54E91A02192BfB34
+- SalesPolicy for protocol 0: 0xeeD260a23F8C3Bd8D7e7235F15f399b518695731
 
 
-- CapitalAgent: 0x6371c237bDeD3Aa2352c48617A8624436104AfA2
+- CapitalAgent: 0x5371d874949DcdD3f2F6Cd0852a88140F77BfcEF
 
 
 - MockUNO : 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5
 - MockUSDT : 0x40c035016AD732b6cFce34c3F881040B6C6cf71E
-- ExchangeAgent: 0xA51A923E3719b460C2F4889407522CAADE2763b1
-- PremiumPool: 0xB6a08545CE53cCEAA209e1c539DC7A4Cc907Cbf5
+- ExchangeAgent: 0xf97Eb2a102Ba485020c9d2EA0ac4BAAC19092Ee9
+- PremiumPool: 0x3fCDBcbBb567d7A326b133439A938cC052FAdf1c
 
 
 ### MockUNO faucet:
