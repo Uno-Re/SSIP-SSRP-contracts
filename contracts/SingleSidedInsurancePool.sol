@@ -149,6 +149,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     function createSyntheticSSIP(address _owner, address _factory) external onlyOwner nonReentrant {
         require(_owner != address(0), "UnoRe: zero owner address");
         require(_factory != address(0), "UnoRe:zero factory address");
+        require(riskPool != address(0), "UnoRe:zero LP token address");
         syntheticSSIP = ISyntheticSSIPFactory(_factory).newSyntheticSSIP(_owner, riskPool);
         emit LogCreateSyntheticSSIP(address(this), syntheticSSIP, riskPool);
     }
@@ -156,9 +157,11 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     function migrate() external nonReentrant {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
+        uint256 lpPrice = IRiskPool(riskPool).lpPriceUno();
         uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
         IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
+        ICapitalAgent(capitalAgent).SSIPPolicyCaim((amount * lpPrice) / 1e18);
         IMigration(migrateTo).onMigration(msg.sender, amount, "");
         userInfo[msg.sender].amount = 0;
         userInfo[msg.sender].rewardDebt = 0;

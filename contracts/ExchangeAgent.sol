@@ -11,7 +11,7 @@ import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
-    address public immutable override USDT_TOKEN;
+    address public immutable override USDC_TOKEN;
     address public immutable UNISWAP_FACTORY;
     address public immutable TWAP_ORACLE_PRICE_FEED_FACTORY;
     address public immutable UNISWAP_ROUTER;
@@ -46,7 +46,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
         address _uniswapRouter,
         address _uniswapFactory
     ) {
-        USDT_TOKEN = _usdtToken;
+        USDC_TOKEN = _usdtToken;
         UNISWAP_FACTORY = _uniswapFactory;
         TWAP_ORACLE_PRICE_FEED_FACTORY = _twapOraclePriceFeedFactory;
         UNISWAP_ROUTER = _uniswapRouter;
@@ -79,14 +79,14 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
         slippage = _slippage * SLIPPAGE_PRECISION;
     }
 
-    // estimate token amount for amount in USDT
-    function getTokenAmountForUSDT(address _token, uint256 _usdtAmount) external view override returns (uint256) {
-        return _getNeededTokenAmount(USDT_TOKEN, _token, _usdtAmount);
+    // estimate token amount for amount in USDC
+    function getTokenAmountForUSDC(address _token, uint256 _usdtAmount) external view override returns (uint256) {
+        return _getNeededTokenAmount(USDC_TOKEN, _token, _usdtAmount);
     }
 
-    // estimate ETH amount for amount in USDT
-    function getETHAmountForUSDT(uint256 _usdtAmount) external view override returns (uint256) {
-        return _getNeededTokenAmount(USDT_TOKEN, WETH, _usdtAmount);
+    // estimate ETH amount for amount in USDC
+    function getETHAmountForUSDC(uint256 _usdtAmount) external view override returns (uint256) {
+        return _getNeededTokenAmount(USDC_TOKEN, WETH, _usdtAmount);
     }
 
     function getETHAmountForToken(address _token, uint256 _tokenAmount) external view override returns (uint256) {
@@ -132,9 +132,9 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
         if (_token != address(0)) {
             TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
         }
-        uint256 twapPriceInUSDT = _getNeededTokenAmount(_token, WETH, _convertAmount);
-        require(twapPriceInUSDT > 0, "UnoRe: no pairs");
-        uint256 desiredAmount = (twapPriceInUSDT * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
+        uint256 twapPriceInUSDC = _getNeededTokenAmount(_token, WETH, _convertAmount);
+        require(twapPriceInUSDC > 0, "UnoRe: no pairs");
+        uint256 desiredAmount = (twapPriceInUSDC * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
 
         uint256 convertedAmount = _convertTokenForETH(UNISWAP_ROUTER, _token, _convertAmount, desiredAmount);
         return convertedAmount;

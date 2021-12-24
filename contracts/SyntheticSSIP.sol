@@ -22,7 +22,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard {
 
     uint256 lastRewardBlock;
     uint256 accRewardPerShare;
-    uint256 rewardPerBlock;
+    uint256 public rewardPerBlock;
 
     struct UserInfo {
         uint256 lastWithdrawTime;
@@ -91,6 +91,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard {
             _cancelWithdrawRequest();
         }
         uint256 amount = userInfo[msg.sender].amount;
+        TransferHelper.safeTransfer(lpToken, migrateTo, amount);
         IMigration(migrateTo).onMigration(msg.sender, amount, "");
         userInfo[msg.sender].amount = 0;
     }

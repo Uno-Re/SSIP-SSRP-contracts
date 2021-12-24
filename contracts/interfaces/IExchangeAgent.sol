@@ -2,11 +2,11 @@
 pragma solidity 0.8.0;
 
 interface IExchangeAgent {
-    function USDT_TOKEN() external view returns (address);
+    function USDC_TOKEN() external view returns (address);
 
-    function getTokenAmountForUSDT(address _token, uint256 _usdtAmount) external view returns (uint256);
+    function getTokenAmountForUSDC(address _token, uint256 _usdtAmount) external view returns (uint256);
 
-    function getETHAmountForUSDT(uint256 _usdtAmount) external view returns (uint256);
+    function getETHAmountForUSDC(uint256 _usdtAmount) external view returns (uint256);
 
     function getETHAmountForToken(address _token, uint256 _tokenAmount) external view returns (uint256);
 

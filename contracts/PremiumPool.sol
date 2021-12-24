@@ -12,7 +12,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
     address public owner;
     address public exchangeAgent;
     address public UNO_TOKEN;
-    address public USDT_TOKEN;
+    address public USDC_TOKEN;
     mapping(address => bool) public availableCurrencies;
     address[] public availableCurrencyList;
 
@@ -35,12 +35,12 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
     constructor(
         address _exchangeAgent,
         address _unoToken,
-        address _usdtToken
+        address _usdcToken
     ) {
         exchangeAgent = _exchangeAgent;
         owner = msg.sender;
         UNO_TOKEN = _unoToken;
-        USDT_TOKEN = _usdtToken;
+        USDC_TOKEN = _usdcToken;
     }
 
     modifier onlyOwner() {
@@ -78,31 +78,31 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
 
     function depositToSyntheticSSRPRewarder(address _rewarder) external payable onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
-        uint256 usdtAmountToDeposit = 0;
+        uint256 usdcAmountToDeposit = 0;
         if (SSRP_PREMIUM_ETH > 0) {
             TransferHelper.safeTransferETH(exchangeAgent, SSRP_PREMIUM_ETH);
-            uint256 convertedAmount = IExchangeAgent(exchangeAgent).convertForToken(address(0), USDT_TOKEN, SSRP_PREMIUM_ETH);
-            usdtAmountToDeposit += convertedAmount;
+            uint256 convertedAmount = IExchangeAgent(exchangeAgent).convertForToken(address(0), USDC_TOKEN, SSRP_PREMIUM_ETH);
+            usdcAmountToDeposit += convertedAmount;
             SSRP_PREMIUM_ETH = 0;
         }
         for (uint256 ii = 0; ii < availableCurrencyList.length; ii++) {
             if (SSRP_PREMIUM[availableCurrencyList[ii]] > 0) {
-                if (availableCurrencyList[ii] == USDT_TOKEN) {
-                    usdtAmountToDeposit += SSRP_PREMIUM[availableCurrencyList[ii]];
+                if (availableCurrencyList[ii] == USDC_TOKEN) {
+                    usdcAmountToDeposit += SSRP_PREMIUM[availableCurrencyList[ii]];
                 } else {
-                    uint256 convertedUSDTAmount = IExchangeAgent(exchangeAgent).convertForToken(
+                    uint256 convertedUSDCAmount = IExchangeAgent(exchangeAgent).convertForToken(
                         availableCurrencyList[ii],
-                        USDT_TOKEN,
+                        USDC_TOKEN,
                         SSRP_PREMIUM[availableCurrencyList[ii]]
                     );
-                    usdtAmountToDeposit += convertedUSDTAmount;
+                    usdcAmountToDeposit += convertedUSDCAmount;
                 }
                 SSRP_PREMIUM[availableCurrencyList[ii]] = 0;
             }
         }
-        if (usdtAmountToDeposit > 0) {
-            TransferHelper.safeTransferETH(_rewarder, usdtAmountToDeposit);
-            emit LogDepositToSyntheticSSRPRewarder(_rewarder, usdtAmountToDeposit);
+        if (usdcAmountToDeposit > 0) {
+            TransferHelper.safeTransfer(USDC_TOKEN, _rewarder, usdcAmountToDeposit);
+            emit LogDepositToSyntheticSSRPRewarder(_rewarder, usdcAmountToDeposit);
         }
     }
 

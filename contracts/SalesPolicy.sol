@@ -22,7 +22,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 coverStartAt;
         uint256 coverageDuration;
         uint256 coverageAmount;
-        uint256 policyPriceInUSDT;
+        uint256 policyPriceInUSDC;
         uint256 premiumPaid;
         address premiumCurrency;
         bool exist;
@@ -35,7 +35,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     address public premiumPool;
     address public capitalAgent;
     address private immutable UNORE_TOKEN; // 0x474021845C4643113458ea4414bdb7fB74A01A77
-    address public immutable USDT_TOKEN; //
+    address public immutable USDC_TOKEN; //
 
     string private protocolURI;
 
@@ -50,7 +50,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 indexed _policyIdx,
         address _owner,
         uint256 _coverageAmount,
-        uint256 _policyPriceInUSDT,
+        uint256 _policyPriceInUSDC,
         address _premiumCurrency,
         uint256 _premiumPaid
     );
@@ -71,7 +71,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address _premiumPool,
         address _capitalAgent,
         address _unoToken,
-        address _usdtToken,
+        address _usdcToken,
         string memory _protocolURI,
         uint16 _protocolIdx
     ) ERC721("Policy insurance", "Policy insurance") {
@@ -80,7 +80,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
         UNORE_TOKEN = _unoToken;
-        USDT_TOKEN = _usdtToken;
+        USDC_TOKEN = _usdcToken;
         premiumPool = _premiumPool;
         maxDeadline = 7 days;
         protocolURI = _protocolURI;
@@ -96,7 +96,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     function buyPolicy(
         uint256 _coverageAmount,
         uint256 _coverageDuration,
-        uint256 _policyPriceInUSDT,
+        uint256 _policyPriceInUSDC,
         uint256 _signedTime,
         address _premiumCurrency
     ) external payable nonReentrant {
@@ -106,28 +106,28 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
         uint256 premiumPaid = 0;
         if (_premiumCurrency == address(0)) {
-            premiumPaid = IExchangeAgent(exchangeAgent).getETHAmountForUSDT(_policyPriceInUSDT);
+            premiumPaid = IExchangeAgent(exchangeAgent).getETHAmountForUSDC(_policyPriceInUSDC);
             require(msg.value >= premiumPaid, "UnoRe: insufficient paid");
             if (msg.value > premiumPaid) {
                 TransferHelper.safeTransferETH(msgSender(), msg.value - premiumPaid);
             }
             TransferHelper.safeTransferETH(premiumPool, premiumPaid);
             IPremiumPool(premiumPool).collectPremiumInETH(premiumPaid);
-        } else if (_premiumCurrency != USDT_TOKEN) {
-            premiumPaid = IExchangeAgent(exchangeAgent).getTokenAmountForUSDT(_premiumCurrency, _policyPriceInUSDT);
+        } else if (_premiumCurrency != USDC_TOKEN) {
+            premiumPaid = IExchangeAgent(exchangeAgent).getTokenAmountForUSDC(_premiumCurrency, _policyPriceInUSDC);
             TransferHelper.safeTransferFrom(_premiumCurrency, msgSender(), address(this), premiumPaid);
             IPremiumPool(premiumPool).collectPremium(_premiumCurrency, premiumPaid);
         } else {
-            premiumPaid = _policyPriceInUSDT;
-            TransferHelper.safeTransferFrom(_premiumCurrency, msgSender(), address(this), _policyPriceInUSDT);
-            IPremiumPool(premiumPool).collectPremium(_premiumCurrency, _policyPriceInUSDT);
+            premiumPaid = _policyPriceInUSDC;
+            TransferHelper.safeTransferFrom(_premiumCurrency, msgSender(), address(this), _policyPriceInUSDC);
+            IPremiumPool(premiumPool).collectPremium(_premiumCurrency, _policyPriceInUSDC);
         }
 
         getPolicy[lastIdx] = Policy({
             coverageAmount: _coverageAmount,
             coverageDuration: _coverageDuration,
             coverStartAt: block.timestamp,
-            policyPriceInUSDT: _policyPriceInUSDT,
+            policyPriceInUSDC: _policyPriceInUSDC,
             premiumPaid: premiumPaid,
             premiumCurrency: _premiumCurrency,
             exist: true,
@@ -139,7 +139,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         ICapitalAgent(capitalAgent).policySale(_coverageAmount);
 
         policyIdx.increment();
-        emit BuyPolicy(protocolIdx, lastIdx, msgSender(), _coverageAmount, _policyPriceInUSDT, _premiumCurrency, premiumPaid);
+        emit BuyPolicy(protocolIdx, lastIdx, msgSender(), _coverageAmount, _policyPriceInUSDC, _premiumCurrency, premiumPaid);
     }
 
     function approvePremium(address _premiumCurrency) external override onlyFactory {
@@ -212,7 +212,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 coverageAmount = getPolicy[_policyId].coverageAmount;
         uint256 coverageDuration = getPolicy[_policyId].coverageDuration;
         uint256 coverStartAt = uint256(getPolicy[_policyId].coverStartAt);
-        uint256 premiumPaid = getPolicy[_policyId].policyPriceInUSDT;
+        uint256 premiumPaid = getPolicy[_policyId].policyPriceInUSDC;
         return (coverageAmount, coverageDuration, coverStartAt, premiumPaid);
     }
 }

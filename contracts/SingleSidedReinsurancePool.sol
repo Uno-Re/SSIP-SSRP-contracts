@@ -122,6 +122,7 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
     function createSyntheticSSRP(address _owner, address _factory) external onlyOwner nonReentrant {
         require(_owner != address(0), "UnoRe: zero owner address");
         require(_factory != address(0), "UnoRe:zero factory address");
+        require(riskPool != address(0), "UnoRe:zero LP token address");
         syntheticSSRP = ISyntheticSSRPFactory(_factory).newSyntheticSSRP(_owner, riskPool);
         emit LogCreateSyntheticSSRP(address(this), syntheticSSRP, riskPool);
     }
