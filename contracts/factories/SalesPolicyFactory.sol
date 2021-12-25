@@ -145,6 +145,12 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
         emit LogSetProtocolMCR(_protocolIdx, _mcr);
     }
 
+    function setSignerInPolicy(uint16 _protocolIdx, address _signer) external onlyOwner {
+        require(_signer != address(0), "UnoRe: zero address");
+        address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
+        ISalesPolicy(salesPolicy).setSigner(_signer);
+    }
+
     function setProtocolURIInPolicy(uint16 _protocolIdx, string memory _uri) external onlyOwner {
         address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
         ISalesPolicy(salesPolicy).setProtocolURI(_uri);

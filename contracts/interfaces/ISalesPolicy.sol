@@ -14,6 +14,8 @@ interface ISalesPolicy {
 
     function setProtocolURI(string memory newURI) external;
 
+    function setSigner(address _signer) external;
+
     function updatePolicyExpired(uint256 _policyId) external;
 
     function markToClaim(uint256 _policyId) external;

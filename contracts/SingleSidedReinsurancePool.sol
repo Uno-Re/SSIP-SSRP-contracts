@@ -50,6 +50,7 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
     event LogLpTransferInSSRP(address indexed _from, address indexed _to, uint256 _amount);
     event LogCreateRewarder(address indexed _SSRP, address indexed _rewarder, address _currency);
     event LogCreateSyntheticSSRP(address indexed _SSRP, address indexed _syntheticSSRP, address indexed _lpToken);
+    event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
 
     constructor(address _owner, address _claimAssessor) {
         owner = _owner;
@@ -257,7 +258,8 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
     }
 
     function cancelWithdrawRequest() external nonReentrant {
-        IRiskPool(riskPool).cancelWithrawRequest(msg.sender);
+        (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithrawRequest(msg.sender);
+        emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
     function policyClaim(address _to, uint256 _amount) external onlyClaimAssessor nonReentrant {

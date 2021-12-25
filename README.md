@@ -2,36 +2,36 @@
 Main topic of discussion was to finalize the implementation logic for Cover Portal which will be utilized to faciltate the sales of insurance policies. There will be two categories of assets.
 
 ### contract deployment(rinkeby):
-- SingleSidedReinsurancePool(SSRP) : 0xA8a49A457d5cd42d01A935002f7d593127Bf661F
+- SingleSidedReinsurancePool(SSRP) : 0xaCDbbF853Fd5a2b3410b92F36c60A7F0d283fcdB
 
-- SSRP RiskPool(SSRP LP token): 0xc72E6e25FBAe57576D0bfD728Fe664446C49A0bB
-- SSRP Rewarder: 0x7f8702562936647541aF148933752cEe1642B861
-- SyntheticSSRP: 0x4088bbFf60e2257bEC4019dF01965a9c60AfEE29
-- SyntheticSSRP Rewarder(reward currency - mockUSDT(it will be changed to USDC in the future)): 0x324dcD59641Ca175Ad7CDf81B841C7A4693697F5 
+- SSRP RiskPool(SSRP LP token): 0xB4Cc174B009d8780Df702afB9AaCACD970C4463f
+- SSRP Rewarder: 0x207e0F0fAc90a690bf23b14B7520d9d7d1F95dE2
+- SyntheticSSRP: 0x683E38e76649b599A93073855f1a6335de36Da81
+- SyntheticSSRP Rewarder(reward currency - mockUSDT(it will be changed to USDC in the future)): 0x4801B9a7A0fDf18059DcE9f42466Fa5bEC838A91 
 
 
-- SingleSidedInsurancePool(SSIP) : 0x9dfA34Ac43D62d5ec7DAf51842caf28A196D1614
+- SingleSidedInsurancePool(SSIP) : 0xa4F355fc1dE69AD9718dC5b01ec7Fd7E78ac2248
 
-- SSIP RiskPool(SSIP LP token): 0xAFBdC1d4335dA9F0DdBF504D00Bdd6148059B611
-- SSIP Rewarder: 0x96a57F8E8B849007c51ec6B81f691d809910cc1C
-- SyntheticSSIP: 0xC1eF6C497EEAfd7509634460f183a891225dE27c
-- SyntheticSSIP Rewarder(reward currency - mockUSDT for now): 0x5F464899464333Df30c6455E2b18297B5B38A556 
+- SSIP RiskPool(SSIP LP token): 0xbea0F688Ea2E835a9D6257bc962509d7799D534C
+- SSIP Rewarder: 0x9E66FfBE92eF224114A6cF08F7F5411bA8AAFde2
+- SyntheticSSIP: 0x6c681F6a2AE9109d765960d7Ba795343CE997535
+- SyntheticSSIP Rewarder(reward currency - mockUSDT for now): 0x14CCBFB9DD13031CC00554Ef2949cDd1A63A3A02 
 
 
 - SyntheticSSIPFactory: 0x2Cb164A07f80ccb921621e1076CC19e341D30fbF
 - SyntheticSSRPFactory: 0xCf26883fE4E3E2A197088D9ED905b2104180C3F1
 
 
-- RiskPoolFactory: 0x800932A00DF17afa45F9aDb6F0DE39074b90e428
+- RiskPoolFactory: 0x9911b6670AB11FE9973cd2e058DAB101865dFcDB
 - RewarderFactory: 0xc376955429C7637d1b7b2D1DD8D4e4ddaF550F9A
 - Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
 
 
-- SalesPolicyFactory: 0x4Aa3aEb01D5a0365971B01BA54E91A02192BfB34
-- SalesPolicy for protocol 0: 0xeeD260a23F8C3Bd8D7e7235F15f399b518695731
+- SalesPolicyFactory: 0xd9070bbFbCf10bF6628D265757FfE4FEC89553Ce
+- SalesPolicy for protocol 0: 0x2D16C547B666434b5cc77eB71240D67832bafE7c
 
 
-- CapitalAgent: 0x5371d874949DcdD3f2F6Cd0852a88140F77BfcEF
+- CapitalAgent: 0x2D1ADb7A6ED75B23E1C5Dfa8E74462DC39753459
 
 
 - MockUNO : 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5

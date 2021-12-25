@@ -204,6 +204,7 @@
 //     })
 
 //     it("Should buy policy in USDT", async function () {
+//       let hexData
 //       const currentDate = new Date()
 //       const timestamp = Math.floor(currentDate.getTime() / 1000)
 //       const privateKey = process.env.PRIVATE_KEY
@@ -213,6 +214,7 @@
 //       const salesPolicy1 = await this.SalesPolicy.attach(salesPolicy1Address)
 
 //       await (await this.salesPolicyFactory.approvePremiumInPolicy(0, this.mockUSDT.address)).wait()
+//       await (await this.salesPolicyFactory.setSignerInPolicy(0, this.signers[5].address)).wait()
 //       await (await this.mockUSDT.approve(salesPolicy1Address, getBigNumber(100000000))).wait()
 
 //       //   prepare sign data
@@ -220,6 +222,22 @@
 //       const coverageDuration = BigNumber.from(24 * 3600 * 30)
 //       const coverageAmount = getBigNumber(100, 6)
 //       const deadline = getBigNumber(timestamp - 7 * 3600, 0)
+
+//       const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
+//       const paddedCoverageDurationHexStr = getPaddedHexStrFromBN(coverageDuration)
+//       const paddedCoverageAmountHexStr = getPaddedHexStrFromBN(coverageAmount)
+//       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+
+//       hexData =
+//         "0x" +
+//         paddedPolicyPriceHexStr.slice(2) +
+//         paddedCoverageDurationHexStr.slice(2) +
+//         paddedCoverageAmountHexStr.slice(2) +
+//         paddedDeadlineHexStr.slice(2) +
+//         this.mockUSDT.address.slice(2)
+
+//       const flatSig = await this.signers[5].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
+//       const splitSig = ethers.utils.splitSignature(flatSig)
 
 //       const chainId = await getChainId()
 //       console.log("chainId", chainId)
@@ -237,6 +255,9 @@
 //         policyPrice,
 //         deadline,
 //         this.mockUSDT.address,
+//         splitSig.r,
+//         splitSig.s,
+//         splitSig.v,
 //       ])
 
 //       const nonce = await salesPolicy1.getNonce(this.signers[0].address)
@@ -307,6 +328,22 @@
 //       const coverageAmount = getBigNumber(100, 6)
 //       const deadline = getBigNumber(timestamp, 0)
 
+//       const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
+//       const paddedCoverageDurationHexStr = getPaddedHexStrFromBN(coverageDuration)
+//       const paddedCoverageAmountHexStr = getPaddedHexStrFromBN(coverageAmount)
+//       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+
+//       hexData =
+//         "0x" +
+//         paddedPolicyPriceHexStr.slice(2) +
+//         paddedCoverageDurationHexStr.slice(2) +
+//         paddedCoverageAmountHexStr.slice(2) +
+//         paddedDeadlineHexStr.slice(2) +
+//         this.mockUSDT.address.slice(2)
+
+//       const flatSig = await this.signers[5].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
+//       const splitSig = ethers.utils.splitSignature(flatSig)
+
 //       const chainId = await getChainId()
 //       console.log("chainId", chainId)
 
@@ -323,6 +360,9 @@
 //         policyPrice,
 //         deadline,
 //         this.mockUSDT.address,
+//         splitSig.r,
+//         splitSig.s,
+//         splitSig.v,
 //       ])
 
 //       const nonce = await salesPolicy1.getNonce(this.signers[0].address)

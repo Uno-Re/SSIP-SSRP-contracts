@@ -79,11 +79,12 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         }
     }
 
-    function cancelWithrawRequest(address _to) external override onlySSRP {
+    function cancelWithrawRequest(address _to) external override onlySSRP returns (uint256, uint256) {
         uint256 _pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
         require(_pendingAmount > 0, "UnoRe: zero amount");
         _cancelWithdrawRequest(_to);
         emit LogCancelWithdrawRequest(_to, _pendingAmount, (_pendingAmount * lpPriceUno) / 1e18);
+        return (_pendingAmount, (_pendingAmount * lpPriceUno) / 1e18);
     }
 
     function policyClaim(address _to, uint256 _amount) external override onlySSRP returns (uint256 realClaimAmount) {

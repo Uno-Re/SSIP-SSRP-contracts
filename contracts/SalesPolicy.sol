@@ -34,6 +34,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     address private exchangeAgent;
     address public premiumPool;
     address public capitalAgent;
+    address public signer;
     address private immutable UNORE_TOKEN; // 0x474021845C4643113458ea4414bdb7fB74A01A77
     address public immutable USDC_TOKEN; //
 
@@ -57,6 +58,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     event LogSetExchangeAgentInPolicy(address indexed _exchangeAgent, address indexed _policyAddress, uint16 _protocolIdx);
     event LogSetPremiumPoolInPolicy(address indexed _premiumPool, address indexed _policyAddress, uint16 _protocolIdx);
     event LogSetProtocolURIInPolicy(uint16 _protocolIdx, address indexed _policyAddress, string _uri);
+    event LogSetSignerInPolicy(address indexed _signer, address indexed _policyAddress, uint16 _protocolIdx);
     event LogSetBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline, address indexed _policyAddress, uint16 _protocolIdx);
     event LogapprovePremiumIInPolicy(
         uint16 _protocolIdx,
@@ -98,8 +100,22 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 _coverageDuration,
         uint256 _policyPriceInUSDC,
         uint256 _signedTime,
-        address _premiumCurrency
+        address _premiumCurrency,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
     ) external payable nonReentrant {
+        address _signer = getSender(
+            _policyPriceInUSDC,
+            _coverageDuration,
+            _coverageAmount,
+            _signedTime,
+            _premiumCurrency,
+            r,
+            s,
+            v
+        );
+        require(_signer != address(0) && _signer == signer, "UnoRe: invalid signer");
         require(_signedTime <= block.timestamp && block.timestamp - _signedTime < maxDeadline, "UnoRe: signature expired");
 
         uint256 lastIdx = policyIdx.current();
@@ -166,6 +182,12 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         emit LogSetExchangeAgentInPolicy(_exchangeAgent, address(this), protocolIdx);
     }
 
+    function setSigner(address _signer) external override onlyFactory {
+        require(_signer != address(0), "UnoRe: zero address");
+        signer = _signer;
+        emit LogSetSignerInPolicy(_signer, address(this), protocolIdx);
+    }
+
     function setCapitalAgent(address _capitalAgent) external override onlyFactory {
         require(_capitalAgent != address(0), "UnoRe: zero address");
         capitalAgent = _capitalAgent;
@@ -214,5 +236,26 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 coverStartAt = uint256(getPolicy[_policyId].coverStartAt);
         uint256 premiumPaid = getPolicy[_policyId].policyPriceInUSDC;
         return (coverageAmount, coverageDuration, coverStartAt, premiumPaid);
+    }
+
+    function getSender(
+        uint256 _policyPrice,
+        uint256 _coverageDuration,
+        uint256 _coverageAmount,
+        uint256 _signedTime,
+        address _premiumCurrency,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
+    ) private pure returns (address) {
+        // bytes32 digest = getSignedMsgHash(productName, priceInUSD, period, conciergePrice);
+        bytes32 msgHash = keccak256(
+            abi.encodePacked(_policyPrice, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency)
+        );
+        // bytes32 msgHash = keccak256(abi.encodePacked(productName));
+        bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+        // (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
+        address recoveredAddress = ecrecover(digest, v, r, s);
+        return recoveredAddress;
     }
 }
