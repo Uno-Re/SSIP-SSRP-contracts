@@ -57,6 +57,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     event LogCreateRewarder(address indexed _SSIP, address indexed _rewarder, address _currency);
     event LogCreateSyntheticSSIP(address indexed _SSIP, address indexed _syntheticSSIP, address indexed _lpToken);
     event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
+    event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
 
     constructor(
         address _owner,
@@ -161,11 +162,12 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         uint256 lpPrice = IRiskPool(riskPool).lpPriceUno();
         uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
-        IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
+        uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim((amount * lpPrice) / 1e18);
         IMigration(migrateTo).onMigration(msg.sender, amount, "");
         userInfo[msg.sender].amount = 0;
         userInfo[msg.sender].rewardDebt = 0;
+        emit LogMigrate(msg.sender, migrateTo, migratedAmount);
     }
 
     function pendingUno(address _to) external view returns (uint256 pending) {

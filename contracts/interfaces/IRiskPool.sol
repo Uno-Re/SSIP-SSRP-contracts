@@ -16,7 +16,7 @@ interface IRiskPool {
         address _to,
         address _migrateTo,
         bool _isUnLocked
-    ) external;
+    ) external returns (uint256);
 
     function setMinLPCapital(uint256 _minLPCapital) external;
 

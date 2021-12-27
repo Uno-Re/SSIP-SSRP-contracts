@@ -75,7 +75,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         } else {
             TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
             emit LogLeaveFromPending(_to, pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
-            return (pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
+            return ((cryptoBalance - MIN_LP_CAPITAL) * 1e18 / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
         }
     }
 
@@ -108,7 +108,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         address _to,
         address _migrateTo,
         bool _isUnLocked
-    ) external override onlySSRP {
+    ) external override onlySSRP returns (uint256) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         if (_isUnLocked && withdrawRequestPerUser[_to].pendingAmount > 0) {
             uint256 pendingAmountInUno = (uint256(withdrawRequestPerUser[_to].pendingAmount) * lpPriceUno) / 1e18;
@@ -128,6 +128,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         TransferHelper.safeTransfer(currency, _migrateTo, unoBalance);
         _burn(_to, balanceOf(_to));
         emit LogMigrateLP(_to, _migrateTo, unoBalance);
+        return unoBalance;
     }
 
     function setMinLPCapital(uint256 _minLPCapital) external override onlySSRP {
