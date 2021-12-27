@@ -101,6 +101,8 @@ describe("SingleSidedReinsurancePool", function () {
     expect(this.rewarder.address).equal(await this.singleSidedReinsurancePool.rewarder())
 
     await (await this.mockUNO.transfer(this.rewarder.address, getBigNumber(100000))).wait()
+
+    await await this.singleSidedReinsurancePool.setStakingStartTime(Math.round(timestamp / 1000 - 3600 * 7))
   })
 
   describe("SingleSidedReinsurancePool Basic", function () {
@@ -268,7 +270,7 @@ describe("SingleSidedReinsurancePool", function () {
       // })
 
       it("Should claim after 10 days since last WR in the case of repetitive WR", async function () {
-        await this.singleSidedReinsurancePool.setLockTime(3600 * 24 * 10);
+        await this.singleSidedReinsurancePool.setLockTime(3600 * 24 * 10)
 
         //check the uno and risk pool LP token balance of the singer 0 before withdraw
         const riskPool = this.RiskPool.attach(this.poolAddress)

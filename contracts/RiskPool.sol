@@ -75,7 +75,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         } else {
             TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
             emit LogLeaveFromPending(_to, pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
-            return ((cryptoBalance - MIN_LP_CAPITAL) * 1e18 / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
+            return (((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
         }
     }
 
