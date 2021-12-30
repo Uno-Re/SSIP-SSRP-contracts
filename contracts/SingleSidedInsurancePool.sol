@@ -24,7 +24,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     address public capitalAgent;
     address public syntheticSSIP;
 
-    uint256 public LOCK_TIME = 1 days;
+    uint256 public LOCK_TIME = 10 days;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
     uint256 public STAKING_START_TIME;
 
@@ -52,7 +52,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     event LogUpdatePool(uint128 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
     event LogSetExchangeAgent(address indexed _exchangeAgent);
-    event LogLeaveFromPendingSSIP(address indexed _user, uint256 _withdrawLpAmount, uint256 _withdrawUnoAmount);
+    event LogLeaveFromPendingSSIP(address indexed _user, address indexed _riskPool, uint256 _withdrawLpAmount, uint256 _withdrawUnoAmount);
     event PolicyClaim(address indexed _user, uint256 _claimAmount);
     event LogLpTransferInSSIP(address indexed _from, address indexed _to, uint256 _amount);
     event LogCreateRewarder(address indexed _SSIP, address indexed _rewarder, address _currency);
@@ -126,8 +126,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     }
 
     function setStakingStartTime(uint256 _startTime) external onlyOwner {
-        require(_startTime > 0, "UnoRe: not allow zero start time");
-        STAKING_START_TIME = _startTime;
+        STAKING_START_TIME = _startTime + block.timestamp;
     }
 
     /**
@@ -255,7 +254,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
             ((pendingAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
         (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
         userInfo[msg.sender].amount = amount - withdrawAmount;
-        emit LogLeaveFromPendingSSIP(msg.sender, withdrawAmount, withdrawAmountInUNO);
+        emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 
     function lpTransfer(

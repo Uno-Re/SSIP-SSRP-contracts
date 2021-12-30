@@ -14,7 +14,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard {
     address public owner;
     address public migrateTo;
 
-    uint256 public LOCK_TIME = 1 days;
+    uint256 public LOCK_TIME = 10 days;
     uint256 public constant ACC_REWARD_PRECISION = 1e18;
 
     address public rewarder;
