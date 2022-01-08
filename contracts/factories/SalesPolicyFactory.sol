@@ -30,8 +30,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     mapping(uint16 => Protocol) public getProtocol;
     Counters.Counter private protocolIds;
 
-    address public USDT_TOKEN;
-    address public UNO_TOKEN;
+    address public USDC_TOKEN;
 
     event ProtocolCreated(address indexed _salesPolicy, uint16 _protocolIdx);
     event LogSetProtocolMCR(uint16 _protocolIdx, uint256 _mcr);
@@ -39,14 +38,17 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
 
     constructor(
         address _owner,
-        address _usdt_token,
-        address _uno_token,
+        address _usdcToken,
         address _exchangeAgent,
         address _premiumPool,
         address _capitalAgent
     ) {
-        USDT_TOKEN = _usdt_token;
-        UNO_TOKEN = _uno_token;
+        require(_owner != address(0), "UnoRe: zero owner address");
+        require(_usdcToken != address(0), "UnoRe: zero USDC address");
+        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
+        require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
+        require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
+        USDC_TOKEN = _usdcToken;
         owner = _owner;
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
@@ -100,8 +102,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
             _twapPriceFeed,
             _premiumPool,
             _capitalAgent,
-            UNO_TOKEN,
-            USDT_TOKEN,
+            USDC_TOKEN,
             _protocolURI,
             _protocolIdx
         );

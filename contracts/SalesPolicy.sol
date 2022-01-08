@@ -35,7 +35,6 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     address public premiumPool;
     address public capitalAgent;
     address public signer;
-    address private immutable UNORE_TOKEN; // 0x474021845C4643113458ea4414bdb7fB74A01A77
     address public immutable USDC_TOKEN; //
 
     string private protocolURI;
@@ -72,16 +71,19 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address _exchangeAgent,
         address _premiumPool,
         address _capitalAgent,
-        address _unoToken,
         address _usdcToken,
         string memory _protocolURI,
         uint16 _protocolIdx
     ) ERC721("Policy insurance", "Policy insurance") {
+        require(_factory != address(0), "UnoRe: zero factory address");
+        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
+        require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
+        require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
+        require(_usdcToken != address(0), "UnoRe: zero USDC address");
         factory = _factory;
         protocolIdx = _protocolIdx;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
-        UNORE_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
         premiumPool = _premiumPool;
         maxDeadline = 7 days;
@@ -90,6 +92,11 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     modifier onlyFactory() {
         require(msgSender() == factory, "UnoRe: SalesPolicy Forbidden");
+        _;
+    }
+
+    modifier onlyCapitalAgent() {
+        require(msgSender() == capitalAgent, "UnoRe: SalesPolicy Forbidden");
         _;
     }
 
@@ -200,13 +207,13 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline, address(this), protocolIdx);
     }
 
-    function markToClaim(uint256 _policyId) external override nonReentrant {
+    function markToClaim(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
         require(getPolicy[_policyId].exist, "UnoRe: marked to claim already");
         getPolicy[_policyId].exist = false;
         _burn(_policyId);
     }
 
-    function updatePolicyExpired(uint256 _policyId) external override nonReentrant {
+    function updatePolicyExpired(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
         require(!getPolicy[_policyId].exist, "UnoRe: expired already");
         getPolicy[_policyId].expired = true;
         _burn(_policyId);

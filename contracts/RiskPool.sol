@@ -29,6 +29,8 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         address _SSRP,
         address _currency
     ) {
+        require(_SSRP != address(0), "UnoRe: zero pool address");
+        require(_currency != address(0), "UnoRe: zero currency address");
         name = _name;
         symbol = _symbol;
         SSRP = _SSRP;

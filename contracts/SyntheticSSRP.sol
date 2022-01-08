@@ -45,6 +45,8 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard {
     event LogCreateRewarder(address indexed _SSRP, address indexed _rewarder, address _currency);
 
     constructor(address _owner, address _lpToken) {
+        require(_owner != address(0), "UnoRe: zero owner address");
+        require(_lpToken != address(0), "UnoRe: zero lp token address");
         owner = _owner;
         lpToken = _lpToken;
         rewardPerBlock = 1e18;

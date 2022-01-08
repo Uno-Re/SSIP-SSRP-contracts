@@ -20,7 +20,6 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     address public claimAssessor;
     address private exchangeAgent;
     address public migrateTo;
-    address public USDT_TOKEN;
     address public capitalAgent;
     address public syntheticSSIP;
 
@@ -52,7 +51,12 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     event LogUpdatePool(uint128 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
     event LogSetExchangeAgent(address indexed _exchangeAgent);
-    event LogLeaveFromPendingSSIP(address indexed _user, address indexed _riskPool, uint256 _withdrawLpAmount, uint256 _withdrawUnoAmount);
+    event LogLeaveFromPendingSSIP(
+        address indexed _user,
+        address indexed _riskPool,
+        uint256 _withdrawLpAmount,
+        uint256 _withdrawUnoAmount
+    );
     event PolicyClaim(address indexed _user, uint256 _claimAmount);
     event LogLpTransferInSSIP(address indexed _from, address indexed _to, uint256 _amount);
     event LogCreateRewarder(address indexed _SSIP, address indexed _rewarder, address _currency);
@@ -64,13 +68,15 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         address _owner,
         address _claimAssessor,
         address _exchangeAgent,
-        address _USDT_TOKEN,
         address _capitalAgent
     ) {
+        require(_owner != address(0), "UnoRe: zero owner address");
+        require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
+        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
+        require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         owner = _owner;
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
-        USDT_TOKEN = _USDT_TOKEN;
         capitalAgent = _capitalAgent;
     }
 

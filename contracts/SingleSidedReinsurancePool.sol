@@ -55,6 +55,8 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
     event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
 
     constructor(address _owner, address _claimAssessor) {
+        require(_owner != address(0), "UnoRe: zero owner address");
+        require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         owner = _owner;
         claimAssessor = _claimAssessor;
         STAKING_START_TIME = block.timestamp + 3 days;

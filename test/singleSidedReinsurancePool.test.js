@@ -300,11 +300,9 @@ describe("SingleSidedReinsurancePool", function () {
         await network.provider.send("evm_mine")
         // signer 0 can claim after 10 days since the last WR
         // await this.singleSidedReinsurancePool.leaveFromPending()
-        await expect(
-                this.singleSidedReinsurancePool.leaveFromPending()
-              )
-                .to.emit(riskPool, 'LogLeaveFromPending')
-                .withArgs(this.signers[0].address, getBigNumber(2000), getBigNumber(2000));
+        await expect(this.singleSidedReinsurancePool.leaveFromPending())
+          .to.emit(riskPool, "LogLeaveFromPending")
+          .withArgs(this.signers[0].address, getBigNumber(2000), getBigNumber(2000))
         // check the uno and risk pool LP token balance of the singer 0 after withdraw
         const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
         const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)

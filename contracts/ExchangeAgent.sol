@@ -39,14 +39,23 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
         uint256 _convertedAmount
     );
 
+    event LogAddWhiteList(address indexed _exchangeAgent, address indexed _whiteListAddress);
+    event LogRemoveWhiteList(address indexed _exchangeAgent, address indexed _whiteListAddress);
+    event LogSetSlippage(address indexed _exchangeAgent, uint256 _slippage);
+
     constructor(
-        address _usdtToken,
+        address _usdcToken,
         address _WETH,
         address _twapOraclePriceFeedFactory,
         address _uniswapRouter,
         address _uniswapFactory
     ) {
-        USDC_TOKEN = _usdtToken;
+        require(_usdcToken != address(0), "UnoRe: zero USDC address");
+        require(_twapOraclePriceFeedFactory != address(0), "UnoRe: zero twapOraclePriceFeedFactory address");
+        require(_uniswapRouter != address(0), "UnoRe: zero uniswapRouter address");
+        require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
+        require(_WETH != address(0), "UnoRe: zero WETH address");
+        USDC_TOKEN = _usdcToken;
         UNISWAP_FACTORY = _uniswapFactory;
         TWAP_ORACLE_PRICE_FEED_FACTORY = _twapOraclePriceFeedFactory;
         UNISWAP_ROUTER = _uniswapRouter;
@@ -72,11 +81,21 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
         require(_whiteListAddress != address(0), "UnoRe: zero address");
         require(!whiteList[_whiteListAddress], "UnoRe: white list already");
         whiteList[_whiteListAddress] = true;
+        emit LogAddWhiteList(address(this), _whiteListAddress);
+    }
+
+    function removeWhiteList(address _whiteListAddress) external onlyOwner {
+        require(_whiteListAddress != address(0), "UnoRe: zero address");
+        require(whiteList[_whiteListAddress], "UnoRe: white list removed or unadded already");
+        whiteList[_whiteListAddress] = false;
+        emit LogRemoveWhiteList(address(this), _whiteListAddress);
     }
 
     function setSlippage(uint256 _slippage) external onlyOwner {
         require(_slippage > 0, "UnoRe: zero slippage");
+        require(_slippage < 100, "UnoRe: 100% slippage overflow");
         slippage = _slippage * SLIPPAGE_PRECISION;
+        emit LogSetSlippage(address(this), _slippage);
     }
 
     // estimate token amount for amount in USDC

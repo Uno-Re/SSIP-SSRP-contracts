@@ -15,6 +15,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
     address public USDC_TOKEN;
     mapping(address => bool) public availableCurrencies;
     address[] public availableCurrencyList;
+    mapping(address => bool) public whiteList;
 
     address public constant burnAddress = 0x000000000000000000000000000000000000dEaD;
     mapping(address => uint256) public SSRP_PREMIUM;
@@ -31,16 +32,26 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
     event LogCollectPremium(address indexed _from, address _premiumCurrency, uint256 _premiumAmount);
     event LogDepositToSyntheticSSRPRewarder(address indexed _rewarder, uint256 _ethAmountDeposited);
     event LogDepositToSyntheticSSIPRewarder(address indexed _rewarder, address indexed _currency, uint256 _amountDeposited);
+    event LogAddCurrency(address indexed _premiumPool, address indexed _currency);
+    event LogRemoveCurrency(address indexed _premiumPool, address indexed _currency);
+    event LogMaxApproveCurrency(address indexed _premiumPool, address indexed _currency, address indexed _to);
+    event LogMaxDestroyCurrencyAllowance(address indexed _premiumPool, address indexed _currency, address indexed _to);
+    event LogAddWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
+    event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
 
     constructor(
         address _exchangeAgent,
         address _unoToken,
         address _usdcToken
     ) {
+        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
+        require(_unoToken != address(0), "UnoRe: zero UNO address");
+        require(_usdcToken != address(0), "UnoRe: zero USDC address");
         exchangeAgent = _exchangeAgent;
         owner = msg.sender;
         UNO_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
+        whiteList[msg.sender] = true;
     }
 
     modifier onlyOwner() {
@@ -53,12 +64,19 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
         _;
     }
 
+    modifier onlyWhiteList() {
+        require(whiteList[msg.sender], "UnoRe: not white list address");
+        _;
+    }
+
     receive() external payable {}
 
-    function collectPremiumInETH(uint256 _premiumAmount) external payable override nonReentrant {
-        SSRP_PREMIUM_ETH = SSRP_PREMIUM_ETH + ((_premiumAmount * 1000) / 10000);
-        SSIP_PREMIUM_ETH = SSIP_PREMIUM_ETH + ((_premiumAmount * 7000) / 10000);
-        BACK_BURN_PREMIUM_ETH = BACK_BURN_PREMIUM_ETH + ((_premiumAmount * 2000) / 10000);
+    function collectPremiumInETH(uint256 _premiumAmount) external override nonReentrant onlyWhiteList {
+        uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
+        uint256 _premium_SSIP = (_premiumAmount * 7000) / 10000;
+        SSRP_PREMIUM_ETH = SSRP_PREMIUM_ETH + _premium_SSRP;
+        SSIP_PREMIUM_ETH = SSIP_PREMIUM_ETH + _premium_SSIP;
+        BACK_BURN_PREMIUM_ETH = BACK_BURN_PREMIUM_ETH + (_premiumAmount - _premium_SSRP - _premium_SSIP);
         emit LogCollectPremium(msg.sender, address(0), _premiumAmount);
     }
 
@@ -67,12 +85,17 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
         override
         nonReentrant
         onlyAvailableCurrency(_premiumCurrency)
+        onlyWhiteList
     {
         require(IERC20(_premiumCurrency).balanceOf(msg.sender) >= _premiumAmount, "UnoRe: premium balance overflow");
         TransferHelper.safeTransferFrom(_premiumCurrency, msg.sender, address(this), _premiumAmount);
-        SSRP_PREMIUM[_premiumCurrency] = SSRP_PREMIUM[_premiumCurrency] + ((_premiumAmount * 1000) / 10000);
-        SSIP_PREMIUM[_premiumCurrency] = SSIP_PREMIUM[_premiumCurrency] + ((_premiumAmount * 7000) / 10000);
-        BACK_BURN_UNO_PREMIUM[_premiumCurrency] = BACK_BURN_UNO_PREMIUM[_premiumCurrency] + ((_premiumAmount * 2000) / 10000);
+        uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
+        uint256 _premium_SSIP = (_premiumAmount * 7000) / 10000;
+        SSRP_PREMIUM[_premiumCurrency] = SSRP_PREMIUM[_premiumCurrency] + _premium_SSRP;
+        SSIP_PREMIUM[_premiumCurrency] = SSIP_PREMIUM[_premiumCurrency] + _premium_SSIP;
+        BACK_BURN_UNO_PREMIUM[_premiumCurrency] =
+            BACK_BURN_UNO_PREMIUM[_premiumCurrency] +
+            (_premiumAmount - _premium_SSRP - _premium_SSIP);
         emit LogCollectPremium(msg.sender, _premiumCurrency, _premiumAmount);
     }
 
@@ -167,6 +190,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
         availableCurrencies[_currency] = true;
         availableCurrencyList.push(_currency);
         maxApproveCurrency(_currency, exchangeAgent);
+        emit LogAddCurrency(address(this), _currency);
     }
 
     function removeCurrency(address _currency) external onlyOwner {
@@ -182,17 +206,34 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
                 return;
             }
         }
+        emit LogRemoveCurrency(address(this), _currency);
     }
 
     function maxApproveCurrency(address _currency, address _to) public onlyOwner nonReentrant {
         if (IERC20(_currency).allowance(address(this), _to) < MAX_INTEGER) {
             TransferHelper.safeApprove(_currency, _to, MAX_INTEGER);
+            emit LogMaxApproveCurrency(address(this), _currency, _to);
         }
     }
 
     function destroyCurrencyAllowance(address _currency, address _to) public onlyOwner nonReentrant {
         if (IERC20(_currency).allowance(address(this), _to) > 0) {
             TransferHelper.safeApprove(_currency, _to, 0);
+            emit LogMaxDestroyCurrencyAllowance(address(this), _currency, _to);
         }
+    }
+
+    function addWhiteList(address _whiteListAddress) external onlyOwner {
+        require(_whiteListAddress != address(0), "UnoRe: zero address");
+        require(!whiteList[_whiteListAddress], "UnoRe: white list already");
+        whiteList[_whiteListAddress] = true;
+        emit LogAddWhiteList(address(this), _whiteListAddress);
+    }
+
+    function removeWhiteList(address _whiteListAddress) external onlyOwner {
+        require(_whiteListAddress != address(0), "UnoRe: zero address");
+        require(whiteList[_whiteListAddress], "UnoRe: white list removed or unadded already");
+        whiteList[_whiteListAddress] = false;
+        emit LogRemoveWhiteList(address(this), _whiteListAddress);
     }
 }

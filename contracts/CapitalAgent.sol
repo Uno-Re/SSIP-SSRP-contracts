@@ -16,8 +16,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
 
     address public owner;
     address public exchangeAgent;
+    address public salesPolicyFactory;
     address public UNO_TOKEN;
-    address public USDT_TOKEN;
+    address public USDC_TOKEN;
 
     struct PoolInfo {
         uint256 totalCapital;
@@ -46,6 +47,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
 
     uint256 public CALC_PRECISION = 1e18;
 
+    mapping(address => bool) public poolWhiteList;
+
     event LogAddPool(address indexed _ssip);
     event LogAddPolicy(address indexed _salesPolicy);
     event LogUpdatePoolCapital(address indexed _ssip, uint256 _poolCapital, uint256 _totalCapital);
@@ -57,16 +60,25 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     );
     event LogUpdatePolicyExpired(address indexed _policy, uint256 _policyTokenId);
     event LogMarkToClaimPolicy(address indexed _policy, uint256 _policyTokenId);
+    event LogSetMCR(address indexed _owner, address indexed _capitalAgent, uint256 _MCR);
+    event LogSetMLR(address indexed _owner, address indexed _capitalAgent, uint256 _MLR);
+    event LogSetExchangeAgent(address indexed _owner, address indexed _capitalAgent, address _exchangeAgent);
+    event LogSetSalesPolicyFactory(address indexed _factory);
+    event LogAddPoolWhiteList(address indexed _pool);
+    event LogRemovePoolWhiteList(address indexed _pool);
 
     constructor(
         address _exchangeAgent,
         address _UNO_TOKEN,
-        address _USDT_TOKEN
+        address _USDC_TOKEN
     ) {
+        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
+        require(_UNO_TOKEN != address(0), "UnoRe: zero UNO address");
+        require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         owner = msg.sender;
         exchangeAgent = _exchangeAgent;
         UNO_TOKEN = _UNO_TOKEN;
-        USDT_TOKEN = _USDT_TOKEN;
+        USDC_TOKEN = _USDC_TOKEN;
     }
 
     modifier onlyOwner() {
@@ -74,9 +86,32 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
         _;
     }
 
-    receive() external payable {}
+    modifier onlyPoolWhiteList() {
+        require(poolWhiteList[msg.sender], "UnoRe: Capital Agent Forbidden");
+        _;
+    }
 
-    function addPool(address _ssip) external override {
+    function setSalesPolicyFactory(address _factory) external onlyOwner nonReentrant {
+        require(_factory != address(0), "UnoRe: zero factory address");
+        salesPolicyFactory = _factory;
+        emit LogSetSalesPolicyFactory(_factory);
+    }
+
+    function addPoolWhiteList(address _pool) external onlyOwner nonReentrant {
+        require(_pool != address(0), "UnoRe: zero pool address");
+        require(!poolWhiteList[_pool], "UnoRe: white list already");
+        poolWhiteList[_pool] = true;
+        emit LogAddPoolWhiteList(_pool);
+    }
+
+    function removePoolWhiteList(address _pool) external onlyOwner nonReentrant {
+        require(_pool != address(0), "UnoRe: zero pool address");
+        require(poolWhiteList[_pool], "UnoRe: no white list");
+        poolWhiteList[_pool] = false;
+        emit LogRemovePoolWhiteList(_pool);
+    }
+
+    function addPool(address _ssip) external override onlyPoolWhiteList {
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
         poolList.push(_ssip);
 
@@ -88,6 +123,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     }
 
     function addPolicy(address _policy) external override nonReentrant {
+        require(salesPolicyFactory != address(0), "UnoRe: not set factory address yet");
+        require(salesPolicyFactory == msg.sender, "UnoRe: only salesPolicyFactory can call");
         require(!policyInfo[_policy].exist, "UnoRe: already exist policy");
         policyList.push(_policy);
 
@@ -176,26 +213,29 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
-        uint256 totalCapitalStakedInUSDT = IExchangeAgent(exchangeAgent).getNeededTokenAmount(
+        uint256 totalCapitalStakedInUSDC = IExchangeAgent(exchangeAgent).getNeededTokenAmount(
             UNO_TOKEN,
-            USDT_TOKEN,
+            USDC_TOKEN,
             totalCapitalStaked
         );
-        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStakedInUSDT * MLR) / CALC_PRECISION;
+        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStakedInUSDC * MLR) / CALC_PRECISION;
     }
 
     function setMCR(uint256 _MCR) external onlyOwner nonReentrant {
         require(_MCR > 0, "UnoRe: zero mcr");
         MCR = _MCR;
+        emit LogSetMCR(msg.sender, address(this), _MCR);
     }
 
     function setMLR(uint256 _MLR) external onlyOwner nonReentrant {
-        require(_MLR > 0, "UnoRe: zero mcr");
+        require(_MLR > 0, "UnoRe: zero mlr");
         MLR = _MLR;
+        emit LogSetMLR(msg.sender, address(this), _MLR);
     }
 
     function setExchangeAgent(address _exchangeAgent) external onlyOwner nonReentrant {
         require(_exchangeAgent != address(0), "UnoRe: zero address");
         exchangeAgent = _exchangeAgent;
+        emit LogSetExchangeAgent(msg.sender, address(this), _exchangeAgent);
     }
 }

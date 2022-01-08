@@ -4,7 +4,7 @@ pragma solidity 0.8.0;
 interface IPremiumPool {
     function collectPremium(address _premiumCurrency, uint256 _premiumAmount) external;
 
-    function collectPremiumInETH(uint256 _premiumAmount) external payable;
+    function collectPremiumInETH(uint256 _premiumAmount) external;
 
     function withdrawPremium(
         address _currency,
