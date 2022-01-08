@@ -19,4 +19,6 @@ interface ISingleSidedReinsurancePool {
     ) external;
 
     function riskPool() external view returns (address);
+
+    function userInfo(address _user) external view returns (uint256, uint256, uint256);
 }
