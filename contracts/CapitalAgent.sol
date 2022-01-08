@@ -4,7 +4,6 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ISingleSidedInsurancePool.sol";
@@ -12,8 +11,6 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/ICapitalAgent.sol";
 
 contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
-    using Counters for Counters.Counter;
-
     address public owner;
     address public exchangeAgent;
     address public salesPolicyFactory;
@@ -31,14 +28,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     }
 
     mapping(address => PoolInfo) public poolInfo;
-    address[] public poolList;
-    Counters.Counter private poolIds;
 
     uint256 public totalCapitalStaked;
 
     mapping(address => PolicyInfo) public policyInfo;
-    address[] public policyList;
-    Counters.Counter private policyIds;
 
     uint256 public totalUtilizedAmount;
 
@@ -50,7 +43,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     mapping(address => bool) public poolWhiteList;
 
     event LogAddPool(address indexed _ssip);
+    event LogRemovePool(address indexed _ssip);
     event LogAddPolicy(address indexed _salesPolicy);
+    event LogRemovePolicy(address indexed _salesPolicy);
     event LogUpdatePoolCapital(address indexed _ssip, uint256 _poolCapital, uint256 _totalCapital);
     event LogUpdatePolicyCoverage(
         address indexed _policy,
@@ -112,27 +107,40 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     }
 
     function addPool(address _ssip) external override onlyPoolWhiteList {
+        require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
-        poolList.push(_ssip);
-
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, exist: true});
 
-        poolIds.increment();
-
         emit LogAddPool(_ssip);
+    }
+
+    function removePool(address _ssip) external onlyOwner nonReentrant {
+        require(_ssip != address(0), "UnoRe: zero address");
+        require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
+        if (poolInfo[_ssip].totalCapital > 0) {
+            totalCapitalStaked = totalCapitalStaked - poolInfo[_ssip].totalCapital;
+        }
+        delete poolInfo[_ssip];
+        emit LogRemovePool(_ssip);
     }
 
     function addPolicy(address _policy) external override nonReentrant {
         require(salesPolicyFactory != address(0), "UnoRe: not set factory address yet");
         require(salesPolicyFactory == msg.sender, "UnoRe: only salesPolicyFactory can call");
         require(!policyInfo[_policy].exist, "UnoRe: already exist policy");
-        policyList.push(_policy);
-
         policyInfo[_policy] = PolicyInfo({utilizedAmount: 0, exist: true});
 
-        policyIds.increment();
-
         emit LogAddPolicy(_policy);
+    }
+
+    function removePolicy(address _policy) external onlyOwner nonReentrant {
+        require(_policy != address(0), "UnoRe: zero address");
+        require(policyInfo[_policy].exist, "UnoRe: no exit pool");
+        if (policyInfo[_policy].utilizedAmount > 0) {
+            totalCapitalStaked = totalUtilizedAmount - policyInfo[_policy].utilizedAmount;
+        }
+        delete policyInfo[_policy];
+        emit LogRemovePolicy(_policy);
     }
 
     function SSIPWithdraw(uint256 _withdrawAmount) external override nonReentrant {
