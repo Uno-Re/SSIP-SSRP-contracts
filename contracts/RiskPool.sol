@@ -68,15 +68,16 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         uint256 pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
         require(cryptoBalance > 0, "UnoRe: zero uno balance");
         require(balanceOf(_to) >= pendingAmount, "UnoRe: lp balance overflow");
-        _withdrawImplement(_to);
         uint256 pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
         if (cryptoBalance - MIN_LP_CAPITAL > pendingAmountInUno) {
+            _withdrawImplement(_to);
             TransferHelper.safeTransfer(currency, _to, pendingAmountInUno);
             emit LogLeaveFromPending(_to, pendingAmount, pendingAmountInUno);
             return (pendingAmount, pendingAmountInUno);
         } else {
+            _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
             TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
-            emit LogLeaveFromPending(_to, pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
+            emit LogLeaveFromPending(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
             return (((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
         }
     }

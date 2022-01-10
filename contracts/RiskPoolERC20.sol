@@ -357,6 +357,15 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
         delete withdrawRequestPerUser[_user];
     }
 
+    function _withdrawImplementIrregular(address _user, uint256 _amount) internal {
+        require(uint256(withdrawRequestPerUser[_user].pendingAmount) > 0, "UnoRe: zero claim amount");
+        require(uint256(withdrawRequestPerUser[_user].pendingAmount) >= _amount, "UnoRe: pending amount overflow");
+        uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
+        totalWithdrawPending -= _pendingAmount;
+        _burn(_user, _amount);
+        delete withdrawRequestPerUser[_user];
+    }
+
     function _cancelWithdrawRequest(address _user) internal {
         uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
         totalWithdrawPending -= _pendingAmount;
