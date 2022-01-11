@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity 0.8.0;
@@ -44,6 +45,21 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     mapping(address => UserInfo) public userInfo;
 
     PoolInfo public poolInfo;
+
+    struct VaultInfo {
+        uint256 rewardDebt;
+        uint256 amount;
+    }
+
+    struct VaultUserInfo {
+        uint256 lastWithdrawTime;
+        uint256 rewardDebt;
+        uint256 amount;
+        uint256 vaultShare;
+    }
+
+    VaultInfo public vaultInfo;
+    mapping(address => VaultUserInfo) public vaultUserInfo;
 
     event RiskPoolCreated(address indexed _SSIP, address indexed _pool);
     event StakedInPool(address indexed _staker, address indexed _pool, uint256 _amount);
@@ -332,5 +348,44 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
      */
     function getTotalWithdrawPendingAmount() external view returns (uint256) {
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
+    }
+
+    function vaultDeposit(uint256 _amount) external {
+        updatePool();
+        // VaultUserInfo update
+        VaultUserInfo storage _vaultUserInfo = vaultUserInfo[msg.sender];
+        _vaultUserInfo.amount += _amount * lpPriceUno / 1e18;
+        _vaultUserInfo.rewardDebt =
+            _vaultUserInfo.rewardDebt +
+            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
+            ACC_UNO_PRECISION;
+        
+        // update user vault share
+
+        // VaultInfo update
+        vaultInfo.amount = _amount * lpPriceUno / 1e18;
+        vaultInfo.rewardDebt += ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
+            ACC_UNO_PRECISION;
+
+    }
+
+    function leaveFromPoolInPendingVault(uint256 amount) external {
+        // it should be almost same
+        // Play with VaultInfo and VaultUserInfo
+    }
+
+    function leaveFromPendingVault(uint256 amount) external {
+        // it should be almost same
+        // Play with VaultInfo and VaultUserInfo
+    }
+
+    // This is the function of autocompounding for vault users
+    // this function will be triggered admin or chainlink
+    function vaultEarn() external {
+        updatePool();
+        // calculating the total rewards of vault users
+        uint256 totalVaultReward;
+        // update VaultInfo
+        // increase lp amount of vaultInfo
     }
 }
