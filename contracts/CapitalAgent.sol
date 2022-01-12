@@ -23,6 +23,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     }
 
     struct PolicyInfo {
+        address policy;
         uint256 utilizedAmount;
         bool exist;
     }
@@ -31,7 +32,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
 
     uint256 public totalCapitalStaked;
 
-    mapping(address => PolicyInfo) public policyInfo;
+    PolicyInfo public policyInfo;
 
     uint256 public totalUtilizedAmount;
 
@@ -44,7 +45,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
 
     event LogAddPool(address indexed _ssip);
     event LogRemovePool(address indexed _ssip);
-    event LogAddPolicy(address indexed _salesPolicy);
+    event LogSetPolicy(address indexed _salesPolicy);
     event LogRemovePolicy(address indexed _salesPolicy);
     event LogUpdatePoolCapital(address indexed _ssip, uint256 _poolCapital, uint256 _totalCapital);
     event LogUpdatePolicyCoverage(
@@ -124,22 +125,23 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
         emit LogRemovePool(_ssip);
     }
 
-    function addPolicy(address _policy) external override nonReentrant {
+    function setPolicy(address _policy) external override nonReentrant {
         require(salesPolicyFactory != address(0), "UnoRe: not set factory address yet");
         require(salesPolicyFactory == msg.sender, "UnoRe: only salesPolicyFactory can call");
-        require(!policyInfo[_policy].exist, "UnoRe: already exist policy");
-        policyInfo[_policy] = PolicyInfo({utilizedAmount: 0, exist: true});
+        policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});
 
-        emit LogAddPolicy(_policy);
+        emit LogSetPolicy(_policy);
     }
 
-    function removePolicy(address _policy) external onlyOwner nonReentrant {
-        require(_policy != address(0), "UnoRe: zero address");
-        require(policyInfo[_policy].exist, "UnoRe: no exit pool");
-        if (policyInfo[_policy].utilizedAmount > 0) {
-            totalCapitalStaked = totalUtilizedAmount - policyInfo[_policy].utilizedAmount;
+    function removePolicy() external onlyOwner nonReentrant {
+        require(policyInfo.exist, "UnoRe: no exit pool");
+        if (policyInfo.utilizedAmount > 0) {
+            totalCapitalStaked = totalUtilizedAmount - policyInfo.utilizedAmount;
         }
-        delete policyInfo[_policy];
+        address _policy = policyInfo.policy;
+        policyInfo.policy = address(0);
+        policyInfo.exist = false;
+        policyInfo.utilizedAmount = 0;
         emit LogRemovePolicy(_policy);
     }
 
@@ -163,29 +165,35 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
         return _checkCapitalByMCR(_withdrawAmount);
     }
 
-    function policySale(uint256 _coverageAmount) external override nonReentrant {
-        require(policyInfo[msg.sender].exist, "UnoRe: no exist policy");
-        require(_checkCoverageByMLR(_coverageAmount), "UnoRe: maximum leverage overflow");
-        _updatePolicyCoverage(msg.sender, _coverageAmount, true);
+    function checkCoverageByMLR(uint256 _coverageAmount) external view override returns (bool) {
+        return _checkCoverageByMLR(_coverageAmount);
     }
 
-    function updatePolicyStatus(address _policyAddr, uint256 _policyId) external override nonReentrant {
-        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt, ) = ISalesPolicy(_policyAddr).getPolicyData(
-            _policyId
-        );
+    function policySale(uint256 _coverageAmount) external override nonReentrant {
+        require(msg.sender == policyInfo.policy, "UnoRe: only salesPolicy can call");
+        require(policyInfo.exist, "UnoRe: no exist policy");
+        require(_checkCoverageByMLR(_coverageAmount), "UnoRe: maximum leverage overflow");
+        _updatePolicyCoverage(_coverageAmount, true);
+    }
+
+    function updatePolicyStatus(uint256 _policyId) external override nonReentrant {
+        require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
+        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt) = ISalesPolicy(policyInfo.policy)
+            .getPolicyData(_policyId);
         bool isExpired = block.timestamp >= _coverageDuration + _coverStartAt;
         if (isExpired) {
-            _updatePolicyCoverage(_policyAddr, _coverageAmount, false);
-            ISalesPolicy(_policyAddr).updatePolicyExpired(_policyId);
-            emit LogUpdatePolicyExpired(_policyAddr, _policyId);
+            _updatePolicyCoverage(_coverageAmount, false);
+            ISalesPolicy(policyInfo.policy).updatePolicyExpired(_policyId);
+            emit LogUpdatePolicyExpired(policyInfo.policy, _policyId);
         }
     }
 
-    function markToClaimPolicy(address _policy, uint256 _policyId) external onlyOwner nonReentrant {
-        (uint256 _coverageAmount, , , ) = ISalesPolicy(_policy).getPolicyData(_policyId);
-        _updatePolicyCoverage(_policy, _coverageAmount, false);
-        ISalesPolicy(_policy).markToClaim(_policyId);
-        emit LogMarkToClaimPolicy(_policy, _policyId);
+    function markToClaimPolicy(uint256 _policyId) external onlyOwner nonReentrant {
+        require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
+        (uint256 _coverageAmount, , ) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
+        _updatePolicyCoverage(_coverageAmount, false);
+        ISalesPolicy(policyInfo.policy).markToClaim(_policyId);
+        emit LogMarkToClaimPolicy(policyInfo.policy, _policyId);
     }
 
     function _updatePoolCapital(
@@ -201,19 +209,13 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
         emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked);
     }
 
-    function _updatePolicyCoverage(
-        address _policy,
-        uint256 _amount,
-        bool isAdd
-    ) private {
+    function _updatePolicyCoverage(uint256 _amount, bool isAdd) private {
         if (!isAdd) {
-            require(policyInfo[_policy].utilizedAmount >= _amount, "UnoRe: policy coverage overflow");
+            require(policyInfo.utilizedAmount >= _amount, "UnoRe: policy coverage overflow");
         }
-        policyInfo[_policy].utilizedAmount = isAdd
-            ? policyInfo[_policy].utilizedAmount + _amount
-            : policyInfo[_policy].utilizedAmount - _amount;
+        policyInfo.utilizedAmount = isAdd ? policyInfo.utilizedAmount + _amount : policyInfo.utilizedAmount - _amount;
         totalUtilizedAmount = isAdd ? totalUtilizedAmount + _amount : totalUtilizedAmount - _amount;
-        emit LogUpdatePolicyCoverage(_policy, _amount, policyInfo[_policy].utilizedAmount, totalUtilizedAmount);
+        emit LogUpdatePolicyCoverage(policyInfo.policy, _amount, policyInfo.utilizedAmount, totalUtilizedAmount);
     }
 
     function _checkCapitalByMCR(uint256 _withdrawAmount) private view returns (bool) {
