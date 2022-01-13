@@ -133,7 +133,6 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             if (msg.value > premiumPaid) {
                 TransferHelper.safeTransferETH(msgSender(), msg.value - premiumPaid);
             }
-            // TransferHelper.safeTransferETH(premiumPool, premiumPaid);
             IPremiumPool(premiumPool).collectPremiumInETH{value: premiumPaid}();
         } else {
             premiumPaid = _premiumCurrency != USDC_TOKEN
