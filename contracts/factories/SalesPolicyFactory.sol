@@ -18,7 +18,6 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
         string name; // protocol name
         string productType; // Type of product i.e. Wallet insurance, smart contract bug insurance, etc.
         string premiumDescription;
-        address salesPolicy;
         bool exist; // initial true
     }
 
@@ -27,12 +26,14 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     address public exchangeAgent;
     address public capitalAgent;
 
+    address public salesPolicy;
+
     mapping(uint16 => Protocol) public getProtocol;
     Counters.Counter private protocolIds;
 
     address public USDC_TOKEN;
 
-    event ProtocolCreated(address indexed _salesPolicy, uint16 _protocolIdx);
+    event ProtocolCreated(uint16 _protocolIdx);
     event LogSetProtocolMCR(uint16 _protocolIdx, uint256 _mcr);
     event LogSetPremiumPool(address indexed _premiumPool);
 
@@ -71,8 +72,6 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     ) external onlyOwner nonReentrant {
         uint16 lastIdx = uint16(protocolIds.current());
         address currency = _protocolCurrency;
-        address _salesPolicy = newSalesPolicy(lastIdx, exchangeAgent, premiumPool, capitalAgent, "");
-        ICapitalAgent(capitalAgent).addPolicy(_salesPolicy);
 
         getProtocol[lastIdx] = Protocol({
             name: _name,
@@ -82,33 +81,23 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
             protocolCurrency: currency,
             productType: _productType,
             premiumDescription: _premiumDescription,
-            salesPolicy: _salesPolicy,
             exist: true
         });
 
         protocolIds.increment();
-        emit ProtocolCreated(_salesPolicy, lastIdx);
+        emit ProtocolCreated(lastIdx);
     }
 
     function newSalesPolicy(
-        uint16 _protocolIdx,
-        address _twapPriceFeed,
+        address _exchangeAgent,
         address _premiumPool,
-        address _capitalAgent,
-        string memory _protocolURI
-    ) private returns (address) {
-        SalesPolicy _salesPolicy = new SalesPolicy(
-            address(this),
-            _twapPriceFeed,
-            _premiumPool,
-            _capitalAgent,
-            USDC_TOKEN,
-            _protocolURI,
-            _protocolIdx
-        );
-        address _salesPolicyAddr = address(_salesPolicy);
+        address _capitalAgent
+    ) external onlyOwner nonReentrant returns (address) {
+        SalesPolicy _salesPolicy = new SalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, USDC_TOKEN);
+        salesPolicy = address(_salesPolicy);
+        ICapitalAgent(capitalAgent).setPolicy(address(_salesPolicy));
 
-        return _salesPolicyAddr;
+        return address(_salesPolicy);
     }
 
     function allProtocolsLength() external view returns (uint256) {
@@ -121,21 +110,18 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
         emit LogSetPremiumPool(_premiumPool);
     }
 
-    function setExchangeAgentInPolicy(uint16 _protocolIdx, address _exchangeAgent) external onlyOwner {
+    function setExchangeAgentInPolicy(address _exchangeAgent) external onlyOwner {
         require(_exchangeAgent != address(0), "UnoRe: zero address");
-        address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
         ISalesPolicy(salesPolicy).setExchangeAgent(_exchangeAgent);
     }
 
-    function setBuyPolicyMaxDeadlineInPolicy(uint16 _protocolIdx, uint256 _maxDeadline) external onlyOwner {
+    function setBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline) external onlyOwner {
         require(_maxDeadline > 0, "UnoRe: zero max deadline");
-        address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
         ISalesPolicy(salesPolicy).setBuyPolicyMaxDeadline(_maxDeadline);
     }
 
-    function setPremiumPoolInPolicy(uint16 _protocolIdx, address _premiumPool) external onlyOwner {
+    function setPremiumPoolInPolicy(address _premiumPool) external onlyOwner {
         require(_premiumPool != address(0), "UnoRe: zero address");
-        address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
         ISalesPolicy(salesPolicy).setPremiumPool(_premiumPool);
     }
 
@@ -146,19 +132,16 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
         emit LogSetProtocolMCR(_protocolIdx, _mcr);
     }
 
-    function setSignerInPolicy(uint16 _protocolIdx, address _signer) external onlyOwner {
+    function setSignerInPolicy(address _signer) external onlyOwner {
         require(_signer != address(0), "UnoRe: zero address");
-        address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
         ISalesPolicy(salesPolicy).setSigner(_signer);
     }
 
-    function setProtocolURIInPolicy(uint16 _protocolIdx, string memory _uri) external onlyOwner {
-        address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
+    function setProtocolURIInPolicy(string memory _uri) external onlyOwner {
         ISalesPolicy(salesPolicy).setProtocolURI(_uri);
     }
 
-    function approvePremiumInPolicy(uint16 _protocolIdx, address _premiumCurrency) external onlyOwner {
-        address salesPolicy = getProtocol[_protocolIdx].salesPolicy;
+    function approvePremiumInPolicy(address _premiumCurrency) external onlyOwner {
         ISalesPolicy(salesPolicy).approvePremium(_premiumCurrency);
     }
 
