@@ -126,23 +126,21 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         require(_signer != address(0) && _signer == signer, "UnoRe: invalid signer");
         require(_signedTime <= block.timestamp && block.timestamp - _signedTime < maxDeadline, "UnoRe: signature expired");
 
-        uint256 premiumPaid = 0;
+        uint256 premiumPaid;
         if (_premiumCurrency == address(0)) {
             premiumPaid = IExchangeAgent(exchangeAgent).getETHAmountForUSDC(_policyPriceInUSDC);
             require(msg.value >= premiumPaid, "UnoRe: insufficient paid");
             if (msg.value > premiumPaid) {
                 TransferHelper.safeTransferETH(msgSender(), msg.value - premiumPaid);
             }
-            TransferHelper.safeTransferETH(premiumPool, premiumPaid);
-            IPremiumPool(premiumPool).collectPremiumInETH(premiumPaid);
-        } else if (_premiumCurrency != USDC_TOKEN) {
-            premiumPaid = IExchangeAgent(exchangeAgent).getTokenAmountForUSDC(_premiumCurrency, _policyPriceInUSDC);
+            // TransferHelper.safeTransferETH(premiumPool, premiumPaid);
+            IPremiumPool(premiumPool).collectPremiumInETH{value: premiumPaid}();
+        } else {
+            premiumPaid = _premiumCurrency != USDC_TOKEN
+                ? IExchangeAgent(exchangeAgent).getTokenAmountForUSDC(_premiumCurrency, _policyPriceInUSDC)
+                : _policyPriceInUSDC;
             TransferHelper.safeTransferFrom(_premiumCurrency, msgSender(), address(this), premiumPaid);
             IPremiumPool(premiumPool).collectPremium(_premiumCurrency, premiumPaid);
-        } else {
-            premiumPaid = _policyPriceInUSDC;
-            TransferHelper.safeTransferFrom(_premiumCurrency, msgSender(), address(this), _policyPriceInUSDC);
-            IPremiumPool(premiumPool).collectPremium(_premiumCurrency, _policyPriceInUSDC);
         }
 
         _buyPolicy(_protocolIds, _coverageAmount, _coverageDuration, premiumPaid, _premiumCurrency);
@@ -156,13 +154,17 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address _premiumCurrency
     ) private {
         uint256 len = _protocolIds.length;
-        uint256 _totalCoverage = 0;
+        uint256 _totalCoverage;
+        uint256 lastIdx;
+        uint256 coverAmount;
+        uint256 coverDuration;
+        uint256 protocolId;
 
         for (uint256 ii = 0; ii < len; ii++) {
-            uint256 lastIdx = policyIdx.current();
-            uint256 coverAmount = _coverageAmount[ii];
-            uint256 coverDuration = _coverageDuration[ii];
-            uint256 protocolId = _protocolIds[ii];
+            lastIdx = policyIdx.current();
+            coverAmount = _coverageAmount[ii];
+            coverDuration = _coverageDuration[ii];
+            protocolId = _protocolIds[ii];
 
             getPolicy[lastIdx] = Policy({
                 protocolId: protocolId,
@@ -178,19 +180,10 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
             _totalCoverage += coverAmount;
 
-            emit BuyPolicy(
-                protocolId,
-                lastIdx,
-                msgSender(),
-                coverAmount,
-                coverDuration,
-                _premiumCurrency,
-                _premiumPaid
-            );
+            emit BuyPolicy(protocolId, lastIdx, msgSender(), coverAmount, coverDuration, _premiumCurrency, _premiumPaid);
             policyIdx.increment();
         }
         ICapitalAgent(capitalAgent).policySale(_totalCoverage);
-
     }
 
     function approvePremium(address _premiumCurrency) external override onlyFactory {
@@ -291,18 +284,5 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         // (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
         address recoveredAddress = ecrecover(digest, v, r, s);
         return recoveredAddress;
-    }
-
-    function _getSender(
-        uint256 _policyPrice,
-        uint256[] memory _protocolIds,
-        uint256[] memory _coverageDuration,
-        uint256[] memory _coverageAmount,
-        uint256 _signedTime,
-        address _premiumCurrency
-    ) external pure returns (bytes memory) {
-        // bytes32 digest = getSignedMsgHash(productName, priceInUSD, period, conciergePrice);
-        bytes memory msgHash = abi.encodePacked(_policyPrice, _protocolIds, _coverageAmount);
-        return msgHash;
     }
 }

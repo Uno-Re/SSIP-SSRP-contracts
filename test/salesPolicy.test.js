@@ -155,8 +155,8 @@ describe("SalesPolicy", function () {
     this.rewarderAddress = await this.singleSidedInsurancePool.rewarder()
     this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
 
-    await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool.address);
-    await this.capitalAgent.setSalesPolicyFactory(this.salesPolicyFactory.address);
+    await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool.address)
+    await this.capitalAgent.setSalesPolicyFactory(this.salesPolicyFactory.address)
 
     await this.singleSidedInsurancePool.createRiskPool(
       "UNO-LP",
@@ -195,10 +195,10 @@ describe("SalesPolicy", function () {
     await this.capitalAgent.setMCR(getBigNumber(1, 16))
     await this.capitalAgent.setMLR(getBigNumber(3))
 
-    await this.salesPolicyFactory.newSalesPolicy(this.exchangeAgent.address, this.premiumPool.address, this.capitalAgent.address);
-    this.salesPolicyAddress = await this.salesPolicyFactory.salesPolicy();
+    await this.salesPolicyFactory.newSalesPolicy(this.exchangeAgent.address, this.premiumPool.address, this.capitalAgent.address)
+    this.salesPolicyAddress = await this.salesPolicyFactory.salesPolicy()
     console.log(this.salesPolicyAddress)
-    this.salesPolicy = await this.SalesPolicy.attach(await this.salesPolicyFactory.salesPolicy());
+    this.salesPolicy = await this.SalesPolicy.attach(await this.salesPolicyFactory.salesPolicy())
   })
 
   describe("Sales policy Action", function () {

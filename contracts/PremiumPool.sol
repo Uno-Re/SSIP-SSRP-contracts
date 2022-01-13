@@ -71,7 +71,8 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
 
     receive() external payable {}
 
-    function collectPremiumInETH(uint256 _premiumAmount) external override nonReentrant onlyWhiteList {
+    function collectPremiumInETH() external payable override nonReentrant onlyWhiteList {
+        uint256 _premiumAmount = msg.value;
         uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
         uint256 _premium_SSIP = (_premiumAmount * 7000) / 10000;
         SSRP_PREMIUM_ETH = SSRP_PREMIUM_ETH + _premium_SSRP;

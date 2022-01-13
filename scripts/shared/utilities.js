@@ -28,16 +28,16 @@ function getPaddedHexStrFromBN(bn) {
 }
 
 function getPaddedHexStrFromBNArray(bnArray) {
-  let hexData;
-  for(let k = 0; k < bnArray.length; k++) {
+  let hexData
+  for (let k = 0; k < bnArray.length; k++) {
     const hexStr = ethers.utils.hexlify(bnArray[k])
-    if(k !== 0) {
-      hexData += ethers.utils.hexZeroPad(hexStr, 32).slice(2);
+    if (k !== 0) {
+      hexData += ethers.utils.hexZeroPad(hexStr, 32).slice(2)
     } else {
-      hexData = ethers.utils.hexZeroPad(hexStr, 32);
+      hexData = ethers.utils.hexZeroPad(hexStr, 32)
     }
   }
-  return hexData;
+  return hexData
 }
 
 function getHexStrFromStr(str) {
