@@ -7,6 +7,4 @@ module.exports = [
   "0x2D1ADb7A6ED75B23E1C5Dfa8E74462DC39753459", // CapitalAgent
   "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5", // mockUNO
   "0x40c035016AD732b6cFce34c3F881040B6C6cf71E", // mockUSDT
-  "", // protocolURI
-  0, // protocolIdx
 ]
