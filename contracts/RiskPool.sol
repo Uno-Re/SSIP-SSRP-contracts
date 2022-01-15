@@ -79,6 +79,22 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         }
     }
 
+    function vaultLeaveFromPending(address _to, uint256 _amount) external override onlySSRP returns (uint256, uint256) {
+        uint256 cryptoBalance = IERC20(currency).balanceOf(address(this));
+        require(cryptoBalance > 0, "UnoRe: zero uno balance");
+        require(balanceOf(_to) >= _amount, "UnoRe: lp balance overflow");
+        uint256 pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
+        if (cryptoBalance - MIN_LP_CAPITAL > pendingAmountInUno) {
+            TransferHelper.safeTransfer(currency, _to, pendingAmountInUno);
+            emit LogLeaveFromPending(_to, pendingAmount, pendingAmountInUno);
+            return (pendingAmount, pendingAmountInUno);
+        } else {
+            TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
+            emit LogLeaveFromPending(_to, pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
+            return (pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
+        }
+    }
+
     function cancelWithrawRequest(address _to) external override onlySSRP returns (uint256, uint256) {
         uint256 _pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
         require(_pendingAmount > 0, "UnoRe: zero amount");

@@ -55,7 +55,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         uint256 lastWithdrawTime;
         uint256 rewardDebt;
         uint256 amount;
-        uint256 vaultShare;
+        uint256 pendingWithdrawAmount;
     }
 
     VaultInfo public vaultInfo;
@@ -351,10 +351,17 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     }
 
     function vaultDeposit(uint256 _amount) external {
+        require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
+
+        address token = IRiskPool(riskPool).currency();
+        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
+        TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
+        IRiskPool(riskPool).enter(msg.sender, _amount);
+
         // VaultUserInfo update
         VaultUserInfo storage _vaultUserInfo = vaultUserInfo[msg.sender];
-        _vaultUserInfo.amount += _amount * lpPriceUno / 1e18;
+        _vaultUserInfo.amount += _amount * 1e18 / lpPriceUno;
         _vaultUserInfo.rewardDebt =
             _vaultUserInfo.rewardDebt +
             ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
@@ -363,20 +370,39 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         // update user vault share
 
         // VaultInfo update
-        vaultInfo.amount = _amount * lpPriceUno / 1e18;
+        vaultInfo.amount = _amount * 1e18 / lpPriceUno;
         vaultInfo.rewardDebt += ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
             ACC_UNO_PRECISION;
-
+        ICapitalAgent(capitalAgent).SSIPStaking(_amount);
+        emit VaultStakedInPool(msg.sender, riskPool, _amount);
     }
 
-    function leaveFromPoolInPendingVault(uint256 amount) external {
-        // it should be almost same
-        // Play with VaultInfo and VaultUserInfo
+    function leaveFromPoolInPendingVault(uint256 _amount) external {
+        require(ICapitalAgent(capitalAgent).checkCapitalByMCR(_amount), "UnoRe: minimum capital underflow");
+        updatePool();
+        uint256 amount = vaultUserInfo[msg.sender].amount;
+        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
+        uint256 pendingVaultWithdrawAmount = vaultUserInfo[msg.sender].pendingWithdrawAmount;
+        require(((amount - pendingVaultWithdrawAmount) * lpPriceUno) / 1e18 >= _amount, "UnoRe: withdraw amount overflow");
+        vaultUserInfo[msg.sender].pendingWithdrawAmount = (_amount * 1e18) / lpPriceUno;
+        vaultUserInfo[msg.sender].lastWithdrawTime = block.timestamp;
+        emit VaultLeftPool(msg.sender, riskPool, _amount);
     }
 
     function leaveFromPendingVault(uint256 amount) external {
-        // it should be almost same
-        // Play with VaultInfo and VaultUserInfo
+        updatePool();
+        uint256 amount = vaultUserInfo[msg.sender].amount;
+        uint256 pendingVaultWithdrawAmount = vaultUserInfo[msg.sender].pendingWithdrawAmount;
+
+        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+        vaultUserInfo[msg.sender].rewardDebt =
+            accumulatedUno -
+            ((pendingVaultWithdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
+
+        
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
+        userInfo[msg.sender].amount = amount - withdrawAmount;
+        emit LogLeaveFromPendingSSIP(msg.sender, withdrawAmount, withdrawAmountInUNO);
     }
 
     // This is the function of autocompounding for vault users
