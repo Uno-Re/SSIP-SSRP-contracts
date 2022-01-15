@@ -19,6 +19,9 @@ contract Rewarder is IRewarder, ReentrancyGuard {
         address _currency,
         address _pool
     ) {
+        require(_operator != address(0), "UnoRe: zero operator address");
+        require(_currency != address(0), "UnoRe: zero currency address");
+        require(_pool != address(0), "UnoRe: zero pool address");
         currency = _currency;
         pool = _pool;
         operator = _operator;
@@ -34,8 +37,9 @@ contract Rewarder is IRewarder, ReentrancyGuard {
                 return _amount;
             } else {
                 if (address(this).balance > 0) {
+                    uint256 rewardAmount = address(this).balance;
                     TransferHelper.safeTransferETH(_to, address(this).balance);
-                    return address(this).balance;
+                    return rewardAmount;
                 } else {
                     return 0;
                 }
@@ -46,8 +50,9 @@ contract Rewarder is IRewarder, ReentrancyGuard {
                 return _amount;
             } else {
                 if (IERC20(currency).balanceOf(address(this)) > 0) {
+                    uint256 rewardAmount = IERC20(currency).balanceOf(address(this));
                     TransferHelper.safeTransfer(currency, _to, IERC20(currency).balanceOf(address(this)));
-                    return IERC20(currency).balanceOf(address(this));
+                    return rewardAmount;
                 } else {
                     return 0;
                 }
@@ -63,8 +68,9 @@ contract Rewarder is IRewarder, ReentrancyGuard {
                 emit LogRewarderWithdraw(address(this), currency, _to, _amount);
             } else {
                 if (address(this).balance > 0) {
+                    uint256 rewardAmount = address(this).balance;
                     TransferHelper.safeTransferETH(_to, address(this).balance);
-                    emit LogRewarderWithdraw(address(this), currency, _to, address(this).balance);
+                    emit LogRewarderWithdraw(address(this), currency, _to, rewardAmount);
                 }
             }
         } else {
@@ -73,8 +79,9 @@ contract Rewarder is IRewarder, ReentrancyGuard {
                 emit LogRewarderWithdraw(address(this), currency, _to, _amount);
             } else {
                 if (IERC20(currency).balanceOf(address(this)) > 0) {
+                    uint256 rewardAmount = IERC20(currency).balanceOf(address(this));
                     TransferHelper.safeTransfer(currency, _to, IERC20(currency).balanceOf(address(this)));
-                    emit LogRewarderWithdraw(address(this), currency, _to, IERC20(currency).balanceOf(address(this)));
+                    emit LogRewarderWithdraw(address(this), currency, _to, rewardAmount);
                 }
             }
         }

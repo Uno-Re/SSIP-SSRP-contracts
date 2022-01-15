@@ -21,12 +21,12 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     address public claimAssessor;
     address private exchangeAgent;
     address public migrateTo;
-    address public USDT_TOKEN;
     address public capitalAgent;
     address public syntheticSSIP;
 
-    uint256 public LOCK_TIME = 1 days;
+    uint256 public LOCK_TIME = 10 days;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
+    uint256 public STAKING_START_TIME;
 
     address public rewarder;
     address public override riskPool;
@@ -67,24 +67,32 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     event LogUpdatePool(uint128 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
     event LogSetExchangeAgent(address indexed _exchangeAgent);
-    event LogLeaveFromPendingSSIP(address indexed _user, uint256 _withdrawLpAmount, uint256 _withdrawUnoAmount);
+    event LogLeaveFromPendingSSIP(
+        address indexed _user,
+        address indexed _riskPool,
+        uint256 _withdrawLpAmount,
+        uint256 _withdrawUnoAmount
+    );
     event PolicyClaim(address indexed _user, uint256 _claimAmount);
     event LogLpTransferInSSIP(address indexed _from, address indexed _to, uint256 _amount);
     event LogCreateRewarder(address indexed _SSIP, address indexed _rewarder, address _currency);
     event LogCreateSyntheticSSIP(address indexed _SSIP, address indexed _syntheticSSIP, address indexed _lpToken);
     event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
+    event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
 
     constructor(
         address _owner,
         address _claimAssessor,
         address _exchangeAgent,
-        address _USDT_TOKEN,
         address _capitalAgent
     ) {
+        require(_owner != address(0), "UnoRe: zero owner address");
+        require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
+        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
+        require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         owner = _owner;
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
-        USDT_TOKEN = _USDT_TOKEN;
         capitalAgent = _capitalAgent;
     }
 
@@ -95,6 +103,11 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
 
     modifier onlyClaimAssessor() {
         require(msg.sender == claimAssessor, "UnoRe: Forbidden");
+        _;
+    }
+
+    modifier isStartTime() {
+        require(block.timestamp >= STAKING_START_TIME, "UnoRe: not available time");
         _;
     }
 
@@ -132,6 +145,10 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     function setLockTime(uint256 _lockTime) external onlyOwner {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
         LOCK_TIME = _lockTime;
+    }
+
+    function setStakingStartTime(uint256 _startTime) external onlyOwner {
+        STAKING_START_TIME = _startTime + block.timestamp;
     }
 
     /**
@@ -177,11 +194,12 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         uint256 lpPrice = IRiskPool(riskPool).lpPriceUno();
         uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
-        IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
+        uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim((amount * lpPrice) / 1e18);
         IMigration(migrateTo).onMigration(msg.sender, amount, "");
         userInfo[msg.sender].amount = 0;
         userInfo[msg.sender].rewardDebt = 0;
+        emit LogMigrate(msg.sender, migrateTo, migratedAmount);
     }
 
     function pendingUno(address _to) external view returns (uint256 pending) {
@@ -209,7 +227,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         }
     }
 
-    function enterInPool(uint256 _amount) external override nonReentrant {
+    function enterInPool(uint256 _amount) external override isStartTime nonReentrant {
         require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
         address token = IRiskPool(riskPool).currency();
@@ -228,7 +246,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override isStartTime nonReentrant {
         _harvest(msg.sender);
         require(ICapitalAgent(capitalAgent).checkCapitalByMCR(_amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
@@ -245,7 +263,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending() external override nonReentrant {
+    function leaveFromPending() external override isStartTime nonReentrant {
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LOCK_TIME, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
@@ -258,7 +276,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
             ((pendingAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
         (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
         userInfo[msg.sender].amount = amount - withdrawAmount;
-        emit LogLeaveFromPendingSSIP(msg.sender, withdrawAmount, withdrawAmountInUNO);
+        emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 
     function lpTransfer(
@@ -285,7 +303,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         }
     }
 
-    function harvest(address _to) external override nonReentrant {
+    function harvest(address _to) external override isStartTime nonReentrant {
         _harvest(_to);
     }
 
@@ -311,7 +329,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
-    function policyClaim(address _to, uint256 _amount) external onlyClaimAssessor nonReentrant {
+    function policyClaim(address _to, uint256 _amount) external onlyClaimAssessor isStartTime nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);

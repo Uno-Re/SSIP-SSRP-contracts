@@ -3,15 +3,12 @@
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
-  const owner = deployer;
-  const claimAssessor = deployer;
 
-  await deploy('SingleSidedReinsurancePool', {
+  await deploy("SyntheticSSRPFactory", {
     from: deployer,
-    args: [owner, claimAssessor],
     log: true,
     deterministicDeployment: false,
   })
 }
 
-module.exports.tags = ["SingleSidedReinsurancePool", "UnoRe"]
+module.exports.tags = ["SyntheticSSRPFactory", "UnoRe"]

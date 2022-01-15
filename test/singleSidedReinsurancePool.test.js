@@ -89,10 +89,7 @@
 //       UNISWAP_FACTORY_ADDRESS.rinkeby,
 //     )
 
-//     this.singleSidedReinsurancePool = await this.SingleSidedReinsurancePool.deploy(
-//       this.masterChefOwner,
-//       this.claimAssessor,
-//     )
+//     this.singleSidedReinsurancePool = await this.SingleSidedReinsurancePool.deploy(this.masterChefOwner, this.claimAssessor)
 //     await this.singleSidedReinsurancePool.createRewarder(
 //       this.signers[0].address,
 //       this.rewarderFactory.address,
@@ -104,6 +101,9 @@
 //     expect(this.rewarder.address).equal(await this.singleSidedReinsurancePool.rewarder())
 
 //     await (await this.mockUNO.transfer(this.rewarder.address, getBigNumber(100000))).wait()
+
+//     await await this.singleSidedReinsurancePool.setStakingStartTime(Math.round(timestamp / 1000 - 3600 * 7))
+//     console.log(Math.round(timestamp / 1000 - 3600 * 7))
 //   })
 
 //   describe("SingleSidedReinsurancePool Basic", function () {
@@ -270,44 +270,47 @@
 //       //   await expect(this.singleSidedReinsurancePool.leaveFromPending()).to.be.revertedWith("UnoRe: Locked time")
 //       // })
 
-//       // it("Should claim after 10 days since last WR in the case of repetitive WR", async function () {
-//       //   await this.singleSidedReinsurancePool.setLockTime(3600 * 24 * 10);
+//       it("Should claim after 10 days since last WR in the case of repetitive WR", async function () {
+//         await this.singleSidedReinsurancePool.setLockTime(3600 * 24 * 10)
 
-//       //   //check the uno and risk pool LP token balance of the singer 0 before withdraw
-//       //   const riskPool = this.RiskPool.attach(this.poolAddress)
-//       //   const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
-//       //   const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
-//       //   expect(lpBalanceBefore).to.equal(getBigNumber(10000))
-//       //   const pendingUnoReward1 = await this.singleSidedReinsurancePool.pendingUno(this.signers[0].address)
-//       //   // console.log("[pendingUnoReward1]", pendingUnoReward1.toString(), getNumber(pendingUnoReward1));
-//       //   // signer 0 submit WR for the 1000 UNO
-//       //   await this.singleSidedReinsurancePool.leaveFromPoolInPending(getBigNumber(1000))
-//       //   const currentDate = new Date()
-//       //   const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
-//       //   const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
-//       //   network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
-//       //   await network.provider.send("evm_mine")
-//       //   // after 10000 blocks
-//       //   const currentBlock = await ethers.provider.getBlockNumber()
-//       //   await advanceBlockTo(currentBlock + 10000)
-//       //   const pendingUnoReward2 = await this.singleSidedReinsurancePool.pendingUno(this.signers[0].address)
-//       //   // console.log("[pendingUnoReward2]", pendingUnoReward2.toString(), getNumber(pendingUnoReward2))
-//       //   // signer 0 submit WR for the 1000 UNO again
-//       //   await this.singleSidedReinsurancePool.leaveFromPoolInPending(getBigNumber(1000))
-//       //   const afterTenDays = new Date(afterFiveDays.setDate(currentDate.getDate() + 11))
-//       //   const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
-//       //   network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
-//       //   await network.provider.send("evm_mine")
-//       //   // signer 0 can claim after 10 days since the last WR
-//       //   await this.singleSidedReinsurancePool.leaveFromPending()
-//       //   // check the uno and risk pool LP token balance of the singer 0 after withdraw
-//       //   const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
-//       //   const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
-//       //   // expected uno blance after claim
-//       //   const expectedUnoBalance = unoBalanceBefore.add(pendingUnoReward1.add(pendingUnoReward2)).add(getBigNumber(2000))
-//       //   expect(lpBalanceAfter).to.equal(getBigNumber(8000))
-//       //   expect(getNumber(expectedUnoBalance)).to.lte(getNumber(unoBalanceAfter))
-//       // })
+//         //check the uno and risk pool LP token balance of the singer 0 before withdraw
+//         const riskPool = this.RiskPool.attach(this.poolAddress)
+//         const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
+//         const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
+//         expect(lpBalanceBefore).to.equal(getBigNumber(10000))
+//         const pendingUnoReward1 = await this.singleSidedReinsurancePool.pendingUno(this.signers[0].address)
+//         // console.log("[pendingUnoReward1]", pendingUnoReward1.toString(), getNumber(pendingUnoReward1));
+//         // signer 0 submit WR for the 1000 UNO
+//         await this.singleSidedReinsurancePool.leaveFromPoolInPending(getBigNumber(1000))
+//         const currentDate = new Date()
+//         const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
+//         const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
+//         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
+//         await network.provider.send("evm_mine")
+//         // after 10000 blocks
+//         const currentBlock = await ethers.provider.getBlockNumber()
+//         await advanceBlockTo(currentBlock + 10000)
+//         const pendingUnoReward2 = await this.singleSidedReinsurancePool.pendingUno(this.signers[0].address)
+//         // console.log("[pendingUnoReward2]", pendingUnoReward2.toString(), getNumber(pendingUnoReward2))
+//         // signer 0 submit WR for the 1000 UNO again
+//         await this.singleSidedReinsurancePool.leaveFromPoolInPending(getBigNumber(1000))
+//         const afterTenDays = new Date(afterFiveDays.setDate(currentDate.getDate() + 11))
+//         const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
+//         network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
+//         await network.provider.send("evm_mine")
+//         // signer 0 can claim after 10 days since the last WR
+//         // await this.singleSidedReinsurancePool.leaveFromPending()
+//         await expect(this.singleSidedReinsurancePool.leaveFromPending())
+//           .to.emit(riskPool, "LogLeaveFromPending")
+//           .withArgs(this.signers[0].address, getBigNumber(2000), getBigNumber(2000))
+//         // check the uno and risk pool LP token balance of the singer 0 after withdraw
+//         const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
+//         const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
+//         // expected uno blance after claim
+//         const expectedUnoBalance = unoBalanceBefore.add(pendingUnoReward1.add(pendingUnoReward2)).add(getBigNumber(2000))
+//         expect(lpBalanceAfter).to.equal(getBigNumber(8000))
+//         expect(getNumber(expectedUnoBalance)).to.lte(getNumber(unoBalanceAfter))
+//       })
 
 //       // it("Should harvest", async function () {
 //       //   // signer's uno balance before harvest
@@ -546,39 +549,37 @@
 //     describe("SingleSidedReinsurancePool migrate", function () {
 //       beforeEach(async function () {
 //         this.Migrate = await ethers.getContractFactory("MigrationMock")
-//         this.migrate = await this.Migrate.deploy();
+//         this.migrate = await this.Migrate.deploy()
 
-//         await this.singleSidedReinsurancePool.setMigrateTo(this.migrate.address);
+//         await this.singleSidedReinsurancePool.setMigrateTo(this.migrate.address)
 
 //         await this.singleSidedReinsurancePool.enterInPool(getBigNumber(10000))
 
-//         await this.singleSidedReinsurancePool.leaveFromPoolInPending(getBigNumber(1000));
-
+//         await this.singleSidedReinsurancePool.leaveFromPoolInPending(getBigNumber(1000))
 //       })
 
 //       // it("Should check staking and wr amount after migrate", async function () {
 //       //   const stakedAmountBefore = await this.singleSidedReinsurancePool.getStakedAmountPerUser(this.signers[0].address)
 //       //   const wrAmountBefore = await this.singleSidedReinsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
 
-//       //   expect(stakedAmountBefore['lpAmount']).to.equal(getBigNumber(10000))
-//       //   expect(wrAmountBefore['pendingAmount']).to.equal(getBigNumber(1000))
-//       //   expect(stakedAmountBefore['unoAmount']).to.equal(getBigNumber(10000))
-//       //   expect(wrAmountBefore['pendingAmountInUno']).to.equal(getBigNumber(1000))
+//       //   expect(stakedAmountBefore["lpAmount"]).to.equal(getBigNumber(10000))
+//       //   expect(wrAmountBefore["pendingAmount"]).to.equal(getBigNumber(1000))
+//       //   expect(stakedAmountBefore["unoAmount"]).to.equal(getBigNumber(10000))
+//       //   expect(wrAmountBefore["pendingAmountInUno"]).to.equal(getBigNumber(1000))
 
-//       //   await this.singleSidedReinsurancePool.migrate();
+//       //   await this.singleSidedReinsurancePool.migrate()
 
 //       //   const stakedAmountAfter = await this.singleSidedReinsurancePool.getStakedAmountPerUser(this.signers[0].address)
 //       //   const wrAmountAfter = await this.singleSidedReinsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
 
-//       //   expect(stakedAmountAfter['lpAmount']).to.equal(getBigNumber(0))
-//       //   expect(wrAmountAfter['pendingAmount']).to.equal(getBigNumber(0))
-//       //   expect(stakedAmountAfter['unoAmount']).to.equal(getBigNumber(0))
-//       //   expect(wrAmountAfter['pendingAmountInUno']).to.equal(getBigNumber(0))
+//       //   expect(stakedAmountAfter["lpAmount"]).to.equal(getBigNumber(0))
+//       //   expect(wrAmountAfter["pendingAmount"]).to.equal(getBigNumber(0))
+//       //   expect(stakedAmountAfter["unoAmount"]).to.equal(getBigNumber(0))
+//       //   expect(wrAmountAfter["pendingAmountInUno"]).to.equal(getBigNumber(0))
 
 //       //   const unobalanceInMigrate = await this.mockUNO.balanceOf(this.migrate.address)
 //       //   expect(unobalanceInMigrate).to.equal(getBigNumber(10000))
 //       // })
-
 //     })
 //   })
 // })

@@ -29,6 +29,8 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         address _SSRP,
         address _currency
     ) {
+        require(_SSRP != address(0), "UnoRe: zero pool address");
+        require(_currency != address(0), "UnoRe: zero currency address");
         name = _name;
         symbol = _symbol;
         SSRP = _SSRP;
@@ -66,16 +68,17 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         uint256 pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
         require(cryptoBalance > 0, "UnoRe: zero uno balance");
         require(balanceOf(_to) >= pendingAmount, "UnoRe: lp balance overflow");
-        _withdrawImplement(_to);
         uint256 pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
         if (cryptoBalance - MIN_LP_CAPITAL > pendingAmountInUno) {
+            _withdrawImplement(_to);
             TransferHelper.safeTransfer(currency, _to, pendingAmountInUno);
             emit LogLeaveFromPending(_to, pendingAmount, pendingAmountInUno);
             return (pendingAmount, pendingAmountInUno);
         } else {
+            _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
             TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
-            emit LogLeaveFromPending(_to, pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
-            return (pendingAmount, cryptoBalance - MIN_LP_CAPITAL);
+            emit LogLeaveFromPending(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
+            return (((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
         }
     }
 
@@ -124,7 +127,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         address _to,
         address _migrateTo,
         bool _isUnLocked
-    ) external override onlySSRP {
+    ) external override onlySSRP returns (uint256) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         if (_isUnLocked && withdrawRequestPerUser[_to].pendingAmount > 0) {
             uint256 pendingAmountInUno = (uint256(withdrawRequestPerUser[_to].pendingAmount) * lpPriceUno) / 1e18;
@@ -144,6 +147,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         TransferHelper.safeTransfer(currency, _migrateTo, unoBalance);
         _burn(_to, balanceOf(_to));
         emit LogMigrateLP(_to, _migrateTo, unoBalance);
+        return unoBalance;
     }
 
     function setMinLPCapital(uint256 _minLPCapital) external override onlySSRP {

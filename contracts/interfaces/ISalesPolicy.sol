@@ -28,7 +28,6 @@ interface ISalesPolicy {
         returns (
             uint256,
             uint256,
-            uint256,
             uint256
         );
 }
