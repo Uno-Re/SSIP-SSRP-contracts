@@ -11,15 +11,11 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     using Counters for Counters.Counter;
     // It should be okay if Protocol is struct
     struct Protocol {
-        uint256 coverDuration; // Duration of the protocol cover products
-        uint256 mcr; // Maximum Capital Requirement Ratio of that protocol
         address protocolAddress; // Address of that protocol
-        address protocolCurrency;
-        string name; // protocol name
-        string productType; // Type of product i.e. Wallet insurance, smart contract bug insurance, etc.
-        string premiumDescription;
-        bool exist; // initial true
+        bool isBlackList; // initial true
     }
+
+    bool public override checkIfProtocolInWhitelistArray;
 
     address public premiumPool;
     address public owner;
@@ -29,13 +25,15 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     address public salesPolicy;
 
     mapping(uint16 => Protocol) public getProtocol;
+    mapping(address => uint16) public override getProtocolId;
     Counters.Counter private protocolIds;
 
     address public USDC_TOKEN;
 
     event ProtocolCreated(uint16 _protocolIdx);
-    event LogSetProtocolMCR(uint16 _protocolIdx, uint256 _mcr);
     event LogSetPremiumPool(address indexed _premiumPool);
+    event LogUpdateCheckIfProtocolInWhitelistArray(bool _status);
+    event LogSetBlackListProtocol(uint16 _protocolId, address indexed _protocol);
 
     constructor(
         address _owner,
@@ -62,27 +60,12 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     }
 
     // This action can be done only by SSIP owner
-    function addProtocol(
-        string calldata _name,
-        string calldata _productType,
-        string calldata _premiumDescription,
-        uint256 _coverDuration,
-        address _protocolAddress,
-        address _protocolCurrency
-    ) external onlyOwner nonReentrant {
+    function addProtocol(address _protocolAddress) external onlyOwner nonReentrant {
         uint16 lastIdx = uint16(protocolIds.current());
-        address currency = _protocolCurrency;
 
-        getProtocol[lastIdx] = Protocol({
-            name: _name,
-            coverDuration: _coverDuration,
-            mcr: 1,
-            protocolAddress: _protocolAddress,
-            protocolCurrency: currency,
-            productType: _productType,
-            premiumDescription: _premiumDescription,
-            exist: true
-        });
+        getProtocol[lastIdx] = Protocol({protocolAddress: _protocolAddress, isBlackList: false});
+
+        getProtocolId[_protocolAddress] = lastIdx;
 
         protocolIds.increment();
         emit ProtocolCreated(lastIdx);
@@ -102,6 +85,23 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
 
     function allProtocolsLength() external view returns (uint256) {
         return protocolIds.current();
+    }
+
+    function updateCheckIfProtocolInWhitelistArray(bool _status) external onlyOwner {
+        checkIfProtocolInWhitelistArray = _status;
+        emit LogUpdateCheckIfProtocolInWhitelistArray(_status);
+    }
+
+    function setBlackListProtocolById(uint16 _protocolId) external onlyOwner {
+        getProtocol[_protocolId].isBlackList = true;
+        emit LogSetBlackListProtocol(_protocolId, getProtocol[_protocolId].protocolAddress);
+    }
+
+    function setBlackListProtocolByAddress(address _protocol) external onlyOwner {
+        require(_protocol != address(0), "UnoRe: zero address");
+        uint16 _protocolId = getProtocolId[_protocol];
+        getProtocol[_protocolId].isBlackList = true;
+        emit LogSetBlackListProtocol(_protocolId, _protocol);
     }
 
     function setPremiumPool(address _premiumPool) external onlyOwner {
@@ -125,13 +125,6 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
         ISalesPolicy(salesPolicy).setPremiumPool(_premiumPool);
     }
 
-    function setProtocolMCR(uint16 _protocolIdx, uint256 _mcr) external onlyOwner {
-        require(_mcr > 0, "UnoRe: zero mcr");
-        Protocol storage _protocol = getProtocol[_protocolIdx];
-        _protocol.mcr = _mcr;
-        emit LogSetProtocolMCR(_protocolIdx, _mcr);
-    }
-
     function setSignerInPolicy(address _signer) external onlyOwner {
         require(_signer != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setSigner(_signer);
@@ -145,16 +138,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
         ISalesPolicy(salesPolicy).approvePremium(_premiumCurrency);
     }
 
-    function getProtocolData(uint16 _protocolIdx)
-        external
-        view
-        override
-        returns (
-            string memory protocolName,
-            string memory productType,
-            address protocolAddress
-        )
-    {
-        return (getProtocol[_protocolIdx].name, getProtocol[_protocolIdx].productType, getProtocol[_protocolIdx].protocolAddress);
+    function getProtocolData(uint16 _protocolIdx) external view override returns (address protocolAddress, bool isBlackList) {
+        return (getProtocol[_protocolIdx].protocolAddress, getProtocol[_protocolIdx].isBlackList);
     }
 }

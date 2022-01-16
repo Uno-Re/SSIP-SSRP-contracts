@@ -127,14 +127,7 @@ describe("SalesPolicy", function () {
 
     // add 2 protocols
     for (let idx = 0; idx < 3; idx++) {
-      await this.salesPolicyFactory.addProtocol(
-        `Protocol${idx + 1}`,
-        `Product${idx + 1}`,
-        `PremiumDescription${idx + 1}`,
-        BigNumber.from(24 * 3600 * 365),
-        this.signers[idx + 1].address,
-        assetArray[idx],
-      )
+      await this.salesPolicyFactory.addProtocol(this.signers[idx + 1].address)
     }
 
     expect(await this.salesPolicyFactory.allProtocolsLength()).equal(3)
@@ -221,16 +214,20 @@ describe("SalesPolicy", function () {
       await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
       await (await this.salesPolicyFactory.setSignerInPolicy(this.signers[5].address)).wait()
       await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber(100000000))).wait()
+      await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
+      await (await this.salesPolicyFactory.updateCheckIfProtocolInWhitelistArray(true)).wait()
+      await (await this.salesPolicyFactory.setBlackListProtocolById(0)).wait()
 
       //   prepare sign data
       const policyPrice = getBigNumber(300, 6)
-      const protocolIds = [getBigNumber(0), getBigNumber(2, 0)]
+      const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
       const coverageAmount = [getBigNumber(100, 6), getBigNumber(100, 6)]
       const deadline = getBigNumber(timestamp - 7 * 3600, 0)
 
       const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-      const paddedProtocolIdsHexStr = getPaddedHexStrFromBNArray(protocolIds)
+      const paddedProtocolsHexStr =
+        "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
       const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
@@ -238,7 +235,7 @@ describe("SalesPolicy", function () {
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
-        paddedProtocolIdsHexStr.slice(2) +
+        paddedProtocolsHexStr +
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
@@ -258,7 +255,7 @@ describe("SalesPolicy", function () {
       }
 
       const functionSignature = this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
-        protocolIds,
+        protocols,
         coverageAmount,
         coverageDuration,
         policyPrice,
@@ -286,9 +283,6 @@ describe("SalesPolicy", function () {
         message: message,
       }
 
-      await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
-      await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber(100000000))).wait()
       const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.address)
       expect(premiumPoolBalanceBefore).to.equal(0)
 
@@ -314,6 +308,87 @@ describe("SalesPolicy", function () {
       expect(premiumForSSIP).to.equal(getBigNumber(210, 6))
       expect(premiumForBackBurn).to.equal(getBigNumber(60, 6))
     })
+
+    // it("Should buy policy in USDT directly", async function () {
+    //   let hexData
+    //   const currentDate = new Date()
+    //   const timestamp = Math.floor(currentDate.getTime() / 1000)
+    //   const protocol = await this.salesPolicyFactory.getProtocol(0)
+
+    //   await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
+    //   await (await this.salesPolicyFactory.setSignerInPolicy(this.signers[5].address)).wait()
+    //   await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber(100000000))).wait()
+    //   await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
+
+    //   //   prepare sign data
+    //   const policyPrice = getBigNumber(300, 6)
+    //   const protocols = [this.signers[0].address, this.signers[1].address]
+    //   const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
+    //   const coverageAmount = [getBigNumber(100, 6), getBigNumber(100, 6)]
+    //   const deadline = getBigNumber(timestamp - 7 * 3600, 0)
+
+    //   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
+    //   const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
+    //   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
+    //   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
+    //   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+
+    //   hexData =
+    //     "0x" +
+    //     paddedPolicyPriceHexStr.slice(2) +
+    //     paddedProtocolsHexStr +
+    //     paddedCoverageDurationHexStr.slice(2) +
+    //     paddedCoverageAmountHexStr.slice(2) +
+    //     paddedDeadlineHexStr.slice(2) +
+    //     this.mockUSDT.address.slice(2)
+
+    //   console.log('[hex data]', hexData);
+
+    //   const msgHsh = await this.salesPolicy._getSender(
+    //     policyPrice,
+    //     protocols,
+    //     coverageDuration,
+    //     coverageAmount,
+    //     deadline,
+    //     this.mockUSDT.address);
+
+    //   console.log('[msg hex data]', msgHsh);
+
+    //   const flatSig = await this.signers[5].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
+    //   const splitSig = ethers.utils.splitSignature(flatSig)
+
+    //   const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.address)
+    //   expect(premiumPoolBalanceBefore).to.equal(0)
+
+    //   try {
+    //     let tx = await this.salesPolicy.buyPolicy(
+    //     protocols,
+    //     coverageAmount,
+    //     coverageDuration,
+    //     policyPrice,
+    //     deadline,
+    //     this.mockUSDT.address,
+    //     splitSig.r,
+    //     splitSig.s,
+    //     splitSig.v,
+    //     {
+    //       gasLimit: 1000000,
+    //     })
+    //     const receipt = await tx.wait()
+    //     console.log("metatransaction receipt", receipt.status)
+    //   } catch (error) {
+    //     console.log("[error]", error)
+    //   }
+
+    //   const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.address)
+    //   const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.address)
+    //   const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.address)
+    //   const premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.address)
+    //   expect(premiumPoolBalanceAfter).to.equal(getBigNumber(300, 6))
+    //   expect(premiumForSSRP).to.equal(getBigNumber(30, 6))
+    //   expect(premiumForSSIP).to.equal(getBigNumber(210, 6))
+    //   expect(premiumForBackBurn).to.equal(getBigNumber(60, 6))
+    // })
 
     // it("Should revert signature expired", async function () {
     //   const timestamp = Math.floor(new Date().getTime() / 1000)

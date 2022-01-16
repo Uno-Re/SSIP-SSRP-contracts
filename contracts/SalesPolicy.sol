@@ -10,6 +10,7 @@ import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/ISingleSidedReinsurancePool.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IPremiumPool.sol";
+import "./interfaces/ISalesPolicyFactory.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 import "./EIP712MetaTransaction.sol";
@@ -19,10 +20,10 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     address public immutable factory;
     struct Policy {
-        uint256 protocolId;
         uint256 coverStartAt;
         uint256 coverageDuration;
         uint256 coverageAmount;
+        address protocolAddress;
         address premiumCurrency;
         bool exist;
         bool expired;
@@ -45,7 +46,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     uint256 private MAX_INTEGER = type(uint256).max;
 
     event BuyPolicy(
-        uint256 indexed _protocolIdx,
+        address indexed _protocol,
         uint256 indexed _policyIdx,
         address _owner,
         uint256 _coverageAmount,
@@ -98,7 +99,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     receive() external payable {}
 
     function buyPolicy(
-        uint256[] memory _protocolIds,
+        address[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
         uint256 _policyPriceInUSDC,
@@ -108,13 +109,13 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         bytes32 s,
         uint8 v
     ) external payable nonReentrant {
-        uint256 len = _protocolIds.length;
+        uint256 len = _protocols.length;
         require(len > 0, "UnoRe: no policy");
         require(len == _coverageAmount.length, "UnoRe: no match protocolIds with coverageAmount");
         require(len == _coverageDuration.length, "UnoRe: no match protocolIds with coverageDuration");
         address _signer = getSender(
             _policyPriceInUSDC,
-            _protocolIds,
+            _protocols,
             _coverageDuration,
             _coverageAmount,
             _signedTime,
@@ -142,45 +143,58 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             IPremiumPool(premiumPool).collectPremium(_premiumCurrency, premiumPaid);
         }
 
-        _buyPolicy(_protocolIds, _coverageAmount, _coverageDuration, premiumPaid, _premiumCurrency);
+        _buyPolicy(_protocols, _coverageAmount, _coverageDuration, premiumPaid, _premiumCurrency);
     }
 
     function _buyPolicy(
-        uint256[] memory _protocolIds,
+        address[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
         uint256 _premiumPaid,
         address _premiumCurrency
     ) private {
-        uint256 len = _protocolIds.length;
         uint256 _totalCoverage;
         uint256 lastIdx;
         uint256 coverAmount;
         uint256 coverDuration;
-        uint256 protocolId;
+        address _protocol;
 
-        for (uint256 ii = 0; ii < len; ii++) {
+        bool checkIfProtocolInWhitelistArray = ISalesPolicyFactory(factory).checkIfProtocolInWhitelistArray();
+
+        for (uint256 ii = 0; ii < _protocols.length; ii++) {
             lastIdx = policyIdx.current();
             coverAmount = _coverageAmount[ii];
             coverDuration = _coverageDuration[ii];
-            protocolId = _protocolIds[ii];
+            _protocol = _protocols[ii];
+            uint256 premiumPaid = _premiumPaid;
+            bool isAvailableSale = false;
+            if (checkIfProtocolInWhitelistArray) {
+                uint16 _protocolId = ISalesPolicyFactory(factory).getProtocolId(_protocol);
+                (, bool isBlackList) = ISalesPolicyFactory(factory).getProtocolData(_protocolId);
+                if (!isBlackList) {
+                    isAvailableSale = true;
+                }
+            } else {
+                isAvailableSale = true;
+            }
+            if (isAvailableSale) {
+                getPolicy[lastIdx] = Policy({
+                    protocolAddress: _protocol,
+                    coverageAmount: coverAmount,
+                    coverageDuration: coverDuration,
+                    coverStartAt: block.timestamp,
+                    premiumCurrency: _premiumCurrency,
+                    exist: true,
+                    expired: false
+                });
 
-            getPolicy[lastIdx] = Policy({
-                protocolId: protocolId,
-                coverageAmount: coverAmount,
-                coverageDuration: coverDuration,
-                coverStartAt: block.timestamp,
-                premiumCurrency: _premiumCurrency,
-                exist: true,
-                expired: false
-            });
+                _mint(msgSender(), lastIdx);
 
-            _mint(msgSender(), lastIdx);
+                _totalCoverage += coverAmount;
 
-            _totalCoverage += coverAmount;
-
-            emit BuyPolicy(protocolId, lastIdx, msgSender(), coverAmount, coverDuration, _premiumCurrency, _premiumPaid);
-            policyIdx.increment();
+                emit BuyPolicy(_protocol, lastIdx, msgSender(), coverAmount, coverDuration, _premiumCurrency, premiumPaid);
+                policyIdx.increment();
+            }
         }
         ICapitalAgent(capitalAgent).policySale(_totalCoverage);
     }
@@ -265,7 +279,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     function getSender(
         uint256 _policyPrice,
-        uint256[] memory _protocolIds,
+        address[] memory _protocols,
         uint256[] memory _coverageDuration,
         uint256[] memory _coverageAmount,
         uint256 _signedTime,
@@ -276,8 +290,9 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     ) private pure returns (address) {
         // bytes32 digest = getSignedMsgHash(productName, priceInUSD, period, conciergePrice);
         bytes32 msgHash = keccak256(
-            abi.encodePacked(_policyPrice, _protocolIds, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency)
+            abi.encodePacked(_policyPrice, _protocols, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency)
         );
+
         // bytes32 msgHash = keccak256(abi.encodePacked(productName));
         bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
         // (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
