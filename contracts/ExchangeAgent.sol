@@ -3,6 +3,7 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IUniswapFactory.sol";
 import "./interfaces/IUniswapRouter02.sol";
 import "./interfaces/ITwapOraclePriceFeedFactory.sol";
@@ -10,7 +11,7 @@ import "./interfaces/ITwapOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 
-contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
+contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     address public immutable override USDC_TOKEN;
     address public immutable UNISWAP_FACTORY;
     address public immutable TWAP_ORACLE_PRICE_FEED_FACTORY;
@@ -20,7 +21,6 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
     uint256 private constant SLIPPAGE_PRECISION = 100;
 
     mapping(address => bool) public whiteList;
-    address public owner;
 
     event ConvertedTokenToToken(
         address indexed _dexAddress,
@@ -48,26 +48,23 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard {
         address _WETH,
         address _twapOraclePriceFeedFactory,
         address _uniswapRouter,
-        address _uniswapFactory
+        address _uniswapFactory,
+        address _multiSigWallet
     ) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_twapOraclePriceFeedFactory != address(0), "UnoRe: zero twapOraclePriceFeedFactory address");
         require(_uniswapRouter != address(0), "UnoRe: zero uniswapRouter address");
         require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
         require(_WETH != address(0), "UnoRe: zero WETH address");
+        require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         USDC_TOKEN = _usdcToken;
         UNISWAP_FACTORY = _uniswapFactory;
         TWAP_ORACLE_PRICE_FEED_FACTORY = _twapOraclePriceFeedFactory;
         UNISWAP_ROUTER = _uniswapRouter;
         WETH = _WETH;
-        owner = msg.sender;
         whiteList[msg.sender] = true;
         slippage = 5 * SLIPPAGE_PRECISION;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "UnoRe: ExchangeAgent Forbidden");
-        _;
+        transferOwnership(_multiSigWallet);
     }
 
     modifier onlyWhiteList() {

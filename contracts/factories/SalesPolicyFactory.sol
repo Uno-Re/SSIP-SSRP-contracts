@@ -3,11 +3,12 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "../SalesPolicy.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISalesPolicyFactory.sol";
 
-contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
+contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     using Counters for Counters.Counter;
     // It should be okay if Protocol is struct
     struct Protocol {
@@ -18,7 +19,6 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     bool public override checkIfProtocolInWhitelistArray;
 
     address public premiumPool;
-    address public owner;
     address public exchangeAgent;
     address public capitalAgent;
 
@@ -36,38 +36,34 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     event LogSetBlackListProtocol(uint16 _protocolId, address indexed _protocol);
 
     constructor(
-        address _owner,
         address _usdcToken,
         address _exchangeAgent,
         address _premiumPool,
-        address _capitalAgent
+        address _capitalAgent,
+        address _multiSigWallet
     ) {
-        require(_owner != address(0), "UnoRe: zero owner address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
+        require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         USDC_TOKEN = _usdcToken;
-        owner = _owner;
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
+        transferOwnership(_multiSigWallet);
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "UnoRe: Forbidden");
-        _;
-    }
-
-    // This action can be done only by SSIP owner
+    // This action can be done only by owner
+    // protoco id will be started from no.1 instead of no.0.
     function addProtocol(address _protocolAddress) external onlyOwner nonReentrant {
+        protocolIds.increment();
         uint16 lastIdx = uint16(protocolIds.current());
 
         getProtocol[lastIdx] = Protocol({protocolAddress: _protocolAddress, isBlackList: false});
 
         getProtocolId[_protocolAddress] = lastIdx;
 
-        protocolIds.increment();
         emit ProtocolCreated(lastIdx);
     }
 
@@ -128,6 +124,11 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard {
     function setSignerInPolicy(address _signer) external onlyOwner {
         require(_signer != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setSigner(_signer);
+    }
+
+    function setCapitalAgentInPolicy(address _capitalAgent) external onlyOwner {
+        require(_capitalAgent != address(0), "UnoRe: zero address");
+        ISalesPolicy(salesPolicy).setCapitalAgent(_capitalAgent);
     }
 
     function setProtocolURIInPolicy(string memory _uri) external onlyOwner {

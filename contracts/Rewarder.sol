@@ -20,7 +20,6 @@ contract Rewarder is IRewarder, ReentrancyGuard {
         address _pool
     ) {
         require(_operator != address(0), "UnoRe: zero operator address");
-        require(_currency != address(0), "UnoRe: zero currency address");
         require(_pool != address(0), "UnoRe: zero pool address");
         currency = _currency;
         pool = _pool;

@@ -4,12 +4,12 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
 
-contract PremiumPool is IPremiumPool, ReentrancyGuard {
-    address public owner;
+contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
     address public exchangeAgent;
     address public UNO_TOKEN;
     address public USDC_TOKEN;
@@ -42,21 +42,18 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard {
     constructor(
         address _exchangeAgent,
         address _unoToken,
-        address _usdcToken
+        address _usdcToken,
+        address _multiSigWallet
     ) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
+        require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
-        owner = msg.sender;
         UNO_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
         whiteList[msg.sender] = true;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "UnoRe: PremiumPool Forbidden");
-        _;
+        transferOwnership(_multiSigWallet);
     }
 
     modifier onlyAvailableCurrency(address _currency) {

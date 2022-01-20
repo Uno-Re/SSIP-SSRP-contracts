@@ -4,14 +4,14 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/ISyntheticSSRP.sol";
 import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard {
-    address public owner;
+contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
     address public migrateTo;
 
     uint256 public LOCK_TIME = 10 days;
@@ -43,33 +43,35 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard {
     event LogHarvest(address indexed _user, address indexed _receiver, uint256 _amount);
     event LogCancelWithdrawRequest(address indexed _user, address indexed _pool, uint256 _cancelAmount);
     event LogCreateRewarder(address indexed _SSRP, address indexed _rewarder, address _currency);
+    event LogSetRewardPerBlock(address indexed _pool, uint256 _rewardPerBlock);
+    event LogSetMigrateTo(address indexed _pool, address indexed _migrateTo);
+    event LogSetLockTime(address indexed _pool, uint256 _lockTime);
+    event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
 
-    constructor(address _owner, address _lpToken) {
-        require(_owner != address(0), "UnoRe: zero owner address");
+    constructor(address _lpToken, address _multiSigWallet) {
+        require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         require(_lpToken != address(0), "UnoRe: zero lp token address");
-        owner = _owner;
         lpToken = _lpToken;
         rewardPerBlock = 1e18;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "UnoRe: Forbidden");
-        _;
+        transferOwnership(_multiSigWallet);
     }
 
     function setRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
         require(_rewardPerBlock > 0, "UnoRe: zero value");
         rewardPerBlock = _rewardPerBlock;
+        emit LogSetRewardPerBlock(address(this), _rewardPerBlock);
     }
 
     function setMigrateTo(address _migrateTo) external onlyOwner {
         require(_migrateTo != address(0), "UnoRe: zero address");
         migrateTo = _migrateTo;
+        emit LogSetMigrateTo(address(this), _migrateTo);
     }
 
     function setLockTime(uint256 _lockTime) external onlyOwner {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
         LOCK_TIME = _lockTime;
+        emit LogSetLockTime(address(this), _lockTime);
     }
 
     function createRewarder(
@@ -78,6 +80,8 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard {
         address _currency
     ) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
+        require(_operator != address(0), "UnoRe: zero operator address");
+        require(_currency != address(0), "UnoRe: zero currency address");
         rewarder = IRewarderFactory(_factory).newRewarder(_operator, _currency, address(this));
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
@@ -96,6 +100,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard {
         TransferHelper.safeTransfer(lpToken, migrateTo, amount);
         IMigration(migrateTo).onMigration(msg.sender, amount, "");
         userInfo[msg.sender].amount = 0;
+        emit LogMigrate(msg.sender, address(this), migrateTo, amount);
     }
 
     function pendingReward(address _to) external view returns (uint256 pending) {

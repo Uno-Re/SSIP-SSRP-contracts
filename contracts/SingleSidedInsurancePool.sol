@@ -4,6 +4,7 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IMigration.sol";
@@ -15,8 +16,7 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard {
-    address public owner;
+contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard, Ownable {
     address public claimAssessor;
     address private exchangeAgent;
     address public migrateTo;
@@ -63,26 +63,28 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     event LogCreateSyntheticSSIP(address indexed _SSIP, address indexed _syntheticSSIP, address indexed _lpToken);
     event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
     event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
+    event LogSetCapitalAgent(address indexed _SSIP, address indexed _capitalAgent);
+    event LogSetRewardMultiplier(address indexed _SSIP, uint256 _rewardPerBlock);
+    event LogSetClaimAssessor(address indexed _SSIP, address indexed _claimAssessor);
+    event LogSetMigrateTo(address indexed _SSIP, address indexed _migrateTo);
+    event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
+    event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
+    event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
 
     constructor(
-        address _owner,
         address _claimAssessor,
         address _exchangeAgent,
-        address _capitalAgent
+        address _capitalAgent,
+        address _multiSigWallet
     ) {
-        require(_owner != address(0), "UnoRe: zero owner address");
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
-        owner = _owner;
+        require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "UnoRe: Forbidden");
-        _;
+        transferOwnership(_multiSigWallet);
     }
 
     modifier onlyClaimAssessor() {
@@ -104,35 +106,42 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
     function setCapitalAgent(address _capitalAgent) external onlyOwner {
         require(_capitalAgent != address(0), "UnoRe: zero address");
         capitalAgent = _capitalAgent;
+        emit LogSetCapitalAgent(address(this), _capitalAgent);
     }
 
     function setRewardMultiplier(uint256 _rewardMultiplier) external onlyOwner {
         require(_rewardMultiplier > 0, "UnoRe: zero value");
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
+        emit LogSetRewardMultiplier(address(this), _rewardMultiplier);
     }
 
     function setClaimAssessor(address _claimAssessor) external onlyOwner {
         require(_claimAssessor != address(0), "UnoRe: zero address");
         claimAssessor = _claimAssessor;
+        emit LogSetClaimAssessor(address(this), _claimAssessor);
     }
 
     function setMigrateTo(address _migrateTo) external onlyOwner {
         require(_migrateTo != address(0), "UnoRe: zero address");
         migrateTo = _migrateTo;
+        emit LogSetMigrateTo(address(this), _migrateTo);
     }
 
     function setMinLPCapital(uint256 _minLPCapital) external onlyOwner {
         require(_minLPCapital > 0, "UnoRe: not allow zero value");
         IRiskPool(riskPool).setMinLPCapital(_minLPCapital);
+        emit LogSetMinLPCapital(address(this), _minLPCapital);
     }
 
     function setLockTime(uint256 _lockTime) external onlyOwner {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
         LOCK_TIME = _lockTime;
+        emit LogSetLockTime(address(this), _lockTime);
     }
 
     function setStakingStartTime(uint256 _startTime) external onlyOwner {
         STAKING_START_TIME = _startTime + block.timestamp;
+        emit LogSetStakingStartTime(address(this), STAKING_START_TIME);
     }
 
     /**
@@ -146,6 +155,8 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         uint256 _rewardMultiplier
     ) external onlyOwner nonReentrant {
         require(riskPool == address(0), "UnoRe: risk pool created already");
+        require(_factory != address(0), "UnoRe: zero factory address");
+        require(_currency != address(0), "UnoRe: zero currency address");
         riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
         poolInfo.lastRewardBlock = uint128(block.number);
         poolInfo.accUnoPerShare = 0;
@@ -160,6 +171,8 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard 
         address _currency
     ) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
+        require(_operator != address(0), "UnoRe: zero operator address");
+        require(_currency != address(0), "UnoRe: zero currency address");
         rewarder = IRewarderFactory(_factory).newRewarder(_operator, _currency, address(this));
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }

@@ -16,6 +16,7 @@
 
 // describe("Premium Pool", function () {
 //   before(async function () {
+//     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
 //     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
 //     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
 //     this.SingleSidedReinsurancePool = await ethers.getContractFactory("SingleSidedReinsurancePool")
@@ -36,9 +37,19 @@
 //       JSON.stringify(UniswapV2Router.abi),
 //       ethers.provider,
 //     )
+//     this.owners = [
+//       this.signers[0].address,
+//       this.signers[1].address,
+//       this.signers[2].address,
+//       this.signers[3].address,
+//       this.signers[4].address,
+//     ]
+
+//     this.numConfirmationsRequired = 2
 //   })
 
 //   beforeEach(async function () {
+//     this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired)
 //     this.mockUNO = this.MockUNO.attach(UNO.rinkeby)
 //     this.mockUSDT = this.MockUSDT.attach(USDT.rinkeby)
 //     await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber(500000000), { from: this.signers[0].address })
@@ -105,20 +116,49 @@
 //       TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
 //       UNISWAP_ROUTER_ADDRESS.rinkeby,
 //       UNISWAP_FACTORY_ADDRESS.rinkeby,
+//       this.multiSigWallet.address,
 //     )
 
-//     this.premiumPool = await this.PremiumPool.deploy(this.exchangeAgent.address, this.mockUNO.address, this.mockUSDT.address)
-//     this.capitalAgent = await this.CapitalAgent.deploy(this.exchangeAgent.address, this.mockUNO.address, this.mockUSDT.address)
+//     this.premiumPool = await this.PremiumPool.deploy(
+//       this.exchangeAgent.address,
+//       this.mockUNO.address,
+//       this.mockUSDT.address,
+//       this.multiSigWallet.address,
+//     )
+//     this.capitalAgent = await this.CapitalAgent.deploy(
+//       this.exchangeAgent.address,
+//       this.mockUNO.address,
+//       this.mockUSDT.address,
+//       this.multiSigWallet.address,
+//     )
 
-//     await this.exchangeAgent.addWhiteList(this.premiumPool.address)
+//     this.txIdx = 0
+//     let encodedCallData
+
+//     encodedCallData = this.exchangeAgent.interface.encodeFunctionData("addWhiteList", [this.premiumPool.address])
+
+//     await expect(this.multiSigWallet.submitTransaction(this.exchangeAgent.address, 0, encodedCallData))
+//       .to.emit(this.multiSigWallet, "SubmitTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx, this.exchangeAgent.address, 0, encodedCallData)
+
+//     await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx)
+
+//     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[1].address, this.txIdx)
+
+//     this.txIdx++
+
+//     // await this.exchangeAgent.addWhiteList(this.premiumPool.address)
 
 //     this.salesPolicyFactory = await this.SalesPolicyFactory.deploy(
-//       this.signers[0].address,
 //       this.mockUSDT.address,
-//       this.mockUNO.address,
 //       this.exchangeAgent.address,
 //       this.premiumPool.address,
 //       this.capitalAgent.address,
+//       this.multiSigWallet.address,
 //     )
 
 //     await (
@@ -126,40 +166,139 @@
 //         .connect(this.signers[0])
 //         .approve(this.premiumPool.address, getBigNumber(10000000), { from: this.signers[0].address })
 //     ).wait()
-//     await (await this.premiumPool.addCurrency(this.mockUSDT.address)).wait()
 
-//     this.singleSidedReinsurancePool = await this.SingleSidedReinsurancePool.deploy(this.masterChefOwner, this.claimAssessor)
-//     await this.singleSidedReinsurancePool.createRewarder(
+//     encodedCallData = this.premiumPool.interface.encodeFunctionData("addCurrency", [this.mockUSDT.address])
+
+//     await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+//       .to.emit(this.multiSigWallet, "SubmitTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+//     await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx)
+
+//     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[1].address, this.txIdx)
+
+//     this.txIdx++
+
+//     encodedCallData = this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.signers[0].address])
+
+//     await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+//       .to.emit(this.multiSigWallet, "SubmitTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+//     await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx)
+
+//     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[1].address, this.txIdx)
+
+//     this.txIdx++
+
+//     this.singleSidedReinsurancePool = await this.SingleSidedReinsurancePool.deploy(
+//       this.claimAssessor,
+//       this.multiSigWallet.address,
+//     )
+
+//     encodedCallData = this.singleSidedReinsurancePool.interface.encodeFunctionData("createRewarder", [
 //       this.signers[0].address,
 //       this.rewarderFactory.address,
 //       this.mockUNO.address,
-//     )
+//     ])
+
+//     await expect(this.multiSigWallet.submitTransaction(this.singleSidedReinsurancePool.address, 0, encodedCallData))
+//       .to.emit(this.multiSigWallet, "SubmitTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx, this.singleSidedReinsurancePool.address, 0, encodedCallData)
+
+//     await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx)
+
+//     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[1].address, this.txIdx)
+
+//     this.txIdx++
+
 //     this.rewarderAddress = await this.singleSidedReinsurancePool.rewarder()
 //     this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
 
 //     expect(this.rewarder.address).equal(await this.singleSidedReinsurancePool.rewarder())
 
-//     await (
-//       await this.singleSidedReinsurancePool.createRiskPool(
-//         "UNO-LP",
-//         "UNO-LP",
-//         this.riskPoolFactory.address,
-//         this.mockUNO.address,
-//         getBigNumber(1),
-//       )
-//     ).wait()
+//     encodedCallData = this.singleSidedReinsurancePool.interface.encodeFunctionData("createRiskPool", [
+//       "UNO-LP",
+//       "UNO-LP",
+//       this.riskPoolFactory.address,
+//       this.mockUNO.address,
+//       getBigNumber(1),
+//     ])
+
+//     await expect(this.multiSigWallet.submitTransaction(this.singleSidedReinsurancePool.address, 0, encodedCallData))
+//       .to.emit(this.multiSigWallet, "SubmitTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx, this.singleSidedReinsurancePool.address, 0, encodedCallData)
+
+//     await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx)
+
+//     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[1].address, this.txIdx)
+
+//     this.txIdx++
 
 //     this.riskPoolAddress = await this.singleSidedReinsurancePool.riskPool()
 
 //     this.riskPool = await this.RiskPool.attach(this.riskPoolAddress)
 
-//     await this.singleSidedReinsurancePool.createSyntheticSSRP(this.signers[0].address, this.syntheticSSRPFactory.address)
+//     encodedCallData = this.singleSidedReinsurancePool.interface.encodeFunctionData("createSyntheticSSRP", [
+//       this.signers[0].address,
+//       this.syntheticSSRPFactory.address,
+//     ])
+
+//     await expect(this.multiSigWallet.submitTransaction(this.singleSidedReinsurancePool.address, 0, encodedCallData))
+//       .to.emit(this.multiSigWallet, "SubmitTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx, this.singleSidedReinsurancePool.address, 0, encodedCallData)
+
+//     await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx)
+
+//     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[1].address, this.txIdx)
+
+//     this.txIdx++
+
 //     this.syntheticSSRPAddr = await this.singleSidedReinsurancePool.syntheticSSRP()
 //     console.log(this.syntheticSSRPAddr)
 
 //     this.syntheticSSRP = await this.SyntheticSSRP.attach(this.syntheticSSRPAddr)
 
-//     await this.syntheticSSRP.createRewarder(this.signers[0].address, this.rewarderFactory.address, this.mockUSDT.address)
+//     encodedCallData = this.syntheticSSRP.interface.encodeFunctionData("createRewarder", [
+//       this.signers[0].address,
+//       this.rewarderFactory.address,
+//       this.mockUSDT.address,
+//     ])
+
+//     await expect(this.multiSigWallet.submitTransaction(this.syntheticSSRP.address, 0, encodedCallData))
+//       .to.emit(this.multiSigWallet, "SubmitTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx, this.syntheticSSRP.address, 0, encodedCallData)
+
+//     await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[0].address, this.txIdx)
+
+//     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//       .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//       .withArgs(this.signers[1].address, this.txIdx)
+
+//     this.txIdx++
+
 //     this.syntheticRewarderAddr = await this.syntheticSSRP.rewarder()
 //     this.syntheticRewarder = await this.Rewarder.attach(this.syntheticRewarderAddr)
 //   })
@@ -217,7 +356,24 @@
 //     //   const premiumForSSRP1 = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.address)
 //     //   expect(premiumForSSRP1).to.equal(getBigNumber(1000, 6))
 
-//     //   await (await this.premiumPool.depositToSyntheticSSRPRewarder(this.syntheticRewarder.address)).wait()
+//     //   let encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSRPRewarder", [
+//     //     this.syntheticRewarder.address,
+//     //   ])
+
+//     //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+//     //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+//     //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+//     //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//     //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//     //     .withArgs(this.signers[0].address, this.txIdx)
+
+//     //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//     //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//     //     .withArgs(this.signers[1].address, this.txIdx)
+
+//     //   this.txIdx++
+
 //     //   const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.syntheticRewarder.address)
 //     //   console.log("[eth balance of rewarder after distribute]", usdtBalanceAfter.toString())
 //     //   expect(usdtBalanceAfter).to.be.gt(getBigNumber(1000, 6))
@@ -229,8 +385,27 @@
 //     // it("Should distribute to Synthetic SSIP Rewarder", async function () {
 //     //   const ethBalanceBefore = await ethers.provider.getBalance(this.signers[5].address)
 //     //   let premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
-//     //   expect(premiumETHForSSIP).to.equal(getBigNumber(7, 17))
-//     //   await (await this.premiumPool.depositToSyntheticSSIPRewarder(this.zeroAddress, this.signers[5].address)).wait()
+//     //   expect(premiumETHForSSIP).to.equal(getBigNumber(7, 17));
+
+//     //   let encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
+//     //     this.zeroAddress,
+//     //     this.signers[5].address,
+//     //   ]);
+
+//     //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+//     //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+//     //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+//     //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//     //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//     //     .withArgs(this.signers[0].address, this.txIdx)
+
+//     //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//     //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//     //     .withArgs(this.signers[1].address, this.txIdx)
+
+//     //   this.txIdx++;
+
 //     //   const ethBalanceAfter = await ethers.provider.getBalance(this.signers[5].address)
 //     //   premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
 //     //   expect(premiumETHForSSIP).to.equal(getBigNumber(0))
@@ -240,9 +415,26 @@
 //     //   expect(usdtBalanceBefore).to.equal(0)
 
 //     //   let premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.address)
-//     //   expect(premiumForSSIP).to.equal(getBigNumber(7000, 6))
+//     //   expect(premiumForSSIP).to.equal(getBigNumber(7000, 6));
 
-//     //   await (await this.premiumPool.depositToSyntheticSSIPRewarder(this.mockUSDT.address, this.signers[5].address)).wait()
+//     //   encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
+//     //     this.mockUSDT.address,
+//     //     this.signers[5].address,
+//     //   ]);
+
+//     //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+//     //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+//     //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+//     //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//     //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//     //     .withArgs(this.signers[0].address, this.txIdx)
+
+//     //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//     //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//     //     .withArgs(this.signers[1].address, this.txIdx)
+
+//     //   this.txIdx++;
 
 //     //   const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[5].address)
 //     //   expect(usdtBalanceAfter).to.equal(getBigNumber(7000, 6))
@@ -250,18 +442,33 @@
 //     //   premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.address)
 //     //   expect(premiumForSSIP).to.equal(0)
 //     // })
-//     // it("Should back UNO and burn", async function () {
-//     //   let premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
-//     //   expect(premiumForBackBurnETH).to.equal(getBigNumber(2, 17))
-//     //   let premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.address)
-//     //   expect(premiumForBackBurn).to.equal(getBigNumber(2000, 6))
+//     it("Should back UNO and burn", async function () {
+//       let premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+//       expect(premiumForBackBurnETH).to.equal(getBigNumber(2, 17))
+//       let premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.address)
+//       expect(premiumForBackBurn).to.equal(getBigNumber(2000, 6))
 
-//     //   await (await this.premiumPool.buyBackAndBurn()).wait()
+//       let encodedCallData = this.premiumPool.interface.encodeFunctionData("buyBackAndBurn", []);
 
-//     //   premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
-//     //   expect(premiumForBackBurnETH).to.equal(getBigNumber(0))
-//     //   premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.address)
-//     //   expect(premiumForBackBurn).to.equal(getBigNumber(0))
-//     // })
+//       await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+//         .to.emit(this.multiSigWallet, "SubmitTransaction")
+//         .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+//       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+//         .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//         .withArgs(this.signers[0].address, this.txIdx)
+
+//       await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+//         .to.emit(this.multiSigWallet, "ConfirmTransaction")
+//         .withArgs(this.signers[1].address, this.txIdx)
+
+//       this.txIdx++;
+//       await (await this.premiumPool.buyBackAndBurn()).wait()
+
+//       premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+//       expect(premiumForBackBurnETH).to.equal(getBigNumber(0))
+//       premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.address)
+//       expect(premiumForBackBurn).to.equal(getBigNumber(0))
+//     })
 //   })
 // })

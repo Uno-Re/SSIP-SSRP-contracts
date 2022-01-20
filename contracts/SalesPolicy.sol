@@ -30,7 +30,6 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     }
 
     uint256 public maxDeadline;
-    uint16 public protocolIdx;
     address private exchangeAgent;
     address public premiumPool;
     address public capitalAgent;
@@ -54,17 +53,13 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address _premiumCurrency,
         uint256 _premiumPaid
     );
-    event LogSetExchangeAgentInPolicy(address indexed _exchangeAgent, address indexed _policyAddress, uint16 _protocolIdx);
-    event LogSetPremiumPoolInPolicy(address indexed _premiumPool, address indexed _policyAddress, uint16 _protocolIdx);
-    event LogSetProtocolURIInPolicy(uint16 _protocolIdx, address indexed _policyAddress, string _uri);
-    event LogSetSignerInPolicy(address indexed _signer, address indexed _policyAddress, uint16 _protocolIdx);
-    event LogSetBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline, address indexed _policyAddress, uint16 _protocolIdx);
-    event LogapprovePremiumIInPolicy(
-        uint16 _protocolIdx,
-        address indexed _policyAddress,
-        address indexed _premiumCurrency,
-        address premiumPool
-    );
+    event LogSetExchangeAgentInPolicy(address indexed _exchangeAgent, address indexed _policyAddress);
+    event LogSetPremiumPoolInPolicy(address indexed _premiumPool, address indexed _policyAddress);
+    event LogSetProtocolURIInPolicy(address indexed _policyAddress, string _uri);
+    event LogSetSignerInPolicy(address indexed _signer, address indexed _policyAddress);
+    event LogSetBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline, address indexed _policyAddress);
+    event LogSetCapitalAgentInPolicy(address indexed _capitalAgent, address indexed _policyAddress);
+    event LogapprovePremiumIInPolicy(address indexed _policyAddress, address indexed _premiumCurrency, address premiumPool);
 
     constructor(
         address _factory,
@@ -170,9 +165,11 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             bool isAvailableSale = false;
             if (checkIfProtocolInWhitelistArray) {
                 uint16 _protocolId = ISalesPolicyFactory(factory).getProtocolId(_protocol);
-                (, bool isBlackList) = ISalesPolicyFactory(factory).getProtocolData(_protocolId);
-                if (!isBlackList) {
-                    isAvailableSale = true;
+                if (_protocolId > 0) {
+                    (, bool isBlackList) = ISalesPolicyFactory(factory).getProtocolData(_protocolId);
+                    if (!isBlackList) {
+                        isAvailableSale = true;
+                    }
                 }
             } else {
                 isAvailableSale = true;
@@ -196,49 +193,51 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
                 policyIdx.increment();
             }
         }
-        ICapitalAgent(capitalAgent).policySale(_totalCoverage);
+        if (_totalCoverage > 0) {
+            ICapitalAgent(capitalAgent).policySale(_totalCoverage);
+        }
     }
 
     function approvePremium(address _premiumCurrency) external override onlyFactory {
         require(_premiumCurrency != address(0), "UnoRe: zero address");
         require(premiumPool != address(0), "UnoRe: not defiend premiumPool");
         TransferHelper.safeApprove(_premiumCurrency, premiumPool, MAX_INTEGER);
-        emit LogapprovePremiumIInPolicy(protocolIdx, address(this), _premiumCurrency, premiumPool);
+        emit LogapprovePremiumIInPolicy(address(this), _premiumCurrency, premiumPool);
     }
 
     function setProtocolURI(string memory newURI) external override onlyFactory {
         protocolURI = newURI;
-        emit LogSetProtocolURIInPolicy(protocolIdx, address(this), newURI);
+        emit LogSetProtocolURIInPolicy(address(this), newURI);
     }
 
     function setPremiumPool(address _premiumPool) external override onlyFactory {
         require(_premiumPool != address(0), "UnoRe: zero address");
         premiumPool = _premiumPool;
-        emit LogSetPremiumPoolInPolicy(_premiumPool, address(this), protocolIdx);
+        emit LogSetPremiumPoolInPolicy(_premiumPool, address(this));
     }
 
     function setExchangeAgent(address _exchangeAgent) external override onlyFactory {
         require(_exchangeAgent != address(0), "UnoRe: zero address");
         exchangeAgent = _exchangeAgent;
-        emit LogSetExchangeAgentInPolicy(_exchangeAgent, address(this), protocolIdx);
+        emit LogSetExchangeAgentInPolicy(_exchangeAgent, address(this));
     }
 
     function setSigner(address _signer) external override onlyFactory {
         require(_signer != address(0), "UnoRe: zero address");
         signer = _signer;
-        emit LogSetSignerInPolicy(_signer, address(this), protocolIdx);
+        emit LogSetSignerInPolicy(_signer, address(this));
     }
 
     function setCapitalAgent(address _capitalAgent) external override onlyFactory {
         require(_capitalAgent != address(0), "UnoRe: zero address");
         capitalAgent = _capitalAgent;
-        emit LogSetExchangeAgentInPolicy(_capitalAgent, address(this), protocolIdx);
+        emit LogSetCapitalAgentInPolicy(_capitalAgent, address(this));
     }
 
     function setBuyPolicyMaxDeadline(uint256 _maxDeadline) external override onlyFactory {
         require(_maxDeadline > 0, "UnoRe: zero max signedTime");
         maxDeadline = _maxDeadline;
-        emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline, address(this), protocolIdx);
+        emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline, address(this));
     }
 
     function markToClaim(uint256 _policyId) external override nonReentrant onlyCapitalAgent {

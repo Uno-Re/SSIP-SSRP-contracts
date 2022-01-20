@@ -4,14 +4,14 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRiskPool.sol";
 import "./interfaces/ICapitalAgent.sol";
 
-contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
-    address public owner;
+contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     address public exchangeAgent;
     address public salesPolicyFactory;
     address public UNO_TOKEN;
@@ -66,20 +66,17 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard {
     constructor(
         address _exchangeAgent,
         address _UNO_TOKEN,
-        address _USDC_TOKEN
+        address _USDC_TOKEN,
+        address _multiSigWallet
     ) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_UNO_TOKEN != address(0), "UnoRe: zero UNO address");
         require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
-        owner = msg.sender;
+        require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
         UNO_TOKEN = _UNO_TOKEN;
         USDC_TOKEN = _USDC_TOKEN;
-    }
-
-    modifier onlyOwner() {
-        require(owner == msg.sender, "UnoRe: Capital Agent Forbidden");
-        _;
+        transferOwnership(_multiSigWallet);
     }
 
     modifier onlyPoolWhiteList() {

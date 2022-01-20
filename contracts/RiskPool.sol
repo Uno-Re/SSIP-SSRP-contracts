@@ -118,10 +118,11 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
             uint256 cryptoBalance = IERC20(currency).balanceOf(address(this));
             if (pendingAmountInUno < cryptoBalance - MIN_LP_CAPITAL) {
                 TransferHelper.safeTransfer(currency, _to, pendingAmountInUno);
+                _withdrawImplement(_to);
             } else {
                 TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
+                _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
             }
-            _withdrawImplement(_to);
         } else {
             if (withdrawRequestPerUser[_to].pendingAmount > 0) {
                 _cancelWithdrawRequest(_to);
