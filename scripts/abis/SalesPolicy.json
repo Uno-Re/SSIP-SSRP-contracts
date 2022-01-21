@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_SSRP",
+        "name": "_factory",
         "type": "address"
       },
       {
@@ -18,23 +18,13 @@
       },
       {
         "internalType": "address",
-        "name": "_unoToken",
+        "name": "_capitalAgent",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_usdtToken",
+        "name": "_usdcToken",
         "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "_protocolURI",
-        "type": "string"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_protocolIdx",
-        "type": "uint16"
       }
     ],
     "stateMutability": "nonpayable",
@@ -46,7 +36,32 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "account",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "approved",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
         "type": "address"
       },
       {
@@ -70,9 +85,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "_protocolIdx",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_protocol",
+        "type": "address"
       },
       {
         "indexed": true,
@@ -95,7 +110,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_policyPriceInUSDT",
+        "name": "_coverageDuration",
         "type": "uint256"
       },
       {
@@ -118,6 +133,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_coverageAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "LogMarkToClaim",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "uint256",
         "name": "_maxDeadline",
@@ -128,15 +162,28 @@
         "internalType": "address",
         "name": "_policyAddress",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "_protocolIdx",
-        "type": "uint16"
       }
     ],
     "name": "LogSetBuyPolicyMaxDeadlineInPolicy",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_capitalAgent",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_policyAddress",
+        "type": "address"
+      }
+    ],
+    "name": "LogSetCapitalAgentInPolicy",
     "type": "event"
   },
   {
@@ -153,12 +200,6 @@
         "internalType": "address",
         "name": "_policyAddress",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "_protocolIdx",
-        "type": "uint16"
       }
     ],
     "name": "LogSetExchangeAgentInPolicy",
@@ -178,12 +219,6 @@
         "internalType": "address",
         "name": "_policyAddress",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "_protocolIdx",
-        "type": "uint16"
       }
     ],
     "name": "LogSetPremiumPoolInPolicy",
@@ -192,12 +227,6 @@
   {
     "anonymous": false,
     "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "_protocolIdx",
-        "type": "uint16"
-      },
       {
         "indexed": true,
         "internalType": "address",
@@ -228,12 +257,6 @@
         "internalType": "address",
         "name": "_policyAddress",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "_protocolIdx",
-        "type": "uint16"
       }
     ],
     "name": "LogSetSignerInPolicy",
@@ -243,11 +266,24 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "_protocolIdx",
-        "type": "uint16"
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_policyId",
+        "type": "uint256"
       },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_coverageAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "LogUpdatePolicyExpired",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
       {
         "indexed": true,
         "internalType": "address",
@@ -301,12 +337,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "from",
         "type": "address"
       },
@@ -317,93 +347,18 @@
         "type": "address"
       },
       {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "ids",
-        "type": "uint256[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "values",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "TransferBatch",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "value",
+        "name": "tokenId",
         "type": "uint256"
       }
     ],
-    "name": "TransferSingle",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "value",
-        "type": "string"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "URI",
+    "name": "Transfer",
     "type": "event"
   },
   {
     "inputs": [],
-    "name": "SSRP",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "USDT_TOKEN",
+    "name": "USDC_TOKEN",
     "outputs": [
       {
         "internalType": "address",
@@ -431,6 +386,24 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_premiumCurrency",
         "type": "address"
       }
@@ -444,13 +417,8 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "account",
+        "name": "owner",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
       }
     ],
     "name": "balanceOf",
@@ -468,41 +436,22 @@
     "inputs": [
       {
         "internalType": "address[]",
-        "name": "accounts",
+        "name": "_protocols",
         "type": "address[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "ids",
+        "name": "_coverageAmount",
         "type": "uint256[]"
-      }
-    ],
-    "name": "balanceOfBatch",
-    "outputs": [
+      },
       {
         "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_coverageAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "_coverageDuration",
-        "type": "uint256"
+        "type": "uint256[]"
       },
       {
         "internalType": "uint256",
-        "name": "_policyPriceInUSDT",
+        "name": "_policyPriceInUSDC",
         "type": "uint256"
       },
       {
@@ -514,11 +463,39 @@
         "internalType": "address",
         "name": "_premiumCurrency",
         "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint8",
+        "name": "v",
+        "type": "uint8"
       }
     ],
     "name": "buyPolicy",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "capitalAgent",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -561,6 +538,38 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "factory",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getApproved",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -582,32 +591,22 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
-    "name": "getPolicyPerUser",
+    "name": "getPolicy",
     "outputs": [
       {
-        "internalType": "uint64",
-        "name": "policyIdx",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "coverageDuration",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
+        "internalType": "uint256",
         "name": "coverStartAt",
-        "type": "uint64"
+        "type": "uint256"
       },
       {
-        "internalType": "uint64",
-        "name": "coverStartNumberAt",
-        "type": "uint64"
+        "internalType": "uint256",
+        "name": "coverageDuration",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -615,19 +614,53 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "policyPriceInUSDT",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "premiumPaid",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "protocolAddress",
+        "type": "address"
       },
       {
         "internalType": "address",
         "name": "premiumCurrency",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "exist",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "expired",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPolicyData",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -637,7 +670,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "account",
+        "name": "owner",
         "type": "address"
       },
       {
@@ -658,6 +691,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "markToClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "maxDeadline",
     "outputs": [
@@ -671,39 +717,32 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_user",
-        "type": "address"
-      }
-    ],
-    "name": "policyDetail",
+    "inputs": [],
+    "name": "name",
     "outputs": [
       {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
-        "name": "",
+        "name": "tokenId",
         "type": "uint256"
-      },
+      }
+    ],
+    "name": "ownerOf",
+    "outputs": [
       {
-        "internalType": "uint64",
+        "internalType": "address",
         "name": "",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -723,19 +762,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "protocolIdx",
-    "outputs": [
-      {
-        "internalType": "uint16",
-        "name": "",
-        "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -748,22 +774,12 @@
         "type": "address"
       },
       {
-        "internalType": "uint256[]",
-        "name": "ids",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
       }
     ],
-    "name": "safeBatchTransferFrom",
+    "name": "safeTransferFrom",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -782,17 +798,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
+        "name": "tokenId",
         "type": "uint256"
       },
       {
         "internalType": "bytes",
-        "name": "data",
+        "name": "_data",
         "type": "bytes"
       }
     ],
@@ -828,6 +839,19 @@
       }
     ],
     "name": "setBuyPolicyMaxDeadline",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_capitalAgent",
+        "type": "address"
+      }
+    ],
+    "name": "setCapitalAgent",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -918,12 +942,12 @@
   },
   {
     "inputs": [],
-    "name": "totalUtilizedAmount",
+    "name": "symbol",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -933,11 +957,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "tokenId",
         "type": "uint256"
       }
     ],
-    "name": "uri",
+    "name": "tokenURI",
     "outputs": [
       {
         "internalType": "string",
@@ -946,6 +970,42 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "updatePolicyExpired",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

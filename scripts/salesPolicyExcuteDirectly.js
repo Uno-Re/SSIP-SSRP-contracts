@@ -37,6 +37,10 @@ async function main() {
   const MockUSDT = await ethers.getContractFactory("MockUSDT")
   const mockUSDT = await MockUSDT.attach(mockUSDT_ADDRESS)
   await (await mockUSDT.approve(SALESPOLICY_ADDRESS, getBigNumber(100000000))).wait()
+
+  const SalesPolicy = await ethers.getContractFactory("SalesPolicy")
+  const salesPolicy = await SalesPolicy.attach(SALESPOLICY_ADDRESS)
+
   const signers = await ethers.getSigners()
 
   const currentDate = new Date()
@@ -71,38 +75,8 @@ async function main() {
   }
   const flatSig = await signers[1].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
   const splitSig = ethers.utils.splitSignature(flatSig)
-  const jsonRpcProvider = new ethers.providers.JsonRpcProvider(hre.config.networks.rinkeby.url)
 
-  const biconomy = new Biconomy(jsonRpcProvider, { apiKey: process.env.BICONOMY_API_KEY, debug: true })
-  const ethersProvider = new ethers.providers.Web3Provider(biconomy)
-  let wallet = new ethers.Wallet(privateKey)
-
-  biconomy
-    .onEvent(biconomy.READY, async () => {
-      console.log("biconomy ready")
-    })
-    .onEvent(biconomy.ERROR, (error, message) => {
-      console.log("message", message)
-      console.log("error", error)
-    })
-
-  const salesPolicyInterface = new ethers.utils.Interface(SALESPOLICY_ABI)
-  const salesPolicy = new ethers.Contract(SALESPOLICY_ADDRESS, SALESPOLICY_ABI, biconomy.getSignerByAddress(signers[0].address))
-
-  // console.log("[biconomy]", ethers.provider)
-
-  const chainId = await getChainId()
-
-  const domainData = {
-    name: "BuyPolicyMetaTransaction",
-    version: "1",
-    verifyingContract: SALESPOLICY_ADDRESS,
-    salt: getPaddedHexStrFromBN(4),
-  }
-
-  console.log(zeroAddress.toString(), deadline.toString())
-
-  const functionSignature = salesPolicy.interface.encodeFunctionData("buyPolicy", [
+  await (await salesPolicy.buyPolicy(
     protocols,
     coverageAmount,
     coverageDuration,
@@ -112,57 +86,8 @@ async function main() {
     splitSig.r,
     splitSig.s,
     splitSig.v,
-  ])
+  )).wait()
 
-  const nonce = await salesPolicy.getNonce(signers[0].address)
-
-  const message = {
-    nonce: nonce.toNumber(),
-    from: signers[0].address,
-    functionSignature: functionSignature,
-  }
-
-  const dataToSign = {
-    types: {
-      EIP712Domain: domainType,
-      MetaTransaction: metaTransactionType,
-    },
-    domain: domainData,
-    primaryType: "MetaTransaction",
-    message: message,
-  }
-
-  const signature = sigUtil.signTypedMessage(new Buffer.from(privateKey, "hex"), { data: dataToSign }, "V3")
-  let { r, s, v } = getSignatureParameters(signature)
-
-  let rawTx, tx
-  rawTx = {
-    to: SALESPOLICY_ADDRESS,
-    data: salesPolicyInterface.encodeFunctionData("executeMetaTransaction", [signers[0].address, functionSignature, r, s, v]),
-    from: signers[0].address,
-    gasLimit: 1000000,
-  }
-  tx = await wallet.signTransaction(rawTx)
-
-  let transactionHash
-  try {
-    let receipt = await ethersProvider.sendTransaction(tx)
-    console.log(receipt)
-  } catch (error) {
-    if (error.returnedHash && error.expectedHash) {
-      console.log("Transaction hash : ", error.returnedHash)
-      transactionHash = error.returnedHash
-    } else {
-      console.log("[Error while sending transaction]", error)
-    }
-  }
-
-  if (transactionHash) {
-    let receipt = await ethersProvider.waitForTransaction(transactionHash)
-    console.log(receipt)
-  } else {
-    console.log("Could not get transaction hash")
-  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere
