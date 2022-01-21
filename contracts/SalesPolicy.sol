@@ -60,6 +60,8 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     event LogSetBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline, address indexed _policyAddress);
     event LogSetCapitalAgentInPolicy(address indexed _capitalAgent, address indexed _policyAddress);
     event LogapprovePremiumIInPolicy(address indexed _policyAddress, address indexed _premiumCurrency, address premiumPool);
+    event LogMarkToClaim(uint256 indexed _policyId, uint256 _coverageAmount);
+    event LogUpdatePolicyExpired(uint256 indexed _policyId, uint256 _coverageAmount);
 
     constructor(
         address _factory,
@@ -244,12 +246,14 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         require(getPolicy[_policyId].exist, "UnoRe: marked to claim already");
         getPolicy[_policyId].exist = false;
         _burn(_policyId);
+        emit LogMarkToClaim(_policyId, getPolicy[_policyId].coverageAmount);
     }
 
     function updatePolicyExpired(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
         require(!getPolicy[_policyId].exist, "UnoRe: expired already");
         getPolicy[_policyId].expired = true;
         _burn(_policyId);
+        emit LogUpdatePolicyExpired(_policyId, getPolicy[_policyId].coverageAmount);
     }
 
     function allPoliciesLength() external view override returns (uint256) {

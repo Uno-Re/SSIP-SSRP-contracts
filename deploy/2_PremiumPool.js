@@ -3,18 +3,20 @@
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
-  const owner = deployer
-  const claimAssessor = deployer
 
+  const mockUNO = "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5"
+  const mockUSDT = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
   const exchangeAgent = await deployments.get("ExchangeAgent")
-  const capitalAgent = await deployments.get("CapitalAgent")
+  const multiSigWallet = await deployments.get("MultiSigWallet")
 
-  await deploy("SingleSidedInsurancePool", {
+  const premiumPool = await deploy("PremiumPool", {
     from: deployer,
-    args: [owner, claimAssessor, exchangeAgent.address, capitalAgent.address],
+    args: [exchangeAgent.address, mockUNO, mockUSDT, multiSigWallet.address],
     log: true,
     deterministicDeployment: false,
   })
+
+  console.log(`deploy at ${premiumPool.address}`)
 }
 
-module.exports.tags = ["SingleSidedInsurancePool", "UnoRe"]
+module.exports.tags = ["PremiumPool"]

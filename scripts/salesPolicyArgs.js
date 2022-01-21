@@ -1,9 +1,9 @@
 const { getBigNumber } = require("./shared/utilities")
 
 module.exports = [
-  "0x61c4309d64213E744B424e724b918C7D66DC4718", // factory
-  "0x1E545CbA6E77CBfcBd0a7CAD9F2D8E0051F347D4", // ExchangeAgent
-  "0xf6F31ACB097B206c80cfcd1d0855f7170891bE4c", // premium pool
-  "0x254D75e01617455BC25258036e642Fb82bbfd0c9", // CapitalAgent
+  "0x5514695C1BF5D35D441B76e080Be56d0bb1cc0E9", // factory
+  "0xcf98D8AE6EF3eeff4826162571190cD9802dCf2D", // ExchangeAgent
+  "0xd8F33445276e4fF385e53Efe04c280d846f9e28F", // premium pool
+  "0x4024C2A563D06456BA7f9cc61F2b12FC44c3F9f2", // CapitalAgent
   "0x40c035016AD732b6cFce34c3F881040B6C6cf71E", // mockUSDT
 ]
