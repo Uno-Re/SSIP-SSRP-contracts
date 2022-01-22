@@ -176,24 +176,23 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             } else {
                 isAvailableSale = true;
             }
-            if (isAvailableSale) {
-                getPolicy[lastIdx] = Policy({
-                    protocolAddress: _protocol,
-                    coverageAmount: coverAmount,
-                    coverageDuration: coverDuration,
-                    coverStartAt: block.timestamp,
-                    premiumCurrency: _premiumCurrency,
-                    exist: true,
-                    expired: false
-                });
+            require(isAvailableSale, "UnoRe: unavailable policy");
+            getPolicy[lastIdx] = Policy({
+                protocolAddress: _protocol,
+                coverageAmount: coverAmount,
+                coverageDuration: coverDuration,
+                coverStartAt: block.timestamp,
+                premiumCurrency: _premiumCurrency,
+                exist: true,
+                expired: false
+            });
 
-                _mint(msgSender(), lastIdx);
+            _mint(msgSender(), lastIdx);
 
-                _totalCoverage += coverAmount;
+            _totalCoverage += coverAmount;
 
-                emit BuyPolicy(_protocol, lastIdx, msgSender(), coverAmount, coverDuration, _premiumCurrency, premiumPaid);
-                policyIdx.increment();
-            }
+            emit BuyPolicy(_protocol, lastIdx, msgSender(), coverAmount, coverDuration, _premiumCurrency, premiumPaid);
+            policyIdx.increment();
         }
         if (_totalCoverage > 0) {
             ICapitalAgent(capitalAgent).policySale(_totalCoverage);
