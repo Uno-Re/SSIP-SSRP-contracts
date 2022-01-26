@@ -97,7 +97,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         emit LogCollectPremium(msg.sender, _premiumCurrency, _premiumAmount);
     }
 
-    function depositToSyntheticSSRPRewarder(address _rewarder) external payable onlyOwner nonReentrant {
+    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         uint256 usdcAmountToDeposit = 0;
         if (SSRP_PREMIUM_ETH > 0) {
@@ -127,7 +127,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         }
     }
 
-    function depositToSyntheticSSIPRewarder(address _currency, address _rewarder) external payable onlyOwner nonReentrant {
+    function depositToSyntheticSSIPRewarder(address _currency, address _rewarder) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
             TransferHelper.safeTransferETH(_rewarder, SSIP_PREMIUM_ETH);

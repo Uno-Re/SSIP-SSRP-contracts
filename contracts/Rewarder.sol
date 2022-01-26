@@ -59,7 +59,7 @@ contract Rewarder is IRewarder, ReentrancyGuard {
         }
     }
 
-    function withdraw(address _to, uint256 _amount) external onlyOperator nonReentrant {
+    function withdraw(address _to, uint256 _amount) external onlyOperator {
         require(_to != address(0), "UnoRe: zero address reward");
         if (currency == address(0)) {
             if (address(this).balance >= _amount) {
@@ -86,7 +86,7 @@ contract Rewarder is IRewarder, ReentrancyGuard {
         }
     }
 
-    function transferOwnership(address _to) external onlyOperator nonReentrant {
+    function transferOwnership(address _to) external onlyOperator {
         require(_to != address(0), "UnoRe: zero address reward");
         address oldOperator = operator;
         operator = _to;
