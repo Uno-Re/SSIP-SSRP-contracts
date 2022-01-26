@@ -5,11 +5,14 @@ pragma solidity 0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
 
 contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
+    using Address for address;
+
     address public exchangeAgent;
     address public UNO_TOKEN;
     address public USDC_TOKEN;
@@ -99,6 +102,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
 
     function depositToSyntheticSSRPRewarder(address _rewarder) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
+        require(_rewarder.isContract(), "UnoRe: no contract address");
         uint256 usdcAmountToDeposit = 0;
         if (SSRP_PREMIUM_ETH > 0) {
             TransferHelper.safeTransferETH(exchangeAgent, SSRP_PREMIUM_ETH);
@@ -129,6 +133,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
 
     function depositToSyntheticSSIPRewarder(address _currency, address _rewarder) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
+        require(_rewarder.isContract(), "UnoRe: no contract address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
             TransferHelper.safeTransferETH(_rewarder, SSIP_PREMIUM_ETH);
             SSIP_PREMIUM_ETH = 0;
