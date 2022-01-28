@@ -8,7 +8,7 @@ contract SyntheticSSRPFactory is ISyntheticSSRPFactory {
     constructor() {}
 
     function newSyntheticSSRP(address _owner, address _lpToken) external override returns (address) {
-        SyntheticSSRP _ssip = new SyntheticSSRP(_owner, _lpToken);
+        SyntheticSSRP _ssip = new SyntheticSSRP(_lpToken, _owner);
         address _ssipAddr = address(_ssip);
         return _ssipAddr;
     }

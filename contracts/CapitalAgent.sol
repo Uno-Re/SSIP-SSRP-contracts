@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ISingleSidedInsurancePool.sol";
-import "./interfaces/IRiskPool.sol";
 import "./interfaces/ICapitalAgent.sol";
 
 contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
@@ -16,9 +15,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     address public salesPolicyFactory;
     address public UNO_TOKEN;
     address public USDC_TOKEN;
+    address public operator;
 
     struct PoolInfo {
         uint256 totalCapital;
+        address currency;
         bool exist;
     }
 
@@ -62,12 +63,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     event LogSetSalesPolicyFactory(address indexed _factory);
     event LogAddPoolWhiteList(address indexed _pool);
     event LogRemovePoolWhiteList(address indexed _pool);
+    event LogSetOperator(address indexed _operator);
 
     constructor(
         address _exchangeAgent,
         address _UNO_TOKEN,
         address _USDC_TOKEN,
-        address _multiSigWallet
+        address _multiSigWallet,
+        address _operator
     ) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_UNO_TOKEN != address(0), "UnoRe: zero UNO address");
@@ -76,6 +79,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         exchangeAgent = _exchangeAgent;
         UNO_TOKEN = _UNO_TOKEN;
         USDC_TOKEN = _USDC_TOKEN;
+        operator = _operator;
         transferOwnership(_multiSigWallet);
     }
 
@@ -84,10 +88,21 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         _;
     }
 
+    modifier onlyOperator() {
+        require(operator == msg.sender, "UnoRe: Capital Agent Forbidden");
+        _;
+    }
+
     function setSalesPolicyFactory(address _factory) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: zero factory address");
         salesPolicyFactory = _factory;
         emit LogSetSalesPolicyFactory(_factory);
+    }
+
+    function setOperator(address _operator) external onlyOwner nonReentrant {
+        require(_operator != address(0), "UnoRe: zero operator address");
+        operator = _operator;
+        emit LogSetOperator(_operator);
     }
 
     function addPoolWhiteList(address _pool) external onlyOwner nonReentrant {
@@ -104,10 +119,18 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogRemovePoolWhiteList(_pool);
     }
 
-    function addPool(address _ssip) external override onlyPoolWhiteList {
+    function addPool(address _ssip, address _currency) external override onlyPoolWhiteList {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
-        poolInfo[_ssip] = PoolInfo({totalCapital: 0, exist: true});
+        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, exist: true});
+
+        emit LogAddPool(_ssip);
+    }
+
+    function addPoolByAdmin(address _ssip, address _currency) external onlyOwner {
+        require(_ssip != address(0), "UnoRe: zero address");
+        require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
+        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, exist: true});
 
         emit LogAddPool(_ssip);
     }
@@ -130,6 +153,13 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogSetPolicy(_policy);
     }
 
+    function setPolicyByAdmin(address _policy) external onlyOwner nonReentrant {
+        require(_policy != address(0), "UnoRe: zero address");
+        policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});
+
+        emit LogSetPolicy(_policy);
+    }
+
     function removePolicy() external onlyOwner nonReentrant {
         require(policyInfo.exist, "UnoRe: no exit pool");
         if (policyInfo.utilizedAmount > 0) {
@@ -144,7 +174,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     function SSIPWithdraw(uint256 _withdrawAmount) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
-        require(_checkCapitalByMCR(_withdrawAmount), "UnoRe: minimum capital underflow");
+        require(_checkCapitalByMCR(msg.sender, _withdrawAmount), "UnoRe: minimum capital underflow");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
     }
 
@@ -158,8 +188,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         _updatePoolCapital(msg.sender, _stakingAmount, true);
     }
 
-    function checkCapitalByMCR(uint256 _withdrawAmount) external view override returns (bool) {
-        return _checkCapitalByMCR(_withdrawAmount);
+    function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view override returns (bool) {
+        return _checkCapitalByMCR(_pool, _withdrawAmount);
     }
 
     function checkCoverageByMLR(uint256 _coverageAmount) external view override returns (bool) {
@@ -198,11 +228,23 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         uint256 _amount,
         bool isAdd
     ) private {
-        if (!isAdd) {
-            require(poolInfo[_pool].totalCapital >= _amount, "UnoRe: pool capital overflow");
+        address currency = poolInfo[_pool].currency;
+        uint256 stakingAmountInUSDC;
+        if (currency == USDC_TOKEN) {
+            stakingAmountInUSDC = _amount;
+        } else {
+            stakingAmountInUSDC = currency != address(0)
+                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(currency, USDC_TOKEN, _amount)
+                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _amount);
         }
-        poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
-        totalCapitalStaked = isAdd ? totalCapitalStaked + _amount : totalCapitalStaked - _amount;
+
+        if (!isAdd) {
+            require(poolInfo[_pool].totalCapital >= stakingAmountInUSDC, "UnoRe: pool capital overflow");
+        }
+        poolInfo[_pool].totalCapital = isAdd
+            ? poolInfo[_pool].totalCapital + stakingAmountInUSDC
+            : poolInfo[_pool].totalCapital - stakingAmountInUSDC;
+        totalCapitalStaked = isAdd ? totalCapitalStaked + stakingAmountInUSDC : totalCapitalStaked - stakingAmountInUSDC;
         emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked);
     }
 
@@ -215,26 +257,30 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogUpdatePolicyCoverage(policyInfo.policy, _amount, policyInfo.utilizedAmount, totalUtilizedAmount);
     }
 
-    function _checkCapitalByMCR(uint256 _withdrawAmount) private view returns (bool) {
-        return totalCapitalStaked - _withdrawAmount >= (totalCapitalStaked * MCR) / CALC_PRECISION;
+    function _checkCapitalByMCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
+        address currency = poolInfo[_pool].currency;
+        uint256 withdrawAmountInUSDC;
+        if (currency == USDC_TOKEN) {
+            withdrawAmountInUSDC = _withdrawAmount;
+        } else {
+            withdrawAmountInUSDC = currency != address(0)
+                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(currency, USDC_TOKEN, _withdrawAmount)
+                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _withdrawAmount);
+        }
+        return totalCapitalStaked - withdrawAmountInUSDC >= (totalCapitalStaked * MCR) / CALC_PRECISION;
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
-        uint256 totalCapitalStakedInUSDC = IExchangeAgent(exchangeAgent).getNeededTokenAmount(
-            UNO_TOKEN,
-            USDC_TOKEN,
-            totalCapitalStaked
-        );
-        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStakedInUSDC * MLR) / CALC_PRECISION;
+        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStaked * MLR) / CALC_PRECISION;
     }
 
-    function setMCR(uint256 _MCR) external onlyOwner nonReentrant {
+    function setMCR(uint256 _MCR) external onlyOperator nonReentrant {
         require(_MCR > 0, "UnoRe: zero mcr");
         MCR = _MCR;
         emit LogSetMCR(msg.sender, address(this), _MCR);
     }
 
-    function setMLR(uint256 _MLR) external onlyOwner nonReentrant {
+    function setMLR(uint256 _MLR) external onlyOperator nonReentrant {
         require(_MLR > 0, "UnoRe: zero mlr");
         MLR = _MLR;
         emit LogSetMLR(msg.sender, address(this), _MLR);

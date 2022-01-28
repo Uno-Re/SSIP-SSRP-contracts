@@ -10,6 +10,8 @@ interface IExchangeAgent {
 
     function getETHAmountForToken(address _token, uint256 _tokenAmount) external view returns (uint256);
 
+    function getTokenAmountForETH(address _token, uint256 _ethAmount) external view returns (uint256);
+
     function getNeededTokenAmount(
         address _token0,
         address _token1,

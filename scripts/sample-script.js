@@ -11,7 +11,7 @@ const {
   getPaddedHexStrFromBN,
   getChainId,
   getSignatureParameters,
-  getPaddedHexStrFromBNArray
+  getPaddedHexStrFromBNArray,
 } = require("./shared/utilities")
 const SALESPOLICY_ABI = require("../scripts/abis/SalesPolicy.json")
 
@@ -33,7 +33,7 @@ const metaTransactionType = [
 ]
 
 async function main() {
-  let hexData;
+  let hexData
   const MockUSDT = await ethers.getContractFactory("MockUSDT")
   const mockUSDT = await MockUSDT.attach(mockUSDT_ADDRESS)
   await (await mockUSDT.approve(SALESPOLICY_ADDRESS, getBigNumber(100000000))).wait()
@@ -67,7 +67,7 @@ async function main() {
     mockUSDT_ADDRESS.slice(2)
 
   for (const account of signers) {
-    console.log('[signer]', account.address);
+    console.log("[signer]", account.address)
   }
   const flatSig = await signers[1].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
   const splitSig = ethers.utils.splitSignature(flatSig)

@@ -156,12 +156,11 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
     ) external onlyOwner nonReentrant {
         require(riskPool == address(0), "UnoRe: risk pool created already");
         require(_factory != address(0), "UnoRe: zero factory address");
-        require(_currency != address(0), "UnoRe: zero currency address");
         riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
         poolInfo.lastRewardBlock = uint128(block.number);
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
-        ICapitalAgent(capitalAgent).addPool(address(this));
+        ICapitalAgent(capitalAgent).addPool(address(this), _currency);
         emit RiskPoolCreated(address(this), riskPool);
     }
 
@@ -172,7 +171,6 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
     ) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
-        require(_currency != address(0), "UnoRe: zero currency address");
         rewarder = IRewarderFactory(_factory).newRewarder(_operator, _currency, address(this));
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
@@ -224,12 +222,20 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         }
     }
 
-    function enterInPool(uint256 _amount) external override isStartTime nonReentrant {
+    function enterInPool(uint256 _amount) external payable override isStartTime nonReentrant {
         require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
         address token = IRiskPool(riskPool).currency();
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
+        if (token == address(0)) {
+            require(msg.value >= _amount, "UnoRe: insufficient paid");
+            if (msg.value > _amount) {
+                TransferHelper.safeTransferETH(msg.sender, msg.value - _amount);
+            }
+            TransferHelper.safeTransferETH(riskPool, _amount);
+        } else {
+            TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
+        }
         IRiskPool(riskPool).enter(msg.sender, _amount);
         userInfo[msg.sender].rewardDebt =
             userInfo[msg.sender].rewardDebt +
@@ -245,7 +251,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
      */
     function leaveFromPoolInPending(uint256 _amount) external override isStartTime nonReentrant {
         _harvest(msg.sender);
-        require(ICapitalAgent(capitalAgent).checkCapitalByMCR(_amount), "UnoRe: minimum capital underflow");
+        require(ICapitalAgent(capitalAgent).checkCapitalByMCR(address(this), _amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
         uint256 amount = userInfo[msg.sender].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();

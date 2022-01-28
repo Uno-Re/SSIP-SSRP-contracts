@@ -109,6 +109,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         return _getNeededTokenAmount(_token, WETH, _tokenAmount);
     }
 
+    function getTokenAmountForETH(address _token, uint256 _ethAmount) external view override returns (uint256) {
+        return _getNeededTokenAmount(WETH, _token, _ethAmount);
+    }
+
     function getNeededTokenAmount(
         address _token0,
         address _token1,
@@ -145,9 +149,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         returns (uint256)
     {
         require(IERC20(_token).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
-        if (_token != address(0)) {
-            TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
-        }
+        TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
         uint256 twapPriceInUSDC = _getNeededTokenAmount(_token, WETH, _convertAmount);
         require(twapPriceInUSDC > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPriceInUSDC * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
