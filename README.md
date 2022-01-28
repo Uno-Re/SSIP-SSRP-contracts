@@ -91,12 +91,16 @@ total faucet Limit: 500000000 $UNO
 - AirdropMockUNO: 0x0A47304bF71c086b8d97C6eE079b7795c8253E17
 
 ### Formula for checking withdrawable by MCR in SSIPs throught CapitalAgent:
-> totalCapitalStaked - withdrawRequestAmount >= (totalCapitalStaked * MCR) / CALC_PRECISION
+```sh
+ totalCapitalStaked - withdrawRequestAmount >= (totalCapitalStaked * MCR) / CALC_PRECISION
+```
 > where totalCapitalStaked is the sum(in USDC) of amounts staked in all SSIPs
 > CALC_PRECISION = 1e18
 
 ### Formula for policy purchasing available by MLR in SSIPs throught CapitalAgent:
-> totalUtilizedCapacity + coverageAmount <= (totalCapitalStaked * MLR) / CALC_PRECISION
+```sh
+ totalUtilizedCapacity + coverageAmount <= (totalCapitalStaked * MLR) / CALC_PRECISION
+```
 > where totalUtilizedCapacity is the total coverage amount of the policies being insured by our project.
 >   totalCapitalStaked is the sum(in USDC) of amounts staked in all SSIPs
 >   CALC_PRECISION = 1e18
