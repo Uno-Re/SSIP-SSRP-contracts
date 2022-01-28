@@ -1,4 +1,4 @@
-## v2 Brainstorming Session 1st November 2021 - The Cover Portal
+## v2 Brainstorming Session 28th January 2022 - The Cover Portal
 Main topic of discussion was to finalize the implementation logic for Cover Portal which will be utilized to faciltate the sales of insurance policies. There will be two categories of assets.
 
 ### contract deployment(rinkeby):
