@@ -43,7 +43,7 @@ async function main() {
   let encodedCallData
   this.txIdx = await this.multiSigWallet.getTransactionCount()
 
-  // for (let idx = 1; idx < 3; idx++) {
+  // for (let idx = 0; idx < 3; idx++) {
   //   encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("addProtocol", [this.signers[idx + 1].address])
   //   console.log("[addProtocol]" + idx, encodedCallData)
 
@@ -152,25 +152,8 @@ async function main() {
 
   // this.txIdx++
 
-  encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setCapitalAgentInPolicy", [this.capitalAgent.address])
-  console.log("[setCapitalAgentInPolicy]", encodedCallData)
-
-  await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
-    .to.emit(this.multiSigWallet, "SubmitTransaction")
-    .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
-
-  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[0].address, this.txIdx)
-
-  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[1].address, this.txIdx)
-
-  this.txIdx++
-
-  // encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [USDT.rinkeby])
-  // console.log("[approvePremiumInPolicy]", encodedCallData)
+  // encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setCapitalAgentInPolicy", [this.capitalAgent.address])
+  // console.log("[setCapitalAgentInPolicy]", encodedCallData)
 
   // await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
   //   .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -185,6 +168,23 @@ async function main() {
   //   .withArgs(this.signers[1].address, this.txIdx)
 
   // this.txIdx++
+
+  encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [USDT.rinkeby])
+  console.log("[approvePremiumInPolicy]", encodedCallData)
+
+  await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
+    .to.emit(this.multiSigWallet, "SubmitTransaction")
+    .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
+
+  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[0].address, this.txIdx)
+
+  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[1].address, this.txIdx)
+
+  this.txIdx++
 }
 
 main()

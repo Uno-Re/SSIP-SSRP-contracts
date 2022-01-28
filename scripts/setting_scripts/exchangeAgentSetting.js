@@ -46,26 +46,26 @@ async function main() {
   let encodedCallData
   this.txIdx = await this.multiSigWallet.getTransactionCount()
 
-  const whitelist = [this.premiumPool.address, this.capitalAgent.address, this.salesPolicy.address]
+  const whitelist = [this.capitalAgent.address, this.salesPolicy.address] //this.premiumPool.address, 
 
-  // for (let addr of whitelist) {
-  encodedCallData = this.exchangeAgent.interface.encodeFunctionData("addWhiteList", [this.capitalAgent.address])
-  console.log("[addWhiteList]", encodedCallData)
+  for (let addr of whitelist) {
+    encodedCallData = this.exchangeAgent.interface.encodeFunctionData("addWhiteList", [addr])
+    console.log("[addWhiteList]", encodedCallData)
 
-  await expect(this.multiSigWallet.submitTransaction(this.exchangeAgent.address, 0, encodedCallData))
-    .to.emit(this.multiSigWallet, "SubmitTransaction")
-    .withArgs(this.signers[0].address, this.txIdx, this.exchangeAgent.address, 0, encodedCallData)
+    await expect(this.multiSigWallet.submitTransaction(this.exchangeAgent.address, 0, encodedCallData))
+      .to.emit(this.multiSigWallet, "SubmitTransaction")
+      .withArgs(this.signers[0].address, this.txIdx, this.exchangeAgent.address, 0, encodedCallData)
 
-  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[0].address, this.txIdx)
+    await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+      .to.emit(this.multiSigWallet, "ConfirmTransaction")
+      .withArgs(this.signers[0].address, this.txIdx)
 
-  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[1].address, this.txIdx)
+    await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+      .to.emit(this.multiSigWallet, "ConfirmTransaction")
+      .withArgs(this.signers[1].address, this.txIdx)
 
-  this.txIdx++
-  // }
+    this.txIdx++
+  }
 }
 
 main()

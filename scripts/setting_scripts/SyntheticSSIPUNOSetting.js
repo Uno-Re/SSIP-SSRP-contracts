@@ -21,8 +21,8 @@ const premiumPoolDeployment = require("../../deployments/rinkeby/PremiumPool.jso
 const salesPolicyFactoryDeployment = require("../../deployments/rinkeby/SalesPolicyFactory.json")
 const singleSidedInsurancePoolUNODeployment = require("../../deployments/rinkeby/SingleSidedInsurancePoolUNO.json")
 const syntheticSSIPFactoryDeployment = require("../../deployments/rinkeby/SyntheticSSIPFactory.json")
-const SSSIPETHAddress = '0x10D574563b8C6504Ae5BAA0284833d5C46955D2A';
-const RewarderFactoryDeployment = require("../../deployments/rinkeby/RewarderFactory.json");
+const RewarderFactoryDeployment = require("../../deployments/rinkeby/RewarderFactory.json")
+const SSSIPUNOAddress = "0xf184F348e4eCfE4768CfCF2028Faf3B65d20de79"
 
 async function main() {
   this.signers = await ethers.getSigners()
@@ -44,7 +44,7 @@ async function main() {
   this.salesPolicyFactory = await this.SalesPolicyFactory.attach(salesPolicyFactoryDeployment.address)
   this.singleSidedInsurancePoolUNO = await this.SingleSidedInsurancePoolUNO.attach(singleSidedInsurancePoolUNODeployment.address)
   this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.attach(syntheticSSIPFactoryDeployment.address)
-  this.syntheticSSIP = await this.SyntheticSSIP.attach(SSSIPETHAddress)
+  this.syntheticSSIP = await this.SyntheticSSIP.attach(SSSIPUNOAddress)
   // this.salesPolicy = await this.SalesPolicy.attach()
 
   let encodedCallData

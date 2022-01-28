@@ -2,43 +2,85 @@
 Main topic of discussion was to finalize the implementation logic for Cover Portal which will be utilized to faciltate the sales of insurance policies. There will be two categories of assets.
 
 ### contract deployment(rinkeby):
-- SingleSidedReinsurancePool(SSRP) : 0xaCDbbF853Fd5a2b3410b92F36c60A7F0d283fcdB
 
-- SSRP RiskPool(SSRP LP token): 0xB4Cc174B009d8780Df702afB9AaCACD970C4463f
-- SSRP Rewarder: 0x207e0F0fAc90a690bf23b14B7520d9d7d1F95dE2
-- SyntheticSSRP: 0x683E38e76649b599A93073855f1a6335de36Da81
-- SyntheticSSRP Rewarder(reward currency - mockUSDT(it will be changed to USDC in the future)): 0x4801B9a7A0fDf18059DcE9f42466Fa5bEC838A91 
+#### SSRP:
+- pool address: 0xD9f69b8d50295119b002ecE30ec2C87cA33Ed565
+- staking currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
+- reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 
+- LP token(RiskPool): 0xAC51a8F0dc7151D0A18AF23C2FFD4c2dAa9DdEAa
+> name: Synthetic SSRP
+> symbol: SSSRP 
 
-- SingleSidedInsurancePool(SSIP) : 0x5A15cccA32c176471DD5394FE1F53907213a04cf
+- Rewarder contract: 0x8B2E925d4D1CF2C32E85b850b1228001128A75d0
 
-- SSIP RiskPool(SSIP LP token): 0x5CC962e6E6d7226ED03DCFfDE33D1Bdd7E77Bc28
-- SSIP Rewarder: 0x9E66FfBE92eF224114A6cF08F7F5411bA8AAFde2
-- SyntheticSSIP: 0x6c681F6a2AE9109d765960d7Ba795343CE997535
-- SyntheticSSIP Rewarder(reward currency - mockUSDT for now): 0x14CCBFB9DD13031CC00554Ef2949cDd1A63A3A02 
+#### Synthetic SSRP
+- pool address: 0x472E56df028928cB28042229D329FF399dAF5d10
+- staking currency(SSRP LP token): 0xAC51a8F0dc7151D0A18AF23C2FFD4c2dAa9DdEAa
+- reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
+> it will be changed to USDC in the future on mainnet.
 
+-Rewarder contract: 0x36BEA8AD62B292E76b11f8D5f40Fc90daa46aB61
 
-- SyntheticSSIPFactory: 0x063Dfccc666685E06825D22355EE90c9991d71FB
-- SyntheticSSRPFactory: 0x5cdAaF3C99BbdDE717eC335e047f1120CDfbA791
+#### Selene - SSIP ETH Pool:
+- pool address: 0x3c668cd82AD4A215495af2B0a975b8245516EA7b
+- staking currency(ETH): 0x0000000000000000000000000000000000000000
+- reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 
+- LP token(RiskPool): 0x0E8614A6fefD06089dC9b1FFea2804D13743634d
+> name: Synthetic SSIP-ETH
+> symbol: SSSIP-ETH 
 
-- RiskPoolFactory: 0x443D703E2F685A127eDFe39c628ffdf7Cf58f62d
-- RewarderFactory: 0x42496BC9a33F653B5631f03427887765CBe52F13
-- Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
+- Rewarder contract: 0xE480c3b1bDe93d66c4f5a9a491c1C9CD7e2E9c95
 
+#### Synth Selene - Synthetic SSIP ETH Pool:
+- pool address: 0x05c978eE201d0e4E9c6277bf3ac5Ef7694911421
+- staking currency(SSSIP-ETH LP token): 0x0E8614A6fefD06089dC9b1FFea2804D13743634d
+- reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 
-- SalesPolicyFactory: 0x5514695C1BF5D35D441B76e080Be56d0bb1cc0E9
-- SalesPolicy: 0xD7ce18716f8f9Ff15BD31E4edca51C3a51310c41
+- Rewarder contract: 0xAeDaFEE6FC0bBD38E4E70FC0449C55DF3dE12Dfe
 
+#### Ares - SSIP UNO Pool:
+- pool address: 0x2b30B5632A76Be1E8f45DBD4F0355526Ec84565e
+- staking currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
+- reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 
-- CapitalAgent: 0x4024C2A563D06456BA7f9cc61F2b12FC44c3F9f2
+- LP token(RiskPool): 0x0fB3cff50d4ACc8e948615460adB454BB4F7c212
+> name: Synthetic SSIP-UNO
+> symbol: SSSIP-UNO 
 
+- Rewarder contract: 0xA86808E8056D54a5cF7895E9afbB21b8FfDDCBa2
 
+#### Synth Ares - Synthetic SSIP UNO Pool:
+- pool address: 0xf184F348e4eCfE4768CfCF2028Faf3B65d20de79
+- staking currency(SSSIP-UNO LP token): 0x0fB3cff50d4ACc8e948615460adB454BB4F7c212
+- reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
+> it will be changed to USDC in the future on mainnet.
+
+- Rewarder contract: 0x33248C149C3C42388b43468f8EBc34b9dfe2cBC3
+
+##### Synthetic Factories:
+- SyntheticSSIPFactory: 0x577f19a828eab36754e90EC4cEE694d8BB495CB3
+- SyntheticSSRPFactory: 0x8968056Fa1CB548136ff06740d058f9538a9522D
+
+#### Policy Insurance:
+- SalesPolicyFactory: 0xe6D7C712A8ACB7283cd8154217b7cFB2D5C78A67
+- SalesPolicy: 0xCeeA4d2597739bFFcbE934b63ab7CA014253597A
+
+#### Factories:
+- RiskPoolFactory: 0x976D5132b58235C7457A6bEebB5A090Ae2fDb76f
+- RewarderFactory: 0x015Bf47B302164076365e6339341071C8F12800c
+
+#### Common contracts:
 - MockUNO : 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5
 - MockUSDT : 0x40c035016AD732b6cFce34c3F881040B6C6cf71E
-- ExchangeAgent: 0xcf98D8AE6EF3eeff4826162571190cD9802dCf2D
-- PremiumPool: 0xd8F33445276e4fF385e53Efe04c280d846f9e28F
-- MultiSigWallet: 0xfadD5ddd92fa216C08C096958Efec97179F6fC58
+
+- MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
+- CapitalAgent: 0x6b16284828F6AC22597890b0Fdab434D93a4048c
+- ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
+- PremiumPool: 0xb2D88872F21341429638EF5EAa0EDC6361313896
+
+- Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
 
 
 ### MockUNO faucet:

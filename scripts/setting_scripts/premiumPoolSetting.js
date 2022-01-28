@@ -63,22 +63,22 @@ async function main() {
 
   this.txIdx++
 
-  // encodedCallData = this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.address])
-  // console.log("[addWhiteList]", encodedCallData)
+  encodedCallData = this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.address])
+  console.log("[addWhiteList]", encodedCallData)
 
-  // await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
-  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
-  //   .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+  await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+    .to.emit(this.multiSigWallet, "SubmitTransaction")
+    .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
 
-  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
-  //   .withArgs(this.signers[0].address, this.txIdx)
+  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[0].address, this.txIdx)
 
-  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
-  //   .withArgs(this.signers[1].address, this.txIdx)
+  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[1].address, this.txIdx)
 
-  // this.txIdx++
+  this.txIdx++
 }
 
 main()

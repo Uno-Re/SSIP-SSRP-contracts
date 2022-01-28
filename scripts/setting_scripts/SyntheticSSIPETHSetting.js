@@ -21,8 +21,8 @@ const premiumPoolDeployment = require("../../deployments/rinkeby/PremiumPool.jso
 const salesPolicyFactoryDeployment = require("../../deployments/rinkeby/SalesPolicyFactory.json")
 const singleSidedInsurancePoolDeployment = require("../../deployments/rinkeby/SingleSidedInsurancePool.json")
 const syntheticSSIPFactoryDeployment = require("../../deployments/rinkeby/SyntheticSSIPFactory.json")
-const SSSIPETHAddress = '0xF89961d8ec9e3bA6eEB2d50AEbdd9b61284785D7';
-const RewarderFactoryDeployment = require("../../deployments/rinkeby/RewarderFactory.json");
+const SSSIPETHAddress = "0x05c978eE201d0e4E9c6277bf3ac5Ef7694911421"
+const RewarderFactoryDeployment = require("../../deployments/rinkeby/RewarderFactory.json")
 
 async function main() {
   this.signers = await ethers.getSigners()
