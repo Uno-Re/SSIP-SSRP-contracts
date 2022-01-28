@@ -109,6 +109,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         return _getNeededTokenAmount(_token, WETH, _tokenAmount);
     }
 
+    function getTokenAmountForETH(address _token, uint256 _ethAmount) external view override returns (uint256) {
+        return _getNeededTokenAmount(WETH, _token, _ethAmount);
+    }
+
     function getNeededTokenAmount(
         address _token0,
         address _token1,

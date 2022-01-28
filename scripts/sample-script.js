@@ -11,13 +11,13 @@ const {
   getPaddedHexStrFromBN,
   getChainId,
   getSignatureParameters,
-  getPaddedHexStrFromBNArray
+  getPaddedHexStrFromBNArray,
 } = require("./shared/utilities")
 const SALESPOLICY_ABI = require("../scripts/abis/SalesPolicy.json")
 
 const mockUSDT_ADDRESS = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
 // const mockUSDC_ADDRESS = "0xD4D5c5D939A173b9c18a6B72eEaffD98ecF8b3F6"
-const SALESPOLICY_ADDRESS = "0xD7ce18716f8f9Ff15BD31E4edca51C3a51310c41"
+const SALESPOLICY_ADDRESS = "0xb27bFF4F973981BfF93EB1B7d144c15F7D31d624"
 const zeroAddress = ethers.constants.AddressZero
 
 const domainType = [
@@ -33,7 +33,7 @@ const metaTransactionType = [
 ]
 
 async function main() {
-  let hexData;
+  let hexData
   const MockUSDT = await ethers.getContractFactory("MockUSDT")
   const mockUSDT = await MockUSDT.attach(mockUSDT_ADDRESS)
   await (await mockUSDT.approve(SALESPOLICY_ADDRESS, getBigNumber(100000000))).wait()
@@ -67,7 +67,7 @@ async function main() {
     mockUSDT_ADDRESS.slice(2)
 
   for (const account of signers) {
-    console.log('[signer]', account.address);
+    console.log("[signer]", account.address)
   }
   const flatSig = await signers[1].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
   const splitSig = ethers.utils.splitSignature(flatSig)

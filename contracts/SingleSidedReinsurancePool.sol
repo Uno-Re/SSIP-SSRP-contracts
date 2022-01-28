@@ -14,7 +14,7 @@ import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGuard, Ownable {
+contract SingleSidedReinsurancePoolNew is ISingleSidedReinsurancePool, ReentrancyGuard, Ownable {
     address public claimAssessor;
     address public migrateTo;
     address public syntheticSSRP;
