@@ -46,71 +46,88 @@ async function main() {
   let encodedCallData
   this.txIdx = await this.multiSigWallet.getTransactionCount()
 
-  encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createRiskPool", [
-    "Synthetic SSIP-ETH",
-    "SSSIP-ETH",
-    "0x744DD0c451C97546FB66c33F95ec252B91A08480",
-    "0x0000000000000000000000000000000000000000",
-    getBigNumber(1),
-  ])
-  console.log("[createRiskPool]", encodedCallData)
+  // encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createRiskPool", [
+  //   "Synthetic SSIP-ETH",
+  //   "SSSIP-ETH",
+  //   "0x744DD0c451C97546FB66c33F95ec252B91A08480",
+  //   "0x0000000000000000000000000000000000000000",
+  //   getBigNumber(1),
+  // ])
+  // console.log("[createRiskPool]", encodedCallData)
 
-  await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
-    .to.emit(this.multiSigWallet, "SubmitTransaction")
-    .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.address, 0, encodedCallData)
+  // await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.address, 0, encodedCallData)
 
-  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[0].address, this.txIdx)
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
 
-  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[1].address, this.txIdx)
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
 
-  this.txIdx++
+  // this.txIdx++
 
-  encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createRewarder", [
-    "0x5569BDF4e02cec3fE459796e3d0e741616029fA4",
-    "0x777eada585d00db3a65bec57e6a8c561c6dcb9ae",
-    "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5",
-  ])
+  // encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createRewarder", [
+  //   "0x5569BDF4e02cec3fE459796e3d0e741616029fA4",
+  //   "0x777eada585d00db3a65bec57e6a8c561c6dcb9ae",
+  //   "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5",
+  // ])
 
-  await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
-    .to.emit(this.multiSigWallet, "SubmitTransaction")
-    .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.address, 0, encodedCallData)
+  // await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.address, 0, encodedCallData)
 
-  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[0].address, this.txIdx)
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
 
-  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[1].address, this.txIdx)
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
 
-  this.txIdx++
+  // this.txIdx++
 
-  encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createSyntheticSSIP", [
-    this.multiSigWallet.address,
-    this.syntheticSSIPFactory.address,
-  ])
-  console.log("[createSyntheticSSIP]", encodedCallData)
+  // encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createSyntheticSSIP", [
+  //   this.multiSigWallet.address,
+  //   this.syntheticSSIPFactory.address,
+  // ])
+  // console.log("[createSyntheticSSIP]", encodedCallData)
 
-  await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
-    .to.emit(this.multiSigWallet, "SubmitTransaction")
-    .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.address, 0, encodedCallData)
+  // await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.address, 0, encodedCallData)
 
-  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[0].address, this.txIdx)
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
 
-  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-    .to.emit(this.multiSigWallet, "ConfirmTransaction")
-    .withArgs(this.signers[1].address, this.txIdx)
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
 
-  this.txIdx++
+  // this.txIdx++
 
-  encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("setCapitalAgent", [this.capitalAgent.address])
-  console.log("[createSyntheticSSIP]", encodedCallData)
+  // encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("setCapitalAgent", [this.capitalAgent.address])
+  // console.log("[createSyntheticSSIP]", encodedCallData)
+
+  // await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.address, 0, encodedCallData)
+
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
+
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
+
+  // this.txIdx++
+
+  encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("setRewardMultiplier", [getBigNumber(625, 7)])
+  console.log("[setRewardPerBlock]", encodedCallData)
 
   await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
     .to.emit(this.multiSigWallet, "SubmitTransaction")

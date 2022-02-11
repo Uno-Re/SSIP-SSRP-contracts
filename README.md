@@ -23,22 +23,23 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 -Rewarder contract: 0x36BEA8AD62B292E76b11f8D5f40Fc90daa46aB61
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0x3c668cd82AD4A215495af2B0a975b8245516EA7b
+- pool address: 0xeA69213af56762805E62686fDA9039ef4e94ac11
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 
-- LP token(RiskPool): 0x0E8614A6fefD06089dC9b1FFea2804D13743634d
+- LP token(RiskPool): 0x6899D6D66E6557cf9372bF6b6cb6b99f5c5bba07
 > name: Synthetic SSIP-ETH
 > symbol: SSSIP-ETH 
 
-- Rewarder contract: 0xE480c3b1bDe93d66c4f5a9a491c1C9CD7e2E9c95
+- Rewarder contract: 0x0614cfe1D373b4870693cf2b47dfB65Db2886Aa2
 
 #### Synth Selene - Synthetic SSIP ETH Pool:
-- pool address: 0x05c978eE201d0e4E9c6277bf3ac5Ef7694911421
-- staking currency(SSSIP-ETH LP token): 0x0E8614A6fefD06089dC9b1FFea2804D13743634d
-- reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
+- pool address: 0x5335fe5fe18e51A7E607F427AdB0c952186e22Ec
+- staking currency(SSSIP-ETH LP token): 0x6899D6D66E6557cf9372bF6b6cb6b99f5c5bba07
+- reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
+> it will be changed to USDC in the future on mainnet.
 
-- Rewarder contract: 0xAeDaFEE6FC0bBD38E4E70FC0449C55DF3dE12Dfe
+- Rewarder contract: 0x3514380422a2D128a2244C151854c86f06f31E77
 
 #### Ares - SSIP UNO Pool:
 - pool address: 0x2b30B5632A76Be1E8f45DBD4F0355526Ec84565e
@@ -78,7 +79,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
 - CapitalAgent: 0x6b16284828F6AC22597890b0Fdab434D93a4048c
 - ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
-- PremiumPool: 0xb2D88872F21341429638EF5EAa0EDC6361313896
+- PremiumPool: 0xb8a6CDD678091eeC8CB20EdDbC48b3Aa502FbF6d
 
 - Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
 

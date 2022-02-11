@@ -53,7 +53,7 @@ async function main() {
   encodedCallData = this.syntheticSSIP.interface.encodeFunctionData("createRewarder", [
     "0x5569BDF4e02cec3fE459796e3d0e741616029fA4",
     RewarderFactoryDeployment.address,
-    "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5",
+    "0x40c035016AD732b6cFce34c3F881040B6C6cf71E",
   ])
   console.log("[createRewarder]", encodedCallData)
 
@@ -70,6 +70,23 @@ async function main() {
     .withArgs(this.signers[1].address, this.txIdx)
 
   this.txIdx++
+
+  // encodedCallData = this.syntheticSSIP.interface.encodeFunctionData("setRewardPerBlock", [getBigNumber(300, 9)])
+  // console.log("[setRewardPerBlock]", encodedCallData)
+
+  // await expect(this.multiSigWallet.submitTransaction(this.syntheticSSIP.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.syntheticSSIP.address, 0, encodedCallData)
+
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
+
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
+
+  // this.txIdx++
 }
 
 main()

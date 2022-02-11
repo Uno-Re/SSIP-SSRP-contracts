@@ -46,7 +46,7 @@ async function main() {
   let encodedCallData
   this.txIdx = await this.multiSigWallet.getTransactionCount()
 
-  const whitelist = [this.capitalAgent.address, this.salesPolicy.address] //this.premiumPool.address, 
+  const whitelist = [this.premiumPool.address] // [this.capitalAgent.address, this.salesPolicy.address]
 
   for (let addr of whitelist) {
     encodedCallData = this.exchangeAgent.interface.encodeFunctionData("addWhiteList", [addr])

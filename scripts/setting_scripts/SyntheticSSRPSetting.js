@@ -19,10 +19,10 @@ const excahngeAgentDeployment = require("../../deployments/rinkeby/ExchangeAgent
 const multiSigWalletDeployment = require("../../deployments/rinkeby/MultiSigWallet.json")
 const premiumPoolDeployment = require("../../deployments/rinkeby/PremiumPool.json")
 const salesPolicyFactoryDeployment = require("../../deployments/rinkeby/SalesPolicyFactory.json")
-const singleSidedInsurancePoolUNODeployment = require("../../deployments/rinkeby/SingleSidedInsurancePoolUNO.json")
-const syntheticSSIPFactoryDeployment = require("../../deployments/rinkeby/SyntheticSSIPFactory.json")
+const singleSidedReinsurancePoolDeployment = require("../../deployments/rinkeby/SingleSidedReinsurancePool.json")
+const syntheticSSRPFactoryDeployment = require("../../deployments/rinkeby/SyntheticSSRPFactory.json")
 const RewarderFactoryDeployment = require("../../deployments/rinkeby/RewarderFactory.json")
-const SSSIPUNOAddress = "0xf184F348e4eCfE4768CfCF2028Faf3B65d20de79"
+const SSSRPAddress = "0x472E56df028928cB28042229D329FF399dAF5d10"
 
 async function main() {
   this.signers = await ethers.getSigners()
@@ -33,33 +33,33 @@ async function main() {
   this.PremiumPool = await ethers.getContractFactory("PremiumPool")
   this.SalesPolicyFactory = await ethers.getContractFactory("SalesPolicyFactory")
   this.SalesPolicy = await ethers.getContractFactory("SalesPolicy")
-  this.SingleSidedInsurancePoolUNO = await ethers.getContractFactory("SingleSidedInsurancePoolUNO")
-  this.SyntheticSSIPFactory = await ethers.getContractFactory("SyntheticSSIPFactory")
-  this.SyntheticSSIP = await ethers.getContractFactory("SyntheticSSIP")
+  this.SingleSidedReinsurancePool = await ethers.getContractFactory("SingleSidedReinsurancePool")
+  this.SyntheticSSRPFactory = await ethers.getContractFactory("SyntheticSSRPFactory")
+  this.SyntheticSSRP = await ethers.getContractFactory("SyntheticSSRP")
 
   this.multiSigWallet = await this.MultiSigWallet.attach(multiSigWalletDeployment.address)
   this.capitalAgent = await this.CapitalAgent.attach(capitalAgentDeployment.address)
   this.exchangeAgent = await this.ExchangeAgent.attach(excahngeAgentDeployment.address)
   this.premiumPool = await this.PremiumPool.attach(premiumPoolDeployment.address)
   this.salesPolicyFactory = await this.SalesPolicyFactory.attach(salesPolicyFactoryDeployment.address)
-  this.singleSidedInsurancePoolUNO = await this.SingleSidedInsurancePoolUNO.attach(singleSidedInsurancePoolUNODeployment.address)
-  this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.attach(syntheticSSIPFactoryDeployment.address)
-  this.syntheticSSIP = await this.SyntheticSSIP.attach(SSSIPUNOAddress)
+  // this.singleSidedReinsurancePool = await this.SingleSidedInsurancePool.attach(singleSidedReinsurancePoolDeployment.address)
+  this.syntheticSSRPFactory = await this.SyntheticSSRPFactory.attach(syntheticSSRPFactoryDeployment.address)
+  this.syntheticSSRP = await this.SyntheticSSRP.attach(SSSRPAddress)
   // this.salesPolicy = await this.SalesPolicy.attach()
 
   let encodedCallData
   this.txIdx = await this.multiSigWallet.getTransactionCount()
 
-  // encodedCallData = this.syntheticSSIP.interface.encodeFunctionData("createRewarder", [
+  // encodedCallData = this.syntheticSSRP.interface.encodeFunctionData("createRewarder", [
   //   "0x5569BDF4e02cec3fE459796e3d0e741616029fA4",
   //   RewarderFactoryDeployment.address,
   //   "0x40c035016AD732b6cFce34c3F881040B6C6cf71E",
   // ])
   // console.log("[createRewarder]", encodedCallData)
 
-  // await expect(this.multiSigWallet.submitTransaction(this.syntheticSSIP.address, 0, encodedCallData))
+  // await expect(this.multiSigWallet.submitTransaction(this.syntheticSSRP.address, 0, encodedCallData))
   //   .to.emit(this.multiSigWallet, "SubmitTransaction")
-  //   .withArgs(this.signers[0].address, this.txIdx, this.syntheticSSIP.address, 0, encodedCallData)
+  //   .withArgs(this.signers[0].address, this.txIdx, this.syntheticSSRP.address, 0, encodedCallData)
 
   // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
   //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
@@ -71,12 +71,12 @@ async function main() {
 
   // this.txIdx++
 
-  encodedCallData = this.syntheticSSIP.interface.encodeFunctionData("setRewardPerBlock", [getBigNumber(2, 3)])
+  encodedCallData = this.syntheticSSRP.interface.encodeFunctionData("setRewardPerBlock", [getBigNumber(477, 1)])
   console.log("[setRewardPerBlock]", encodedCallData)
 
-  await expect(this.multiSigWallet.submitTransaction(this.syntheticSSIP.address, 0, encodedCallData))
+  await expect(this.multiSigWallet.submitTransaction(this.syntheticSSRP.address, 0, encodedCallData))
     .to.emit(this.multiSigWallet, "SubmitTransaction")
-    .withArgs(this.signers[0].address, this.txIdx, this.syntheticSSIP.address, 0, encodedCallData)
+    .withArgs(this.signers[0].address, this.txIdx, this.syntheticSSRP.address, 0, encodedCallData)
 
   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
     .to.emit(this.multiSigWallet, "ConfirmTransaction")

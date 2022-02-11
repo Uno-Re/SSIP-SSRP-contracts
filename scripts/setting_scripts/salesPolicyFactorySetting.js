@@ -104,21 +104,21 @@ async function main() {
 
   // this.txIdx++
 
-  // encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setPremiumPool", [this.premiumPool.address])
+  encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setPremiumPool", [this.premiumPool.address])
 
-  // await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
-  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
-  //   .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
+  await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
+    .to.emit(this.multiSigWallet, "SubmitTransaction")
+    .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
 
-  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
-  //   .withArgs(this.signers[0].address, this.txIdx)
+  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[0].address, this.txIdx)
 
-  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
-  //   .withArgs(this.signers[1].address, this.txIdx)
+  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[1].address, this.txIdx)
 
-  // this.txIdx++
+  this.txIdx++
 
   // encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setExchangeAgentInPolicy", [this.exchangeAgent.address])
 
@@ -136,21 +136,21 @@ async function main() {
 
   // this.txIdx++
 
-  // encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setPremiumPoolInPolicy", [this.premiumPool.address])
+  encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setPremiumPoolInPolicy", [this.premiumPool.address])
 
-  // await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
-  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
-  //   .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
+  await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
+    .to.emit(this.multiSigWallet, "SubmitTransaction")
+    .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
 
-  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
-  //   .withArgs(this.signers[0].address, this.txIdx)
+  await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[0].address, this.txIdx)
 
-  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
-  //   .withArgs(this.signers[1].address, this.txIdx)
+  await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    .withArgs(this.signers[1].address, this.txIdx)
 
-  // this.txIdx++
+  this.txIdx++
 
   // encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setCapitalAgentInPolicy", [this.capitalAgent.address])
   // console.log("[setCapitalAgentInPolicy]", encodedCallData)
