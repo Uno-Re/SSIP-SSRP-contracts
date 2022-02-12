@@ -33,7 +33,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
     event PremiumWithdraw(address indexed _currency, address indexed _to, uint256 _amount);
     event LogBuyBackAndBurn(address indexed _operator, address indexed _premiumPool, uint256 _unoAmount);
     event LogCollectPremium(address indexed _from, address _premiumCurrency, uint256 _premiumAmount);
-    event LogDepositToSyntheticSSRPRewarder(address indexed _rewarder, uint256 _ethAmountDeposited);
+    event LogDepositToSyntheticSSRPRewarder(address indexed _rewarder, uint256 _amountDeposited);
     event LogDepositToSyntheticSSIPRewarder(address indexed _rewarder, address indexed _currency, uint256 _amountDeposited);
     event LogAddCurrency(address indexed _premiumPool, address indexed _currency);
     event LogRemoveCurrency(address indexed _premiumPool, address indexed _currency);
@@ -131,18 +131,20 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         }
     }
 
-    function depositToSyntheticSSIPRewarder(address _currency, address _rewarder) external onlyOwner nonReentrant {
+    function depositToSyntheticSSIPRewarder(address _currency, address _rewarder, uint256 _amount) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         require(_rewarder.isContract(), "UnoRe: no contract address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
-            TransferHelper.safeTransferETH(_rewarder, SSIP_PREMIUM_ETH);
-            SSIP_PREMIUM_ETH = 0;
-            emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, SSIP_PREMIUM_ETH);
+            require(_amount <= SSIP_PREMIUM_ETH, "UnoRe: premium balance overflow");
+            TransferHelper.safeTransferETH(_rewarder, _amount);
+            SSIP_PREMIUM_ETH -= _amount;
+            emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);
         } else {
             if (availableCurrencies[_currency] && SSIP_PREMIUM[_currency] > 0) {
-                TransferHelper.safeTransfer(_currency, _rewarder, SSIP_PREMIUM[_currency]);
-                SSIP_PREMIUM[_currency] = 0;
-                emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, SSIP_PREMIUM[_currency]);
+                require(_amount <= SSIP_PREMIUM[_currency], "UnoRe: premium balance overflow");
+                TransferHelper.safeTransfer(_currency, _rewarder, _amount);
+                SSIP_PREMIUM[_currency] -= _amount;
+                emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);
             }
         }
     }
