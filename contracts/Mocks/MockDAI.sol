@@ -9,13 +9,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * This smart contract
  */
 
-contract MockUSDT is Ownable, ERC20 {
+contract MockDAI is Ownable, ERC20 {
     uint256 INITIAL_SUPPLY = 10000000000 * 10**18;
 
     mapping(address => uint256) private _faucets;
     uint256 public constant faucetLimit = 500000 * 10**18;
 
-    constructor() ERC20("USDT", "USDT") {
+    constructor() ERC20("DAI", "DAI") {
         _mint(msg.sender, INITIAL_SUPPLY);
     }
 

@@ -85,13 +85,50 @@ async function main() {
 
   // this.txIdx++
 
-  const usdtBalance = await this.mockUSDT.balanceOf(this.premiumPoolOld.address);
-  encodedCallData = this.premiumPoolOld.interface.encodeFunctionData("withdrawPremium", [USDT.rinkeby, this.signers[0].address, usdtBalance])
-  console.log("[withdrawPremium]", encodedCallData)
+  // const usdtBalance = await this.mockUSDT.balanceOf(this.premiumPoolOld.address);
+  // encodedCallData = this.premiumPoolOld.interface.encodeFunctionData("withdrawPremium", [USDT.rinkeby, this.signers[0].address, usdtBalance])
+  // console.log("[withdrawPremium]", encodedCallData)
 
-  await expect(this.multiSigWallet.submitTransaction(this.premiumPoolOld.address, 0, encodedCallData))
+  // await expect(this.multiSigWallet.submitTransaction(this.premiumPoolOld.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.premiumPoolOld.address, 0, encodedCallData)
+
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
+
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
+
+  // this.txIdx++
+
+  // const rewarder = "0x3514380422a2D128a2244C151854c86f06f31E77";
+  // const distributeAmount = getBigNumber(50, 6);
+  // const usdtBalance = await this.mockUSDT.balanceOf(this.premiumPool.address);
+  // encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [USDT.rinkeby, rewarder, distributeAmount])
+  // console.log("[depositToSyntheticSSIPRewarder]", encodedCallData)
+
+  // await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
+
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
+
+  // this.txIdx++
+
+  encodedCallData = this.premiumPool.interface.encodeFunctionData("buyBackAndBurn")
+  console.log("[buyBackAndBurn]", encodedCallData)
+
+  await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
     .to.emit(this.multiSigWallet, "SubmitTransaction")
-    .withArgs(this.signers[0].address, this.txIdx, this.premiumPoolOld.address, 0, encodedCallData)
+    .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
 
   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
     .to.emit(this.multiSigWallet, "ConfirmTransaction")
@@ -103,7 +140,22 @@ async function main() {
 
   this.txIdx++
 
-  const oldBalance = getBigNumber(300774793, 1) 
+  // encodedCallData = this.premiumPool.interface.encodeFunctionData("transferOwnership", [this.signers[0].address])
+  // console.log("[transferOwnership]", encodedCallData)
+
+  // await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+  //   .to.emit(this.multiSigWallet, "SubmitTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+
+  // await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[0].address, this.txIdx)
+
+  // await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+  //   .to.emit(this.multiSigWallet, "ConfirmTransaction")
+  //   .withArgs(this.signers[1].address, this.txIdx)
+
+  // this.txIdx++
 }
 
 main()
