@@ -152,7 +152,8 @@ contract SingleSidedInsurancePoolUNO is ISingleSidedInsurancePool, ReentrancyGua
         string calldata _symbol,
         address _factory,
         address _currency,
-        uint256 _rewardMultiplier
+        uint256 _rewardMultiplier,
+        uint256 _SCR
     ) external onlyOwner nonReentrant {
         require(riskPool == address(0), "UnoRe: risk pool created already");
         require(_factory != address(0), "UnoRe: zero factory address");
@@ -160,7 +161,7 @@ contract SingleSidedInsurancePoolUNO is ISingleSidedInsurancePool, ReentrancyGua
         poolInfo.lastRewardBlock = uint128(block.number);
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
-        ICapitalAgent(capitalAgent).addPool(address(this), _currency);
+        ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
         emit RiskPoolCreated(address(this), riskPool);
     }
 

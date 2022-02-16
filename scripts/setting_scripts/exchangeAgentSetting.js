@@ -83,7 +83,6 @@ async function main() {
     .withArgs(this.signers[1].address, this.txIdx)
 
   this.txIdx++
-
 }
 
 main()

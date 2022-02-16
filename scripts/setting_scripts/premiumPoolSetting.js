@@ -20,7 +20,7 @@ const multiSigWalletDeployment = require("../../deployments/rinkeby/MultiSigWall
 const premiumPoolDeployment = require("../../deployments/rinkeby/PremiumPool.json")
 const salesPolicyFactoryDeployment = require("../../deployments/rinkeby/SalesPolicyFactory.json")
 const singleSidedInsurancePoolDeployment = require("../../deployments/rinkeby/SingleSidedInsurancePool.json")
-const oldPremiumPool = "0xb2D88872F21341429638EF5EAa0EDC6361313896";
+const oldPremiumPool = "0xb2D88872F21341429638EF5EAa0EDC6361313896"
 
 async function main() {
   this.signers = await ethers.getSigners()
@@ -32,7 +32,7 @@ async function main() {
   this.SalesPolicyFactory = await ethers.getContractFactory("SalesPolicyFactory")
   this.SalesPolicy = await ethers.getContractFactory("SalesPolicy")
   this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
-  this.MockUSDT = await ethers.getContractFactory("MockUSDT");
+  this.MockUSDT = await ethers.getContractFactory("MockUSDT")
 
   this.multiSigWallet = await this.MultiSigWallet.attach(multiSigWalletDeployment.address)
   this.capitalAgent = await this.CapitalAgent.attach(capitalAgentDeployment.address)
@@ -41,12 +41,11 @@ async function main() {
   this.premiumPoolOld = await this.PremiumPool.attach(oldPremiumPool)
   this.salesPolicyFactory = await this.SalesPolicyFactory.attach(salesPolicyFactoryDeployment.address)
   this.singleSidedInsurancePool = await this.SingleSidedInsurancePool.attach(singleSidedInsurancePoolDeployment.address)
-  this.mockUSDT = await this.MockUSDT.attach(USDT.rinkeby);
+  this.mockUSDT = await this.MockUSDT.attach(USDT.rinkeby)
   // this.salesPolicy = await this.SalesPolicy.attach()
   this.salesPolicyAddress = await this.salesPolicyFactory.salesPolicy()
   console.log(this.salesPolicyAddress)
   this.salesPolicy = await this.SalesPolicy.attach(this.salesPolicyAddress)
-
 
   let encodedCallData
   this.txIdx = await this.multiSigWallet.getTransactionCount()
