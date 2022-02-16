@@ -10,11 +10,12 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const UNISWAPV2_FACTORY = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
   const UNISWAPV2_ROUTER = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
   const TWAP_PRICE_FEED_FACTORY = "0x6fa8a7E5c13E4094fD4Fa288ba59544791E4c9d3"
-  const multiSigWallet = await deployments.get("MultiSigWallet")
+  // const multiSigWallet = await deployments.get("MultiSigWallet")
+  const multiSigWallet = "0x5569BDF4e02cec3fE459796e3d0e741616029fA4"
 
   await deploy("ExchangeAgent", {
     from: deployer,
-    args: [mockUSDT, WETH, TWAP_PRICE_FEED_FACTORY, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet.address],
+    args: [mockUSDT, WETH, TWAP_PRICE_FEED_FACTORY, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet],
     log: true,
     deterministicDeployment: false,
   })

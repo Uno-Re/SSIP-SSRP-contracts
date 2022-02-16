@@ -278,8 +278,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
                 : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _withdrawAmount);
         }
         bool isMCRPass = totalCapitalStaked - withdrawAmountInUSDC >= (totalCapitalStaked * MCR) / CALC_PRECISION;
-        bool isSCRPass = poolInfo[_pool].totalCapital - withdrawAmountInUSDC >=
-            (poolInfo[_pool].totalCapital * poolInfo[_pool].SCR) / CALC_PRECISION;
+        bool isSCRPass = poolInfo[_pool].totalCapital - withdrawAmountInUSDC >= poolInfo[_pool].SCR;
         return isMCRPass && isSCRPass;
     }
 

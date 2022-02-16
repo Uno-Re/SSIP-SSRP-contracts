@@ -7,11 +7,12 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const exchangeAgent = await deployments.get("ExchangeAgent")
   const mockUNO = "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5"
   const mockUSDT = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
-  const multiSigWallet = await deployments.get("MultiSigWallet")
+  // const multiSigWallet = await deployments.get("MultiSigWallet")
+  const multiSigWallet = "0x5569BDF4e02cec3fE459796e3d0e741616029fA4"
 
   const capitalAgent = await deploy("CapitalAgent", {
     from: deployer,
-    args: [exchangeAgent.address, mockUNO, mockUSDT, multiSigWallet.address, deployer],
+    args: [exchangeAgent.address, mockUNO, mockUSDT, multiSigWallet, deployer],
     log: true,
     deterministicDeployment: false,
   })
