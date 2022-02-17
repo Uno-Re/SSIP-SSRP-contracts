@@ -26,6 +26,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0x290d5742D097924dE147dC81F58f6E048aBcd676
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
+> the current SCR: 15000 USDC
+> the current rewardPerBlock: 0.000000625
 
 - LP token(RiskPool): 0xBdf8ba83d61DAB0d63FEB8cadAC4A473F1D629C1
 > name: Synthetic SSIP-ETH
@@ -38,6 +40,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - staking currency(SSSIP-ETH LP token): 0xBdf8ba83d61DAB0d63FEB8cadAC4A473F1D629C1
 - reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
 > it will be changed to USDC in the future on mainnet.
+> the current rewardPerBlock: 0.00002
 
 - Rewarder contract: 0x91fcd0054cC1299476408a0F49FB0E9e8BCc962C
 
@@ -45,6 +48,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0xFbD7FB72EC079eC19dAfdC2cA294F8D3b83b3624
 - staking currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
+> the current SCR: 500 USDC
+> the current rewardPerBlock: 0.0049
 
 - LP token(RiskPool): 0xBb5e56E869465cC86bDceA854063C87E8aD1f17A
 > name: Synthetic SSIP-UNO
@@ -57,6 +62,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - staking currency(SSSIP-UNO LP token): 0xBb5e56E869465cC86bDceA854063C87E8aD1f17A
 - reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
 > it will be changed to USDC in the future on mainnet.
+> the current rewardPerBlock: 0.002
 
 - Rewarder contract: 0xeAC3374160D03f9c57A8b6119c6398c906ABec5c
 
@@ -80,6 +86,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 - MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
 - CapitalAgent: 0x64741A6b0143596F31e462c6cD802A2A7eacaAc3
+> the current MCR: 50%
+> the current MLR: 200%
 - ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
 - PremiumPool: 0xb8a6CDD678091eeC8CB20EdDbC48b3Aa502FbF6d
 
