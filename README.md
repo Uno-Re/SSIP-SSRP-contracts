@@ -9,8 +9,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 
 - LP token(RiskPool): 0xAC51a8F0dc7151D0A18AF23C2FFD4c2dAa9DdEAa
-> name: Synthetic SSRP
-> symbol: SSSRP 
+> name: Synthetic SSRP <br/>
+> symbol: SSSRP <br/>
 
 - Rewarder contract: 0x8B2E925d4D1CF2C32E85b850b1228001128A75d0
 
@@ -18,7 +18,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0x472E56df028928cB28042229D329FF399dAF5d10
 - staking currency(SSRP LP token): 0xAC51a8F0dc7151D0A18AF23C2FFD4c2dAa9DdEAa
 - reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
-> it will be changed to USDC in the future on mainnet.
+> it will be changed to USDC in the future on mainnet. <br/>
 
 -Rewarder contract: 0x36BEA8AD62B292E76b11f8D5f40Fc90daa46aB61
 
@@ -26,12 +26,12 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0x290d5742D097924dE147dC81F58f6E048aBcd676
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 15000 USDC
-> the current rewardPerBlock: 0.000000625
+> the current SCR: 15000 USDC <br/>
+> the current rewardPerBlock: 0.000000625 <br/>
 
 - LP token(RiskPool): 0xBdf8ba83d61DAB0d63FEB8cadAC4A473F1D629C1
-> name: Synthetic SSIP-ETH
-> symbol: SSSIP-ETH 
+> name: Synthetic SSIP-ETH <br/>
+> symbol: SSSIP-ETH <br/>
 
 - Rewarder contract: 0xdeE194b832EF3a8EEF23738dd034059f3Ef2085b
 
@@ -39,8 +39,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0xE6e5Fe96947ff6238D18d64Aaa36890eb019c339
 - staking currency(SSSIP-ETH LP token): 0xBdf8ba83d61DAB0d63FEB8cadAC4A473F1D629C1
 - reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
-> it will be changed to USDC in the future on mainnet.
-> the current rewardPerBlock: 0.00002
+> it will be changed to USDC in the future on mainnet.<br/>
+> the current rewardPerBlock: 0.00002 <br/>
 
 - Rewarder contract: 0x91fcd0054cC1299476408a0F49FB0E9e8BCc962C
 
@@ -48,12 +48,12 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0xFbD7FB72EC079eC19dAfdC2cA294F8D3b83b3624
 - staking currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 500 USDC
-> the current rewardPerBlock: 0.0049
+> the current SCR: 500 USDC <br/>
+> the current rewardPerBlock: 0.0049 <br/>
 
 - LP token(RiskPool): 0xBb5e56E869465cC86bDceA854063C87E8aD1f17A
-> name: Synthetic SSIP-UNO
-> symbol: SSSIP-UNO 
+> name: Synthetic SSIP-UNO <br/>
+> symbol: SSSIP-UNO <br/>
 
 - Rewarder contract: 0xa91C7f8EFD6360fbB3BAE3CBaab6e5c53067692C
 
@@ -61,8 +61,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0x8B5a928a6ae93F14C914822766bff3bf91240d54
 - staking currency(SSSIP-UNO LP token): 0xBb5e56E869465cC86bDceA854063C87E8aD1f17A
 - reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
-> it will be changed to USDC in the future on mainnet.
-> the current rewardPerBlock: 0.002
+> it will be changed to USDC in the future on mainnet. <br/>
+> the current rewardPerBlock: 0.002 <br/>
 
 - Rewarder contract: 0xeAC3374160D03f9c57A8b6119c6398c906ABec5c
 
@@ -86,8 +86,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 - MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
 - CapitalAgent: 0x64741A6b0143596F31e462c6cD802A2A7eacaAc3
-> the current MCR: 50%
-> the current MLR: 200%
+> the current MCR: 50% <br/>
+> the current MLR: 200% <br/>
 - ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
 - PremiumPool: 0xb8a6CDD678091eeC8CB20EdDbC48b3Aa502FbF6d
 
