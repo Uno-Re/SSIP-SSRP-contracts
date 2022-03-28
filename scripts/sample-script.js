@@ -17,7 +17,7 @@ const SALESPOLICY_ABI = require("../scripts/abis/SalesPolicy.json")
 
 const mockUSDT_ADDRESS = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
 // const mockUSDC_ADDRESS = "0xD4D5c5D939A173b9c18a6B72eEaffD98ecF8b3F6"
-const SALESPOLICY_ADDRESS = "0xCeeA4d2597739bFFcbE934b63ab7CA014253597A"
+const SALESPOLICY_ADDRESS = "0x871564f3a1de8b8faA3F4058311116516dd5AF2B"
 const zeroAddress = ethers.constants.AddressZero
 
 const domainType = [
