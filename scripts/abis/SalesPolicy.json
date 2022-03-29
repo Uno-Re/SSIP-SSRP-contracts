@@ -84,10 +84,10 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
+        "indexed": false,
+        "internalType": "bytes32",
         "name": "_protocol",
-        "type": "address"
+        "type": "bytes32"
       },
       {
         "indexed": true,
@@ -435,9 +435,9 @@
   {
     "inputs": [
       {
-        "internalType": "address[]",
+        "internalType": "bytes32[]",
         "name": "_protocols",
-        "type": "address[]"
+        "type": "bytes32[]"
       },
       {
         "internalType": "uint256[]",
@@ -614,9 +614,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "address",
+        "internalType": "bytes32",
         "name": "protocolAddress",
-        "type": "address"
+        "type": "bytes32"
       },
       {
         "internalType": "address",

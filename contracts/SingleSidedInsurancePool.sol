@@ -84,7 +84,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
-        // transferOwnership(_multiSigWallet);
+        transferOwnership(_multiSigWallet);
     }
 
     modifier onlyClaimAssessor() {

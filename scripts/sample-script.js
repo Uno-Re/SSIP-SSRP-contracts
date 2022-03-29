@@ -12,12 +12,13 @@ const {
   getChainId,
   getSignatureParameters,
   getPaddedHexStrFromBNArray,
+  getBytes32FromStr,
 } = require("./shared/utilities")
 const SALESPOLICY_ABI = require("../scripts/abis/SalesPolicy.json")
 
 const mockUSDT_ADDRESS = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
 // const mockUSDC_ADDRESS = "0xD4D5c5D939A173b9c18a6B72eEaffD98ecF8b3F6"
-const SALESPOLICY_ADDRESS = "0x871564f3a1de8b8faA3F4058311116516dd5AF2B"
+const SALESPOLICY_ADDRESS = "0xa03a7Bc6D79F943d80DA61353f312028098a69A6"
 const zeroAddress = ethers.constants.AddressZero
 
 const domainType = [
@@ -36,23 +37,36 @@ async function main() {
   let hexData
   const MockUSDT = await ethers.getContractFactory("MockUSDT")
   const mockUSDT = await MockUSDT.attach(mockUSDT_ADDRESS)
-  await (await mockUSDT.approve(SALESPOLICY_ADDRESS, getBigNumber(100000000))).wait()
   const signers = await ethers.getSigners()
+  await (await mockUSDT.approve(SALESPOLICY_ADDRESS, getBigNumber(100000000))).wait()
 
   const currentDate = new Date()
   const timestamp = Math.floor(new Date(currentDate.setTime(currentDate.getTime())).getTime() / 1000)
 
   const privateKey = process.env.PRIVATE_KEY
+  const jsonRpcProvider = new ethers.providers.JsonRpcProvider(hre.config.networks.rinkeby.url)
+
+  const biconomy = new Biconomy(jsonRpcProvider, { apiKey: process.env.BICONOMY_API_KEY, debug: true })
+  const ethersProvider = new ethers.providers.Web3Provider(biconomy)
+  let wallet = new ethers.Wallet(privateKey)
+
+  biconomy
+    .onEvent(biconomy.READY, async () => {
+      console.log("biconomy ready")
+    })
+    .onEvent(biconomy.ERROR, (error, message) => {
+      console.log("message", message)
+      console.log("error", error)
+    })
 
   const policyPrice = getBigNumber(300, 6)
-  const protocols = [signers[0].address, signers[1].address]
+  const protocols = [getBytes32FromStr(signers[0].address), getBytes32FromStr(signers[1].address)]
   const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
   const coverageAmount = [getBigNumber(100, 6), getBigNumber(100, 6)]
   const deadline = getBigNumber(timestamp - 7 * 3600, 0)
 
   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-  const paddedProtocolsHexStr =
-    "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
+  const paddedProtocolsHexStr = protocols[0].slice(2) + protocols[1].slice(2)
   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
@@ -71,20 +85,6 @@ async function main() {
   }
   const flatSig = await signers[1].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
   const splitSig = ethers.utils.splitSignature(flatSig)
-  const jsonRpcProvider = new ethers.providers.JsonRpcProvider(hre.config.networks.rinkeby.url)
-
-  const biconomy = new Biconomy(jsonRpcProvider, { apiKey: process.env.BICONOMY_API_KEY, debug: true })
-  const ethersProvider = new ethers.providers.Web3Provider(biconomy)
-  let wallet = new ethers.Wallet(privateKey)
-
-  biconomy
-    .onEvent(biconomy.READY, async () => {
-      console.log("biconomy ready")
-    })
-    .onEvent(biconomy.ERROR, (error, message) => {
-      console.log("message", message)
-      console.log("error", error)
-    })
 
   const salesPolicyInterface = new ethers.utils.Interface(SALESPOLICY_ABI)
   const salesPolicy = new ethers.Contract(SALESPOLICY_ADDRESS, SALESPOLICY_ABI, biconomy.getSignerByAddress(signers[0].address))
@@ -113,6 +113,7 @@ async function main() {
     splitSig.s,
     splitSig.v,
   ])
+  console.log(functionSignature)
 
   const nonce = await salesPolicy.getNonce(signers[0].address)
 

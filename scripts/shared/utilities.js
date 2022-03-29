@@ -1,4 +1,5 @@
 const { ethers } = require("hardhat")
+const { stripHexPrefix } = require("ethereumjs-util")
 const { BigNumber } = ethers
 
 function getCreate2CohortAddress(actuaryAddress, { cohortName, sender, nonce }, bytecode) {
@@ -41,8 +42,14 @@ function getPaddedHexStrFromBNArray(bnArray) {
 }
 
 function getHexStrFromStr(str) {
-  const strBytes = ethers.utils.toUtf8Bytes(str)
+  const strWithoutHex = stripHexPrefix(str)
+  const strBytes = ethers.utils.toUtf8Bytes(strWithoutHex)
   return ethers.utils.hexlify(strBytes)
+}
+
+function getBytes32FromStr(str) {
+  const strBytes = getHexStrFromStr(str)
+  return ethers.utils.keccak256(strBytes);
 }
 
 async function advanceBlock() {
@@ -87,6 +94,7 @@ module.exports = {
   getPaddedHexStrFromBN,
   getPaddedHexStrFromBNArray,
   getHexStrFromStr,
+  getBytes32FromStr,
   advanceBlock,
   advanceBlockTo,
   getChainId,

@@ -7,7 +7,7 @@ const { Biconomy } = require("@biconomy/mexa")
 const {
   getBigNumber,
   getNumber,
-  getHexStrFromStr,
+  getBytes32FromStr,
   getPaddedHexStrFromBN,
   getChainId,
   getSignatureParameters,
@@ -17,20 +17,7 @@ const SALESPOLICY_ABI = require("../scripts/abis/SalesPolicy.json")
 
 const mockUSDT_ADDRESS = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
 // const mockUSDC_ADDRESS = "0xD4D5c5D939A173b9c18a6B72eEaffD98ecF8b3F6"
-const SALESPOLICY_ADDRESS = "0xCeeA4d2597739bFFcbE934b63ab7CA014253597A"
-const zeroAddress = ethers.constants.AddressZero
-
-const domainType = [
-  { name: "name", type: "string" },
-  { name: "version", type: "string" },
-  { name: "verifyingContract", type: "address" },
-  { name: "salt", type: "bytes32" },
-]
-const metaTransactionType = [
-  { name: "nonce", type: "uint256" },
-  { name: "from", type: "address" },
-  { name: "functionSignature", type: "bytes" },
-]
+const SALESPOLICY_ADDRESS = "0xa03a7Bc6D79F943d80DA61353f312028098a69A6"
 
 async function main() {
   let hexData
@@ -46,17 +33,14 @@ async function main() {
   const currentDate = new Date()
   const timestamp = Math.floor(new Date(currentDate.setTime(currentDate.getTime())).getTime() / 1000)
 
-  const privateKey = process.env.PRIVATE_KEY
-
   const policyPrice = getBigNumber(300, 6)
-  const protocols = [signers[0].address, signers[1].address]
+  const protocols = [getBytes32FromStr(signers[0].address), getBytes32FromStr(signers[1].address)]
   const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
   const coverageAmount = [getBigNumber(100, 6), getBigNumber(100, 6)]
   const deadline = getBigNumber(timestamp - 7 * 3600, 0)
 
   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-  const paddedProtocolsHexStr =
-    "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
+  const paddedProtocolsHexStr = protocols[0].slice(2) + protocols[1].slice(2)
   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)

@@ -172,9 +172,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     function removePolicy() external onlyOwner nonReentrant {
         require(policyInfo.exist, "UnoRe: no exit pool");
-        if (policyInfo.utilizedAmount > 0) {
-            totalCapitalStaked = totalUtilizedAmount - policyInfo.utilizedAmount;
-        }
+        totalUtilizedAmount = 0;
         address _policy = policyInfo.policy;
         policyInfo.policy = address(0);
         policyInfo.exist = false;

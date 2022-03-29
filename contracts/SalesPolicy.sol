@@ -23,7 +23,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 coverStartAt;
         uint256 coverageDuration;
         uint256 coverageAmount;
-        address protocolAddress;
+        bytes32 protocolAddress;
         address premiumCurrency;
         bool exist;
         bool expired;
@@ -45,7 +45,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     uint256 private MAX_INTEGER = type(uint256).max;
 
     event BuyPolicy(
-        address indexed _protocol,
+        bytes32 _protocol,
         uint256 indexed _policyIdx,
         address _owner,
         uint256 _coverageAmount,
@@ -96,7 +96,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     receive() external payable {}
 
     function buyPolicy(
-        address[] memory _protocols,
+        bytes32[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
         uint256 _policyPriceInUSDC,
@@ -144,7 +144,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     }
 
     function _buyPolicy(
-        address[] memory _protocols,
+        bytes32[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
         uint256 _premiumPaid,
@@ -154,7 +154,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 lastIdx;
         uint256 coverAmount;
         uint256 coverDuration;
-        address _protocol;
+        bytes32 _protocol;
 
         bool checkIfProtocolInWhitelistArray = ISalesPolicyFactory(factory).checkIfProtocolInWhitelistArray();
 
@@ -281,7 +281,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     function getSender(
         uint256 _policyPrice,
-        address[] memory _protocols,
+        bytes32[] memory _protocols,
         uint256[] memory _coverageDuration,
         uint256[] memory _coverageAmount,
         uint256 _signedTime,
