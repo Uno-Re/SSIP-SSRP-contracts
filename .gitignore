@@ -7,4 +7,4 @@ artifacts
 # .env
 .env
 
-deployments/rinkeby_old
+/deployments/rinkeby_old

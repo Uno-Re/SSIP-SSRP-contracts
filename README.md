@@ -71,8 +71,8 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - SyntheticSSRPFactory: 0x8968056Fa1CB548136ff06740d058f9538a9522D
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0x881384D8653292414F27e86F2EbAed855F429ffA
-- SalesPolicy: 0x871564f3a1de8b8faA3F4058311116516dd5AF2B
+- SalesPolicyFactory: 0x83a813A86C6ab0E7EA9Ec816254Ce5db563aEb4C
+- SalesPolicy: 0xa03a7Bc6D79F943d80DA61353f312028098a69A6
 
 #### Factories:
 - RiskPoolFactory: 0x976D5132b58235C7457A6bEebB5A090Ae2fDb76f
