@@ -149,10 +149,9 @@ describe("SalesPolicy", function () {
 
     // add 2 protocols
     for (let idx = 0; idx < 3; idx++) {
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData(
-        "addProtocol",
-        [getBytes32FromStr(this.signers[idx + 1].address)],
-      )
+      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("addProtocol", [
+        getBytes32FromStr(this.signers[idx + 1].address),
+      ])
 
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -243,7 +242,7 @@ describe("SalesPolicy", function () {
       getBigNumber(1),
       getBigNumber(5000, 6),
     ])
-    console.log('[createRiskPool]', encodedCallData)
+    console.log("[createRiskPool]", encodedCallData)
 
     await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.address, 0, encodedCallData))
       .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -276,7 +275,7 @@ describe("SalesPolicy", function () {
     const beforeBlockNumber = await ethers.provider.getBlockNumber()
 
     await advanceBlockTo(beforeBlockNumber + 10000)
-    console.log('[beforeBlockNumber]', beforeBlockNumber)
+    console.log("[beforeBlockNumber]", beforeBlockNumber)
 
     // another one will deposit in pool with the same amount
     await this.singleSidedInsurancePool
@@ -292,7 +291,7 @@ describe("SalesPolicy", function () {
       this.premiumPool.address,
       this.capitalAgent.address,
     ])
-    console.log('[newSalesPolicy]', encodedCallData)
+    console.log("[newSalesPolicy]", encodedCallData)
 
     await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
       .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -384,6 +383,7 @@ describe("SalesPolicy", function () {
       // await (await this.salesPolicyFactory.updateCheckIfProtocolInWhitelistArray(true)).wait()
       // await (await this.salesPolicyFactory.setBlackListProtocolById(0)).wait()
 
+      const assets = [this.mockUSDT.address, this.zeroAddress]
       //   prepare sign data
       const policyPrice = getBigNumber(300, 6)
       const protocols = [getBytes32FromStr(this.signers[0].address), getBytes32FromStr(this.signers[1].address)]
@@ -415,6 +415,7 @@ describe("SalesPolicy", function () {
       expect(premiumPoolBalanceBefore).to.equal(0)
 
       await this.salesPolicy.buyPolicy(
+        assets,
         protocols,
         coverageAmount,
         coverageDuration,
@@ -425,7 +426,6 @@ describe("SalesPolicy", function () {
         splitSig.s,
         splitSig.v,
       )
-
 
       const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.address)
       const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.address)

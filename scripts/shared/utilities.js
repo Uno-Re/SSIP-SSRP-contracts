@@ -49,7 +49,7 @@ function getHexStrFromStr(str) {
 
 function getBytes32FromStr(str) {
   const strBytes = getHexStrFromStr(str)
-  return ethers.utils.keccak256(strBytes);
+  return ethers.utils.keccak256(strBytes)
 }
 
 async function advanceBlock() {

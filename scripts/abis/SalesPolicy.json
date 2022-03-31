@@ -84,6 +84,24 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_asset",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_premiumCurrency",
+        "type": "address"
+      },
+      {
         "indexed": false,
         "internalType": "bytes32",
         "name": "_protocol",
@@ -97,12 +115,6 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "_coverageAmount",
         "type": "uint256"
@@ -112,12 +124,6 @@
         "internalType": "uint256",
         "name": "_coverageDuration",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_premiumCurrency",
-        "type": "address"
       },
       {
         "indexed": false,
@@ -434,6 +440,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "_assets",
+        "type": "address[]"
+      },
       {
         "internalType": "bytes32[]",
         "name": "_protocols",

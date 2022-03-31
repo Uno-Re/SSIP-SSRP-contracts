@@ -14,10 +14,11 @@ const {
   getPaddedHexStrFromBNArray,
 } = require("./shared/utilities")
 const SALESPOLICY_ABI = require("../scripts/abis/SalesPolicy.json")
+const zeroAddress = ethers.constants.AddressZero
 
 const mockUSDT_ADDRESS = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
 // const mockUSDC_ADDRESS = "0xD4D5c5D939A173b9c18a6B72eEaffD98ecF8b3F6"
-const SALESPOLICY_ADDRESS = "0xa03a7Bc6D79F943d80DA61353f312028098a69A6"
+const SALESPOLICY_ADDRESS = "0x5A4229D402eE3791DA98eCdbaE0700beBfcfa53c"
 
 async function main() {
   let hexData
@@ -33,6 +34,7 @@ async function main() {
   const currentDate = new Date()
   const timestamp = Math.floor(new Date(currentDate.setTime(currentDate.getTime())).getTime() / 1000)
 
+  const assets = [mockUSDT.address, zeroAddress]
   const policyPrice = getBigNumber(300, 6)
   const protocols = [getBytes32FromStr(signers[0].address), getBytes32FromStr(signers[1].address)]
   const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
@@ -62,6 +64,7 @@ async function main() {
 
   await (
     await salesPolicy.buyPolicy(
+      assets,
       protocols,
       coverageAmount,
       coverageDuration,
