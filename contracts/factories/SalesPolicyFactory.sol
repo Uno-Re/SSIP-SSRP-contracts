@@ -12,7 +12,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     using Counters for Counters.Counter;
     // It should be okay if Protocol is struct
     struct Protocol {
-        bytes32 protocolAddress; // Address of that protocol
+        address protocolAddress; // Address of that protocol
         bool isBlackList; // initial true
     }
 
@@ -25,15 +25,15 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     address public salesPolicy;
 
     mapping(uint16 => Protocol) public getProtocol;
-    mapping(bytes32 => uint16) public override getProtocolId;
+    mapping(address => uint16) public override getProtocolId;
     Counters.Counter private protocolIds;
 
     address public USDC_TOKEN;
 
-    event ProtocolCreated(uint16 _protocolIdx, bytes32 _protocol);
+    event ProtocolCreated(uint16 _protocolIdx, address _protocol);
     event LogSetPremiumPool(address indexed _premiumPool);
     event LogUpdateCheckIfProtocolInWhitelistArray(bool _status);
-    event LogSetBlackListProtocol(uint16 _protocolId, bytes32 _protocol);
+    event LogSetBlackListProtocol(uint16 _protocolId, address indexed _protocol);
 
     constructor(
         address _usdcToken,
@@ -56,7 +56,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
 
     // This action can be done only by owner
     // protoco id will be started from no.1 instead of no.0.
-    function addProtocol(bytes32 _protocolAddress) external onlyOwner nonReentrant {
+    function addProtocol(address _protocolAddress) external onlyOwner nonReentrant {
         protocolIds.increment();
         uint16 lastIdx = uint16(protocolIds.current());
 
@@ -93,7 +93,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         emit LogSetBlackListProtocol(_protocolId, getProtocol[_protocolId].protocolAddress);
     }
 
-    function setBlackListProtocolByAddress(bytes32 _protocol) external onlyOwner {
+    function setBlackListProtocolByAddress(address _protocol) external onlyOwner {
         // require(_protocol != "", "UnoRe: zero address");
         uint16 _protocolId = getProtocolId[_protocol];
         getProtocol[_protocolId].isBlackList = true;
@@ -139,7 +139,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         ISalesPolicy(salesPolicy).approvePremium(_premiumCurrency);
     }
 
-    function getProtocolData(uint16 _protocolIdx) external view override returns (bytes32 protocolAddress, bool isBlackList) {
+    function getProtocolData(uint16 _protocolIdx) external view override returns (address protocolAddress, bool isBlackList) {
         return (getProtocol[_protocolIdx].protocolAddress, getProtocol[_protocolIdx].isBlackList);
     }
 }

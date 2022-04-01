@@ -139,13 +139,13 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         require(_rewarder != address(0), "UnoRe: zero address");
         require(_rewarder.isContract(), "UnoRe: no contract address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
-            require(_amount <= SSIP_PREMIUM_ETH, "UnoRe: overflow premium balance");
+            require(_amount <= SSIP_PREMIUM_ETH, "UnoRe: premium balance overflow");
             TransferHelper.safeTransferETH(_rewarder, _amount);
             SSIP_PREMIUM_ETH -= _amount;
             emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);
         } else {
             if (availableCurrencies[_currency] && SSIP_PREMIUM[_currency] > 0) {
-                require(_amount <= SSIP_PREMIUM[_currency], "UnoRe: overflow premium balance");
+                require(_amount <= SSIP_PREMIUM[_currency], "UnoRe: premium balance overflow");
                 TransferHelper.safeTransfer(_currency, _rewarder, _amount);
                 SSIP_PREMIUM[_currency] -= _amount;
                 emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);

@@ -135,7 +135,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         require(_migrateTo != address(0), "UnoRe: zero address");
         if (_isUnLocked && withdrawRequestPerUser[_to].pendingAmount > 0) {
             uint256 pendingAmountInUno = (uint256(withdrawRequestPerUser[_to].pendingAmount) * lpPriceUno) / 1e18;
-            uint256 cryptoBalance = IERC20(currency).balanceOf(address(this));
+            uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
             if (pendingAmountInUno < cryptoBalance - MIN_LP_CAPITAL) {
                 if (currency != address(0)) {
                     TransferHelper.safeTransfer(currency, _to, pendingAmountInUno);

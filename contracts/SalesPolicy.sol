@@ -23,7 +23,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 coverStartAt;
         uint256 coverageDuration;
         uint256 coverageAmount;
-        bytes32 protocolAddress;
+        address protocolAddress;
         address premiumCurrency;
         bool exist;
         bool expired;
@@ -48,7 +48,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address indexed _owner,
         address indexed _asset,
         address _premiumCurrency,
-        bytes32 _protocol,
+        address _protocol,
         uint256 indexed _policyIdx,
         uint256 _coverageAmount,
         uint256 _coverageDuration,
@@ -98,7 +98,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     function buyPolicy(
         address[] memory _assets,
-        bytes32[] memory _protocols,
+        address[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
         uint256 _policyPriceInUSDC,
@@ -147,7 +147,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     function _buyPolicy(
         address[] memory _assets,
-        bytes32[] memory _protocols,
+        address[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
         uint256 _premiumPaid,
@@ -157,7 +157,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 lastIdx;
         uint256 coverAmount;
         uint256 coverDuration;
-        bytes32 _protocol;
+        address _protocol;
         address _assetLocked;
 
         bool checkIfProtocolInWhitelistArray = ISalesPolicyFactory(factory).checkIfProtocolInWhitelistArray();
@@ -295,7 +295,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     function getSender(
         uint256 _policyPrice,
-        bytes32[] memory _protocols,
+        address[] memory _protocols,
         uint256[] memory _coverageDuration,
         uint256[] memory _coverageAmount,
         uint256 _signedTime,

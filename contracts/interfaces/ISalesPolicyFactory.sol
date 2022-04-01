@@ -2,11 +2,11 @@
 pragma solidity 0.8.0;
 
 interface ISalesPolicyFactory {
-    function getProtocolId(bytes32 _protocolAddress) external view returns (uint16);
+    function getProtocolId(address _protocolAddress) external view returns (uint16);
 
     function checkIfProtocolInWhitelistArray() external view returns (bool);
 
-    function getProtocolData(uint16 _protocolIdx) external view returns (bytes32 protocolAddress, bool isBlackList);
+    function getProtocolData(uint16 _protocolIdx) external view returns (address protocolAddress, bool isBlackList);
 
     // function newSalesPolicy(
     //     uint16 _protocolIdx,
