@@ -103,9 +103,9 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
+        "internalType": "address",
         "name": "_protocol",
-        "type": "bytes32"
+        "type": "address"
       },
       {
         "indexed": true,
@@ -446,9 +446,9 @@
         "type": "address[]"
       },
       {
-        "internalType": "bytes32[]",
+        "internalType": "address[]",
         "name": "_protocols",
-        "type": "bytes32[]"
+        "type": "address[]"
       },
       {
         "internalType": "uint256[]",
@@ -625,9 +625,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32",
+        "internalType": "address",
         "name": "protocolAddress",
-        "type": "bytes32"
+        "type": "address"
       },
       {
         "internalType": "address",
