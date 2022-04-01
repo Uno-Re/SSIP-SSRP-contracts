@@ -2,5 +2,5 @@
 pragma solidity 0.8.0;
 
 interface ISyntheticSSIPFactory {
-    function newSyntheticSSIP(address _owner, address _lpToken) external returns (address);
+    function newSyntheticSSIP(address _multiSigWallet, address _lpToken) external returns (address);
 }

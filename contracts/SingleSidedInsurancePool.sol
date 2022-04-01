@@ -152,7 +152,8 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         string calldata _symbol,
         address _factory,
         address _currency,
-        uint256 _rewardMultiplier
+        uint256 _rewardMultiplier,
+        uint256 _SCR
     ) external onlyOwner nonReentrant {
         require(riskPool == address(0), "UnoRe: risk pool created already");
         require(_factory != address(0), "UnoRe: zero factory address");
@@ -160,7 +161,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         poolInfo.lastRewardBlock = uint128(block.number);
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
-        ICapitalAgent(capitalAgent).addPool(address(this), _currency);
+        ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
         emit RiskPoolCreated(address(this), riskPool);
     }
 
@@ -175,11 +176,11 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
 
-    function createSyntheticSSIP(address _owner, address _factory) external onlyOwner nonReentrant {
-        require(_owner != address(0), "UnoRe: zero owner address");
+    function createSyntheticSSIP(address _multiSigWallet, address _factory) external onlyOwner nonReentrant {
+        require(_multiSigWallet != address(0), "UnoRe: zero owner address");
         require(_factory != address(0), "UnoRe:zero factory address");
         require(riskPool != address(0), "UnoRe:zero LP token address");
-        syntheticSSIP = ISyntheticSSIPFactory(_factory).newSyntheticSSIP(_owner, riskPool);
+        syntheticSSIP = ISyntheticSSIPFactory(_factory).newSyntheticSSIP(_multiSigWallet, riskPool);
         emit LogCreateSyntheticSSIP(address(this), syntheticSSIP, riskPool);
     }
 

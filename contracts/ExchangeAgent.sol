@@ -149,7 +149,9 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         returns (uint256)
     {
         require(IERC20(_token).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
-        TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
+        if (_token != address(0)) {
+            TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
+        }
         uint256 twapPriceInUSDC = _getNeededTokenAmount(_token, WETH, _convertAmount);
         require(twapPriceInUSDC > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPriceInUSDC * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;

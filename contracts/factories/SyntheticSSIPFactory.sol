@@ -7,8 +7,8 @@ import "../interfaces/ISyntheticSSIPFactory.sol";
 contract SyntheticSSIPFactory is ISyntheticSSIPFactory {
     constructor() {}
 
-    function newSyntheticSSIP(address _owner, address _lpToken) external override returns (address) {
-        SyntheticSSIP _ssip = new SyntheticSSIP(_lpToken, _owner);
+    function newSyntheticSSIP(address _multiSigWallet, address _lpToken) external override returns (address) {
+        SyntheticSSIP _ssip = new SyntheticSSIP(_lpToken, _multiSigWallet);
         address _ssipAddr = address(_ssip);
         return _ssipAddr;
     }

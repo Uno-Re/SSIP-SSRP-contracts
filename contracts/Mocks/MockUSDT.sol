@@ -15,7 +15,7 @@ contract MockUSDT is Ownable, ERC20 {
     mapping(address => uint256) private _faucets;
     uint256 public constant faucetLimit = 500000 * 10**18;
 
-    constructor() ERC20("USDC", "USDC") {
+    constructor() ERC20("USDT", "USDT") {
         _mint(msg.sender, INITIAL_SUPPLY);
     }
 

@@ -19,6 +19,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     struct PoolInfo {
         uint256 totalCapital;
+        uint256 SCR;
         address currency;
         bool exist;
     }
@@ -44,7 +45,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     mapping(address => bool) public poolWhiteList;
 
-    event LogAddPool(address indexed _ssip);
+    event LogAddPool(address indexed _ssip, address _currency, uint256 _scr);
     event LogRemovePool(address indexed _ssip);
     event LogSetPolicy(address indexed _salesPolicy);
     event LogRemovePolicy(address indexed _salesPolicy);
@@ -59,6 +60,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     event LogMarkToClaimPolicy(address indexed _policy, uint256 _policyTokenId);
     event LogSetMCR(address indexed _owner, address indexed _capitalAgent, uint256 _MCR);
     event LogSetMLR(address indexed _owner, address indexed _capitalAgent, uint256 _MLR);
+    event LogSetSCR(address indexed _owner, address indexed _capitalAgent, address indexed _pool, uint256 _SCR);
     event LogSetExchangeAgent(address indexed _owner, address indexed _capitalAgent, address _exchangeAgent);
     event LogSetSalesPolicyFactory(address indexed _factory);
     event LogAddPoolWhiteList(address indexed _pool);
@@ -119,20 +121,28 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogRemovePoolWhiteList(_pool);
     }
 
-    function addPool(address _ssip, address _currency) external override onlyPoolWhiteList {
+    function addPool(
+        address _ssip,
+        address _currency,
+        uint256 _scr
+    ) external override onlyPoolWhiteList {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
-        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, exist: true});
+        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
 
-        emit LogAddPool(_ssip);
+        emit LogAddPool(_ssip, _currency, _scr);
     }
 
-    function addPoolByAdmin(address _ssip, address _currency) external onlyOwner {
+    function addPoolByAdmin(
+        address _ssip,
+        address _currency,
+        uint256 _scr
+    ) external onlyOwner {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
-        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, exist: true});
+        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
 
-        emit LogAddPool(_ssip);
+        emit LogAddPool(_ssip, _currency, _scr);
     }
 
     function removePool(address _ssip) external onlyOwner nonReentrant {
@@ -162,9 +172,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     function removePolicy() external onlyOwner nonReentrant {
         require(policyInfo.exist, "UnoRe: no exit pool");
-        if (policyInfo.utilizedAmount > 0) {
-            totalCapitalStaked = totalUtilizedAmount - policyInfo.utilizedAmount;
-        }
+        totalUtilizedAmount = 0;
         address _policy = policyInfo.policy;
         policyInfo.policy = address(0);
         policyInfo.exist = false;
@@ -174,7 +182,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     function SSIPWithdraw(uint256 _withdrawAmount) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
-        require(_checkCapitalByMCR(msg.sender, _withdrawAmount), "UnoRe: minimum capital underflow");
+        require(_checkCapitalByMCRAndSCR(msg.sender, _withdrawAmount), "UnoRe: minimum capital underflow");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
     }
 
@@ -189,7 +197,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     }
 
     function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view override returns (bool) {
-        return _checkCapitalByMCR(_pool, _withdrawAmount);
+        return _checkCapitalByMCRAndSCR(_pool, _withdrawAmount);
     }
 
     function checkCoverageByMLR(uint256 _coverageAmount) external view override returns (bool) {
@@ -257,7 +265,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogUpdatePolicyCoverage(policyInfo.policy, _amount, policyInfo.utilizedAmount, totalUtilizedAmount);
     }
 
-    function _checkCapitalByMCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
+    function _checkCapitalByMCRAndSCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
         address currency = poolInfo[_pool].currency;
         uint256 withdrawAmountInUSDC;
         if (currency == USDC_TOKEN) {
@@ -267,7 +275,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
                 ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(currency, USDC_TOKEN, _withdrawAmount)
                 : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _withdrawAmount);
         }
-        return totalCapitalStaked - withdrawAmountInUSDC >= (totalCapitalStaked * MCR) / CALC_PRECISION;
+        bool isMCRPass = totalCapitalStaked - withdrawAmountInUSDC >= (totalCapitalStaked * MCR) / CALC_PRECISION;
+        bool isSCRPass = poolInfo[_pool].totalCapital - withdrawAmountInUSDC >= poolInfo[_pool].SCR;
+        return isMCRPass && isSCRPass;
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
@@ -284,6 +294,12 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         require(_MLR > 0, "UnoRe: zero mlr");
         MLR = _MLR;
         emit LogSetMLR(msg.sender, address(this), _MLR);
+    }
+
+    function setSCR(uint256 _SCR, address _pool) external onlyOperator nonReentrant {
+        require(_SCR > 0, "UnoRe: zero scr");
+        poolInfo[_pool].SCR = _SCR;
+        emit LogSetSCR(msg.sender, address(this), _pool, _SCR);
     }
 
     function setExchangeAgent(address _exchangeAgent) external onlyOwner nonReentrant {

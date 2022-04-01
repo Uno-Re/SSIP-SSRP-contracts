@@ -131,7 +131,11 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         }
     }
 
-    function depositToSyntheticSSIPRewarder(address _currency, address _rewarder, uint256 _amount) external onlyOwner nonReentrant {
+    function depositToSyntheticSSIPRewarder(
+        address _currency,
+        address _rewarder,
+        uint256 _amount
+    ) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         require(_rewarder.isContract(), "UnoRe: no contract address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {

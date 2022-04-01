@@ -30,7 +30,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
 
     address public USDC_TOKEN;
 
-    event ProtocolCreated(uint16 _protocolIdx);
+    event ProtocolCreated(uint16 _protocolIdx, address _protocol);
     event LogSetPremiumPool(address indexed _premiumPool);
     event LogUpdateCheckIfProtocolInWhitelistArray(bool _status);
     event LogSetBlackListProtocol(uint16 _protocolId, address indexed _protocol);
@@ -64,7 +64,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
 
         getProtocolId[_protocolAddress] = lastIdx;
 
-        emit ProtocolCreated(lastIdx);
+        emit ProtocolCreated(lastIdx, _protocolAddress);
     }
 
     function newSalesPolicy(
@@ -94,7 +94,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     }
 
     function setBlackListProtocolByAddress(address _protocol) external onlyOwner {
-        require(_protocol != address(0), "UnoRe: zero address");
+        // require(_protocol != address(0), "UnoRe: zero address");
         uint16 _protocolId = getProtocolId[_protocol];
         getProtocol[_protocolId].isBlackList = true;
         emit LogSetBlackListProtocol(_protocolId, _protocol);

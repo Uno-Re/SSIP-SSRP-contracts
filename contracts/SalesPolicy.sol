@@ -45,12 +45,13 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     uint256 private MAX_INTEGER = type(uint256).max;
 
     event BuyPolicy(
-        address indexed _protocol,
+        address indexed _owner,
+        address indexed _asset,
+        address _premiumCurrency,
+        address _protocol,
         uint256 indexed _policyIdx,
-        address _owner,
         uint256 _coverageAmount,
         uint256 _coverageDuration,
-        address _premiumCurrency,
         uint256 _premiumPaid
     );
     event LogSetExchangeAgentInPolicy(address indexed _exchangeAgent, address indexed _policyAddress);
@@ -96,6 +97,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     receive() external payable {}
 
     function buyPolicy(
+        address[] memory _assets,
         address[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
@@ -140,10 +142,11 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             IPremiumPool(premiumPool).collectPremium(_premiumCurrency, premiumPaid);
         }
 
-        _buyPolicy(_protocols, _coverageAmount, _coverageDuration, premiumPaid, _premiumCurrency);
+        _buyPolicy(_assets, _protocols, _coverageAmount, _coverageDuration, premiumPaid, _premiumCurrency);
     }
 
     function _buyPolicy(
+        address[] memory _assets,
         address[] memory _protocols,
         uint256[] memory _coverageAmount,
         uint256[] memory _coverageDuration,
@@ -155,6 +158,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 coverAmount;
         uint256 coverDuration;
         address _protocol;
+        address _assetLocked;
 
         bool checkIfProtocolInWhitelistArray = ISalesPolicyFactory(factory).checkIfProtocolInWhitelistArray();
 
@@ -163,6 +167,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             coverAmount = _coverageAmount[ii];
             coverDuration = _coverageDuration[ii];
             _protocol = _protocols[ii];
+            _assetLocked = _assets[ii];
             uint256 premiumPaid = _premiumPaid;
             bool isAvailableSale = false;
             if (checkIfProtocolInWhitelistArray) {
@@ -191,7 +196,16 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
             _totalCoverage += coverAmount;
 
-            emit BuyPolicy(_protocol, lastIdx, msgSender(), coverAmount, coverDuration, _premiumCurrency, premiumPaid);
+            emit BuyPolicy(
+                msgSender(),
+                _assetLocked,
+                _premiumCurrency,
+                _protocol,
+                lastIdx,
+                coverAmount,
+                coverDuration,
+                premiumPaid
+            );
             policyIdx.increment();
         }
         if (_totalCoverage > 0) {

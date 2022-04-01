@@ -7,8 +7,8 @@ import "../interfaces/ISyntheticSSRPFactory.sol";
 contract SyntheticSSRPFactory is ISyntheticSSRPFactory {
     constructor() {}
 
-    function newSyntheticSSRP(address _owner, address _lpToken) external override returns (address) {
-        SyntheticSSRP _ssip = new SyntheticSSRP(_lpToken, _owner);
+    function newSyntheticSSRP(address _multiSigWallet, address _lpToken) external override returns (address) {
+        SyntheticSSRP _ssip = new SyntheticSSRP(_lpToken, _multiSigWallet);
         address _ssipAddr = address(_ssip);
         return _ssipAddr;
     }

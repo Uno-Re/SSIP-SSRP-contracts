@@ -2,7 +2,11 @@
 pragma solidity 0.8.0;
 
 interface ICapitalAgent {
-    function addPool(address _ssip, address _currency) external;
+    function addPool(
+        address _ssip,
+        address _currency,
+        uint256 _scr
+    ) external;
 
     function setPolicy(address _policy) external;
 

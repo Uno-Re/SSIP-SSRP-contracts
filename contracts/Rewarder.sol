@@ -31,31 +31,13 @@ contract Rewarder is IRewarder, ReentrancyGuard {
     function onReward(address _to, uint256 _amount) external payable override onlyPOOL returns (uint256) {
         require(_to != address(0), "UnoRe: zero address reward");
         if (currency == address(0)) {
-            if (address(this).balance >= _amount) {
-                TransferHelper.safeTransferETH(_to, _amount);
-                return _amount;
-            } else {
-                if (address(this).balance > 0) {
-                    uint256 rewardAmount = address(this).balance;
-                    TransferHelper.safeTransferETH(_to, address(this).balance);
-                    return rewardAmount;
-                } else {
-                    return 0;
-                }
-            }
+            require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
+            TransferHelper.safeTransferETH(_to, _amount);
+            return _amount;
         } else {
-            if (IERC20(currency).balanceOf(address(this)) >= _amount) {
-                TransferHelper.safeTransfer(currency, _to, _amount);
-                return _amount;
-            } else {
-                if (IERC20(currency).balanceOf(address(this)) > 0) {
-                    uint256 rewardAmount = IERC20(currency).balanceOf(address(this));
-                    TransferHelper.safeTransfer(currency, _to, IERC20(currency).balanceOf(address(this)));
-                    return rewardAmount;
-                } else {
-                    return 0;
-                }
-            }
+            require(IERC20(currency).balanceOf(address(this)) >= _amount, "UnoRe: insufficient reward balance");
+            TransferHelper.safeTransfer(currency, _to, _amount);
+            return _amount;
         }
     }
 
