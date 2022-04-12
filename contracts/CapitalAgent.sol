@@ -186,9 +186,16 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
     }
 
-    function SSIPPolicyCaim(uint256 _withdrawAmount) external override nonReentrant {
+    function SSIPPolicyCaim(
+        uint256 _withdrawAmount,
+        uint256 _policyId,
+        bool _isFinished
+    ) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
+        if (_isFinished) {
+            _markToClaimPolicy(_policyId);
+        }
     }
 
     function SSIPStaking(uint256 _stakingAmount) external override nonReentrant {
@@ -224,6 +231,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     }
 
     function markToClaimPolicy(uint256 _policyId) external onlyOwner nonReentrant {
+        _markToClaimPolicy(_policyId);
+    }
+
+    function _markToClaimPolicy(uint256 _policyId) private {
         require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
         (uint256 _coverageAmount, , ) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
         _updatePolicyCoverage(_coverageAmount, false);
