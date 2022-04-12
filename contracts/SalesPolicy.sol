@@ -257,13 +257,14 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     function markToClaim(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
         require(getPolicy[_policyId].exist, "UnoRe: marked to claim already");
+        require(!getPolicy[_policyId].expired, "UnoRe: policy expired");
         getPolicy[_policyId].exist = false;
         _burn(_policyId);
         emit LogMarkToClaim(_policyId, getPolicy[_policyId].coverageAmount);
     }
 
     function updatePolicyExpired(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
-        require(!getPolicy[_policyId].exist, "UnoRe: expired already");
+        require(getPolicy[_policyId].exist, "UnoRe: marked to claim already");
         getPolicy[_policyId].expired = true;
         _burn(_policyId);
         emit LogUpdatePolicyExpired(_policyId, getPolicy[_policyId].coverageAmount);

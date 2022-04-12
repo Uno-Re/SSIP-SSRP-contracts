@@ -191,7 +191,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
         uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
-        ICapitalAgent(capitalAgent).SSIPPolicyCaim((amount * lpPrice) / 1e18);
+        ICapitalAgent(capitalAgent).SSIPPolicyCaim((amount * lpPrice) / 1e18, 0, false);
         IMigration(migrateTo).onMigration(msg.sender, amount, "");
         userInfo[msg.sender].amount = 0;
         userInfo[msg.sender].rewardDebt = 0;
@@ -333,11 +333,16 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
-    function policyClaim(address _to, uint256 _amount) external onlyClaimAssessor isStartTime nonReentrant {
+    function policyClaim(
+        address _to,
+        uint256 _amount,
+        uint256 _policyId,
+        bool _isFinished
+    ) external onlyClaimAssessor isStartTime nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
-        ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount);
+        ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, _policyId, _isFinished);
         emit PolicyClaim(_to, realClaimAmount);
     }
 

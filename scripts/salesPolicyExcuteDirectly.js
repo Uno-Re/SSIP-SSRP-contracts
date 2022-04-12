@@ -42,7 +42,8 @@ async function main() {
   const deadline = getBigNumber(timestamp - 7 * 3600, 0)
 
   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-  const paddedProtocolsHexStr = "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
+  const paddedProtocolsHexStr =
+    "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
