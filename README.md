@@ -23,60 +23,60 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 -Rewarder contract: 0x36BEA8AD62B292E76b11f8D5f40Fc90daa46aB61
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0x290d5742D097924dE147dC81F58f6E048aBcd676
+- pool address: 0xf74a9F804f3a303128c3088dc4C1A1bB91C0A161
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 > the current SCR: 15000 USDC <br/>
 > the current rewardPerBlock: 0.000000625 <br/>
 
-- LP token(RiskPool): 0xBdf8ba83d61DAB0d63FEB8cadAC4A473F1D629C1
+- LP token(RiskPool): 0x27F2DAC2d9E29319A13101D21E9F430dEfA07ADE
 > name: Synthetic SSIP-ETH <br/>
 > symbol: SSSIP-ETH <br/>
 
-- Rewarder contract: 0xdeE194b832EF3a8EEF23738dd034059f3Ef2085b
+- Rewarder contract: 0x3cfB4F9b6568fe3d483b6532f5Be1C212F6A07D7
 
 #### Synth Selene - Synthetic SSIP ETH Pool:
-- pool address: 0xE6e5Fe96947ff6238D18d64Aaa36890eb019c339
-- staking currency(SSSIP-ETH LP token): 0xBdf8ba83d61DAB0d63FEB8cadAC4A473F1D629C1
+- pool address: 0xcD682E75Cd3AD0Ee4Eda38DF55D1A419F6824E71
+- staking currency(SSSIP-ETH LP token): 0x27F2DAC2d9E29319A13101D21E9F430dEfA07ADE
 - reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
 > it will be changed to USDC in the future on mainnet.<br/>
 > the current rewardPerBlock: 0.00002 <br/>
 
-- Rewarder contract: 0x91fcd0054cC1299476408a0F49FB0E9e8BCc962C
+- Rewarder contract: 0x12f1F2e3bb12411DBd6B936338568a150E9Ab61A
 
 #### Ares - SSIP UNO Pool:
-- pool address: 0xFbD7FB72EC079eC19dAfdC2cA294F8D3b83b3624
+- pool address: 0x17E1f0122380f0BB53B6db6940ea29f311588B12
 - staking currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 > the current SCR: 500 USDC <br/>
 > the current rewardPerBlock: 0.0049 <br/>
 
-- LP token(RiskPool): 0xBb5e56E869465cC86bDceA854063C87E8aD1f17A
+- LP token(RiskPool): 0x838584c1A85299157ccEE1eFCA9f65d17A6903FA
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0xa91C7f8EFD6360fbB3BAE3CBaab6e5c53067692C
+- Rewarder contract: 0x596f033139c035091E4bc0e40a1F9f9f28F2983C
 
 #### Synth Ares - Synthetic SSIP UNO Pool:
-- pool address: 0x8B5a928a6ae93F14C914822766bff3bf91240d54
-- staking currency(SSSIP-UNO LP token): 0xBb5e56E869465cC86bDceA854063C87E8aD1f17A
+- pool address: 0x96d25C735BB1077b48F3117119b92dFd6e99730c
+- staking currency(SSSIP-UNO LP token): 0x838584c1A85299157ccEE1eFCA9f65d17A6903FA
 - reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
 > it will be changed to USDC in the future on mainnet. <br/>
 > the current rewardPerBlock: 0.002 <br/>
 
-- Rewarder contract: 0xeAC3374160D03f9c57A8b6119c6398c906ABec5c
+- Rewarder contract: 0x3eE97688d308be4176158dDe5967a3F924885701
 
 ##### Synthetic Factories:
 - SyntheticSSIPFactory: 0x577f19a828eab36754e90EC4cEE694d8BB495CB3
 - SyntheticSSRPFactory: 0x8968056Fa1CB548136ff06740d058f9538a9522D
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0x96Bb139f27d2F614CC75b6aFa43D2f5f805363F6
-- SalesPolicy: 0x51fd83ea602d27F1CCb5B34128a3362F8cc31f7E
+- SalesPolicyFactory: 0x91c1b4C9e9DCf7FaBF5bd6B0052055c8bFE96EFa
+- SalesPolicy: 0x789b7E835F3e1F496aE6334d51c495Efa2aab2D5
 
 #### Factories:
 - RiskPoolFactory: 0x976D5132b58235C7457A6bEebB5A090Ae2fDb76f
-- RewarderFactory: 0x015Bf47B302164076365e6339341071C8F12800c
+- RewarderFactory: 0xB8D78D2E91DbD75f6c1194Fb9DFaEB4eC532aaEC
 
 #### Common contracts:
 - MockUNO : 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5
@@ -85,7 +85,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - MockDAI : 0x97bA5a3fBc887c764f321a2d1d4322750D2e156d
 
 - MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
-- CapitalAgent: 0x64741A6b0143596F31e462c6cD802A2A7eacaAc3
+- CapitalAgent: 0xb0e0Ba5e10b0ccd3C748Fe68531C43D630D82D4C
 > the current MCR: 50% <br/>
 > the current MLR: 200% <br/>
 - ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
@@ -111,12 +111,16 @@ total faucet Limit: 500000000 $UNO
 
 - AirdropMockUNO: 0x0A47304bF71c086b8d97C6eE079b7795c8253E17
 
-### Formula for checking withdrawable by MCR in SSIPs throught CapitalAgent:
+### Formula for checking withdrawable by MCR, SCR in SSIPs throught CapitalAgent:
 ```sh
  totalCapitalStaked - withdrawRequestAmount >= (totalCapitalStaked * MCR) / CALC_PRECISION
 ```
 > where totalCapitalStaked is the sum(in USDC) of amounts staked in all SSIPs.
 > CALC_PRECISION = 1e18
+```sh
+ totalCapital of the pool - withdrawRequestAmount >= SCR of the pool
+```
+
 
 ### Formula for policy purchasing available by MLR in SSIPs throught CapitalAgent:
 ```sh
