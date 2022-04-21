@@ -23,60 +23,38 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 -Rewarder contract: 0x36BEA8AD62B292E76b11f8D5f40Fc90daa46aB61
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0xf74a9F804f3a303128c3088dc4C1A1bB91C0A161
+- pool address: 0xf61dD8d46E85Eb1fE70bA92F09E9E02E476843Ed
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 15000 USDC <br/>
+> the current SCR: 150000 USDC <br/>
 > the current rewardPerBlock: 0.000000625 <br/>
 
-- LP token(RiskPool): 0x27F2DAC2d9E29319A13101D21E9F430dEfA07ADE
+- LP token(RiskPool): 0xfCbD3B035d54Fc3E57e3A4e2017F3f11A5803b0f
 > name: Synthetic SSIP-ETH <br/>
 > symbol: SSSIP-ETH <br/>
 
-- Rewarder contract: 0x3cfB4F9b6568fe3d483b6532f5Be1C212F6A07D7
-
-#### Synth Selene - Synthetic SSIP ETH Pool:
-- pool address: 0xcD682E75Cd3AD0Ee4Eda38DF55D1A419F6824E71
-- staking currency(SSSIP-ETH LP token): 0x27F2DAC2d9E29319A13101D21E9F430dEfA07ADE
-- reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
-> it will be changed to USDC in the future on mainnet.<br/>
-> the current rewardPerBlock: 0.00002 <br/>
-
-- Rewarder contract: 0x12f1F2e3bb12411DBd6B936338568a150E9Ab61A
+- Rewarder contract: 0x534C4F1eD09499e5f2d53bbd146f92cC06fb6B39
 
 #### Ares - SSIP UNO Pool:
-- pool address: 0x17E1f0122380f0BB53B6db6940ea29f311588B12
+- pool address: 0xd3Ad73A0Ccc8cc5482304133f997Df1d3C5598ce
 - staking currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 500 USDC <br/>
+> the current SCR: 150000 USDC <br/>
 > the current rewardPerBlock: 0.0049 <br/>
 
-- LP token(RiskPool): 0x838584c1A85299157ccEE1eFCA9f65d17A6903FA
+- LP token(RiskPool): 0x4167A6d14E54a85fF8bdaefF4E2A8f7395678Ff7
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0x596f033139c035091E4bc0e40a1F9f9f28F2983C
-
-#### Synth Ares - Synthetic SSIP UNO Pool:
-- pool address: 0x96d25C735BB1077b48F3117119b92dFd6e99730c
-- staking currency(SSSIP-UNO LP token): 0x838584c1A85299157ccEE1eFCA9f65d17A6903FA
-- reward currency(USDC): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
-> it will be changed to USDC in the future on mainnet. <br/>
-> the current rewardPerBlock: 0.002 <br/>
-
-- Rewarder contract: 0x3eE97688d308be4176158dDe5967a3F924885701
-
-##### Synthetic Factories:
-- SyntheticSSIPFactory: 0x577f19a828eab36754e90EC4cEE694d8BB495CB3
-- SyntheticSSRPFactory: 0x8968056Fa1CB548136ff06740d058f9538a9522D
+- Rewarder contract: 0xd8B5Ef66ff71a568042A6143769F5eEDb72d8641
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0x91c1b4C9e9DCf7FaBF5bd6B0052055c8bFE96EFa
-- SalesPolicy: 0x789b7E835F3e1F496aE6334d51c495Efa2aab2D5
+- SalesPolicyFactory: 0xf853338544416B310f845f4fd98b9F2d2249E086
+- SalesPolicy: 0xEd803ad2107DF39921a71d53a2624c11304b4483
 
 #### Factories:
-- RiskPoolFactory: 0x976D5132b58235C7457A6bEebB5A090Ae2fDb76f
-- RewarderFactory: 0xB8D78D2E91DbD75f6c1194Fb9DFaEB4eC532aaEC
+- RiskPoolFactory: 0x02CC7B5720FF5b17dB2A30cEa5dfC4a866dc4AE8
+- RewarderFactory: 0x566D59b2333df7272BF6CA04aE81045C41828F16
 
 #### Common contracts:
 - MockUNO : 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5
@@ -85,11 +63,11 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - MockDAI : 0x97bA5a3fBc887c764f321a2d1d4322750D2e156d
 
 - MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
-- CapitalAgent: 0xb0e0Ba5e10b0ccd3C748Fe68531C43D630D82D4C
+- CapitalAgent: 0x405B99Df812b84368cEe8beEb9c390f102FF1813
 > the current MCR: 50% <br/>
 > the current MLR: 200% <br/>
 - ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
-- PremiumPool: 0xb8a6CDD678091eeC8CB20EdDbC48b3Aa502FbF6d
+- PremiumPool: 0xfF7ad087BcB24053a53EF21F9422d7a1273608E9
 
 - Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
 
