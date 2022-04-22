@@ -23,34 +23,34 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 -Rewarder contract: 0x36BEA8AD62B292E76b11f8D5f40Fc90daa46aB61
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0xf61dD8d46E85Eb1fE70bA92F09E9E02E476843Ed
+- pool address: 0x1184c182d5411021f40f693420bA6DDd40E7685e
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 150000 USDC <br/>
+> the current SCR: 15000 USDC <br/>
 > the current rewardPerBlock: 0.000000625 <br/>
 
-- LP token(RiskPool): 0xfCbD3B035d54Fc3E57e3A4e2017F3f11A5803b0f
+- LP token(RiskPool): 0x23A7D6A0d9D033353225b4D1b3C7E91cc8e746e0
 > name: Synthetic SSIP-ETH <br/>
 > symbol: SSSIP-ETH <br/>
 
-- Rewarder contract: 0x534C4F1eD09499e5f2d53bbd146f92cC06fb6B39
+- Rewarder contract: 0x4b2D6F15680b71dC2f43e4ffAF5b20492d8079ea
 
 #### Ares - SSIP UNO Pool:
-- pool address: 0xd3Ad73A0Ccc8cc5482304133f997Df1d3C5598ce
+- pool address: 0xDcB84407FD1b8f96489C519d49093A504144C792
 - staking currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 150000 USDC <br/>
+> the current SCR: 15000 USDC <br/>
 > the current rewardPerBlock: 0.0049 <br/>
 
-- LP token(RiskPool): 0x4167A6d14E54a85fF8bdaefF4E2A8f7395678Ff7
+- LP token(RiskPool): 0x02161410F5594FbD0f73070eD16c4fDD2d84A956
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0xd8B5Ef66ff71a568042A6143769F5eEDb72d8641
+- Rewarder contract: 0xCfD3E59E5c71A3Fe78BbA4F6D8E7e6Af3d3298c5
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0xf853338544416B310f845f4fd98b9F2d2249E086
-- SalesPolicy: 0xEd803ad2107DF39921a71d53a2624c11304b4483
+- SalesPolicyFactory: 0x2aB01080Db09E8DD6BDaC80745b2Dce7eF55DfBd
+- SalesPolicy: 0x9688bEc05126BacE0D67136C7fcC8c20F2299dC0
 
 #### Factories:
 - RiskPoolFactory: 0x02CC7B5720FF5b17dB2A30cEa5dfC4a866dc4AE8
@@ -63,11 +63,11 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - MockDAI : 0x97bA5a3fBc887c764f321a2d1d4322750D2e156d
 
 - MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
-- CapitalAgent: 0x405B99Df812b84368cEe8beEb9c390f102FF1813
+- CapitalAgent: 0xD96f02DC7090e2c143463188F72C6465a61271E9
 > the current MCR: 50% <br/>
 > the current MLR: 200% <br/>
 - ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
-- PremiumPool: 0xfF7ad087BcB24053a53EF21F9422d7a1273608E9
+- PremiumPool: 0xC5425D69ac87e52812AF0F90953d0D3d644eb94D
 
 - Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
 
