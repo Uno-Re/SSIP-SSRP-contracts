@@ -1,47 +1,66 @@
 ## v2 Brainstorming Session 1st November 2021 - The Cover Portal
 Main topic of discussion was to finalize the implementation logic for Cover Portal which will be utilized to faciltate the sales of insurance policies. There will be two categories of assets.
 
-### contract deployment(rinkeby):
-- SingleSidedReinsurancePool(SSRP) : 0xaCDbbF853Fd5a2b3410b92F36c60A7F0d283fcdB
+### contract deployment(mainnet):
 
-- SSRP RiskPool(SSRP LP token): 0xB4Cc174B009d8780Df702afB9AaCACD970C4463f
-- SSRP Rewarder: 0x207e0F0fAc90a690bf23b14B7520d9d7d1F95dE2
-- SyntheticSSRP: 0x683E38e76649b599A93073855f1a6335de36Da81
-- SyntheticSSRP Rewarder(reward currency - mockUSDT(it will be changed to USDC in the future)): 0x4801B9a7A0fDf18059DcE9f42466Fa5bEC838A91 
+#### SSRP:
+- pool address: 0x87e1f628225c170a5C0Bf895580686430DEb3322
+- staking currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+
+- LP token(RiskPool): 0x1eECc8C8298ed9Bd46c147D44E2D7A7BfACE2034
+> name: Synthetic SSRP <br/>
+> symbol: SSSRP <br/>
+
+- Rewarder contract: 0x629D346448086ECCC6bD19EcA617074a2dF5b365
+
+#### Selene - SSIP ETH Pool:
+- pool address: 0x1342b3dAec4f54F5Af01Aaa34839626f959B362a
+- staking currency(ETH): 0x0000000000000000000000000000000000000000
+- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+> the current SCR: 200K USDC <br/>
+> the current rewardPerBlock: 0.05749417402375796 UNO <br/>
+
+- LP token(RiskPool): 0x29B4b8674D93b36Bf651d0b86A8e5bE3c378aCF4
+> name: Synthetic SSIP-ETH <br/>
+> symbol: SSSIP-ETH <br/>
+
+- Rewarder contract: 0xAeFEAB8f99b7705D11A94fc823908103cCADA92a
+
+#### Ares - SSIP UNO Pool:
+- pool address: 0x82E107d2b1Be4347b55FBba4a6fB99669dF3ceb1
+- staking currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+> the current SCR: 200K USDC <br/>
+> the current rewardPerBlock: 0.095129375951293759 <br/>
+
+- LP token(RiskPool): 0xbd3E70819A8Add92B06d6d92A06DcdA9249DF2a3
+> name: Synthetic SSIP-UNO <br/>
+> symbol: SSSIP-UNO <br/>
+
+- Rewarder contract: 0xE5290071A40F8c724105a3f78036A0EA6b6F3CC3
+
+#### Policy Insurance:
+- SalesPolicyFactory: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
+- SalesPolicy: 0xdD2715Ec8C6D96E3064063842C47413782C4F66b
+
+#### Factories:
+- RiskPoolFactory: 0x60D00f3eb762AB197E6909da4a93aa2F53F041B4
+- RewarderFactory: 0x87205a4d46D1Cd0b90fe04Aa8FE66F4c28842148
+
+#### Common contracts:
+- UNO : 0x474021845C4643113458ea4414bdb7fB74A01A77
+- USDC : 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+
+- CapitalAgent: 0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05
+> the current MCR: 50% <br/>
+> the current MLR: 200% <br/>
+- ExchangeAgent: 0x6aC1081CBb92524170E61CFFD37bDaF3b38FBC4c
+- PremiumPool: 0xdB4B701f1a4653BFD5F0f4EFF1913aEAF5E21E68
+- MultiSigWallet: 
 
 
-- SingleSidedInsurancePool(SSIP) : 0x5A15cccA32c176471DD5394FE1F53907213a04cf
-
-- SSIP RiskPool(SSIP LP token): 0x5CC962e6E6d7226ED03DCFfDE33D1Bdd7E77Bc28
-- SSIP Rewarder: 0x9E66FfBE92eF224114A6cF08F7F5411bA8AAFde2
-- SyntheticSSIP: 0x6c681F6a2AE9109d765960d7Ba795343CE997535
-- SyntheticSSIP Rewarder(reward currency - mockUSDT for now): 0x14CCBFB9DD13031CC00554Ef2949cDd1A63A3A02 
-
-
-- SyntheticSSIPFactory: 0x063Dfccc666685E06825D22355EE90c9991d71FB
-- SyntheticSSRPFactory: 0x5cdAaF3C99BbdDE717eC335e047f1120CDfbA791
-
-
-- RiskPoolFactory: 0x443D703E2F685A127eDFe39c628ffdf7Cf58f62d
-- RewarderFactory: 0x42496BC9a33F653B5631f03427887765CBe52F13
-- Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738
-
-
-- SalesPolicyFactory: 0x5514695C1BF5D35D441B76e080Be56d0bb1cc0E9
-- SalesPolicy: 0xD7ce18716f8f9Ff15BD31E4edca51C3a51310c41
-
-
-- CapitalAgent: 0x4024C2A563D06456BA7f9cc61F2b12FC44c3F9f2
-
-
-- MockUNO : 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5
-- MockUSDT : 0x40c035016AD732b6cFce34c3F881040B6C6cf71E
-- ExchangeAgent: 0xcf98D8AE6EF3eeff4826162571190cD9802dCf2D
-- PremiumPool: 0xd8F33445276e4fF385e53Efe04c280d846f9e28F
-- MultiSigWallet: 0xfadD5ddd92fa216C08C096958Efec97179F6fC58
-
-
-### MockUNO faucet:
+## MockUNO faucet(rinkeby):
 https://rinkeby.etherscan.io/address/0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5#writeContract
 
 total faucet Limit: 500000000 $UNO
