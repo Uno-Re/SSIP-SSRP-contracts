@@ -12,12 +12,12 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
   const UNISWAPV2_FACTORY = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
   const UNISWAPV2_ROUTER = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-  const TWAP_PRICE_FEED_FACTORY = "0xd4354a2e9A5B29C0DB8c22F500D8BbAcAa257dEb"
+  const PRICE_FEED = "0x8e9581a717FDB3eaCc7a3420fFf22b530B61be0e"
   const multiSigWallet = "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F"
 
   await deploy("ExchangeAgent", {
     from: deployer,
-    args: [USDC, WETH, TWAP_PRICE_FEED_FACTORY, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet],
+    args: [USDC, WETH, PRICE_FEED, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet],
     log: true,
     deterministicDeployment: false,
   })

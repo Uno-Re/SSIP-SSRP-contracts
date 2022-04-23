@@ -55,7 +55,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - CapitalAgent: 0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05
 > the current MCR: 50% <br/>
 > the current MLR: 200% <br/>
-- ExchangeAgent: 0x6aC1081CBb92524170E61CFFD37bDaF3b38FBC4c
+- ExchangeAgent: 0x0b0D83702acbD625aDD45c79c7307C08eecEff4B
 - PremiumPool: 0xdB4B701f1a4653BFD5F0f4EFF1913aEAF5E21E68
 - MultiSigWallet: 
 

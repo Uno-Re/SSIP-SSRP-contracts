@@ -3,20 +3,20 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IUniswapFactory.sol";
 import "./interfaces/IUniswapRouter02.sol";
-import "./interfaces/ITwapOraclePriceFeedFactory.sol";
-import "./interfaces/ITwapOraclePriceFeed.sol";
+import "./interfaces/IOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     address public immutable override USDC_TOKEN;
     address public immutable UNISWAP_FACTORY;
-    address public immutable TWAP_ORACLE_PRICE_FEED_FACTORY;
     address public immutable UNISWAP_ROUTER;
     address public immutable WETH;
+    address public oraclePriceFeed;
     uint256 public slippage;
     uint256 private constant SLIPPAGE_PRECISION = 100;
 
@@ -42,26 +42,26 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     event LogAddWhiteList(address indexed _exchangeAgent, address indexed _whiteListAddress);
     event LogRemoveWhiteList(address indexed _exchangeAgent, address indexed _whiteListAddress);
     event LogSetSlippage(address indexed _exchangeAgent, uint256 _slippage);
+    event LogSetOraclePriceFeed(address indexed _exchangeAgent, address indexed _oraclePriceFeed);
 
     constructor(
         address _usdcToken,
         address _WETH,
-        address _twapOraclePriceFeedFactory,
+        address _oraclePriceFeed,
         address _uniswapRouter,
         address _uniswapFactory,
         address _multiSigWallet
     ) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
-        require(_twapOraclePriceFeedFactory != address(0), "UnoRe: zero twapOraclePriceFeedFactory address");
         require(_uniswapRouter != address(0), "UnoRe: zero uniswapRouter address");
         require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
         require(_WETH != address(0), "UnoRe: zero WETH address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         USDC_TOKEN = _usdcToken;
         UNISWAP_FACTORY = _uniswapFactory;
-        TWAP_ORACLE_PRICE_FEED_FACTORY = _twapOraclePriceFeedFactory;
         UNISWAP_ROUTER = _uniswapRouter;
         WETH = _WETH;
+        oraclePriceFeed = _oraclePriceFeed;
         whiteList[msg.sender] = true;
         slippage = 5 * SLIPPAGE_PRECISION;
         transferOwnership(_multiSigWallet);
@@ -95,6 +95,12 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         emit LogSetSlippage(address(this), _slippage);
     }
 
+    function setOraclePriceFeed(address _oraclePriceFeed) external onlyOwner {
+        require(_oraclePriceFeed != address(0), "UnoRe: zero address");
+        oraclePriceFeed = _oraclePriceFeed;
+        emit LogSetOraclePriceFeed(address(this), oraclePriceFeed);
+    }
+
     // estimate token amount for amount in USDC
     function getTokenAmountForUSDC(address _token, uint256 _usdtAmount) external view override returns (uint256) {
         return _getNeededTokenAmount(USDC_TOKEN, _token, _usdtAmount);
@@ -102,15 +108,21 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
 
     // estimate ETH amount for amount in USDC
     function getETHAmountForUSDC(uint256 _usdtAmount) external view override returns (uint256) {
-        return _getNeededTokenAmount(USDC_TOKEN, WETH, _usdtAmount);
+        uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(USDC_TOKEN);
+        uint256 tokenDecimal = IERC20Metadata(USDC_TOKEN).decimals();
+        return _usdtAmount * ethPrice / (10 ** tokenDecimal);
     }
 
-    function getETHAmountForToken(address _token, uint256 _tokenAmount) external view override returns (uint256) {
-        return _getNeededTokenAmount(_token, WETH, _tokenAmount);
+    function getETHAmountForToken(address _token, uint256 _tokenAmount) public view override returns (uint256) {
+        uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
+        uint256 tokenDecimal = IERC20Metadata(_token).decimals();
+        return _tokenAmount * ethPrice / (10 ** tokenDecimal);
     }
 
-    function getTokenAmountForETH(address _token, uint256 _ethAmount) external view override returns (uint256) {
-        return _getNeededTokenAmount(WETH, _token, _ethAmount);
+    function getTokenAmountForETH(address _token, uint256 _ethAmount) public view override returns (uint256) {
+        uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
+        uint256 tokenDecimal = IERC20Metadata(_token).decimals();
+        return _ethAmount * (10 ** tokenDecimal) / ethPrice;
     }
 
     function getNeededTokenAmount(
@@ -132,7 +144,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
             TransferHelper.safeTransferFrom(_token0, msg.sender, address(this), _token0Amount);
             twapPrice = _getNeededTokenAmount(_token0, _token1, _token0Amount);
         } else {
-            twapPrice = _getNeededTokenAmount(WETH, _token1, _token0Amount);
+            twapPrice = getTokenAmountForETH(_token1, _token0Amount);
         }
         require(twapPrice > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPrice * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
@@ -152,7 +164,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         if (_token != address(0)) {
             TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
         }
-        uint256 twapPriceInUSDC = _getNeededTokenAmount(_token, WETH, _convertAmount);
+        uint256 twapPriceInUSDC = getETHAmountForToken(_token, _convertAmount);
         require(twapPriceInUSDC > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPriceInUSDC * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
 
@@ -244,15 +256,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         address _token1,
         uint256 _token0Amount
     ) private view returns (uint256) {
-        address pair = IUniswapFactory(UNISWAP_FACTORY).getPair(_token0, _token1);
-        require(pair != address(0), "There's no pair");
-
-        address twapOraclePriceFeed = ITwapOraclePriceFeedFactory(TWAP_ORACLE_PRICE_FEED_FACTORY).getTwapOraclePriceFeed(
-            _token0,
-            _token1
-        );
-
-        uint256 expectedToken1Amount = ITwapOraclePriceFeed(twapOraclePriceFeed).consult(_token0, _token0Amount);
+        uint256 expectedToken1Amount = IOraclePriceFeed(oraclePriceFeed).consult(_token0, _token1, _token0Amount);
 
         return expectedToken1Amount;
     }
