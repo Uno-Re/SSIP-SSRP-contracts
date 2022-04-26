@@ -57,6 +57,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 > the current MLR: 200% <br/>
 - ExchangeAgent: 0x0b0D83702acbD625aDD45c79c7307C08eecEff4B
 - PremiumPool: 0xdB4B701f1a4653BFD5F0f4EFF1913aEAF5E21E68
+- PriceOracle: 0x3677cE9C9777Cc4DEEE764B1811558cB89e67F00
 - MultiSigWallet: 
 
 
