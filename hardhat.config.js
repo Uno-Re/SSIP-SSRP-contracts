@@ -64,6 +64,23 @@ module.exports = {
       gasPrice: "auto",
       accounts
     },
+    // local: {
+    //   url: "http://localhost:8545/",
+    //   accounts: ["C93F165DF8EC9D318A464CA9304E96D627674DC7CD745B97786BB696480F13B3"]
+    // },
+    kava_local: {
+      hardfork: "london",
+      allowUnlimitedContractSize: true,
+      forking: {
+        url: 'https://eth-rinkeby.alchemyapi.io/v2/8SAQa7xMc0VXTR_hyfPvAt2pe3QrXybB',
+        enabled: true,
+        // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355        
+      },
+      gasPrice: "auto",
+      url: "http://localhost:8545/",
+      // accounts: ["C93F165DF8EC9D318A464CA9304E96D627674DC7CD745B97786BB696480F13B3"]
+      accounts
+    },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
       accounts,
@@ -81,20 +98,14 @@ module.exports = {
       gasPrice: 5000000000,
       gasMultiplier: 2
     },
-    bscTest: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
-      chainId: 97,
-      accounts: {mnemonic: process.env.MNEMONIC},
-      live: true,
+    kava_alpha: {
+      url: `https://evm.evm-alpha.kava.io`,
+      accounts,
+      chainId: 2221,
+      live: false,
       saveDeployments: true,
-      gasMultiplier: 2,
-    },
-    bscMain: {
-      url: "https://bsc-dataseed.binance.org/",
-      chainId: 56,
-      accounts: {mnemonic: process.env.MNEMONIC},
-      live: true,
-      saveDeployments: true
+      tags: ["staging"],
+      gasMultiplier: 2
     }
   },
   etherscan: {
