@@ -18,6 +18,7 @@
     "ropsten:export": "hardhat --network ropsten export --export exports/ropsten.json",
     "rinkeby:deploy": "hardhat --network rinkeby deploy",
     "rinkeby:verify": "hardhat --network rinkeby etherscan-verify --solc-input",
+    "kava_alpha:verify": "hardhat --network kava_alpha etherscan-verify --solc-input",
     "rinkeby:export": "hardhat --network rinkeby export --export exports/rinkeby.json",
     "bscTest:deploy": "hardhat --network bscTest deploy",
     "bscTest:verify": "hardhat --network bscTest etherscan-verify --solc-input",

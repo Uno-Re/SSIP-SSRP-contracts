@@ -4,69 +4,62 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 ### contract deployment(mainnet):
 
 #### SSRP:
-- pool address: 0x87e1f628225c170a5C0Bf895580686430DEb3322
-- staking currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+- pool address: 0x08c93862FFc7D34B3a416E6E98936268AB6e37c4
+- staking currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
 
-- LP token(RiskPool): 0x1eECc8C8298ed9Bd46c147D44E2D7A7BfACE2034
+- LP token(RiskPool): 0xeb19991bbA286946d102859D7623e0B1dABF7673
 > name: Synthetic SSRP <br/>
 > symbol: SSSRP <br/>
 
-- Rewarder contract: 0x629D346448086ECCC6bD19EcA617074a2dF5b365
+- Rewarder contract: 0xa38400fcec4dA590bC12012D570A2011F63586E4
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0x1342b3dAec4f54F5Af01Aaa34839626f959B362a
+- pool address: 0xD6637fD484261bB7C8b5b0b3283F539f98eAaD53
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-> the current SCR: 200K USDC <br/>
-> the current rewardPerBlock: 0.05749417402375796 UNO <br/>
+- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+> the current SCR: 15K mockUSDT <br/>
+> the current rewardPerBlock: 0.05749417402375796 mockUNO <br/>
 
-- LP token(RiskPool): 0x29B4b8674D93b36Bf651d0b86A8e5bE3c378aCF4
+- LP token(RiskPool): 0x3FFf38881A9C9A902404E41443Da333aC273A8B9
 > name: Synthetic SSIP-ETH <br/>
 > symbol: SSSIP-ETH <br/>
 
-- Rewarder contract: 0xAeFEAB8f99b7705D11A94fc823908103cCADA92a
+- Rewarder contract: 0x5e30fd2252012Af5BbAA11894f05fE696CF2e999
 
 #### Ares - SSIP UNO Pool:
-- pool address: 0x82E107d2b1Be4347b55FBba4a6fB99669dF3ceb1
-- staking currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-> the current SCR: 200K USDC <br/>
-> the current rewardPerBlock: 0.095129375951293759 <br/>
+- pool address: 0x8AFc6b2492EF8fF57a7e1Cc5D0A94FAc9c33c282
+- staking currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+> the current SCR: 15K USDC <br/>
+> the current rewardPerBlock: 0.721099507210995063 mockUNO <br/>
 
-- LP token(RiskPool): 0xbd3E70819A8Add92B06d6d92A06DcdA9249DF2a3
+- LP token(RiskPool): 0x3154cc455D228205A4F00F2ff6A5fe6967c92109
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0xE5290071A40F8c724105a3f78036A0EA6b6F3CC3
+- Rewarder contract: 0x42f0cd12aed0AA10E1BA896ef9F4c12E87F373E9
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
-- SalesPolicy: 0xdD2715Ec8C6D96E3064063842C47413782C4F66b
+- SalesPolicyFactory: 0x77049864cCa895D8A197938CE72008ff795e4A30
+- SalesPolicy: 0xE9B9202491E8600e1d8753c24804f4a93E846CD2
 
 #### Factories:
-- RiskPoolFactory: 0x60D00f3eb762AB197E6909da4a93aa2F53F041B4
-- RewarderFactory: 0x87205a4d46D1Cd0b90fe04Aa8FE66F4c28842148
+- RiskPoolFactory: 0x01e116289819bFb500505C89F1AcdF27200a8670
+- RewarderFactory: 0x95635bB88C887ff2464801B989d5483ac8BFe6F8
 
 #### Common contracts:
-- UNO : 0x474021845C4643113458ea4414bdb7fB74A01A77
-- USDC : 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+- mockUNO : 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+- mockUSDT : 0x336f7224CDcfc041Ca34B3400d49c2083B36835c
 
-- CapitalAgent: 0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05
+- CapitalAgent: 0x6A81EBbd82E1aC1938A1969c00a8E484c03EFD4E
 > the current MCR: 50% <br/>
 > the current MLR: 200% <br/>
-- ExchangeAgent: 0x0b0D83702acbD625aDD45c79c7307C08eecEff4B
-- PremiumPool: 0xdB4B701f1a4653BFD5F0f4EFF1913aEAF5E21E68
-- PriceOracle: 0x3e7dF95146bF4beb0B0a78E1cE76BF80c9d56B7e
+- ExchangeAgent: 0xA4eE9bE5faA14b7883312Bd64CbF6227Aa285c22
+- PremiumPool: 0x743e418116ed14FEDD3218297C18a1D4E5d551aF
+- PriceOracle: 0x33C5F22E6db919CCFFe1dDf0999cB5C4C9ae7B79
 - MultiSigWallet: 
 
-
-## MockUNO faucet(rinkeby):
-https://rinkeby.etherscan.io/address/0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5#writeContract
-
-total faucet Limit: 500000000 $UNO
-
-- AirdropMockUNO: 0x0A47304bF71c086b8d97C6eE079b7795c8253E17
 
 ### Frontend Pages:
 1. @wang - Homescreen: 

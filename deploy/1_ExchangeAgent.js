@@ -8,12 +8,12 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   // const mockUSDT = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
   // const multiSigWallet = await deployments.get("MultiSigWallet")
 
-  const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-  const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-  const UNISWAPV2_FACTORY = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
-  const UNISWAPV2_ROUTER = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-  const PRICE_FEED = "0x8e9581a717FDB3eaCc7a3420fFf22b530B61be0e"
-  const multiSigWallet = "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F"
+  const USDC = "0x336f7224CDcfc041Ca34B3400d49c2083B36835c"
+  const WETH = "0xED1432BfE5235019c6724c23628467D92F26cabb"
+  const UNISWAPV2_FACTORY = "0x1e7fa99d0DD1D2896564B44A26EbA952DB167159"
+  const UNISWAPV2_ROUTER = "0x161EAD7347193e7eA44ea997efD92777E35C9320"
+  const PRICE_FEED = "0x19b6B39aa065eD73FfC20627801fC028fa03B2B0"
+  const multiSigWallet = "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b"
 
   await deploy("ExchangeAgent", {
     from: deployer,
