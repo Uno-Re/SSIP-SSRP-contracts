@@ -1,5 +1,6 @@
 const WETH_ADDRESS = {
   rinkeby: "0xc778417E063141139Fce010982780140Aa0cD5Ab", // this is WETH address in Uniswap router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D on rinkeby
+  kava_alpha: "0xED1432BfE5235019c6724c23628467D92F26cabb",
 }
 
 const UNISWAP_FACTORY_ADDRESS = {
@@ -18,14 +19,17 @@ const TWAP_ORACLE_PRICE_FEED_FACTORY = {
 
 const UNO = {
   rinkeby: "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5",
+  kava_alpha: "0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F",
 }
 
 const USDT = {
   rinkeby: "0x40c035016AD732b6cFce34c3F881040B6C6cf71E",
+  kava_alpha: "0x336f7224CDcfc041Ca34B3400d49c2083B36835c",
 }
 
 const UNO_USDT_PRICE_FEED = {
   rinkeby: "0x8EAD48786e0F1569625f95b650a5aC63222b9bF2",
+  kava_alpha: "0xD3E572A50c8e201A274BA0007d4fC43c4fAbbc37",
 }
 
 module.exports = {

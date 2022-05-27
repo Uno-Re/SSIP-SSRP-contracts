@@ -5,12 +5,12 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
     const { deployer } = await getNamedAccounts()
   
  
-    await deploy('MockUSDT', {
+    await deploy('MockUSDC', {
       from: deployer,
       log: true,
       deterministicDeployment: false,
     })
   }
   
-  module.exports.tags = ["MockUSDT", "UnoRe"]
+  module.exports.tags = ["MockUSDC", "UnoRe"]
   

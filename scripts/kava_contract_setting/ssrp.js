@@ -17,7 +17,7 @@ const riskFactoryDeployment = require("../../deployments/kava_alpha/RiskPoolFact
 const rewarderFactoryDeployment = require("../../deployments/kava_alpha/RewarderFactory.json")
 const ssrpDeployment = require("../../deployments/kava_alpha/SingleSidedReinsurancePool.json")
 const unoDeployment = require("../../deployments/kava_alpha/MockUNO.json")
-const usdtDeployment = require("../../deployments/kava_alpha/MockUSDT.json")
+const usdcDeployment = require("../../deployments/kava_alpha/MockUSDC.json")
 
 async function main() {
   const signers = await ethers.getSigners()
@@ -29,41 +29,28 @@ async function main() {
   const SSRP = await ethers.getContractFactory("SingleSidedReinsurancePool")
   const ssrp = await SSRP.attach(ssrpDeployment.address)
 
-  await (
-    await ssrp
-      .connect(signers[0])
-      .createRiskPool(
-        "Synthetic SSRP",
-        "SSSRP",
-        riskFactoryDeployment.address,
-        mockUNO.address,
-        getBigNumber(105, 16),
-      )
-  ).wait()
+  // await (
+  //   await ssrp
+  //     .connect(signers[0])
+  //     .createRiskPool("Synthetic SSRP", "SSSRP", riskFactoryDeployment.address, mockUNO.address, getBigNumber(105, 16))
+  // ).wait()
 
-  const riskPoolAddr = await ssrp.riskPool();
-  console.log('[riskPoolAddr]', riskPoolAddr)
+  const riskPoolAddr = await ssrp.riskPool()
+  console.log("[riskPoolAddr]", riskPoolAddr)
 
   await (
-    await ssrp
-      .connect(signers[0])
-      .createRewarder(
-        signers[0].address,
-        rewarderFactoryDeployment.address,
-        unoDeployment.address,
-      )
+    await ssrp.connect(signers[0]).createRewarder(signers[0].address, rewarderFactoryDeployment.address, unoDeployment.address)
   ).wait()
-  
-  const rewarderAddr = await ssrp.rewarder();
-  console.log('[rewarderAddr]', rewarderAddr)
-  await(await mockUNO.transfer(rewarderAddr, getBigNumber(500000))).wait()
+
+  const rewarderAddr = await ssrp.rewarder()
+  console.log("[rewarderAddr]", rewarderAddr)
+  await (await mockUNO.transfer(rewarderAddr, getBigNumber(500000))).wait()
 
   // await (
   //   await ssipETH
   //     .connect(signers[0])
   //     .setLockTime(86400)
   // ).wait()
-
 }
 
 main()

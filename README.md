@@ -12,37 +12,37 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 > name: Synthetic SSRP <br/>
 > symbol: SSSRP <br/>
 
-- Rewarder contract: 0xa38400fcec4dA590bC12012D570A2011F63586E4
+- Rewarder contract: 0x3971289c9f7E3EB4c559E00b267ad68AdB895082
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0xD6637fD484261bB7C8b5b0b3283F539f98eAaD53
+- pool address: 0xFfec3ac173256b8DD0Dc4c56b531919c60128848
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-> the current SCR: 15K mockUSDT <br/>
+> the current SCR: 15K mockUSDC <br/>
 > the current rewardPerBlock: 0.05749417402375796 mockUNO <br/>
 
-- LP token(RiskPool): 0x3FFf38881A9C9A902404E41443Da333aC273A8B9
+- LP token(RiskPool): 0xd6C42Ef5bDb3B4bE3Eb8843C6e7C897879A69522
 > name: Synthetic SSIP-ETH <br/>
 > symbol: SSSIP-ETH <br/>
 
-- Rewarder contract: 0x5e30fd2252012Af5BbAA11894f05fE696CF2e999
+- Rewarder contract: 0xF69f506eac7b5f4F4DBf3f9F0b78f68509Ff1Fb2
 
 #### Ares - SSIP UNO Pool:
-- pool address: 0x8AFc6b2492EF8fF57a7e1Cc5D0A94FAc9c33c282
+- pool address: 0x9eb6ea5d968399e173f54301523392493db1fda7
 - staking currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
 - reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-> the current SCR: 15K USDC <br/>
+> the current SCR: 15K mockUSDC <br/>
 > the current rewardPerBlock: 0.721099507210995063 mockUNO <br/>
 
-- LP token(RiskPool): 0x3154cc455D228205A4F00F2ff6A5fe6967c92109
+- LP token(RiskPool): 0x3AC4961FBc32404d7BFcefE7d8E1195376cae066
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0x42f0cd12aed0AA10E1BA896ef9F4c12E87F373E9
+- Rewarder contract: 0x0F58D1765929FCCCa5d0DbdD23E0541F8021aB63
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0x77049864cCa895D8A197938CE72008ff795e4A30
-- SalesPolicy: 0xE9B9202491E8600e1d8753c24804f4a93E846CD2
+- SalesPolicyFactory: 0xC940A4A3d187A30aA4b76bB5D74cA997A9E48163
+- SalesPolicy: 0x5097ecF33b0bE8Ad9bc4A27458fFa2CbEA21ED3e
 
 #### Factories:
 - RiskPoolFactory: 0x01e116289819bFb500505C89F1AcdF27200a8670
@@ -50,14 +50,14 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 #### Common contracts:
 - mockUNO : 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-- mockUSDT : 0x336f7224CDcfc041Ca34B3400d49c2083B36835c
+- mockUSDC : 0xCe86b34aE48947794F038a2c1C2BA577bC4B03a4
 
-- CapitalAgent: 0x6A81EBbd82E1aC1938A1969c00a8E484c03EFD4E
+- CapitalAgent: 0x653Bc9F47Fb2C067004f001Bd528457D779c7109
 > the current MCR: 50% <br/>
 > the current MLR: 200% <br/>
-- ExchangeAgent: 0xA4eE9bE5faA14b7883312Bd64CbF6227Aa285c22
-- PremiumPool: 0x743e418116ed14FEDD3218297C18a1D4E5d551aF
-- PriceOracle: 0x33C5F22E6db919CCFFe1dDf0999cB5C4C9ae7B79
+- ExchangeAgent: 0x4548339b51163918b15b225aBC2021383269f011
+- PremiumPool: 0xe9b2718DCF413F3E4b71282951E24f0aFd196a2d
+- PriceOracle: 0xD3E572A50c8e201A274BA0007d4fC43c4fAbbc37
 - MultiSigWallet: 
 
 

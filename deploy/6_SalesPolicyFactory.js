@@ -7,7 +7,8 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const owner = deployer
 
   // const mockUNO = "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5"
-  const mockUSDT = "0x336f7224CDcfc041Ca34B3400d49c2083B36835c"
+  // const mockUSDT = "0x336f7224CDcfc041Ca34B3400d49c2083B36835c"
+  const mockUSDC = await deployments.get("MockUSDC")
   const exchangeAgent = await deployments.get("ExchangeAgent")
   const premiumPool = await deployments.get("PremiumPool")
   const capitalAgent = await deployments.get("CapitalAgent")
@@ -21,7 +22,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   await deploy("SalesPolicyFactory", {
     from: deployer,
-    args: [mockUSDT, exchangeAgent.address, premiumPool.address, capitalAgent.address, multiSigWallet],
+    args: [mockUSDC.address, exchangeAgent.address, premiumPool.address, capitalAgent.address, multiSigWallet],
     log: true,
     deterministicDeployment: false,
   })

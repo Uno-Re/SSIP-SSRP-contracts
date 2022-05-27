@@ -15,7 +15,7 @@ const premiumPoolDeployment = require("../../deployments/kava_alpha/PremiumPool.
 const capitalAgentDeployment = require("../../deployments/kava_alpha/CapitalAgent.json")
 const salesPolicyFactoryDeployment = require("../../deployments/kava_alpha/SalesPolicyFactory.json")
 const unoDeployment = require("../../deployments/kava_alpha/MockUNO.json")
-const usdtDeployment = require("../../deployments/kava_alpha/MockUSDT.json")
+const usdcDeployment = require("../../deployments/kava_alpha/MockUSDC.json")
 
 async function main() {
   const signers = await ethers.getSigners()
@@ -30,7 +30,7 @@ async function main() {
   ).wait()
 
   await (await salesPolicyFactory.connect(signers[0]).setSignerInPolicy(signers[0].address)).wait()
-  await (await salesPolicyFactory.connect(signers[0]).approvePremiumInPolicy(usdtDeployment.address)).wait()
+  await (await salesPolicyFactory.connect(signers[0]).approvePremiumInPolicy(usdcDeployment.address)).wait()
 
   const salesPolicyAddress = await salesPolicyFactory.salesPolicy()
   const SalesPolicy = await ethers.getContractFactory("SalesPolicy")

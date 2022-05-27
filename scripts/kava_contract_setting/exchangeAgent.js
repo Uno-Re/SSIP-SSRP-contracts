@@ -1,12 +1,10 @@
 const { ethers } = require("hardhat")
-const {
-  getBigNumber,
-} = require("../shared/utilities")
-const priceOracle = "0x33C5F22E6db919CCFFe1dDf0999cB5C4C9ae7B79"
+const { getBigNumber } = require("../shared/utilities")
+const priceOracle = "0xD3E572A50c8e201A274BA0007d4fC43c4fAbbc37"
 const exchangeAgentDeployment = require("../../deployments/kava_alpha/ExchangeAgent.json")
 const premiumPoolDeployment = require("../../deployments/kava_alpha/PremiumPool.json")
 const unoDeployment = require("../../deployments/kava_alpha/MockUNO.json")
-const usdtDeployment = require("../../deployments/kava_alpha/MockUSDT.json")
+const usdcDeployment = require("../../deployments/kava_alpha/MockUSDC.json")
 
 async function main() {
   const signers = await ethers.getSigners()
@@ -18,9 +16,9 @@ async function main() {
 
   // await (await exchangeAgent.connect(signers[0]).addWhiteList(premiumPoolDeployment.address)).wait()
   const priceOracleAddr = await exchangeAgent.oraclePriceFeed()
-  console.log('[priceOracleAddr]', priceOracleAddr)
-  const USDT_value = await exchangeAgent.getNeededTokenAmount(unoDeployment.address, usdtDeployment.address, getBigNumber(5000))
-  console.log('[usdt value]', USDT_value.toString())
+  console.log("[priceOracleAddr]", priceOracleAddr, unoDeployment.address, usdcDeployment.address)
+  const USDC_value = await exchangeAgent.getNeededTokenAmount(unoDeployment.address, usdcDeployment.address, getBigNumber(5000))
+  console.log("[usdt value]", USDC_value.toString())
 }
 
 main()

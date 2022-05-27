@@ -15,9 +15,9 @@ const premiumPoolDeployment = require("../../deployments/kava_alpha/PremiumPool.
 const capitalAgentDeployment = require("../../deployments/kava_alpha/CapitalAgent.json")
 const riskFactoryDeployment = require("../../deployments/kava_alpha/RiskPoolFactory.json")
 const rewarderFactoryDeployment = require("../../deployments/kava_alpha/RewarderFactory.json")
-const ssipDeployment = require("../../deployments/kava_alpha/SingleSidedInsurancePool.json")
+const ssipDeployment = require("../../deployments/kava_alpha/SingleSidedInsurancePoolETH.json")
 const unoDeployment = require("../../deployments/kava_alpha/MockUNO.json")
-const usdtDeployment = require("../../deployments/kava_alpha/MockUSDT.json")
+const usdtDeployment = require("../../deployments/kava_alpha/MockUSDC.json")
 
 async function main() {
   const signers = await ethers.getSigners()
@@ -30,42 +30,33 @@ async function main() {
   const ssipETH = await SSIPETH.attach(ssipDeployment.address)
 
   await (
-    await ssipETH
-      .connect(signers[0])
-      .createRiskPool(
-        "Synthetic SSIP-ETH",
-        "SSSIP-ETH",
-        riskFactoryDeployment.address,
-        ethers.constants.AddressZero,
-        // 57494174023757960,
-        getBigNumber('57494174023757960', 0),
-        getBigNumber(15000, 6),
-      )
+    await ssipETH.connect(signers[0]).createRiskPool(
+      "Synthetic SSIP-ETH",
+      "SSSIP-ETH",
+      riskFactoryDeployment.address,
+      ethers.constants.AddressZero,
+      // 57494174023757960,
+      getBigNumber("57494174023757960", 0),
+      getBigNumber(15000, 6),
+    )
   ).wait()
 
-  const riskPoolAddr = await ssipETH.riskPool();
-  console.log('[riskPoolAddr]', riskPoolAddr)
+  const riskPoolAddr = await ssipETH.riskPool()
+  console.log("[riskPoolAddr]", riskPoolAddr)
 
   await (
-    await ssipETH
-      .connect(signers[0])
-      .createRewarder(
-        signers[0].address,
-        rewarderFactoryDeployment.address,
-        unoDeployment.address,
-      )
+    await ssipETH.connect(signers[0]).createRewarder(signers[0].address, rewarderFactoryDeployment.address, unoDeployment.address)
   ).wait()
-  
-  const rewarderAddr = await ssipETH.rewarder();
-  console.log('[rewarderAddr]', rewarderAddr)
-  await(await mockUNO.transfer(rewarderAddr, getBigNumber(500000))).wait()
+
+  const rewarderAddr = await ssipETH.rewarder()
+  console.log("[rewarderAddr]", rewarderAddr)
+  await (await mockUNO.transfer(rewarderAddr, getBigNumber(500000))).wait()
 
   // await (
   //   await ssipETH
   //     .connect(signers[0])
   //     .setLockTime(86400)
   // ).wait()
-
 }
 
 main()

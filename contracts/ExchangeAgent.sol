@@ -10,6 +10,7 @@ import "./interfaces/IUniswapRouter02.sol";
 import "./interfaces/IOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
+import "hardhat/console.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     address public immutable override USDC_TOKEN;
@@ -130,6 +131,8 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         address _token1,
         uint256 _token0Amount
     ) external view override returns (uint256) {
+        console.log("[_getNeededTokenAmount]", _token0);
+        // return _token0Amount;
         return _getNeededTokenAmount(_token0, _token1, _token0Amount);
     }
 
@@ -256,6 +259,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         address _token1,
         uint256 _token0Amount
     ) private view returns (uint256) {
+        console.log("[_getNeededTokenAmount]", _token0);
         uint256 expectedToken1Amount = IOraclePriceFeed(oraclePriceFeed).consult(_token0, _token1, _token0Amount);
 
         return expectedToken1Amount;
