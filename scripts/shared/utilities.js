@@ -27,6 +27,11 @@ function getPaddedHexStrFromBN(bn) {
   return ethers.utils.hexZeroPad(hexStr, 32)
 }
 
+function getPaddedAddressFromBN(bn) {
+  const hexStr = ethers.utils.hexlify(bn)
+  return ethers.utils.hexZeroPad(hexStr, 20)
+}
+
 function getPaddedHexStrFromBNArray(bnArray) {
   let hexData
   for (let k = 0; k < bnArray.length; k++) {
@@ -85,6 +90,7 @@ module.exports = {
   getBigNumber,
   getNumber,
   getPaddedHexStrFromBN,
+  getPaddedAddressFromBN,
   getPaddedHexStrFromBNArray,
   getHexStrFromStr,
   advanceBlock,

@@ -12,12 +12,14 @@ const {
   getChainId,
   getSignatureParameters,
   getPaddedHexStrFromBNArray,
+  getPaddedAddressFromBN,
 } = require("./shared/utilities")
+const { protocolData } = require("../scripts/shared/constants")
 const SALESPOLICY_ABI = require("../scripts/abis/SalesPolicy.json")
 
 const mockUSDT_ADDRESS = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
 // const mockUSDC_ADDRESS = "0xD4D5c5D939A173b9c18a6B72eEaffD98ecF8b3F6"
-const SALESPOLICY_ADDRESS = "0xD7ce18716f8f9Ff15BD31E4edca51C3a51310c41"
+const SALESPOLICY_ADDRESS = "0x9688bEc05126BacE0D67136C7fcC8c20F2299dC0"
 const zeroAddress = ethers.constants.AddressZero
 
 const domainType = [
@@ -48,15 +50,19 @@ async function main() {
 
   const privateKey = process.env.PRIVATE_KEY
 
+  console.log('[protocolData]', protocolData)
+  const protocols = protocolData.map((e) => getPaddedAddressFromBN(BigNumber.from(e.id)))  
+  console.log('[protocols]', protocols)
+  const assets = [mockUSDT.address]
   const policyPrice = getBigNumber(300, 6)
-  const protocols = [signers[0].address, signers[1].address]
-  const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
-  const coverageAmount = [getBigNumber(100, 6), getBigNumber(100, 6)]
+  // const protocols = [signers[0].address, signers[1].address]
+  const coverageDuration = [BigNumber.from(24 * 3600 * 30)]
+  const coverageAmount = [getBigNumber(100, 6)]
   const deadline = getBigNumber(timestamp - 7 * 3600, 0)
 
   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
   const paddedProtocolsHexStr =
-    "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
+    "000000000000000000000000" + protocols[0].slice(2)
   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
@@ -78,6 +84,7 @@ async function main() {
 
   await (
     await salesPolicy.buyPolicy(
+      assets,
       protocols,
       coverageAmount,
       coverageDuration,

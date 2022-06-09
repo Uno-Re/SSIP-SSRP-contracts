@@ -26,6 +26,22 @@ const UNO_USDT_PRICE_FEED = {
   rinkeby: "0x8EAD48786e0F1569625f95b650a5aC63222b9bF2",
 }
 
+const protocolData = [
+  {
+    "id": 99, // mandatory int value
+    "product_name": "UnoRe SSIP + SSRP Vaults", // mandatory string value, Name of protocol or name of Bundle
+    "product_logo": "", // mandatory string value, logo of protocol or custom logo of bundle 
+    "product_link": "", // mandatory string value, website link of protocol or link to bundle info page
+    "product_type": 0, // mandatory int value
+    "status": 0, // mandatory int value, 0 means policy is inactive, 1 means policy is active
+    "premium_factor": "", // mandatory float value
+    "DAO_approval_status": 3, // keep it 3 on all current protocols for now, will be explained later
+    "chains": [
+      0, // just mention chain ID's here which can be used to query logos for the respective chains 
+    ]
+  }
+]
+
 module.exports = {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
@@ -34,4 +50,6 @@ module.exports = {
   UNO,
   USDT,
   UNO_USDT_PRICE_FEED,
+  protocolData,
 }
+
