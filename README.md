@@ -48,6 +48,32 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 - Rewarder contract: 0xCfD3E59E5c71A3Fe78BbA4F6D8E7e6Af3d3298c5
 
+#### SSIP USDC Pool:
+- pool address: 0x7ee58dc800AE61DF5bCF8FdcEc0D86A6e33036A2
+- staking currency(UNO): 0x68C34F54E63664019f59029b9dE344d6219C7758(Mock USDC)
+- reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
+> the current SCR: 15000 USDC <br/>
+> the current rewardPerBlock: 0.00317 <br/>
+
+- LP token(RiskPool): 0x43214aCd27f57B3f8Cef8f962a48056BfbFF01b3
+> name: Synthetic SSIP-USDC <br/>
+> symbol: SSSIP-USDC <br/>
+
+- Rewarder contract: 0x85d9dBd959Cd180eE44135404625D2acB837d9f3
+
+#### SSIP USDT Pool:
+- pool address: 0x3442a97F780769Ff028e4b491EfAA7ca277cEbD4
+- staking currency(UNO): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
+- reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
+> the current SCR: 15000 USDC <br/>
+> the current rewardPerBlock: 0.00317 <br/>
+
+- LP token(RiskPool): 0x2bCFa6eE63446452a25E7CEa1Bf3ed1f2D09DB3F
+> name: Synthetic SSIP-USDT <br/>
+> symbol: SSSIP-USDT <br/>
+
+- Rewarder contract: 0x73e095b80c99221f6eB03DBBD29D857146BE8976
+
 #### Policy Insurance:
 - SalesPolicyFactory: 0x2aB01080Db09E8DD6BDaC80745b2Dce7eF55DfBd
 - SalesPolicy: 0x9688bEc05126BacE0D67136C7fcC8c20F2299dC0
@@ -59,14 +85,14 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 #### Common contracts:
 - MockUNO : 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5
 - MockUSDT : 0x40c035016AD732b6cFce34c3F881040B6C6cf71E
-- MockUSDC : 0x5b82ea1611F07910276CE161B7ea717f971439d1
+- MockUSDC : 0x68C34F54E63664019f59029b9dE344d6219C7758
 - MockDAI : 0x97bA5a3fBc887c764f321a2d1d4322750D2e156d
 
 - MultiSigWallet: 0x53819C211EC8FFD5885C301EfAa75E420b3c5Fbe
 - CapitalAgent: 0xD96f02DC7090e2c143463188F72C6465a61271E9
 > the current MCR: 50% <br/>
 > the current MLR: 200% <br/>
-- ExchangeAgent: 0x34Bb884F2B45F614067Df55AD58c0DDdaeff9408
+- ExchangeAgent: 0xE67fC73b8E7099F29b37347Ac2fAB5acd20C1d1F
 - PremiumPool: 0xC5425D69ac87e52812AF0F90953d0D3d644eb94D
 
 - Migration: 0x966D9Ea65e33Ff5F857b457329CdFe9dfaC33738

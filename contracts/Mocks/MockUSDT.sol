@@ -10,10 +10,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  */
 
 contract MockUSDT is Ownable, ERC20 {
-    uint256 INITIAL_SUPPLY = 10000000000 * 10**18;
+    uint256 INITIAL_SUPPLY = 10000000000 * 10**6;
 
     mapping(address => uint256) private _faucets;
-    uint256 public constant faucetLimit = 500000 * 10**18;
+    uint256 public constant faucetLimit = 500000 * 10**6;
 
     constructor() ERC20("USDT", "USDT") {
         _mint(msg.sender, INITIAL_SUPPLY);
@@ -22,5 +22,9 @@ contract MockUSDT is Ownable, ERC20 {
     function faucetToken(uint256 _amount) external {
         require(msg.sender == owner() || _faucets[msg.sender] + _amount <= faucetLimit, "Uno: Faucet amount limitation");
         _mint(msg.sender, _amount);
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 6;
     }
 }
