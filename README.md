@@ -49,37 +49,37 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - Rewarder contract: 0xCfD3E59E5c71A3Fe78BbA4F6D8E7e6Af3d3298c5
 
 #### SSIP USDC Pool:
-- pool address: 0x7ee58dc800AE61DF5bCF8FdcEc0D86A6e33036A2
-- staking currency(UNO): 0x68C34F54E63664019f59029b9dE344d6219C7758(Mock USDC)
+- pool address: 0xF399F220Ed45a47624814bF07063A320cD89a8D2
+- staking currency(USDC): 0x68C34F54E63664019f59029b9dE344d6219C7758(Mock USDC)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 15000 USDC <br/>
+> the current SCR: 1000 USDC <br/>
 > the current rewardPerBlock: 0.00317 <br/>
 
-- LP token(RiskPool): 0x43214aCd27f57B3f8Cef8f962a48056BfbFF01b3
+- LP token(RiskPool): 0x1B03a7095A13f0F3f067D2fB69531B7787052d56
 > name: Synthetic SSIP-USDC <br/>
 > symbol: SSSIP-USDC <br/>
 
-- Rewarder contract: 0x85d9dBd959Cd180eE44135404625D2acB837d9f3
+- Rewarder contract: 0x0Cf021b91762a5BD4FaEa21eBB6bBD8037E14b6A
 
 #### SSIP USDT Pool:
-- pool address: 0x3442a97F780769Ff028e4b491EfAA7ca277cEbD4
-- staking currency(UNO): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
+- pool address: 0xd7fFE6d63f7a64260943BC0327065F13F8Ac0f47
+- staking currency(USDT): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
-> the current SCR: 15000 USDC <br/>
+> the current SCR: 1000 USDC <br/>
 > the current rewardPerBlock: 0.00317 <br/>
 
-- LP token(RiskPool): 0x2bCFa6eE63446452a25E7CEa1Bf3ed1f2D09DB3F
+- LP token(RiskPool): 0x09Ae34DfB11BAF89b7fe727557E98a3AF94D30e5
 > name: Synthetic SSIP-USDT <br/>
 > symbol: SSSIP-USDT <br/>
 
-- Rewarder contract: 0x73e095b80c99221f6eB03DBBD29D857146BE8976
+- Rewarder contract: 0x35893E75514c8e3D12603778531Ea3e383376eC9
 
 #### Policy Insurance:
 - SalesPolicyFactory: 0x2aB01080Db09E8DD6BDaC80745b2Dce7eF55DfBd
 - SalesPolicy: 0x9688bEc05126BacE0D67136C7fcC8c20F2299dC0
 
 #### Factories:
-- RiskPoolFactory: 0x02CC7B5720FF5b17dB2A30cEa5dfC4a866dc4AE8
+- RiskPoolFactory: 0xDe29Ae8a4b17cdcc95650d092fAb159761B3C905
 - RewarderFactory: 0x566D59b2333df7272BF6CA04aE81045C41828F16
 
 #### Common contracts:
