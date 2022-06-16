@@ -53,7 +53,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - staking currency(USDC): 0x68C34F54E63664019f59029b9dE344d6219C7758(Mock USDC)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 > the current SCR: 1000 USDC <br/>
-> the current rewardPerBlock: 0.00317 <br/>
+> the current rewardPerBlock: 0.165 <br/>
 
 - LP token(RiskPool): 0x1B03a7095A13f0F3f067D2fB69531B7787052d56
 > name: Synthetic SSIP-USDC <br/>
@@ -66,7 +66,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - staking currency(USDT): 0x40c035016AD732b6cFce34c3F881040B6C6cf71E(Mock USDT)
 - reward currency(UNO): 0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5(Mock UNO)
 > the current SCR: 1000 USDC <br/>
-> the current rewardPerBlock: 0.00317 <br/>
+> the current rewardPerBlock: 0.165 <br/>
 
 - LP token(RiskPool): 0x09Ae34DfB11BAF89b7fe727557E98a3AF94D30e5
 > name: Synthetic SSIP-USDT <br/>
