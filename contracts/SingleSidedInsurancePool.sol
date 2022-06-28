@@ -187,12 +187,10 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
     function migrate() external nonReentrant {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
-        uint256 lpPrice = IRiskPool(riskPool).lpPriceUno();
-        uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
         uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
-        ICapitalAgent(capitalAgent).SSIPPolicyCaim((amount * lpPrice) / 1e18, 0, false);
-        IMigration(migrateTo).onMigration(msg.sender, amount, "");
+        ICapitalAgent(capitalAgent).SSIPPolicyCaim(migratedAmount, 0, false);
+        IMigration(migrateTo).onMigration(msg.sender, migratedAmount, "");
         userInfo[msg.sender].amount = 0;
         userInfo[msg.sender].rewardDebt = 0;
         emit LogMigrate(msg.sender, migrateTo, migratedAmount);
@@ -257,7 +255,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         uint256 amount = userInfo[msg.sender].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
         (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
-        require(amount - pendingAmount >= _amount * 1e18 / lpPriceUno, "UnoRe: withdraw amount overflow");
+        require(amount - pendingAmount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
         IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
 
         userInfo[msg.sender].lastWithdrawTime = block.timestamp;
@@ -271,8 +269,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LOCK_TIME, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
-        (uint256 pendingAmount, , uint256 pendingAmountInUNO) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
-        ICapitalAgent(capitalAgent).SSIPWithdraw(pendingAmountInUNO);
+        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
 
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[msg.sender].rewardDebt =
@@ -280,6 +277,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
             ((pendingAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
         (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
         userInfo[msg.sender].amount = amount - withdrawAmount;
+        ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 

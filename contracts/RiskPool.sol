@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./RiskPoolERC20.sol";
 import "./interfaces/ISingleSidedReinsurancePool.sol";
 import "./interfaces/IRiskPool.sol";
@@ -16,7 +16,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     address public SSRP;
     address public override currency; // for now we should accept only UNO
     uint256 public override lpPriceUno;
-    uint256 public MIN_LP_CAPITAL = 1e20;
+    uint256 public MIN_LP_CAPITAL = 1e7;
 
     event LogCancelWithdrawRequest(address indexed _user, uint256 _amount, uint256 _amountInUno);
     event LogPolicyClaim(address indexed _user, uint256 _amount);
@@ -46,6 +46,10 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     }
 
     receive() external payable {}
+
+    function decimals() external view virtual override returns (uint8) {
+        return IERC20Metadata(currency).decimals();
+    }
 
     /**
      * @dev Users can stake only through Cohort
@@ -133,15 +137,18 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         bool _isUnLocked
     ) external override onlySSRP returns (uint256) {
         require(_migrateTo != address(0), "UnoRe: zero address");
+        uint256 migratedAmount;
+        uint256 cryptoBalance;
         if (_isUnLocked && withdrawRequestPerUser[_to].pendingAmount > 0) {
             uint256 pendingAmountInUno = (uint256(withdrawRequestPerUser[_to].pendingAmount) * lpPriceUno) / 1e18;
-            uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
+            cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
             if (pendingAmountInUno < cryptoBalance - MIN_LP_CAPITAL) {
                 if (currency != address(0)) {
                     TransferHelper.safeTransfer(currency, _to, pendingAmountInUno);
                 } else {
                     TransferHelper.safeTransferETH(_to, pendingAmountInUno);
                 }
+                migratedAmount += pendingAmountInUno;
                 _withdrawImplement(_to);
             } else {
                 if (currency != address(0)) {
@@ -149,6 +156,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
                 } else {
                     TransferHelper.safeTransferETH(_to, cryptoBalance - MIN_LP_CAPITAL);
                 }
+                migratedAmount += cryptoBalance - MIN_LP_CAPITAL;
                 _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
             }
         } else {
@@ -156,15 +164,27 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
                 _cancelWithdrawRequest(_to);
             }
         }
+        cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         uint256 unoBalance = (balanceOf(_to) * lpPriceUno) / 1e18;
-        if (currency != address(0)) {
-            TransferHelper.safeTransfer(currency, _migrateTo, unoBalance);
+        if (unoBalance < cryptoBalance - MIN_LP_CAPITAL) {
+            if (currency != address(0)) {
+                TransferHelper.safeTransfer(currency, _migrateTo, unoBalance);
+            } else {
+                TransferHelper.safeTransferETH(_migrateTo, unoBalance);
+            }
+            migratedAmount += unoBalance;
+            emit LogMigrateLP(_to, _migrateTo, unoBalance);
         } else {
-            TransferHelper.safeTransferETH(_migrateTo, unoBalance);
+            if (currency != address(0)) {
+                TransferHelper.safeTransfer(currency, _migrateTo, cryptoBalance - MIN_LP_CAPITAL);
+            } else {
+                TransferHelper.safeTransferETH(_migrateTo, cryptoBalance - MIN_LP_CAPITAL);
+            }
+            migratedAmount += cryptoBalance - MIN_LP_CAPITAL;
+            emit LogMigrateLP(_to, _migrateTo, cryptoBalance - MIN_LP_CAPITAL);
         }
         _burn(_to, balanceOf(_to));
-        emit LogMigrateLP(_to, _migrateTo, unoBalance);
-        return unoBalance;
+        return migratedAmount;
     }
 
     function setMinLPCapital(uint256 _minLPCapital) external override onlySSRP {

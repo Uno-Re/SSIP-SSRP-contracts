@@ -110,19 +110,19 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     function getETHAmountForUSDC(uint256 _usdtAmount) external view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(USDC_TOKEN);
         uint256 tokenDecimal = IERC20Metadata(USDC_TOKEN).decimals();
-        return _usdtAmount * ethPrice / (10 ** tokenDecimal);
+        return (_usdtAmount * ethPrice) / (10**tokenDecimal);
     }
 
     function getETHAmountForToken(address _token, uint256 _tokenAmount) public view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
         uint256 tokenDecimal = IERC20Metadata(_token).decimals();
-        return _tokenAmount * ethPrice / (10 ** tokenDecimal);
+        return (_tokenAmount * ethPrice) / (10**tokenDecimal);
     }
 
     function getTokenAmountForETH(address _token, uint256 _ethAmount) public view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
         uint256 tokenDecimal = IERC20Metadata(_token).decimals();
-        return _ethAmount * (10 ** tokenDecimal) / ethPrice;
+        return (_ethAmount * (10**tokenDecimal)) / ethPrice;
     }
 
     function getNeededTokenAmount(

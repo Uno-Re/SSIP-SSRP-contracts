@@ -40,24 +40,52 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 - Rewarder contract: 0xE5290071A40F8c724105a3f78036A0EA6b6F3CC3
 
+#### Hercules - SSIP USDT Pool:
+- pool address: 0xa476b3F7333796D4565a3D3666D54cF8557F0169
+- staking currency(USDT): 0xdAC17F958D2ee523a2206206994597C13D831ec7
+- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.165 <br/>
+
+- LP token(RiskPool): 0x920D510D5c70C01989b66f4e24687Dddb988DdAe
+> name: Synthetic SSIP-USDT <br/>
+> symbol: SSSIP-USDT <br/>
+
+- Rewarder contract: 0x0451863C4dc8480D95E9Fb87D73D4f427A671eB6
+
+#### Aphrodite - SSIP USDC Pool:
+- pool address: 0x72D1B61B1723900f64d041a80fe4f114d3F0942a
+- staking currency(USDC): 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.165 <br/>
+
+- LP token(RiskPool): 0xfdfAA453eF3709D2c26EcF43786a14Ab8bF27E36
+> name: Synthetic SSIP-USDC <br/>
+> symbol: SSSIP-USDC <br/>
+
+- Rewarder contract: 0xFf0898C3C90c35DBb8A9c64F63f4d9c16C81a479
+
 #### Policy Insurance:
 - SalesPolicyFactory: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
 - SalesPolicy: 0xdD2715Ec8C6D96E3064063842C47413782C4F66b
 
 #### Factories:
-- RiskPoolFactory: 0x60D00f3eb762AB197E6909da4a93aa2F53F041B4
+- RiskPoolFactory: 0x60D00f3eb762AB197E6909da4a93aa2F53F041B4(old)
+- RiskPoolFactory: 0xe3Ffa053ae0d84280f01901e2d7813d7523CfCf6(new)
 - RewarderFactory: 0x87205a4d46D1Cd0b90fe04Aa8FE66F4c28842148
 
 #### Common contracts:
 - UNO : 0x474021845C4643113458ea4414bdb7fB74A01A77
 - USDC : 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+- USDT : 0xdAC17F958D2ee523a2206206994597C13D831ec7
 
 - CapitalAgent: 0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05
 > the current MCR: 50% <br/>
-> the current MLR: 200% <br/>
+> the current MLR: 400% <br/>
 - ExchangeAgent: 0x0b0D83702acbD625aDD45c79c7307C08eecEff4B
 - PremiumPool: 0xdB4B701f1a4653BFD5F0f4EFF1913aEAF5E21E68
-- PriceOracle: 0x3e7dF95146bF4beb0B0a78E1cE76BF80c9d56B7e
+- PriceOracle: 0x3Ba0A22c1f4FdD2eB5fD84F560efAE19B7bF6aDB
 - MultiSigWallet: 
 
 

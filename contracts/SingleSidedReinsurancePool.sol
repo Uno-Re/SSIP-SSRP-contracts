@@ -215,7 +215,7 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
         uint256 amount = userInfo[msg.sender].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
         (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
-        require(amount - pendingAmount >= _amount * 1e18 / lpPriceUno, "UnoRe: withdraw amount overflow");
+        require(amount - pendingAmount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
         IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
 
         userInfo[msg.sender].lastWithdrawTime = block.timestamp;
