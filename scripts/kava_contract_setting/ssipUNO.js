@@ -4,6 +4,7 @@ const riskFactoryDeployment = require("../../deployments/kava_alpha/RiskPoolFact
 const rewarderFactoryDeployment = require("../../deployments/kava_alpha/RewarderFactory.json")
 const ssipDeployment = require("../../deployments/kava_alpha/SingleSidedInsurancePool.json")
 const unoDeployment = require("../../deployments/kava_alpha/MockUNO.json")
+const usdcDeployment = require("../../deployments/kava_alpha/MockUSDC.json")
 
 async function main() {
   const signers = await ethers.getSigners()
@@ -12,34 +13,48 @@ async function main() {
   const MockUNO = await ethers.getContractFactory("MockUNO")
   const mockUNO = await MockUNO.attach(unoDeployment.address)
 
+  const MockUSDC = await ethers.getContractFactory("MockUSDC")
+  const mockUSDC = await MockUSDC.attach(usdcDeployment.address)
+
   const SSIPUNO = await ethers.getContractFactory("SingleSidedInsurancePool")
   const ssipUNO = await SSIPUNO.attach(ssipDeployment.address)
 
-  await (
-    await ssipUNO.connect(signers[0]).createRiskPool(
-      "Synthetic SSIP-UNO",
-      "SSSIP-UNO",
-      riskFactoryDeployment.address,
-      mockUNO.address,
-      // 57494174023757960,
-      getBigNumber("721099507210995063", 0),
-      getBigNumber(15000, 6),
-    )
-  ).wait()
+  // await (
+  //   await ssipUNO.connect(signers[0]).createRiskPool(
+  //     "Synthetic SSIP-UNO",
+  //     "SSSIP-UNO",
+  //     riskFactoryDeployment.address,
+  //     mockUNO.address,
+  //     // 57494174023757960,
+  //     getBigNumber("721099507210995063", 0),
+  //     getBigNumber(15000, 6),
+  //   )
+  // ).wait()
 
-  const poolInfo = await ssipUNO.poolInfo()
-  console.log("[pool info]", poolInfo, poolInfo.unoMultiplierPerBlock.toString())
+  // const poolInfo = await ssipUNO.poolInfo()
+  // console.log("[pool info]", poolInfo, poolInfo.unoMultiplierPerBlock.toString())
 
-  const riskPoolAddr = await ssipUNO.riskPool()
-  console.log("[riskPoolAddr]", riskPoolAddr)
+  // const riskPoolAddr = await ssipUNO.riskPool()
+  // console.log("[riskPoolAddr]", riskPoolAddr)
 
-  await (
-    await ssipUNO.connect(signers[0]).createRewarder(signers[0].address, rewarderFactoryDeployment.address, unoDeployment.address)
-  ).wait()
+  // const riskPoolBalance = await mockUNO.balanceOf(riskPoolAddr)
+  // console.log('[riskPoolBalance]', riskPoolBalance.toString())
 
-  const rewarderAddr = await ssipUNO.rewarder()
-  console.log("[rewarderAddr]", rewarderAddr)
-  await (await mockUNO.transfer(rewarderAddr, getBigNumber(500000))).wait()
+  // const userInfo = await ssipUNO.getStakedAmountPerUser('0x02aB62496EE0b0dF9ff58f181E237923d8Ad1cBb')
+  // console.log('[userInfo]', userInfo.toString())
+
+  const beforeBalance = await mockUSDC.balanceOf('0x02aB62496EE0b0dF9ff58f181E237923d8Ad1cBb')
+  await(await mockUSDC.transfer('0x02aB62496EE0b0dF9ff58f181E237923d8Ad1cBb', getBigNumber(100000, 6))).wait()
+  const afterBalance = await mockUSDC.balanceOf('0x02aB62496EE0b0dF9ff58f181E237923d8Ad1cBb')
+
+  console.log('[balance check]', beforeBalance.toString(), afterBalance.toString())
+  // await (
+  //   await ssipUNO.connect(signers[0]).createRewarder(signers[0].address, rewarderFactoryDeployment.address, unoDeployment.address)
+  // ).wait()
+
+  // const rewarderAddr = await ssipUNO.rewarder()
+  // console.log("[rewarderAddr]", rewarderAddr)
+  // await (await mockUNO.transfer(rewarderAddr, getBigNumber(500000))).wait()
 
   // await (
   //   await ssipETH

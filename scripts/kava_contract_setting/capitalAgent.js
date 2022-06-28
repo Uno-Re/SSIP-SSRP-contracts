@@ -22,11 +22,15 @@ async function main() {
 
   const CapitalAgent = await ethers.getContractFactory("CapitalAgent")
   const capitalAgent = await CapitalAgent.attach(capitalAgentDeployment.address)
-  await(await capitalAgent.connect(signers[0]).setSalesPolicyFactory(salesPolicyFactoryDeployment.address)).wait()
-  await (await capitalAgent.connect(signers[0]).addPoolWhiteList(ssipDeployment.address)).wait()
-  await (await capitalAgent.connect(signers[0]).addPoolWhiteList(ssipUNODeployment.address)).wait()
-  await (await capitalAgent.connect(signers[0]).setMLR(getBigNumber(2))).wait()
-  await (await capitalAgent.connect(signers[0]).setMCR(getBigNumber(5, 17))).wait()
+  // await(await capitalAgent.connect(signers[0]).setSalesPolicyFactory(salesPolicyFactoryDeployment.address)).wait()
+  // await (await capitalAgent.connect(signers[0]).addPoolWhiteList(ssipDeployment.address)).wait()
+  // await (await capitalAgent.connect(signers[0]).addPoolWhiteList(ssipUNODeployment.address)).wait()
+  // await (await capitalAgent.connect(signers[0]).setMLR(getBigNumber(2))).wait()
+  // await (await capitalAgent.connect(signers[0]).setMCR(getBigNumber(5, 17))).wait()
+  const totalStakedAmount = await capitalAgent.totalCapitalStaked()
+  const totalUtilizedAmount = await capitalAgent.totalUtilizedAmount()
+  const MLR = await capitalAgent.MLR()
+  console.log('[totalStakedAmount]', totalStakedAmount.toString(), totalUtilizedAmount.toString(), MLR.toString())
 }
 
 main()
