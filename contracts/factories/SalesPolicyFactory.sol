@@ -36,18 +36,15 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     event LogSetBlackListProtocol(uint16 _protocolId, address indexed _protocol);
 
     constructor(
-        address _usdcToken,
         address _exchangeAgent,
         address _premiumPool,
         address _capitalAgent,
         address _multiSigWallet
     ) {
-        require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        USDC_TOKEN = _usdcToken;
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
@@ -72,7 +69,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         address _premiumPool,
         address _capitalAgent
     ) external onlyOwner nonReentrant returns (address) {
-        SalesPolicy _salesPolicy = new SalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, USDC_TOKEN);
+        SalesPolicy _salesPolicy = new SalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent);
         salesPolicy = address(_salesPolicy);
         ICapitalAgent(capitalAgent).setPolicy(address(_salesPolicy));
 
@@ -124,6 +121,11 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     function setSignerInPolicy(address _signer) external onlyOwner {
         require(_signer != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setSigner(_signer);
+    }
+
+    function setUSDCInPolicy(address _usdc) external onlyOwner {
+        USDC_TOKEN = _usdc;
+        ISalesPolicy(salesPolicy).setUSDC(_usdc);
     }
 
     function setCapitalAgentInPolicy(address _capitalAgent) external onlyOwner {

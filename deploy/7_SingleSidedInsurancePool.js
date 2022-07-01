@@ -7,11 +7,8 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const exchangeAgent = await deployments.get("ExchangeAgent")
   const capitalAgent = await deployments.get("CapitalAgent")
-  const multiSigWallet = "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b"
-  // const exchangeAgent = "0x6aC1081CBb92524170E61CFFD37bDaF3b38FBC4c"
-  // const capitalAgent = "0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05"
-  // const multiSigWallet = "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F"
-  const claimAssessor = "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b"
+  const multiSigWallet = "0x6E1ae7E0A77e51A9B0a1F58D57a023493FBfbe0c"
+  const claimAssessor = "0x6E1ae7E0A77e51A9B0a1F58D57a023493FBfbe0c"
 
   await deploy("SingleSidedInsurancePool", {
     from: deployer,
@@ -21,4 +18,4 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   })
 }
 
-module.exports.tags = ["SingleSidedInsurancePoolUSDT", "UnoRe"]
+module.exports.tags = ["SingleSidedInsurancePool", "UnoRe"]

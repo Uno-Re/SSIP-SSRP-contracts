@@ -13,7 +13,6 @@ import "./interfaces/ICapitalAgent.sol";
 contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     address public exchangeAgent;
     address public salesPolicyFactory;
-    address public UNO_TOKEN;
     address public USDC_TOKEN;
     address public operator;
 
@@ -69,18 +68,12 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     constructor(
         address _exchangeAgent,
-        address _UNO_TOKEN,
-        address _USDC_TOKEN,
         address _multiSigWallet,
         address _operator
     ) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
-        require(_UNO_TOKEN != address(0), "UnoRe: zero UNO address");
-        require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
-        UNO_TOKEN = _UNO_TOKEN;
-        USDC_TOKEN = _USDC_TOKEN;
         operator = _operator;
         transferOwnership(_multiSigWallet);
     }
@@ -105,6 +98,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         require(_operator != address(0), "UnoRe: zero operator address");
         operator = _operator;
         emit LogSetOperator(_operator);
+    }
+
+    function setUSDC(address _usdc) external onlyOwner nonReentrant {
+        USDC_TOKEN = _usdc;
     }
 
     function addPoolWhiteList(address _pool) external onlyOwner nonReentrant {

@@ -10,13 +10,12 @@ import "./interfaces/IUniswapRouter02.sol";
 import "./interfaces/IOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
-import "hardhat/console.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
-    address public immutable override USDC_TOKEN;
-    address public immutable UNISWAP_FACTORY;
-    address public immutable UNISWAP_ROUTER;
-    address public immutable WETH;
+    address public override USDC_TOKEN;
+    address public UNISWAP_FACTORY;
+    address public UNISWAP_ROUTER;
+    address public WETH;
     address public oraclePriceFeed;
     uint256 public slippage;
     uint256 private constant SLIPPAGE_PRECISION = 100;
@@ -45,27 +44,9 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     event LogSetSlippage(address indexed _exchangeAgent, uint256 _slippage);
     event LogSetOraclePriceFeed(address indexed _exchangeAgent, address indexed _oraclePriceFeed);
 
-    constructor(
-        address _usdcToken,
-        address _WETH,
-        address _oraclePriceFeed,
-        address _uniswapRouter,
-        address _uniswapFactory,
-        address _multiSigWallet
-    ) {
-        require(_usdcToken != address(0), "UnoRe: zero USDC address");
-        require(_uniswapRouter != address(0), "UnoRe: zero uniswapRouter address");
-        require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
-        require(_WETH != address(0), "UnoRe: zero WETH address");
-        require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        USDC_TOKEN = _usdcToken;
-        UNISWAP_FACTORY = _uniswapFactory;
-        UNISWAP_ROUTER = _uniswapRouter;
-        WETH = _WETH;
-        oraclePriceFeed = _oraclePriceFeed;
+    constructor() {
         whiteList[msg.sender] = true;
         slippage = 5 * SLIPPAGE_PRECISION;
-        transferOwnership(_multiSigWallet);
     }
 
     modifier onlyWhiteList() {
@@ -94,6 +75,16 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         require(_slippage < 100, "UnoRe: 100% slippage overflow");
         slippage = _slippage * SLIPPAGE_PRECISION;
         emit LogSetSlippage(address(this), _slippage);
+    }
+
+    function setUSDC(address _usdc) external onlyOwner {
+        USDC_TOKEN = _usdc;
+    }
+
+    function setUniswap(address _factory, address _router, address _weth) external onlyOwner {
+        UNISWAP_FACTORY = _factory;
+        UNISWAP_ROUTER = _router;
+        WETH = _weth;
     }
 
     function setOraclePriceFeed(address _oraclePriceFeed) external onlyOwner {
@@ -131,8 +122,6 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         address _token1,
         uint256 _token0Amount
     ) external view override returns (uint256) {
-        console.log("[_getNeededTokenAmount]", _token0);
-        // return _token0Amount;
         return _getNeededTokenAmount(_token0, _token1, _token0Amount);
     }
 
@@ -259,7 +248,6 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         address _token1,
         uint256 _token0Amount
     ) private view returns (uint256) {
-        console.log("[_getNeededTokenAmount]", _token0);
         uint256 expectedToken1Amount = IOraclePriceFeed(oraclePriceFeed).consult(_token0, _token1, _token0Amount);
 
         return expectedToken1Amount;

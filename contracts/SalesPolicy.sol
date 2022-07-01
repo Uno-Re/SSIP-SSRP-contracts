@@ -34,7 +34,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     address public premiumPool;
     address public capitalAgent;
     address public signer;
-    address public immutable USDC_TOKEN; //
+    address public USDC_TOKEN; //
 
     string private protocolURI;
 
@@ -68,18 +68,15 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address _factory,
         address _exchangeAgent,
         address _premiumPool,
-        address _capitalAgent,
-        address _usdcToken
+        address _capitalAgent
     ) ERC721("Policy insurance", "Policy insurance") {
         require(_factory != address(0), "UnoRe: zero factory address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
-        require(_usdcToken != address(0), "UnoRe: zero USDC address");
         factory = _factory;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
-        USDC_TOKEN = _usdcToken;
         premiumPool = _premiumPool;
         maxDeadline = 7 days;
     }
@@ -235,6 +232,10 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         require(_exchangeAgent != address(0), "UnoRe: zero address");
         exchangeAgent = _exchangeAgent;
         emit LogSetExchangeAgentInPolicy(_exchangeAgent, address(this));
+    }
+
+    function setUSDC(address _usdc) external override onlyFactory {
+        USDC_TOKEN = _usdc;
     }
 
     function setSigner(address _signer) external override onlyFactory {

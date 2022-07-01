@@ -4,104 +4,81 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 ### contract deployment(mainnet):
 
 #### SSRP:
-- pool address: 0x08c93862FFc7D34B3a416E6E98936268AB6e37c4
-- staking currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+- pool address: 0x92B8c61da004Ae90e4583d4BCC92Bb814D26e447
+- staking currency(UNO): 
+- reward currency(UNO): 
 
-- LP token(RiskPool): 0xeb19991bbA286946d102859D7623e0B1dABF7673
+- LP token(RiskPool): 
 > name: Synthetic SSRP <br/>
 > symbol: SSSRP <br/>
 
-- Rewarder contract: 0x3971289c9f7E3EB4c559E00b267ad68AdB895082
+- Rewarder contract: 
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0xFfec3ac173256b8DD0Dc4c56b531919c60128848
+- pool address: 0x115C2C85924a6a2e9d9eB5065099Ccc7b76e80Ff
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
-- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-> the current SCR: 15K mockUSDC <br/>
-> the current rewardPerBlock: 0.05749417402375796 mockUNO <br/>
+- reward currency(UNO): 
+> the current SCR:  <br/>
+> the current rewardPerBlock:  <br/>
 
-- LP token(RiskPool): 0xd6C42Ef5bDb3B4bE3Eb8843C6e7C897879A69522
+- LP token(RiskPool): 
 > name: Synthetic SSIP-ETH <br/>
 > symbol: SSSIP-ETH <br/>
 
-- Rewarder contract: 0xF69f506eac7b5f4F4DBf3f9F0b78f68509Ff1Fb2
+- Rewarder contract: 
 
 #### Ares - SSIP UNO Pool:
-- pool address: 0x9eb6ea5d968399e173f54301523392493db1fda7
-- staking currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-> the current SCR: 15K mockUSDC <br/>
-> the current rewardPerBlock: 0.721099507210995063 mockUNO <br/>
+- pool address: 
+- staking currency(UNO): 
+- reward currency(UNO): 
+> the current SCR:  <br/>
+> the current rewardPerBlock:  <br/>
 
-- LP token(RiskPool): 0x3AC4961FBc32404d7BFcefE7d8E1195376cae066
+- LP token(RiskPool): 
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0x0F58D1765929FCCCa5d0DbdD23E0541F8021aB63
+- Rewarder contract: 
 
 #### Hercules - SSIP USDT Pool:
-- pool address: 0xa476b3F7333796D4565a3D3666D54cF8557F0169
-- staking currency(USDT): 0xdAC17F958D2ee523a2206206994597C13D831ec7
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-> the current SCR: 10K USDC <br/>
-> the current rewardPerBlock: 0.165 <br/>
+- pool address: 
+- staking currency(USDT): 
+- reward currency(UNO): 
+> the current SCR:  <br/>
+> the current rewardPerBlock:  <br/>
 
-- LP token(RiskPool): 0x920D510D5c70C01989b66f4e24687Dddb988DdAe
+- LP token(RiskPool): 
 > name: Synthetic SSIP-USDT <br/>
 > symbol: SSSIP-USDT <br/>
 
-- Rewarder contract: 0x0451863C4dc8480D95E9Fb87D73D4f427A671eB6
+- Rewarder contract: 
 
 #### Aphrodite - SSIP USDC Pool:
-- pool address: 0x72D1B61B1723900f64d041a80fe4f114d3F0942a
-- staking currency(USDC): 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-> the current SCR: 10K USDC <br/>
-> the current rewardPerBlock: 0.165 <br/>
+- pool address: 
+- staking currency(USDC): 
+- reward currency(UNO): 
+> the current SCR:  <br/>
+> the current rewardPerBlock:  <br/>
 
-- LP token(RiskPool): 0xfdfAA453eF3709D2c26EcF43786a14Ab8bF27E36
+- LP token(RiskPool): 
 > name: Synthetic SSIP-USDC <br/>
 > symbol: SSSIP-USDC <br/>
 
 - Rewarder contract: 0xFf0898C3C90c35DBb8A9c64F63f4d9c16C81a479
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0xC940A4A3d187A30aA4b76bB5D74cA997A9E48163
-- SalesPolicy: 0x5097ecF33b0bE8Ad9bc4A27458fFa2CbEA21ED3e
+- SalesPolicyFactory: 0x7cDBa68B8e3dfb8b6b0f66eC01e616848488EF45
+- SalesPolicy: 
 
 #### Factories:
-<<<<<<< HEAD
-- RiskPoolFactory: 0x60D00f3eb762AB197E6909da4a93aa2F53F041B4(old)
-- RiskPoolFactory: 0xe3Ffa053ae0d84280f01901e2d7813d7523CfCf6(new)
-- RewarderFactory: 0x87205a4d46D1Cd0b90fe04Aa8FE66F4c28842148
+- RiskPoolFactory: 0x1E8765Db38ee176c1dE6adB903D483804A54eFBc
+- RewarderFactory: 0x64Bb28acD2411AC51083DEB0A361ac3cc6fC677e
 
 #### Common contracts:
-- UNO : 0x474021845C4643113458ea4414bdb7fB74A01A77
-- USDC : 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-- USDT : 0xdAC17F958D2ee523a2206206994597C13D831ec7
-=======
-- RiskPoolFactory: 0x01e116289819bFb500505C89F1AcdF27200a8670
-- RewarderFactory: 0x95635bB88C887ff2464801B989d5483ac8BFe6F8
-
-#### Common contracts:
-- mockUNO : 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
-- mockUSDC : 0xCe86b34aE48947794F038a2c1C2BA577bC4B03a4
->>>>>>> dev/kava_alpha
-
-- CapitalAgent: 0x653Bc9F47Fb2C067004f001Bd528457D779c7109
-> the current MCR: 50% <br/>
-<<<<<<< HEAD
-> the current MLR: 400% <br/>
-- ExchangeAgent: 0x0b0D83702acbD625aDD45c79c7307C08eecEff4B
-- PremiumPool: 0xdB4B701f1a4653BFD5F0f4EFF1913aEAF5E21E68
-- PriceOracle: 0x3Ba0A22c1f4FdD2eB5fD84F560efAE19B7bF6aDB
-=======
-> the current MLR: 200% <br/>
-- ExchangeAgent: 0x4548339b51163918b15b225aBC2021383269f011
-- PremiumPool: 0xe9b2718DCF413F3E4b71282951E24f0aFd196a2d
-- PriceOracle: 0xD3E572A50c8e201A274BA0007d4fC43c4fAbbc37
->>>>>>> dev/kava_alpha
+- ExchangeAgent: 0xe036608523D1C1B0b7220d26E787CCc60d69D494
+- PremiumPool: 0x2dcB2ED309967bd3040e623826ED801eDF5c341D
+- capitalAgent: 0x6B456aAe97D912E9fDe5a8d03438eAB71037AE37
+- PriceOracle: 
 - MultiSigWallet: 
 
 

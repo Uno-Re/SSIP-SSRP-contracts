@@ -44,17 +44,11 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
 
     constructor(
         address _exchangeAgent,
-        address _unoToken,
-        address _usdcToken,
         address _multiSigWallet
     ) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
-        require(_unoToken != address(0), "UnoRe: zero UNO address");
-        require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
-        UNO_TOKEN = _unoToken;
-        USDC_TOKEN = _usdcToken;
         whiteList[msg.sender] = true;
         transferOwnership(_multiSigWallet);
     }
@@ -192,6 +186,14 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
             TransferHelper.safeTransfer(_currency, _to, _amount);
         }
         emit PremiumWithdraw(_currency, _to, _amount);
+    }
+
+    function setUSDC(address _usdc) external onlyOwner {
+        USDC_TOKEN = _usdc;
+    }
+
+    function setUNO(address _uno) external onlyOwner {
+        UNO_TOKEN = _uno;
     }
 
     function addCurrency(address _currency) external onlyOwner {

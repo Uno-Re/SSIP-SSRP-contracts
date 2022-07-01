@@ -16,6 +16,8 @@ interface ISalesPolicy {
 
     function setSigner(address _signer) external;
 
+    function setUSDC(address _usdc) external;
+    
     function updatePolicyExpired(uint256 _policyId) external;
 
     function markToClaim(uint256 _policyId) external;

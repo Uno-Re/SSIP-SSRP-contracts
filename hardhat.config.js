@@ -103,7 +103,7 @@ module.exports = {
       live: true,
       saveDeployments: true
     },
-    kava_mainnet: {
+    kava: {
       url: `https://evm.kava.io`,
       accounts,
       chainId: 2222,
@@ -123,7 +123,20 @@ module.exports = {
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY // BSC_API_KEY
+    apiKey: {
+      kava: "api key is not required by the Kava explorer, but can't be empty",
+    }, 
+      // mainnet: process.env.ETHERSCAN_API_KEY, // BSC_API_KEY,
+    customChains: [
+      {
+        network: 'kava',
+        chainId: 2222,
+        urls: {
+          apiURL: 'https://explorer.kava.io/api',
+          browserURL: 'https://explorer.kava.io',
+        },
+      },
+    ],
   },
   paths: {
     deploy: "deploy",

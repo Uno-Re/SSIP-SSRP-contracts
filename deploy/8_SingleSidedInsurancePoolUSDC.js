@@ -5,13 +5,10 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deployer } = await getNamedAccounts()
   const owner = deployer
 
-  // const exchangeAgent = await deployments.get("ExchangeAgent")
-  // const capitalAgent = await deployments.get("CapitalAgent")
-  // const multiSigWallet = await deployments.get("MultiSigWallet")
-  const exchangeAgent = "0x0b0D83702acbD625aDD45c79c7307C08eecEff4B"
-  const capitalAgent = "0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05"
-  const multiSigWallet = "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F"
-  const claimAssessor = "0x6c78D94AB7a94A982B773aE453a6E000Da663b62"
+  const exchangeAgent = await deployments.get("ExchangeAgent")
+  const capitalAgent = await deployments.get("CapitalAgent")
+  const multiSigWallet = "0x6E1ae7E0A77e51A9B0a1F58D57a023493FBfbe0c"
+  const claimAssessor = "0x6E1ae7E0A77e51A9B0a1F58D57a023493FBfbe0c"
 
   await deploy("SingleSidedInsurancePool", {
     from: deployer,
