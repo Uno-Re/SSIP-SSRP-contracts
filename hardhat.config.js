@@ -95,6 +95,24 @@ module.exports = {
       accounts: {mnemonic: process.env.MNEMONIC},
       live: true,
       saveDeployments: true
+    },
+    kava_mainnet: {
+      url: `https://evm.kava.io`,
+      accounts,
+      chainId: 2222,
+      live: false,
+      saveDeployments: true,
+      tags: ["staging"],
+      gasMultiplier: 2
+    },
+    kava_alpha: {
+      url: `https://evm.evm-alpha.kava.io`,
+      accounts,
+      chainId: 2221,
+      live: false,
+      saveDeployments: true,
+      tags: ["staging"],
+      gasMultiplier: 2
     }
   },
   etherscan: {
