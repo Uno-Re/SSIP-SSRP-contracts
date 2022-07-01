@@ -46,7 +46,7 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      hardfork: "london",
+      // hardfork: "london",
       allowUnlimitedContractSize: true,
       settings: {
         optimizer: {
@@ -54,14 +54,29 @@ module.exports = {
           runs: 9999,
         },
       },
-      evmVersion: "byzantium",
+      // evmVersion: "byzantium",
       forking: {
-        url: 'https://eth-rinkeby.alchemyapi.io/v2/8SAQa7xMc0VXTR_hyfPvAt2pe3QrXybB',
+        // url: 'https://eth-rinkeby.alchemyapi.io/v2/8SAQa7xMc0VXTR_hyfPvAt2pe3QrXybB',
+        // url: 'https://evm.evm-alpha.kava.io',
+        url: 'https://evm.kava.io',
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
         enabled: true,
         // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355        
       },
       gasPrice: "auto",
+      accounts
+    },
+    kava_local: {
+      hardfork: "london",
+      allowUnlimitedContractSize: true,
+      forking: {
+        url: 'https://eth-rinkeby.alchemyapi.io/v2/8SAQa7xMc0VXTR_hyfPvAt2pe3QrXybB',
+        enabled: true,
+        // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355        
+      },
+      gasPrice: "auto",
+      url: "http://localhost:8545/",
+      // accounts: ["C93F165DF8EC9D318A464CA9304E96D627674DC7CD745B97786BB696480F13B3"]
       accounts
     },
     mainnet: {
@@ -80,14 +95,6 @@ module.exports = {
       tags: ["staging"],
       gasPrice: 5000000000,
       gasMultiplier: 2
-    },
-    bscTest: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
-      chainId: 97,
-      accounts: {mnemonic: process.env.MNEMONIC},
-      live: true,
-      saveDeployments: true,
-      gasMultiplier: 2,
     },
     bscMain: {
       url: "https://bsc-dataseed.binance.org/",

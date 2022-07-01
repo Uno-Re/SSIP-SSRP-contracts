@@ -1,6 +1,6 @@
 const { getBigNumber } = require("./shared/utilities")
 
 module.exports = [
-  "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F", // owner
-  "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F", // claimAssessor
+  "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b", // owner
+  "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b", // claimAssessor
 ]

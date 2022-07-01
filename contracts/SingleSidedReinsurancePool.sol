@@ -64,7 +64,6 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         claimAssessor = _claimAssessor;
-        STAKING_START_TIME = block.timestamp + 3 days;
         transferOwnership(_multiSigWallet);
     }
 
@@ -109,8 +108,7 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
     }
 
     function setStakingStartTime(uint256 _startTime) external onlyOwner {
-        require(_startTime > 0, "UnoRe: not allow zero start time");
-        STAKING_START_TIME = _startTime;
+        STAKING_START_TIME = _startTime + block.timestamp;
         emit LogSetStakingStartTime(address(this), _startTime);
     }
 

@@ -4,41 +4,41 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 ### contract deployment(mainnet):
 
 #### SSRP:
-- pool address: 0x87e1f628225c170a5C0Bf895580686430DEb3322
-- staking currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
+- pool address: 0x08c93862FFc7D34B3a416E6E98936268AB6e37c4
+- staking currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
 
-- LP token(RiskPool): 0x1eECc8C8298ed9Bd46c147D44E2D7A7BfACE2034
+- LP token(RiskPool): 0xeb19991bbA286946d102859D7623e0B1dABF7673
 > name: Synthetic SSRP <br/>
 > symbol: SSSRP <br/>
 
-- Rewarder contract: 0x629D346448086ECCC6bD19EcA617074a2dF5b365
+- Rewarder contract: 0x3971289c9f7E3EB4c559E00b267ad68AdB895082
 
 #### Selene - SSIP ETH Pool:
-- pool address: 0x1342b3dAec4f54F5Af01Aaa34839626f959B362a
+- pool address: 0xFfec3ac173256b8DD0Dc4c56b531919c60128848
 - staking currency(ETH): 0x0000000000000000000000000000000000000000
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-> the current SCR: 200K USDC <br/>
-> the current rewardPerBlock: 0.05749417402375796 UNO <br/>
+- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+> the current SCR: 15K mockUSDC <br/>
+> the current rewardPerBlock: 0.05749417402375796 mockUNO <br/>
 
-- LP token(RiskPool): 0x29B4b8674D93b36Bf651d0b86A8e5bE3c378aCF4
+- LP token(RiskPool): 0xd6C42Ef5bDb3B4bE3Eb8843C6e7C897879A69522
 > name: Synthetic SSIP-ETH <br/>
 > symbol: SSSIP-ETH <br/>
 
-- Rewarder contract: 0xAeFEAB8f99b7705D11A94fc823908103cCADA92a
+- Rewarder contract: 0xF69f506eac7b5f4F4DBf3f9F0b78f68509Ff1Fb2
 
 #### Ares - SSIP UNO Pool:
-- pool address: 0x82E107d2b1Be4347b55FBba4a6fB99669dF3ceb1
-- staking currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-- reward currency(UNO): 0x474021845C4643113458ea4414bdb7fB74A01A77
-> the current SCR: 200K USDC <br/>
-> the current rewardPerBlock: 0.095129375951293759 <br/>
+- pool address: 0x9eb6ea5d968399e173f54301523392493db1fda7
+- staking currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+- reward currency(UNO): 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+> the current SCR: 15K mockUSDC <br/>
+> the current rewardPerBlock: 0.721099507210995063 mockUNO <br/>
 
-- LP token(RiskPool): 0xbd3E70819A8Add92B06d6d92A06DcdA9249DF2a3
+- LP token(RiskPool): 0x3AC4961FBc32404d7BFcefE7d8E1195376cae066
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0xE5290071A40F8c724105a3f78036A0EA6b6F3CC3
+- Rewarder contract: 0x0F58D1765929FCCCa5d0DbdD23E0541F8021aB63
 
 #### Hercules - SSIP USDT Pool:
 - pool address: 0xa476b3F7333796D4565a3D3666D54cF8557F0169
@@ -67,10 +67,11 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - Rewarder contract: 0xFf0898C3C90c35DBb8A9c64F63f4d9c16C81a479
 
 #### Policy Insurance:
-- SalesPolicyFactory: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
-- SalesPolicy: 0xdD2715Ec8C6D96E3064063842C47413782C4F66b
+- SalesPolicyFactory: 0xC940A4A3d187A30aA4b76bB5D74cA997A9E48163
+- SalesPolicy: 0x5097ecF33b0bE8Ad9bc4A27458fFa2CbEA21ED3e
 
 #### Factories:
+<<<<<<< HEAD
 - RiskPoolFactory: 0x60D00f3eb762AB197E6909da4a93aa2F53F041B4(old)
 - RiskPoolFactory: 0xe3Ffa053ae0d84280f01901e2d7813d7523CfCf6(new)
 - RewarderFactory: 0x87205a4d46D1Cd0b90fe04Aa8FE66F4c28842148
@@ -79,22 +80,30 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - UNO : 0x474021845C4643113458ea4414bdb7fB74A01A77
 - USDC : 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
 - USDT : 0xdAC17F958D2ee523a2206206994597C13D831ec7
+=======
+- RiskPoolFactory: 0x01e116289819bFb500505C89F1AcdF27200a8670
+- RewarderFactory: 0x95635bB88C887ff2464801B989d5483ac8BFe6F8
 
-- CapitalAgent: 0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05
+#### Common contracts:
+- mockUNO : 0x3853D735ABEb59E1289EEb1F9E9c49B189103E3F
+- mockUSDC : 0xCe86b34aE48947794F038a2c1C2BA577bC4B03a4
+>>>>>>> dev/kava_alpha
+
+- CapitalAgent: 0x653Bc9F47Fb2C067004f001Bd528457D779c7109
 > the current MCR: 50% <br/>
+<<<<<<< HEAD
 > the current MLR: 400% <br/>
 - ExchangeAgent: 0x0b0D83702acbD625aDD45c79c7307C08eecEff4B
 - PremiumPool: 0xdB4B701f1a4653BFD5F0f4EFF1913aEAF5E21E68
 - PriceOracle: 0x3Ba0A22c1f4FdD2eB5fD84F560efAE19B7bF6aDB
+=======
+> the current MLR: 200% <br/>
+- ExchangeAgent: 0x4548339b51163918b15b225aBC2021383269f011
+- PremiumPool: 0xe9b2718DCF413F3E4b71282951E24f0aFd196a2d
+- PriceOracle: 0xD3E572A50c8e201A274BA0007d4fC43c4fAbbc37
+>>>>>>> dev/kava_alpha
 - MultiSigWallet: 
 
-
-## MockUNO faucet(rinkeby):
-https://rinkeby.etherscan.io/address/0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5#writeContract
-
-total faucet Limit: 500000000 $UNO
-
-- AirdropMockUNO: 0x0A47304bF71c086b8d97C6eE079b7795c8253E17
 
 ### Frontend Pages:
 1. @wang - Homescreen: 
