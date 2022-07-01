@@ -40,32 +40,6 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 - Rewarder contract: 
 
-#### Hercules - SSIP USDT Pool:
-- pool address: 
-- staking currency(USDT): 
-- reward currency(UNO): 
-> the current SCR:  <br/>
-> the current rewardPerBlock:  <br/>
-
-- LP token(RiskPool): 
-> name: Synthetic SSIP-USDT <br/>
-> symbol: SSSIP-USDT <br/>
-
-- Rewarder contract: 
-
-#### Aphrodite - SSIP USDC Pool:
-- pool address: 
-- staking currency(USDC): 
-- reward currency(UNO): 
-> the current SCR:  <br/>
-> the current rewardPerBlock:  <br/>
-
-- LP token(RiskPool): 
-> name: Synthetic SSIP-USDC <br/>
-> symbol: SSSIP-USDC <br/>
-
-- Rewarder contract: 0xFf0898C3C90c35DBb8A9c64F63f4d9c16C81a479
-
 #### Policy Insurance:
 - SalesPolicyFactory: 0x7cDBa68B8e3dfb8b6b0f66eC01e616848488EF45
 - SalesPolicy: 
