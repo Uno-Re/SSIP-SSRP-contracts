@@ -12,7 +12,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   await deploy("SingleSidedInsurancePool", {
     from: deployer,
-    args: [claimAssessor, exchangeAgent, capitalAgent, multiSigWallet],
+    args: [claimAssessor, exchangeAgent.address, capitalAgent.address, multiSigWallet],
     log: true,
     deterministicDeployment: false,
   })
