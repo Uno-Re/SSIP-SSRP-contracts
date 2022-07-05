@@ -14,29 +14,29 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 - Rewarder contract: 
 
-#### Selene - SSIP ETH Pool:
+#### SSIP KAVA Pool:
 - pool address: 0x115C2C85924a6a2e9d9eB5065099Ccc7b76e80Ff
-- staking currency(ETH): 0x0000000000000000000000000000000000000000
+- staking currency(KAVA): 0x0000000000000000000000000000000000000000
 - reward currency(UNO): 
-> the current SCR:  <br/>
-> the current rewardPerBlock:  <br/>
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.165 <br/>
 
-- LP token(RiskPool): 
-> name: Synthetic SSIP-ETH <br/>
-> symbol: SSSIP-ETH <br/>
+- LP token(RiskPool): 0x112a295B0fCd382E47E98E8271e45979EDf952b6
+> name: Synthetic SSIP-KAVA <br/>
+> symbol: SSSIP-KAVA <br/>
 
 - Rewarder contract: 
 
-#### Ares - SSIP UNO Pool:
-- pool address: 
-- staking currency(UNO): 
+#### SSIP USDC Pool:
+- pool address: 0xF2cFD4DF596E53e29d7B444a6559bD58dF0Ea797
+- staking currency(USDC): 0xfA9343C3897324496A05fC75abeD6bAC29f8A40f
 - reward currency(UNO): 
-> the current SCR:  <br/>
-> the current rewardPerBlock:  <br/>
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.165 <br/>
 
-- LP token(RiskPool): 
-> name: Synthetic SSIP-UNO <br/>
-> symbol: SSSIP-UNO <br/>
+- LP token(RiskPool): 0x6cEC77829F474b56c327655f3281739De112B019
+> name: Synthetic SSIP-USDC <br/>
+> symbol: SSSIP-USDC <br/>
 
 - Rewarder contract: 
 
