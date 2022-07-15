@@ -61,14 +61,13 @@ async function main() {
 
   const assets = [mockUSDT.address, zeroAddress]
   const policyPrice = getBigNumber(300, 6)
-  const protocols = [signers[0].address, signers[1].address]
-  const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
+  const protocols = [getBigNumber(113, 0), getBigNumber(111, 0)]
+  const coverageDuration = [BigNumber.from(3600 * 5), BigNumber.from(3600 * 5)]
   const coverageAmount = [getBigNumber(100, 6), getBigNumber(100, 6)]
   const deadline = getBigNumber(timestamp - 7 * 3600, 0)
 
   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-  const paddedProtocolsHexStr =
-    "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
+  const paddedProtocolsHexStr = getPaddedHexStrFromBNArray(protocols)
   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
@@ -76,7 +75,7 @@ async function main() {
   hexData =
     "0x" +
     paddedPolicyPriceHexStr.slice(2) +
-    paddedProtocolsHexStr +
+    paddedProtocolsHexStr.slice(2) +
     paddedCoverageDurationHexStr.slice(2) +
     paddedCoverageAmountHexStr.slice(2) +
     paddedDeadlineHexStr.slice(2) +
@@ -102,11 +101,11 @@ async function main() {
     salt: getPaddedHexStrFromBN(4),
   }
 
-  console.log(zeroAddress.toString(), deadline.toString())
+  console.log(zeroAddress.toString(), deadline.toString(), getPaddedHexStrFromBN(protocols[0]))
 
   const functionSignature = salesPolicy.interface.encodeFunctionData("buyPolicy", [
     assets,
-    protocols,
+    [getPaddedHexStrFromBN(protocols[0]),getPaddedHexStrFromBN(protocols[0])],
     coverageAmount,
     coverageDuration,
     policyPrice,
