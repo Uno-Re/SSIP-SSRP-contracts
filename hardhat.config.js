@@ -18,6 +18,8 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
+
+console.log('bsc api key', process.env.BSC_API_KEY)
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
@@ -98,7 +100,7 @@ module.exports = {
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY // BSC_API_KEY
+    apiKey: process.env.BSC_API_KEY // ETHERSCAN_API_KEY
   },
   paths: {
     deploy: "deploy",

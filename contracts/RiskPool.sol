@@ -13,7 +13,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     string public name;
     string public symbol;
 
-    address public SSRP;
+    address public SSIP;
     address public override currency; // for now we should accept only UNO
     uint256 public override lpPriceUno;
     uint256 public MIN_LP_CAPITAL = 1e7;
@@ -26,13 +26,13 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     constructor(
         string memory _name,
         string memory _symbol,
-        address _SSRP,
+        address _SSIP,
         address _currency
     ) {
-        require(_SSRP != address(0), "UnoRe: zero pool address");
+        require(_SSIP != address(0), "UnoRe: zero pool address");
         name = _name;
         symbol = _symbol;
-        SSRP = _SSRP;
+        SSIP = _SSIP;
         currency = _currency;
         lpPriceUno = 1e18;
         if (_currency == address(0)) {
@@ -40,8 +40,8 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         }
     }
 
-    modifier onlySSRP() {
-        require(msg.sender == SSRP, "UnoRe: RiskPool Forbidden");
+    modifier onlySSIP() {
+        require(msg.sender == SSIP, "UnoRe: RiskPool Forbidden");
         _;
     }
 
@@ -54,14 +54,14 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     /**
      * @dev Users can stake only through Cohort
      */
-    function enter(address _from, uint256 _amount) external override onlySSRP {
+    function enter(address _from, uint256 _amount) external override onlySSIP {
         _mint(_from, (_amount * 1e18) / lpPriceUno);
     }
 
     /**
      * @param _amount UNO amount to withdraw
      */
-    function leaveFromPoolInPending(address _to, uint256 _amount) external override onlySSRP {
+    function leaveFromPoolInPending(address _to, uint256 _amount) external override onlySSIP {
         require(totalSupply() > 0, "UnoRe: There's no remaining in the pool");
         uint256 requestAmountInLP = (_amount * 1e18) / lpPriceUno;
         require(
@@ -71,7 +71,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         _withdrawRequest(_to, requestAmountInLP, _amount);
     }
 
-    function leaveFromPending(address _to) external override onlySSRP returns (uint256, uint256) {
+    function leaveFromPending(address _to) external override onlySSIP returns (uint256, uint256) {
         uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         uint256 pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
         require(cryptoBalance > 0, "UnoRe: zero uno balance");
@@ -98,7 +98,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         }
     }
 
-    function cancelWithrawRequest(address _to) external override onlySSRP returns (uint256, uint256) {
+    function cancelWithrawRequest(address _to) external override onlySSIP returns (uint256, uint256) {
         uint256 _pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
         require(_pendingAmount > 0, "UnoRe: zero amount");
         _cancelWithdrawRequest(_to);
@@ -106,7 +106,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         return (_pendingAmount, (_pendingAmount * lpPriceUno) / 1e18);
     }
 
-    function policyClaim(address _to, uint256 _amount) external override onlySSRP returns (uint256 realClaimAmount) {
+    function policyClaim(address _to, uint256 _amount) external override onlySSIP returns (uint256 realClaimAmount) {
         uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         require(totalSupply() > 0, "UnoRe: zero lp balance");
         require(cryptoBalance > MIN_LP_CAPITAL, "UnoRe: minimum UNO capital underflow");
@@ -135,7 +135,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         address _to,
         address _migrateTo,
         bool _isUnLocked
-    ) external override onlySSRP returns (uint256) {
+    ) external override onlySSIP returns (uint256) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         uint256 migratedAmount;
         uint256 cryptoBalance;
@@ -187,7 +187,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         return migratedAmount;
     }
 
-    function setMinLPCapital(uint256 _minLPCapital) external override onlySSRP {
+    function setMinLPCapital(uint256 _minLPCapital) external override onlySSIP {
         require(_minLPCapital > 0, "UnoRe: not allow zero value");
         MIN_LP_CAPITAL = _minLPCapital;
     }
@@ -196,7 +196,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         external
         view
         override
-        onlySSRP
+        onlySSIP
         returns (
             uint256,
             uint256,
@@ -210,7 +210,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         );
     }
 
-    function getTotalWithdrawRequestAmount() external view override onlySSRP returns (uint256) {
+    function getTotalWithdrawRequestAmount() external view override onlySSIP returns (uint256) {
         return totalWithdrawPending;
     }
 
@@ -221,7 +221,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         );
         _transfer(msg.sender, recipient, amount);
 
-        ISingleSidedReinsurancePool(SSRP).lpTransfer(msg.sender, recipient, amount);
+        ISingleSidedReinsurancePool(SSIP).lpTransfer(msg.sender, recipient, amount);
         return true;
     }
 
@@ -239,7 +239,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         uint256 currentAllowance = _allowances[sender][msg.sender];
         require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
         _approve(sender, msg.sender, currentAllowance - amount);
-        ISingleSidedReinsurancePool(SSRP).lpTransfer(sender, recipient, amount);
+        ISingleSidedReinsurancePool(SSIP).lpTransfer(sender, recipient, amount);
         return true;
     }
 }

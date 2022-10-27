@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/ICapitalAgent.sol";
-import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/IRiskPoolFactory.sol";
@@ -18,7 +17,6 @@ import "./libraries/TransferHelper.sol";
 
 contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard, Ownable {
     address public claimAssessor;
-    address private exchangeAgent;
     address public migrateTo;
     address public capitalAgent;
     address public syntheticSSIP;
@@ -50,7 +48,6 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
     event LeftPool(address indexed _staker, address indexed _pool, uint256 _requestAmount);
     event LogUpdatePool(uint128 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
-    event LogSetExchangeAgent(address indexed _exchangeAgent);
     event LogLeaveFromPendingSSIP(
         address indexed _user,
         address indexed _riskPool,
@@ -73,15 +70,11 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
 
     constructor(
         address _claimAssessor,
-        address _exchangeAgent,
         address _capitalAgent,
         address _multiSigWallet
     ) {
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
-        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
-        require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
         transferOwnership(_multiSigWallet);
@@ -95,12 +88,6 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
     modifier isStartTime() {
         require(block.timestamp >= STAKING_START_TIME, "UnoRe: not available time");
         _;
-    }
-
-    function setExchangeAgent(address _exchangeAgent) external onlyOwner {
-        require(_exchangeAgent != address(0), "UnoRe: zero address");
-        exchangeAgent = _exchangeAgent;
-        emit LogSetExchangeAgent(_exchangeAgent);
     }
 
     function setCapitalAgent(address _capitalAgent) external onlyOwner {
@@ -161,7 +148,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         poolInfo.lastRewardBlock = uint128(block.number);
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
-        ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
+        // ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
         emit RiskPoolCreated(address(this), riskPool);
     }
 
@@ -236,9 +223,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
             TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
         }
         IRiskPool(riskPool).enter(_behalf, _amount);
-        userInfo[_behalf].rewardDebt += 
-            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
-            ACC_UNO_PRECISION;
+        userInfo[_behalf].rewardDebt += ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) / ACC_UNO_PRECISION;
         userInfo[_behalf].amount = userInfo[_behalf].amount + ((_amount * 1e18) / lpPriceUno);
         ICapitalAgent(capitalAgent).SSIPStaking(_amount);
         emit StakedInPool(_behalf, riskPool, _amount);

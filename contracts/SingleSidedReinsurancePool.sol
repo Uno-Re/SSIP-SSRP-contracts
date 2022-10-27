@@ -191,19 +191,19 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
         }
     }
 
-    function enterInPool(uint256 _amount) external override isStartTime nonReentrant {
+    function enterInPool(address _behalf, uint256 _amount) external override isStartTime nonReentrant {
         require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
         address token = IRiskPool(riskPool).currency();
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
         TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
-        IRiskPool(riskPool).enter(msg.sender, _amount);
-        userInfo[msg.sender].rewardDebt =
-            userInfo[msg.sender].rewardDebt +
+        IRiskPool(riskPool).enter(_behalf, _amount);
+        userInfo[_behalf].rewardDebt =
+            userInfo[_behalf].rewardDebt +
             ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
             ACC_UNO_PRECISION;
-        userInfo[msg.sender].amount = userInfo[msg.sender].amount + ((_amount * 1e18) / lpPriceUno);
-        emit StakedInPool(msg.sender, riskPool, _amount);
+        userInfo[_behalf].amount = userInfo[_behalf].amount + ((_amount * 1e18) / lpPriceUno);
+        emit StakedInPool(_behalf, riskPool, _amount);
     }
 
     /**

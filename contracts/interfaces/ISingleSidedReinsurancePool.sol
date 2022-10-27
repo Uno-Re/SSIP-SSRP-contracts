@@ -4,7 +4,7 @@ pragma solidity 0.8.0;
 interface ISingleSidedReinsurancePool {
     function updatePool() external;
 
-    function enterInPool(uint256 _amount) external;
+    function enterInPool(address _behalf, uint256 _amount) external;
 
     function leaveFromPoolInPending(uint256 _amount) external;
 
