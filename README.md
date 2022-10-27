@@ -7,7 +7,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - pool address: 0x402003901C87c73D85d8FCf4B98228d1B79faDca
 - staking currency(USDC): 0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5
 - reward currency(UNO): 0x41bA390295F266E38AB3C904D9cbeF5ad9F85424
-> the current SCR:  <br/>
+> the current SCR: 10K USDC <br/>
 > the current rewardPerBlock: 0.165 <br/>
 
 - LP token(RiskPool): 0xCeeDd150b9B09a865E21acA29DD5F329BaF9c49d
@@ -24,10 +24,10 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - UNO : 0x41bA390295F266E38AB3C904D9cbeF5ad9F85424
 - USDC : 0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5
 
-- CapitalAgent: 
-> the current MCR:  <br/>
+- CapitalAgent: 0xC606C1c1d3d2aB9c16d911C6eA20C3A4B8d26149
+> the current MCR: 50% <br/>
 > the current MLR:  <br/>
-- ExchangeAgent: 
+- ExchangeAgent: 0x282193B0f3CF5AE0942cA439f1E302900465b4e9
 - PremiumPool: 
 - PriceOracle: 
 - MultiSigWallet: 
@@ -41,7 +41,7 @@ total faucet Limit: 500000000 $UNO
 ## MockUSDC faucet(bscTestnet):
 https://testnet.bscscan.com/address/0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5#writeContract
 
-total faucet Limit: 500000000 $UNO
+total faucet Limit: 500000000 $USDC
 
 ### Staking Pool with UNO block rewards : Yet to be Discussed
 For of MasterChef v2 - @terry and @jonas please add your notes here

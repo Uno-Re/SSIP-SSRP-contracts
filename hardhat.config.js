@@ -87,7 +87,7 @@ module.exports = {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
       accounts: {mnemonic: process.env.MNEMONIC},
-      live: true,
+      live: false,
       saveDeployments: true,
       gasMultiplier: 2,
     },

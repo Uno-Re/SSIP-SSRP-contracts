@@ -13,7 +13,6 @@ import "./interfaces/ICapitalAgent.sol";
 contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     address public exchangeAgent;
     address public salesPolicyFactory;
-    address public UNO_TOKEN;
     address public USDC_TOKEN;
     address public operator;
 
@@ -31,8 +30,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     }
 
     mapping(address => PoolInfo) public poolInfo;
-
-    uint256 public totalCapitalStaked;
+    address[] private poolList;
 
     PolicyInfo public policyInfo;
 
@@ -69,17 +67,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     constructor(
         address _exchangeAgent,
-        address _UNO_TOKEN,
         address _USDC_TOKEN,
         address _multiSigWallet,
         address _operator
     ) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
-        require(_UNO_TOKEN != address(0), "UnoRe: zero UNO address");
         require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
-        UNO_TOKEN = _UNO_TOKEN;
         USDC_TOKEN = _USDC_TOKEN;
         operator = _operator;
         transferOwnership(_multiSigWallet);
@@ -129,6 +124,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
+        poolList.push(_ssip);
 
         emit LogAddPool(_ssip, _currency, _scr);
     }
@@ -141,6 +137,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
+        poolList.push(_ssip);
 
         emit LogAddPool(_ssip, _currency, _scr);
     }
@@ -148,10 +145,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     function removePool(address _ssip) external onlyOwner nonReentrant {
         require(_ssip != address(0), "UnoRe: zero address");
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
-        if (poolInfo[_ssip].totalCapital > 0) {
-            totalCapitalStaked = totalCapitalStaked - poolInfo[_ssip].totalCapital;
-        }
         delete poolInfo[_ssip];
+        for (uint256 ii = 0; ii < poolList.length; ii++) {
+            if (poolList[ii] == _ssip) {
+                poolList[ii] = poolList[poolList.length - 1];
+                poolList.pop();
+                return;
+            }
+        }
         emit LogRemovePool(_ssip);
     }
 
@@ -247,24 +248,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         uint256 _amount,
         bool isAdd
     ) private {
-        address currency = poolInfo[_pool].currency;
-        uint256 stakingAmountInUSDC;
-        if (currency == USDC_TOKEN) {
-            stakingAmountInUSDC = _amount;
-        } else {
-            stakingAmountInUSDC = currency != address(0)
-                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(currency, USDC_TOKEN, _amount)
-                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _amount);
-        }
-
         if (!isAdd) {
-            require(poolInfo[_pool].totalCapital >= stakingAmountInUSDC, "UnoRe: pool capital overflow");
+            require(poolInfo[_pool].totalCapital >= _amount, "UnoRe: pool capital overflow");
         }
-        poolInfo[_pool].totalCapital = isAdd
-            ? poolInfo[_pool].totalCapital + stakingAmountInUSDC
-            : poolInfo[_pool].totalCapital - stakingAmountInUSDC;
-        totalCapitalStaked = isAdd ? totalCapitalStaked + stakingAmountInUSDC : totalCapitalStaked - stakingAmountInUSDC;
-        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked);
+        poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
+        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalInUSDC());
     }
 
     function _updatePolicyCoverage(uint256 _amount, bool isAdd) private {
@@ -278,21 +266,36 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
 
     function _checkCapitalByMCRAndSCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
         address currency = poolInfo[_pool].currency;
-        uint256 withdrawAmountInUSDC;
-        if (currency == USDC_TOKEN) {
-            withdrawAmountInUSDC = _withdrawAmount;
-        } else {
-            withdrawAmountInUSDC = currency != address(0)
-                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(currency, USDC_TOKEN, _withdrawAmount)
-                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _withdrawAmount);
-        }
-        bool isMCRPass = totalCapitalStaked - withdrawAmountInUSDC >= (totalCapitalStaked * MCR) / CALC_PRECISION;
-        bool isSCRPass = poolInfo[_pool].totalCapital - withdrawAmountInUSDC >= poolInfo[_pool].SCR;
+        uint256 withdrawAmountInUSDC = _getUSDCValue(currency, _withdrawAmount);
+        uint256 poolCapitalInUSDC = _getUSDCValue(currency, poolInfo[_pool].totalCapital);
+        uint256 totalCapital = totalCapitalInUSDC();
+        bool isMCRPass = totalCapital - withdrawAmountInUSDC >= (totalCapital * MCR) / CALC_PRECISION;
+        bool isSCRPass = poolCapitalInUSDC - withdrawAmountInUSDC >= poolInfo[_pool].SCR;
         return isMCRPass && isSCRPass;
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
-        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStaked * MLR) / CALC_PRECISION;
+        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalInUSDC() * MLR) / CALC_PRECISION;
+    }
+
+    function _getUSDCValue(address _currency, uint256 _amount) private view returns (uint256 convertedAmount) {
+        if (_currency == USDC_TOKEN) {
+            convertedAmount = _amount;
+        } else {
+            convertedAmount = _currency != address(0)
+                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(_currency, USDC_TOKEN, _amount)
+                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _amount);
+        }
+    }
+
+    function totalCapitalInUSDC() public view returns (uint256) {
+        uint256 totalCapital;
+        for (uint256 ii = 0; ii < poolList.length; ii++) {
+            address currency = poolInfo[poolList[ii]].currency;
+            uint256 poolCapitalInUSDC = _getUSDCValue(currency, poolInfo[poolList[ii]].totalCapital);
+            totalCapital += poolCapitalInUSDC;
+        }
+        return totalCapital;
     }
 
     function setMCR(uint256 _MCR) external onlyOperator nonReentrant {
