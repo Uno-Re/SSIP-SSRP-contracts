@@ -148,7 +148,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
         poolInfo.lastRewardBlock = uint128(block.number);
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
-        // ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
+        ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
         emit RiskPoolCreated(address(this), riskPool);
     }
 

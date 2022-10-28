@@ -43,6 +43,38 @@ https://testnet.bscscan.com/address/0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5#w
 
 total faucet Limit: 500000000 $USDC
 
+### contract deployment(bsc mainnet):
+
+#### SSIP USDC Pool:
+- pool address: 0xBD1105Ce524828f15d7da3CAF098c8E42D0Fbf31
+- staking currency(USDC): 0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d
+- reward currency(UNO): 0x474021845c4643113458ea4414bdb7fb74a01a77
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.165 <br/>
+
+- LP token(RiskPool): 0xFC9a02a13B19F65219034AB03ADcD8CAdf275f35
+> name: Synthetic SSIP-USDC <br/>
+> symbol: SSSIP-USDC <br/>
+
+- Rewarder contract: 0xc8FFf74f9AB50B68a727bf2c35afe3A3970910D3
+
+#### Factories:
+- RiskPoolFactory: 0xc743508A6AD19c31Aff110778EFDE0867E4cEf08
+- RewarderFactory: 0xA722FdFBbECdadB79aB27aAE388015dC4FACF6Ca
+
+#### Common contracts:
+- UNO : 0x474021845c4643113458ea4414bdb7fb74a01a77
+- USDC : 0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d
+
+- CapitalAgent: 0x75298ca41f347Ab468f01BDdDA20057603b3AA4d
+> the current MCR: 50% <br/>
+> the current MLR:  <br/>
+- ExchangeAgent: 0x87e1f628225c170a5C0Bf895580686430DEb3322
+- PremiumPool: 
+- PriceOracle: 
+- MultiSigWallet: 
+
+
 ### Staking Pool with UNO block rewards : Yet to be Discussed
 For of MasterChef v2 - @terry and @jonas please add your notes here
 
