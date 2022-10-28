@@ -132,11 +132,12 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     function addPoolByAdmin(
         address _ssip,
         address _currency,
-        uint256 _scr
+        uint256 _scr,
+        uint256 _initCapital
     ) external onlyOwner {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
-        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
+        poolInfo[_ssip] = PoolInfo({totalCapital: _initCapital, currency: _currency, SCR: _scr, exist: true});
         poolList.push(_ssip);
 
         emit LogAddPool(_ssip, _currency, _scr);
@@ -252,7 +253,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
             require(poolInfo[_pool].totalCapital >= _amount, "UnoRe: pool capital overflow");
         }
         poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
-        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalInUSDC());
+        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked());
     }
 
     function _updatePolicyCoverage(uint256 _amount, bool isAdd) private {
@@ -268,14 +269,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         address currency = poolInfo[_pool].currency;
         uint256 withdrawAmountInUSDC = _getUSDCValue(currency, _withdrawAmount);
         uint256 poolCapitalInUSDC = _getUSDCValue(currency, poolInfo[_pool].totalCapital);
-        uint256 totalCapital = totalCapitalInUSDC();
+        uint256 totalCapital = totalCapitalStaked();
         bool isMCRPass = totalCapital - withdrawAmountInUSDC >= (totalCapital * MCR) / CALC_PRECISION;
         bool isSCRPass = poolCapitalInUSDC - withdrawAmountInUSDC >= poolInfo[_pool].SCR;
         return isMCRPass && isSCRPass;
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
-        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalInUSDC() * MLR) / CALC_PRECISION;
+        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStaked() * MLR) / CALC_PRECISION;
     }
 
     function _getUSDCValue(address _currency, uint256 _amount) private view returns (uint256 convertedAmount) {
@@ -288,7 +289,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         }
     }
 
-    function totalCapitalInUSDC() public view returns (uint256) {
+    function totalCapitalStaked() public view returns (uint256) {
         uint256 totalCapital;
         for (uint256 ii = 0; ii < poolList.length; ii++) {
             address currency = poolInfo[poolList[ii]].currency;

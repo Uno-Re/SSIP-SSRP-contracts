@@ -14,7 +14,7 @@ const {
 } = require("./shared/utilities")
 
 const ssipAddress = "0xBD1105Ce524828f15d7da3CAF098c8E42D0Fbf31"
-const capitalAgentAddress = "0x75298ca41f347Ab468f01BDdDA20057603b3AA4d"
+const capitalAgentAddress = "0x62e1D28f3204962852976983cD575Fc2741bfE19" //"0x75298ca41f347Ab468f01BDdDA20057603b3AA4d"
 const exchangeAgentAddress = "0x87e1f628225c170a5C0Bf895580686430DEb3322"
 const riskPoolFactoryAddress = "0xc743508A6AD19c31Aff110778EFDE0867E4cEf08"
 const rewarderFactoryAddress = "0xA722FdFBbECdadB79aB27aAE388015dC4FACF6Ca"
@@ -34,8 +34,8 @@ async function main() {
   const signers = await ethers.getSigners()
   const zeroAddress = ethers.constants.AddressZero
 
-  // await(await capitalAgent.addPoolWhiteList(ssip.address)).wait()
-  // await(await capitalAgent.setMCR(ethers.utils.parseUnits("0.5"))).wait()
+  await(await capitalAgent.addPoolWhiteList(ssip.address)).wait()
+  await(await capitalAgent.setMCR(ethers.utils.parseUnits("0.5"))).wait()
   const mcr = await capitalAgent.MCR()
   console.log('[mcr check]', mcr.toString())
   const whiteList = await capitalAgent.poolWhiteList(ssip.address)
@@ -44,10 +44,12 @@ async function main() {
   const capitalAgentCheck = await ssip.capitalAgent()
   console.log('[capitalAgentCheck check]', capitalAgentCheck)
 
-  // await (await ssip.setCapitalAgent(capitalAgentAddress)).wait()
+  await(await capitalAgent.addPoolByAdmin(ssip.address, USDC, ethers.utils.parseUnits("10000"), ethers.utils.parseUnits("0.00000000001071021"))).wait()
 
-  // const capitalAgentCheckAfter = await ssip.capitalAgent()
-  // console.log('[capitalAgentCheck check after]', capitalAgentCheckAfter)
+  await (await ssip.setCapitalAgent(capitalAgentAddress)).wait()
+
+  const capitalAgentCheckAfter = await ssip.capitalAgent()
+  console.log('[capitalAgentCheck check after]', capitalAgentCheckAfter)
 
   // await(await ssip.createRewarder(
   //   signers[0].address,
@@ -75,7 +77,7 @@ async function main() {
   const poolInfo = await capitalAgent.poolInfo(ssip.address)
   console.log('[pool info check on capitalAgent]', poolInfo.totalCapital.toString(), poolInfo.SCR.toString(), poolInfo.currency, poolInfo.exist)
 
-  const totalCapital = await capitalAgent.totalCapitalInUSDC()
+  const totalCapital = await capitalAgent.totalCapitalStaked()
   console.log('[total capital check]', totalCapital.toString())
 }
 // We recommend this pattern to be able to use async/await everywhere
