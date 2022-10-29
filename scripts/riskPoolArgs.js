@@ -3,6 +3,6 @@ const { getBigNumber } = require("./shared/utilities")
 module.exports = [
   "Synthetic SSIP-USDC",
   "SSSIP-USDC",
-  "0x402003901C87c73D85d8FCf4B98228d1B79faDca",
-  "0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5",
+  "0xBD1105Ce524828f15d7da3CAF098c8E42D0Fbf31",
+  "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
 ]
