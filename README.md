@@ -3,7 +3,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 ### contract deployment(bscTestnet):
 
-#### SSIP USDC Pool:
+#### Zeus(v2) - SSIP USDC Pool:
 - pool address: 0x402003901C87c73D85d8FCf4B98228d1B79faDca
 - staking currency(USDC): 0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5
 - reward currency(UNO): 0x41bA390295F266E38AB3C904D9cbeF5ad9F85424
@@ -16,6 +16,32 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 
 - Rewarder contract: 0x71Fdc22F7522D7a07d1509205df0DEec538180f2
 
+#### Ares BSC - SSIP UNO Pool:
+- pool address: 0x6C91Cde8D17D4a5FA49d4CD5DbFDF9490259B234
+- staking currency(UNO): 0x41bA390295F266E38AB3C904D9cbeF5ad9F85424
+- reward currency(UNO): 0x41bA390295F266E38AB3C904D9cbeF5ad9F85424
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.095129375951293759 <br/>
+
+- LP token(RiskPool): 0xC44EAc8E7808d5e173E8811625dfE687dB64baA2
+> name: Synthetic SSIP-UNO <br/>
+> symbol: SSSIP-UNO <br/>
+
+- Rewarder contract: 0xe2D9a972AdFcfBC4629910469C3917aAe8805Afa
+
+#### Thanatos - SSIP HORDE Pool:
+- pool address: 0xc75e610A640c88F6cd183247DB469Ee938C209D5
+- staking currency(HORDE): 0x199c66ab7273Fa711F5CCe0fbd92f3Ff4a1f2939
+- reward currency(UNO): 0x41bA390295F266E38AB3C904D9cbeF5ad9F85424
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.142987451863791467 <br/>
+
+- LP token(RiskPool): 0x901FD16932F009c4c26517f51ff9E10E8c877a79
+> name: Synthetic SSIP-HORDE <br/>
+> symbol: SSSIP-HORDE <br/>
+
+- Rewarder contract: 0x36137dADD65abA3747f8FE82A1E98F8f770E03b2
+
 #### Factories:
 - RiskPoolFactory: 0xa9c48c93887CBAFB37bea7D87A2C201C22D435f2
 - RewarderFactory: 0x7411F6c596A7E132ef008fe7f3f4dF73126E5C84
@@ -23,13 +49,14 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 #### Common contracts:
 - UNO : 0x41bA390295F266E38AB3C904D9cbeF5ad9F85424
 - USDC : 0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5
+- HORDE: 0x199c66ab7273Fa711F5CCe0fbd92f3Ff4a1f2939
 
-- CapitalAgent: 0xC606C1c1d3d2aB9c16d911C6eA20C3A4B8d26149
+- CapitalAgent: 0xb2B62606f3f855C03C1baeed7ae3B3a91B64633B
 > the current MCR: 50% <br/>
 > the current MLR:  <br/>
 - ExchangeAgent: 0x282193B0f3CF5AE0942cA439f1E302900465b4e9
 - PremiumPool: 
-- PriceOracle: 
+- PriceOracle: 0x6e01a9Da1A531B947ffab813cC9402fB1f79aFe6
 - MultiSigWallet: 
 
 
@@ -40,6 +67,11 @@ total faucet Limit: 500000000 $UNO
 
 ## MockUSDC faucet(bscTestnet):
 https://testnet.bscscan.com/address/0x188bf631F2272B61Dd61119fbD264aeC7b6C57D5#writeContract
+
+total faucet Limit: 500000000 $USDC
+
+## MockHORDE faucet(bscTestnet):
+https://testnet.bscscan.com/address/0x199c66ab7273Fa711F5CCe0fbd92f3Ff4a1f2939#writeContract
 
 total faucet Limit: 500000000 $USDC
 
