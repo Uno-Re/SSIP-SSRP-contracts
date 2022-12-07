@@ -77,7 +77,7 @@ total faucet Limit: 500000000 $USDC
 
 ## contract deployment(bsc mainnet):
 
-#### SSIP USDC Pool:
+#### Zeus v2 - SSIP USDC Pool:
 - pool address: 0xBD1105Ce524828f15d7da3CAF098c8E42D0Fbf31
 - staking currency(USDC): 0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d
 - reward currency(UNO): 0x474021845c4643113458ea4414bdb7fb74a01a77
@@ -89,6 +89,19 @@ total faucet Limit: 500000000 $USDC
 > symbol: SSSIP-USDC <br/>
 
 - Rewarder contract: 0xc8FFf74f9AB50B68a727bf2c35afe3A3970910D3
+
+#### Ares - SSIP UNO Pool:
+- pool address: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
+- staking currency(UNO): 0x474021845c4643113458ea4414bdb7fb74a01a77
+- reward currency(UNO): 0x474021845c4643113458ea4414bdb7fb74a01a77
+> the current SCR: 10K USDC <br/>
+> the current rewardPerBlock: 0.443937087772704211 UNO <br/>
+
+- LP token(RiskPool): 0x456d60a7E2a2DA97BDb43759Cf63f7acbC3a700a
+> name: Synthetic SSIP-UNO <br/>
+> symbol: SSSIP-UNO <br/>
+
+- Rewarder contract: 0x9b9fa4bE1c98F5E9A8e774619b2e7056aF48384e
 
 #### Factories:
 - RiskPoolFactory: 0xc743508A6AD19c31Aff110778EFDE0867E4cEf08
@@ -103,7 +116,7 @@ total faucet Limit: 500000000 $USDC
 > the current MLR:  <br/>
 - ExchangeAgent: 0x87e1f628225c170a5C0Bf895580686430DEb3322
 - PremiumPool: 
-- PriceOracle: 
+- PriceOracle: 0xE795C2118b02d468Ed2215CEc44cae4CB63F9E83
 - MultiSigWallet: 
 
 

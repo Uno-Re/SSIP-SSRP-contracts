@@ -34,22 +34,29 @@ async function main() {
   const signers = await ethers.getSigners()
   const zeroAddress = ethers.constants.AddressZero
 
-  await(await capitalAgent.addPoolWhiteList(ssip.address)).wait()
-  await(await capitalAgent.setMCR(ethers.utils.parseUnits("0.5"))).wait()
+  await (await capitalAgent.addPoolWhiteList(ssip.address)).wait()
+  await (await capitalAgent.setMCR(ethers.utils.parseUnits("0.5"))).wait()
   const mcr = await capitalAgent.MCR()
-  console.log('[mcr check]', mcr.toString())
+  console.log("[mcr check]", mcr.toString())
   const whiteList = await capitalAgent.poolWhiteList(ssip.address)
-  console.log('[whiteList check]', whiteList)
+  console.log("[whiteList check]", whiteList)
 
   const capitalAgentCheck = await ssip.capitalAgent()
-  console.log('[capitalAgentCheck check]', capitalAgentCheck)
+  console.log("[capitalAgentCheck check]", capitalAgentCheck)
 
-  await(await capitalAgent.addPoolByAdmin(ssip.address, USDC, ethers.utils.parseUnits("10000"), ethers.utils.parseUnits("0.00000000001071021"))).wait()
+  await (
+    await capitalAgent.addPoolByAdmin(
+      ssip.address,
+      USDC,
+      ethers.utils.parseUnits("10000"),
+      ethers.utils.parseUnits("0.00000000001071021"),
+    )
+  ).wait()
 
   await (await ssip.setCapitalAgent(capitalAgentAddress)).wait()
 
   const capitalAgentCheckAfter = await ssip.capitalAgent()
-  console.log('[capitalAgentCheck check after]', capitalAgentCheckAfter)
+  console.log("[capitalAgentCheck check after]", capitalAgentCheckAfter)
 
   // await(await ssip.createRewarder(
   //   signers[0].address,
@@ -72,13 +79,19 @@ async function main() {
   const riskPoolAddress = await ssip.riskPool()
   const riskPool = await Rewarder.attach(riskPoolAddress)
 
-  console.log('[riskpool and rewarder check]', rewarderAddress, riskPool.address)
+  console.log("[riskpool and rewarder check]", rewarderAddress, riskPool.address)
 
   const poolInfo = await capitalAgent.poolInfo(ssip.address)
-  console.log('[pool info check on capitalAgent]', poolInfo.totalCapital.toString(), poolInfo.SCR.toString(), poolInfo.currency, poolInfo.exist)
+  console.log(
+    "[pool info check on capitalAgent]",
+    poolInfo.totalCapital.toString(),
+    poolInfo.SCR.toString(),
+    poolInfo.currency,
+    poolInfo.exist,
+  )
 
   const totalCapital = await capitalAgent.totalCapitalStaked()
-  console.log('[total capital check]', totalCapital.toString())
+  console.log("[total capital check]", totalCapital.toString())
 }
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
