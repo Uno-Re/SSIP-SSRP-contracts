@@ -15,11 +15,11 @@ function getCreate2CohortAddress(actuaryAddress, { cohortName, sender, nonce }, 
 
 // Defaults to e18 using amount * 10^18
 function getBigNumber(amount, decimals = 18) {
-  return BigNumber.from(amount).mul(BigNumber.from(10).pow(decimals))
+  return ethers.utils.parseUnits(amount, decimals)
 }
 
 function getNumber(amount, decimals = 18) {
-  return BigNumber.from(amount).div(BigNumber.from(10).pow(decimals)).toNumber()
+  return Number(ethers.utils.formatUnits(amount, decimals))
 }
 
 function getPaddedHexStrFromBN(bn) {
