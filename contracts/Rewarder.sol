@@ -3,10 +3,13 @@
 pragma solidity 0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
 
 contract Rewarder is IRewarder, ReentrancyGuard {
+    using Address for address;
+
     address public immutable override currency;
     address public immutable pool;
     address public operator;
@@ -29,7 +32,8 @@ contract Rewarder is IRewarder, ReentrancyGuard {
     receive() external payable {}
 
     function onReward(address _to, uint256 _amount) external payable override onlyPOOL returns (uint256) {
-        require(_to != address(0), "UnoRe: zero address reward");
+        require(tx.origin == _to && !tx.origin.isContract(), "UnoRe: must be message sender");
+        // require(_to != address(0), "UnoRe: zero address reward");
         if (currency == address(0)) {
             require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
             TransferHelper.safeTransferETH(_to, _amount);
