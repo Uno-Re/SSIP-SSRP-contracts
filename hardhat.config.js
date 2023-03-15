@@ -58,7 +58,7 @@ module.exports = {
       forking: {
         url: 'https://eth-rinkeby.alchemyapi.io/v2/8SAQa7xMc0VXTR_hyfPvAt2pe3QrXybB',
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
-        enabled: true,
+        enabled: false,
         // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355        
       },
       gasPrice: "auto",

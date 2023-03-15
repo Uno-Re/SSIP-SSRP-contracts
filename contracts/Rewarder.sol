@@ -7,8 +7,28 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
 
+interface ISSIP {
+    struct PoolInfo {
+        uint128 lastRewardBlock;
+        uint128 accUnoPerShare;
+        uint256 unoMultiplierPerBlock;
+    }
+
+    struct UserInfo {
+        uint256 lastWithdrawTime;
+        uint256 rewardDebt;
+        uint256 amount;
+    }
+
+    function poolInfo() external view returns (PoolInfo memory);
+
+    function userInfo(address _user) external view returns (UserInfo memory);
+}
+
 contract Rewarder is IRewarder, ReentrancyGuard {
     using Address for address;
+
+    uint256 public constant ACC_UNO_PRECISION = 1e18;
 
     address public immutable override currency;
     address public immutable pool;
@@ -33,6 +53,12 @@ contract Rewarder is IRewarder, ReentrancyGuard {
 
     function onReward(address _to, uint256 _amount) external payable override onlyPOOL returns (uint256) {
         require(tx.origin == _to && !tx.origin.isContract(), "UnoRe: must be message sender");
+        ISSIP ssip = ISSIP(pool);
+        ISSIP.UserInfo memory userInfos = ssip.userInfo(_to);
+        ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
+        uint256 accumulatedUno = (userInfos.amount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
+        require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
+
         // require(_to != address(0), "UnoRe: zero address reward");
         if (currency == address(0)) {
             require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");

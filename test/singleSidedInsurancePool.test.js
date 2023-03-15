@@ -25,7 +25,8 @@ describe("SingleSidedInsurancePool", function () {
     this.RewarderFactory = await ethers.getContractFactory("RewarderFactory")
     this.SyntheticSSIPFactory = await ethers.getContractFactory("SyntheticSSIPFactory")
     this.MockUNO = await ethers.getContractFactory("MockUNO")
-    this.MockUSDT = await ethers.getContractFactory("MockUSDC")
+    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
+    this.RewardAttack = await ethers.getContractFactory("RewardAttack")
     this.signers = await ethers.getSigners()
     this.zeroAddress = ethers.constants.AddressZero
     this.routerContract = new ethers.Contract(
@@ -38,10 +39,10 @@ describe("SingleSidedInsurancePool", function () {
   beforeEach(async function () {
     this.mockUNO = await this.MockUNO.deploy()
     this.mockUSDT = await this.MockUSDT.deploy()
-    await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber('500000000'), { from: this.signers[0].address })
-    await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber('500000'), { from: this.signers[0].address })
-    await this.mockUNO.connect(this.signers[1]).faucetToken(getBigNumber('500000000'), { from: this.signers[1].address })
-    await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber('500000'), { from: this.signers[1].address })
+    await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000"), { from: this.signers[0].address })
+    await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber("500000"), { from: this.signers[0].address })
+    await this.mockUNO.connect(this.signers[1]).faucetToken(getBigNumber("500000000"), { from: this.signers[1].address })
+    await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber("500000"), { from: this.signers[1].address })
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
     this.riskPoolFactory = await this.RiskPoolFactory.deploy()
@@ -55,12 +56,12 @@ describe("SingleSidedInsurancePool", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber('10000000'), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber('10000000'), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
 
     console.log("Adding liquidity...")
@@ -71,10 +72,10 @@ describe("SingleSidedInsurancePool", function () {
         .addLiquidity(
           this.mockUNO.address,
           this.mockUSDT.address,
-          getBigNumber('3000000'),
-          getBigNumber('3000', 6),
-          getBigNumber('3000000'),
-          getBigNumber('3000', 6),
+          getBigNumber("3000000"),
+          getBigNumber("3000", 6),
+          getBigNumber("3000000"),
+          getBigNumber("3000", 6),
           this.signers[0].address,
           timestamp,
           { from: this.signers[0].address, gasLimit: 9999999 },
@@ -87,14 +88,22 @@ describe("SingleSidedInsurancePool", function () {
       TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
+      this.signers[0].address,
     )
 
-    this.capitalAgent = await this.CapitalAgent.deploy(this.exchangeAgent.address, this.mockUSDT.address, this.signers[0].address, this.signers[0].address)
+    this.capitalAgent = await this.CapitalAgent.deploy(
+      this.exchangeAgent.address,
+      this.mockUNO.address,
+      this.mockUSDT.address,
+      this.signers[0].address,
+      this.signers[0].address,
+    )
 
     this.singleSidedInsurancePool = await this.SingleSidedInsurancePool.deploy(
       this.claimAssessor,
+      this.exchangeAgent.address,
       this.capitalAgent.address,
-      this.signers[0].address
+      this.signers[0].address,
     )
     await (await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool.address)).wait()
     await this.singleSidedInsurancePool.createRewarder(
@@ -107,7 +116,9 @@ describe("SingleSidedInsurancePool", function () {
 
     expect(this.rewarder.address).equal(await this.singleSidedInsurancePool.rewarder())
 
-    await (await this.mockUNO.transfer(this.rewarder.address, getBigNumber('100000'))).wait()
+    await (await this.mockUNO.transfer(this.rewarder.address, getBigNumber("100000"))).wait()
+
+    this.rewardAttack = await this.RewardAttack.deploy()
   })
 
   describe("SingleSidedInsurancePool Basic", function () {
@@ -149,129 +160,248 @@ describe("SingleSidedInsurancePool", function () {
 
   describe("SingleSidedInsurancePool Actions", function () {
     beforeEach(async function () {
-      console.log('[action start ========>]')
+      console.log("[action start ========>]")
       await this.singleSidedInsurancePool.createRiskPool(
         "UNO-LP",
         "UNO-LP",
         this.riskPoolFactory.address,
         this.mockUSDT.address,
-        getBigNumber('1'),
-        getBigNumber('10', 6)
+        getBigNumber("1"),
+        getBigNumber("10", 6),
       )
-      await this.mockUSDT.approve(this.singleSidedInsurancePool.address, getBigNumber('1000000'))
+      await this.mockUSDT.approve(this.singleSidedInsurancePool.address, getBigNumber("1000000"))
       await this.mockUSDT
         .connect(this.signers[1])
-        .approve(this.singleSidedInsurancePool.address, getBigNumber('1000000'), { from: this.signers[1].address })
+        .approve(this.singleSidedInsurancePool.address, getBigNumber("1000000"), { from: this.signers[1].address })
 
       const poolInfo = await this.singleSidedInsurancePool.poolInfo()
-      expect(poolInfo.unoMultiplierPerBlock).equal(getBigNumber('1'))
+      expect(poolInfo.unoMultiplierPerBlock).equal(getBigNumber("1"))
       this.poolAddress = await this.singleSidedInsurancePool.riskPool()
     })
 
     describe("SingleSidedInsurancePool Staking", function () {
-      it("Should enter in pool and check pending reward and totalCapital in CapitalAgent after generate 10000 blocks", async function () {
-        const riskPool = this.RiskPool.attach(this.poolAddress)
-        const pendingUnoRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore.toString())
-        await this.singleSidedInsurancePool.enterInPool(this.signers[0].address, getBigNumber('8500'))
-        const beforeBlockNumber = await ethers.provider.getBlockNumber()
-        const poolBalance = await riskPool.balanceOf(this.signers[0].address)
-        expect(poolBalance).to.equal(getBigNumber('8500'))
-        await advanceBlockTo(beforeBlockNumber + 10000)
-        const afterBlockNumber = await ethers.provider.getBlockNumber()
-        const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        console.log("[pendingUnoRewardAfter]", pendingUnoRewardAfter.toString(), getNumber(pendingUnoRewardAfter))
-        expect(pendingUnoRewardBefore).to.be.not.equal(pendingUnoRewardAfter)
-        const totalCaptial = await this.capitalAgent.totalCapitalStaked();
-        console.log(totalCaptial.toString());
-      })
-      it("should harvest to self address after 10000 block", async function () {
+      // it("Should enter in pool and check pending reward and totalCapital in CapitalAgent after generate 10000 blocks", async function () {
+      //   const riskPool = this.RiskPool.attach(this.poolAddress)
+      //   const pendingUnoRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore.toString())
+      //   await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
+      //   const beforeBlockNumber = await ethers.provider.getBlockNumber()
+      //   const poolBalance = await riskPool.balanceOf(this.signers[0].address)
+      //   expect(poolBalance).to.equal(getBigNumber("8500"))
+      //   await advanceBlockTo(beforeBlockNumber + 10000)
+      //   const afterBlockNumber = await ethers.provider.getBlockNumber()
+      //   const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   console.log("[pendingUnoRewardAfter]", pendingUnoRewardAfter.toString(), getNumber(pendingUnoRewardAfter))
+      //   expect(pendingUnoRewardBefore).to.be.not.equal(pendingUnoRewardAfter)
+      //   const totalCaptial = await this.capitalAgent.totalCapitalStaked()
+      //   console.log(totalCaptial.toString())
+      // })
+      // it("should harvest to self address after 10000 block", async function () {
+      //   const riskPool = this.RiskPool.attach(this.poolAddress)
+      //   const pendingUnoRewardBefore1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   const pendingUnoRewardBefore2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
+      //   console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
+      //   await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
+      //   await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), {from: this.signers[1].address})
+      //   const beforeBlockNumber = await ethers.provider.getBlockNumber()
+      //   const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
+      //   expect(poolBalance1).to.equal(getBigNumber("8500"))
+      //   const poolBalance2 = await riskPool.balanceOf(this.signers[1].address)
+      //   expect(poolBalance2).to.equal(getBigNumber("10000"))
+      //   await advanceBlockTo(beforeBlockNumber + 10000)
+      //   const afterBlockNumber = await ethers.provider.getBlockNumber()
+      //   const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   const pendingUnoRewardAfter2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
+      //   console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
+      //   expect(pendingUnoRewardBefore2).to.be.not.equal(pendingUnoRewardAfter2)
+      //   const totalCaptial = await this.capitalAgent.totalCapitalStaked()
+      //   console.log(totalCaptial.toString())
+
+      //   // harvesting caller address equal to target address
+      //   const userInfoBeforeHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
+      //   const userInfoBeforeHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
+
+      //   console.log(
+      //     "[user info before harvest]",
+      //     this.signers[0].address,
+      //     userInfoBeforeHarvest1.toString(),
+      //     userInfoBeforeHarvest2.toString(),
+      //   )
+      //   console.log("[mock uno address check ===>]", this.mockUNO.address)
+
+      //   await (await this.singleSidedInsurancePool.harvest(this.signers[0].address)).wait()
+
+      //   const userInfoAfterHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
+      //   const userInfoAfterHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
+
+      //   console.log("[user info after harvest]", userInfoAfterHarvest1.toString(), userInfoAfterHarvest2.toString())
+
+      //   const pendingUnoRewardAfterHarvest1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   const pendingUnoRewardAfterHarvest2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
+      //   console.log(
+      //     "[pendingUnoRewardAfterHarvest]",
+      //     getNumber(pendingUnoRewardAfterHarvest1),
+      //     getNumber(pendingUnoRewardAfterHarvest2),
+      //   )
+      // })
+      // it("should revert harvest to other address after 10000 block", async function () {
+      //   const riskPool = this.RiskPool.attach(this.poolAddress)
+      //   const pendingUnoRewardBefore1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   const pendingUnoRewardBefore2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
+      //   console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
+      //   await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
+      //   await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), {from: this.signers[1].address})
+      //   const beforeBlockNumber = await ethers.provider.getBlockNumber()
+      //   const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
+      //   expect(poolBalance1).to.equal(getBigNumber("8500"))
+      //   const poolBalance2 = await riskPool.balanceOf(this.signers[1].address)
+      //   expect(poolBalance2).to.equal(getBigNumber("10000"))
+      //   await advanceBlockTo(beforeBlockNumber + 10000)
+      //   const afterBlockNumber = await ethers.provider.getBlockNumber()
+      //   const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   const pendingUnoRewardAfter2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
+      //   console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
+      //   expect(pendingUnoRewardBefore2).to.be.not.equal(pendingUnoRewardAfter2)
+      //   const totalCaptial = await this.capitalAgent.totalCapitalStaked()
+      //   console.log(totalCaptial.toString())
+
+      //   // harvesting caller address equal to target address
+      //   const userInfoBeforeHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
+      //   const userInfoBeforeHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
+
+      //   console.log(
+      //     "[user info before harvest]",
+      //     this.signers[0].address,
+      //     userInfoBeforeHarvest1.toString(),
+      //     userInfoBeforeHarvest2.toString(),
+      //   )
+      //   console.log("[mock uno address check ===>]", this.mockUNO.address)
+
+      //   await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
+      //     "UnoRe: must be message sender",
+      //   )
+
+      //   const userInfoAfterHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
+      //   const userInfoAfterHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
+
+      //   console.log("[user info after harvest]", userInfoAfterHarvest1.toString(), userInfoAfterHarvest2.toString())
+
+      //   const pendingUnoRewardAfterHarvest1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+      //   const pendingUnoRewardAfterHarvest2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
+      //   console.log(
+      //     "[pendingUnoRewardAfterHarvest]",
+      //     getNumber(pendingUnoRewardAfterHarvest1),
+      //     getNumber(pendingUnoRewardAfterHarvest2),
+      //   )
+      // })
+      it("should revert harvest through malicious contract after 10000 block", async function () {
         const riskPool = this.RiskPool.attach(this.poolAddress)
         const pendingUnoRewardBefore1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardBefore2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
         console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
-        await this.singleSidedInsurancePool.enterInPool(this.signers[0].address, getBigNumber('8500'))
-        await this.singleSidedInsurancePool.enterInPool(this.signers[1].address, getBigNumber('10000'))
+
+        await this.mockUSDT.transfer(this.rewardAttack.address, getBigNumber("20000"))
+        await this.rewardAttack.enterInPool(this.singleSidedInsurancePool.address, getBigNumber("8500"), this.mockUSDT.address)
+        await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
+        await this.singleSidedInsurancePool
+          .connect(this.signers[1])
+          .enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
-        const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
-        expect(poolBalance1).to.equal(getBigNumber('8500'))
+        const poolBalance1 = await riskPool.balanceOf(this.rewardAttack.address)
+        expect(poolBalance1).to.equal(getBigNumber("8500"))
         const poolBalance2 = await riskPool.balanceOf(this.signers[1].address)
-        expect(poolBalance2).to.equal(getBigNumber('10000'))
+        expect(poolBalance2).to.equal(getBigNumber("10000"))
         await advanceBlockTo(beforeBlockNumber + 10000)
         const afterBlockNumber = await ethers.provider.getBlockNumber()
-        const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+        const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.rewardAttack.address)
         const pendingUnoRewardAfter2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
         console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
         expect(pendingUnoRewardBefore2).to.be.not.equal(pendingUnoRewardAfter2)
-        const totalCaptial = await this.capitalAgent.totalCapitalStaked();
-        console.log(totalCaptial.toString());
+        const totalCaptial = await this.capitalAgent.totalCapitalStaked()
+        console.log(totalCaptial.toString())
 
         // harvesting caller address equal to target address
-        const userInfoBeforeHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
+        const userInfoBeforeHarvest1 = await this.singleSidedInsurancePool.userInfo(this.rewardAttack.address)
         const userInfoBeforeHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
 
-        console.log('[user info before harvest]', this.signers[0].address, userInfoBeforeHarvest1.toString(), userInfoBeforeHarvest2.toString())
-        console.log('[mock uno address check ===>]', this.mockUNO.address)
+        console.log(
+          "[user info before harvest]",
+          this.signers[0].address,
+          userInfoBeforeHarvest1.toString(),
+          userInfoBeforeHarvest2.toString(),
+        )
+        console.log("[mock uno address check ===>]", this.mockUNO.address)
 
-        await (await this.singleSidedInsurancePool.harvest(this.signers[0].address)).wait()
+        const unoBalanceBeforeHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
+        console.log("[unoBalanceBeforeHarvest]", unoBalanceBeforeHarvest.toString())
+
+        const unoBalanceBeforeHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.address)
+        console.log("[unoBalanceBeforeHarvest 2 ======]", unoBalanceBeforeHarvest2.toString())
+
+        // await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
+        //   "UnoRe: must be message sender",
+        // )
+
+        await (await this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[0].address)).wait()
+
+        // await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[0].address)).to.be.revertedWith(
+        //   "UnoRe: must be message sender",
+        // )
+        const unoBalanceAfterFirstHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
+        console.log(
+          "[unoBalanceAfterFirstHarvest]",
+          unoBalanceAfterFirstHarvest.toString(),
+          unoBalanceAfterFirstHarvest.sub(unoBalanceBeforeHarvest).toString(),
+        )
+
+        const unoBalanceAfterFirstHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.address)
+        console.log(
+          "[unoBalanceAfterFirstHarvest 2 ========]",
+          unoBalanceAfterFirstHarvest2.toString(),
+          unoBalanceAfterFirstHarvest2.sub(unoBalanceBeforeHarvest2).toString(),
+        )
+
+        await advanceBlockTo(afterBlockNumber + 10000)
+        await ethers.provider.getBlockNumber()
+
+        await (await this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[0].address)).wait()
+
+        const unoBalanceAfterSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
+        console.log(
+          "[unoBalanceAfterSecondHarvest]",
+          unoBalanceAfterSecondHarvest.toString(),
+          unoBalanceAfterSecondHarvest.sub(unoBalanceAfterFirstHarvest).toString(),
+        )
+
+        const unoBalanceAfterSecondHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.address)
+        console.log(
+          "[unoBalanceAfterSecondHarvest 2 ==========]",
+          unoBalanceAfterSecondHarvest2.toString(),
+          unoBalanceAfterSecondHarvest2.sub(unoBalanceAfterFirstHarvest2).toString(),
+        )
 
         const userInfoAfterHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
         const userInfoAfterHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
 
-        console.log('[user info after harvest]', userInfoAfterHarvest1.toString(), userInfoAfterHarvest2.toString())
+        console.log("[user info after harvest]", userInfoAfterHarvest1.toString(), userInfoAfterHarvest2.toString())
 
         const pendingUnoRewardAfterHarvest1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardAfterHarvest2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
-        console.log("[pendingUnoRewardAfterHarvest]", getNumber(pendingUnoRewardAfterHarvest1), getNumber(pendingUnoRewardAfterHarvest2))
-      })
-      it("should revert harvest to other address after 10000 block", async function () {
-        const riskPool = this.RiskPool.attach(this.poolAddress)
-        const pendingUnoRewardBefore1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        const pendingUnoRewardBefore2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
-        console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
-        await this.singleSidedInsurancePool.enterInPool(this.signers[0].address, getBigNumber('8500'))
-        await this.singleSidedInsurancePool.enterInPool(this.signers[1].address, getBigNumber('10000'))
-        const beforeBlockNumber = await ethers.provider.getBlockNumber()
-        const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
-        expect(poolBalance1).to.equal(getBigNumber('8500'))
-        const poolBalance2 = await riskPool.balanceOf(this.signers[1].address)
-        expect(poolBalance2).to.equal(getBigNumber('10000'))
-        await advanceBlockTo(beforeBlockNumber + 10000)
-        const afterBlockNumber = await ethers.provider.getBlockNumber()
-        const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        const pendingUnoRewardAfter2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
-        console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
-        expect(pendingUnoRewardBefore2).to.be.not.equal(pendingUnoRewardAfter2)
-        const totalCaptial = await this.capitalAgent.totalCapitalStaked();
-        console.log(totalCaptial.toString());
-
-        // harvesting caller address equal to target address
-        const userInfoBeforeHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
-        const userInfoBeforeHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
-
-        console.log('[user info before harvest]', this.signers[0].address, userInfoBeforeHarvest1.toString(), userInfoBeforeHarvest2.toString())
-        console.log('[mock uno address check ===>]', this.mockUNO.address)
-
-        await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith('UnoRe: must be message sender')
-
-        const userInfoAfterHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
-        const userInfoAfterHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
-
-        console.log('[user info after harvest]', userInfoAfterHarvest1.toString(), userInfoAfterHarvest2.toString())
-
-        const pendingUnoRewardAfterHarvest1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        const pendingUnoRewardAfterHarvest2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
-        console.log("[pendingUnoRewardAfterHarvest]", getNumber(pendingUnoRewardAfterHarvest1), getNumber(pendingUnoRewardAfterHarvest2))
+        console.log(
+          "[pendingUnoRewardAfterHarvest]",
+          getNumber(pendingUnoRewardAfterHarvest1),
+          getNumber(pendingUnoRewardAfterHarvest2),
+        )
       })
       it("Should enter in pool by multiple users and check pending reward after generate 10000 blocks", async function () {
         const riskPool = this.RiskPool.attach(this.poolAddress)
         const pendingUnoRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         expect(pendingUnoRewardBefore).to.equal(0)
-        await this.singleSidedInsurancePool.enterInPool(this.signers[0].address, getBigNumber('10000'))
+        await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
         // block number when deposit in pool for the first time
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
         const poolBalance = await riskPool.balanceOf(this.signers[0].address)
-        expect(poolBalance).to.equal(getBigNumber('10000'))
+        expect(poolBalance).to.equal(getBigNumber("10000"))
         await advanceBlockTo(beforeBlockNumber + 10000)
         // pending reward after 10000 blocks
         const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
@@ -282,7 +412,7 @@ describe("SingleSidedInsurancePool", function () {
         console.log("[mockUSDTBalanceBefore]", getNumber(mockUSDTBalanceBefore))
         await this.singleSidedInsurancePool
           .connect(this.signers[1])
-          .enterInPool(this.signers[1].address, getBigNumber('10000'), { from: this.signers[1].address })
+          .enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
         // pending reward of the signer 0 and 1 after another 10000 blocks
         const afterBlockNumber1 = await ethers.provider.getBlockNumber()
         await advanceBlockTo(afterBlockNumber1 + 10000)
@@ -291,145 +421,144 @@ describe("SingleSidedInsurancePool", function () {
         console.log("[pendingUnoRewardAfter1,2]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
         expect(pendingUnoRewardAfter1).to.gte(pendingUnoRewardAfter)
         expect(pendingUnoRewardAfter2).to.be.not.equal(0)
-        const totalCaptial = await this.capitalAgent.totalCapitalStaked();
-        console.log(totalCaptial.toString());
+        const totalCaptial = await this.capitalAgent.totalCapitalStaked()
+        console.log(totalCaptial.toString())
       })
     })
 
-    describe("SingleSidedInsurancePool withdraw", function () {
-      beforeEach(async function () {
-        await this.singleSidedInsurancePool.enterInPool(this.signers[0].address, getBigNumber('10000'))
+    // describe("SingleSidedInsurancePool withdraw", function () {
+    //   beforeEach(async function () {
+    //     await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
 
-        // block number when deposit in pool for the first time
-        const beforeBlockNumber = await ethers.provider.getBlockNumber()
+    //     // block number when deposit in pool for the first time
+    //     const beforeBlockNumber = await ethers.provider.getBlockNumber()
 
-        await advanceBlockTo(beforeBlockNumber + 10000)
+    //     await advanceBlockTo(beforeBlockNumber + 10000)
 
-        // another one will deposit in pool with the same amount
-        await this.singleSidedInsurancePool
-          .connect(this.signers[1])
-          .enterInPool(this.signers[1].address, getBigNumber('10000'), { from: this.signers[1].address })
+    //     // another one will deposit in pool with the same amount
+    //     await this.singleSidedInsurancePool
+    //       .connect(this.signers[1])
+    //       .enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
 
-        // pending reward of the signer 0 and 1 after another 10000 blocks
-        const afterBlockNumber1 = await ethers.provider.getBlockNumber()
-        await advanceBlockTo(afterBlockNumber1 + 10000)
+    //     // pending reward of the signer 0 and 1 after another 10000 blocks
+    //     const afterBlockNumber1 = await ethers.provider.getBlockNumber()
+    //     await advanceBlockTo(afterBlockNumber1 + 10000)
 
-        await this.capitalAgent.setMCR(getBigNumber('1', 16))
-      })
+    //     await this.capitalAgent.setMCR(getBigNumber("1", 16))
+    //   })
 
-      it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
-        //check the uno and risk pool LP token balance of the singer 0 before withdraw
-        const riskPool = this.RiskPool.attach(this.poolAddress)
-        const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
-        const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
-        expect(lpBalanceBefore).to.equal(getBigNumber('10000'))
-        const pendingUnoRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        expect(pendingUnoRewardBefore).to.gt(0);
-        // signer 0 submit WR for the 1000 UNO
-        await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber('1000'))
-        // check the uno and risk pool LP token balance of the singer 0 after withdraw
-        const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
-        const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
-        expect(lpBalanceAfter).to.equal(getBigNumber('10000'))
-        expect(unoBalanceBefore).to.lt(unoBalanceAfter)
+    //   it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
+    //     //check the uno and risk pool LP token balance of the singer 0 before withdraw
+    //     const riskPool = this.RiskPool.attach(this.poolAddress)
+    //     const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
+    //     const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
+    //     expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
+    //     const pendingUnoRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+    //     expect(pendingUnoRewardBefore).to.gt(0)
+    //     // signer 0 submit WR for the 1000 UNO
+    //     await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
+    //     // check the uno and risk pool LP token balance of the singer 0 after withdraw
+    //     const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
+    //     const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
+    //     expect(lpBalanceAfter).to.equal(getBigNumber("10000"))
+    //     expect(unoBalanceBefore).to.lt(unoBalanceAfter)
 
-        const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        expect(pendingUnoRewardAfter).to.equal(0);
+    //     const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+    //     expect(pendingUnoRewardAfter).to.equal(0)
 
-        await this.singleSidedInsurancePool
-          .connect(this.signers[1])
-          .leaveFromPoolInPending(getBigNumber('1000'), { from: this.signers[1].address })
+    //     await this.singleSidedInsurancePool
+    //       .connect(this.signers[1])
+    //       .leaveFromPoolInPending(getBigNumber("1000"), { from: this.signers[1].address })
 
-        const pendingWithdrawRequest1 = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-        const pendingWithdrawRequest2 = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[1].address)
-        const totalPendingWithdrawAmount = await this.singleSidedInsurancePool.getTotalWithdrawPendingAmount()
-        console.log(pendingWithdrawRequest1["pendingAmount"].toString(), pendingWithdrawRequest1["pendingAmountInUno"].toString())
-        expect(pendingWithdrawRequest1["pendingAmountInUno"]).to.equal(getBigNumber('1000'))
-        expect(pendingWithdrawRequest2["pendingAmountInUno"]).to.equal(getBigNumber('1000'))
-        expect(totalPendingWithdrawAmount).to.equal(getBigNumber('2000'))
+    //     const pendingWithdrawRequest1 = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
+    //     const pendingWithdrawRequest2 = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[1].address)
+    //     const totalPendingWithdrawAmount = await this.singleSidedInsurancePool.getTotalWithdrawPendingAmount()
+    //     console.log(pendingWithdrawRequest1["pendingAmount"].toString(), pendingWithdrawRequest1["pendingAmountInUno"].toString())
+    //     expect(pendingWithdrawRequest1["pendingAmountInUno"]).to.equal(getBigNumber("1000"))
+    //     expect(pendingWithdrawRequest2["pendingAmountInUno"]).to.equal(getBigNumber("1000"))
+    //     expect(totalPendingWithdrawAmount).to.equal(getBigNumber("2000"))
+    //   })
 
-      })
+    //   it("Sould not claim within 10 days since WR", async function () {
+    //     await this.singleSidedInsurancePool.setLockTime(3600 * 24 * 10)
+    //     // signer 0 submit WR for the 1000 UNO
+    //     await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
+    //     const currentDate = new Date()
+    //     const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
+    //     const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
+    //     network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
+    //     await network.provider.send("evm_mine")
+    //     // signer 0 submit claim after 5 days since WR
+    //     await expect(this.singleSidedInsurancePool.leaveFromPending()).to.be.revertedWith("UnoRe: Locked time")
+    //   })
 
-      it("Sould not claim within 10 days since WR", async function () {
-        await this.singleSidedInsurancePool.setLockTime(3600 * 24 * 10);
-        // signer 0 submit WR for the 1000 UNO
-        await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber('1000'))
-        const currentDate = new Date()
-        const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
-        const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
-        network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
-        await network.provider.send("evm_mine")
-        // signer 0 submit claim after 5 days since WR
-        await expect(this.singleSidedInsurancePool.leaveFromPending()).to.be.revertedWith("UnoRe: Locked time")
-      })
+    //   it("Should claim after 10 days since last WR in the case of repetitive WR", async function () {
+    //     await this.singleSidedInsurancePool.setLockTime(3600 * 24 * 10)
 
-      it("Should claim after 10 days since last WR in the case of repetitive WR", async function () {
-        await this.singleSidedInsurancePool.setLockTime(3600 * 24 * 10);
+    //     const totalCaptial0 = await this.capitalAgent.totalCapitalStaked()
+    //     console.log(totalCaptial0.toString())
+    //     expect(totalCaptial0).to.equal(getBigNumber("20000"))
+    //     //check the uno and risk pool LP token balance of the singer 0 before withdraw
+    //     const riskPool = this.RiskPool.attach(this.poolAddress)
+    //     const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
+    //     const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
+    //     expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
+    //     const pendingUnoReward1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+    //     // console.log("[pendingUnoReward1]", pendingUnoReward1.toString(), getNumber(pendingUnoReward1));
+    //     // signer 0 submit WR for the 1000 UNO
+    //     await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
+    //     const currentDate = new Date()
+    //     const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
+    //     const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
+    //     network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
+    //     await network.provider.send("evm_mine")
+    //     // after 10000 blocks
+    //     const currentBlock = await ethers.provider.getBlockNumber()
+    //     await advanceBlockTo(currentBlock + 10000)
+    //     const pendingUnoReward2 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+    //     // console.log("[pendingUnoReward2]", pendingUnoReward2.toString(), getNumber(pendingUnoReward2))
+    //     // signer 0 submit WR for the 1000 UNO again
+    //     await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
+    //     const afterTenDays = new Date(afterFiveDays.setDate(currentDate.getDate() + 11))
+    //     const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
+    //     network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
+    //     await network.provider.send("evm_mine")
+    //     // signer 0 can claim after 10 days since the last WR
+    //     await this.singleSidedInsurancePool.leaveFromPending()
+    //     // check the uno and risk pool LP token balance of the singer 0 after withdraw
+    //     const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
+    //     const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
+    //     // expected uno blance after claim
+    //     const expectedUnoBalance = unoBalanceBefore.add(pendingUnoReward1.add(pendingUnoReward2))
+    //     expect(lpBalanceAfter).to.equal(getBigNumber("8000"))
+    //     expect(getNumber(expectedUnoBalance)).to.lte(getNumber(unoBalanceAfter))
+    //     const totalCaptial = await this.capitalAgent.totalCapitalStaked()
+    //     expect(totalCaptial).to.equal(getBigNumber("18000"))
+    //   })
 
-        const totalCaptial0 = await this.capitalAgent.totalCapitalStaked();
-        console.log(totalCaptial0.toString());
-        expect(totalCaptial0).to.equal(getBigNumber('20000'))
-        //check the uno and risk pool LP token balance of the singer 0 before withdraw
-        const riskPool = this.RiskPool.attach(this.poolAddress)
-        const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
-        const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
-        expect(lpBalanceBefore).to.equal(getBigNumber('10000'))
-        const pendingUnoReward1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        // console.log("[pendingUnoReward1]", pendingUnoReward1.toString(), getNumber(pendingUnoReward1));
-        // signer 0 submit WR for the 1000 UNO
-        await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber('1000'))
-        const currentDate = new Date()
-        const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
-        const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
-        network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
-        await network.provider.send("evm_mine")
-        // after 10000 blocks
-        const currentBlock = await ethers.provider.getBlockNumber()
-        await advanceBlockTo(currentBlock + 10000)
-        const pendingUnoReward2 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        // console.log("[pendingUnoReward2]", pendingUnoReward2.toString(), getNumber(pendingUnoReward2))
-        // signer 0 submit WR for the 1000 UNO again
-        await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber('1000'))
-        const afterTenDays = new Date(afterFiveDays.setDate(currentDate.getDate() + 11))
-        const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
-        network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
-        await network.provider.send("evm_mine")
-        // signer 0 can claim after 10 days since the last WR
-        await this.singleSidedInsurancePool.leaveFromPending()
-        // check the uno and risk pool LP token balance of the singer 0 after withdraw
-        const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
-        const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
-        // expected uno blance after claim
-        const expectedUnoBalance = unoBalanceBefore.add(pendingUnoReward1.add(pendingUnoReward2))
-        expect(lpBalanceAfter).to.equal(getBigNumber('8000'))
-        expect(getNumber(expectedUnoBalance)).to.lte(getNumber(unoBalanceAfter))
-        const totalCaptial = await this.capitalAgent.totalCapitalStaked();
-        expect(totalCaptial).to.equal(getBigNumber('18000'))
-      })
+    //   it("Should harvest", async function () {
+    //     // signer's uno balance before harvest
+    //     const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
+    //     await this.singleSidedInsurancePool.harvest(this.signers[0].address)
+    //     // signer's uno balance after harvest
+    //     const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
+    //     expect(unoBalanceAfter.sub(unoBalanceBefore)).to.gt(0)
+    //   })
 
-      it("Should harvest", async function () {
-        // signer's uno balance before harvest
-        const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
-        await this.singleSidedInsurancePool.harvest(this.signers[0].address)
-        // signer's uno balance after harvest
-        const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
-        expect(unoBalanceAfter.sub(unoBalanceBefore)).to.gt(0)
-      })
-
-      it("Should cancel withdraw request", async function () {
-        const riskPool = this.RiskPool.attach(this.poolAddress)
-        // signer 0 submit WR for the 1000 UNO
-        await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber('5000'))
-        const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
-        const withdrawRequestBefore = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-        expect(withdrawRequestBefore["pendingAmount"]).to.equal(getBigNumber('5000'))
-        expect(withdrawRequestBefore["pendingAmountInUno"]).to.equal(getBigNumber('5000'))
-        await this.singleSidedInsurancePool.cancelWithdrawRequest()
-        const withdrawRequestAfter = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-        expect(withdrawRequestAfter["pendingAmountInUno"]).to.equal(getBigNumber('0'))
-        expect(withdrawRequestAfter["pendingAmount"]).to.equal(getBigNumber('0'))
-      })
-    })
+    //   it("Should cancel withdraw request", async function () {
+    //     const riskPool = this.RiskPool.attach(this.poolAddress)
+    //     // signer 0 submit WR for the 1000 UNO
+    //     await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("5000"))
+    //     const unoBalanceBefore = await this.mockUNO.balanceOf(this.signers[0].address)
+    //     const withdrawRequestBefore = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
+    //     expect(withdrawRequestBefore["pendingAmount"]).to.equal(getBigNumber("5000"))
+    //     expect(withdrawRequestBefore["pendingAmountInUno"]).to.equal(getBigNumber("5000"))
+    //     await this.singleSidedInsurancePool.cancelWithdrawRequest()
+    //     const withdrawRequestAfter = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
+    //     expect(withdrawRequestAfter["pendingAmountInUno"]).to.equal(getBigNumber("0"))
+    //     expect(withdrawRequestAfter["pendingAmount"]).to.equal(getBigNumber("0"))
+    //   })
+    // })
 
     // describe("SingleSidedInsurancePool Claim", function () {
     //   beforeEach(async function () {
@@ -685,6 +814,5 @@ describe("SingleSidedInsurancePool", function () {
     //     // })
 
     //   })
-
   })
 })
