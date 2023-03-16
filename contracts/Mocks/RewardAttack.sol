@@ -9,9 +9,9 @@ contract RewardAttack {
 
     function attackHarvest(address _pool, address _to) external {
         ISingleSidedInsurancePool ssip = ISingleSidedInsurancePool(_pool);
-        for (uint256 ii = 0; ii < 5; ii++) {
-            ssip.harvest(msg.sender);
-        }
+        // for (uint256 ii = 0; ii < 5; ii++) {
+            ssip.harvest(_to);
+        // }
     }
 
     function enterInPool(

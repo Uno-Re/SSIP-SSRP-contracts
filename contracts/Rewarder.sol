@@ -34,6 +34,8 @@ contract Rewarder is IRewarder, ReentrancyGuard {
     address public immutable pool;
     address public operator;
 
+    mapping (address => uint256) public userRewardDebt;
+
     event LogRewarderWithdraw(address indexed _rewarder, address _currency, address indexed _to, uint256 _amount);
     event LogTransferOwnerShip(address indexed _rewarder, address indexed _oldOperator, address indexed _newOperator);
 
@@ -52,14 +54,18 @@ contract Rewarder is IRewarder, ReentrancyGuard {
     receive() external payable {}
 
     function onReward(address _to, uint256 _amount) external payable override onlyPOOL returns (uint256) {
-        require(tx.origin == _to && !tx.origin.isContract(), "UnoRe: must be message sender");
+        require(tx.origin == _to, "UnoRe: must be message sender");
         ISSIP ssip = ISSIP(pool);
         ISSIP.UserInfo memory userInfos = ssip.userInfo(_to);
         ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
         uint256 accumulatedUno = (userInfos.amount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
-        require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
 
-        // require(_to != address(0), "UnoRe: zero address reward");
+        uint256 pendingUno = accumulatedUno - userRewardDebt[_to];
+        userRewardDebt[_to] = accumulatedUno;
+
+        require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
+        require(pendingUno >= _amount, "UnoRe: invalid reward amount");
+
         if (currency == address(0)) {
             require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
             TransferHelper.safeTransferETH(_to, _amount);
