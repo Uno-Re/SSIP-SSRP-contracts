@@ -89,6 +89,7 @@ total faucet Limit: 500000000 $USDC
 > symbol: SSSIP-USDC <br/>
 
 - Rewarder contract: 0xc8FFf74f9AB50B68a727bf2c35afe3A3970910D3
+- New Rewarder contract: 0x99a428Deb40b470FDB35CbcaDbf50cCa878f37ce
 
 #### Ares - SSIP UNO Pool:
 - pool address: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
@@ -102,10 +103,12 @@ total faucet Limit: 500000000 $USDC
 > symbol: SSSIP-UNO <br/>
 
 - Rewarder contract: 0x9b9fa4bE1c98F5E9A8e774619b2e7056aF48384e
+- New Rewarder contract: 0x2dc1537BFadDc176076cC188426AEC86aE7Af797
 
 #### Factories:
 - RiskPoolFactory: 0xc743508A6AD19c31Aff110778EFDE0867E4cEf08
 - RewarderFactory: 0xA722FdFBbECdadB79aB27aAE388015dC4FACF6Ca
+- New RewarderFactory: 0x7d9fEaBfB9c15770eAEcEbC12cc8a339b9086eE4
 
 #### Common contracts:
 - UNO : 0x474021845c4643113458ea4414bdb7fb74a01a77
