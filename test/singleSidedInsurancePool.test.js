@@ -301,89 +301,62 @@ describe("SingleSidedInsurancePool", function () {
         console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
 
         await this.mockUSDT.transfer(this.rewardAttack.address, getBigNumber("20000"))
-        await this.rewardAttack.enterInPool(this.singleSidedInsurancePool.address, getBigNumber("8500"), this.mockUSDT.address)
+
+        await this.rewardAttack.enterInPool(this.singleSidedInsurancePool.address, getBigNumber("10000"), this.mockUSDT.address)
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
         await this.singleSidedInsurancePool
           .connect(this.signers[1])
-          .enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
-        const beforeBlockNumber = await ethers.provider.getBlockNumber()
+          .enterInPool(getBigNumber("8500"), { from: this.signers[1].address })
+
         const poolBalance1 = await riskPool.balanceOf(this.rewardAttack.address)
-        expect(poolBalance1).to.equal(getBigNumber("8500"))
+        expect(poolBalance1).to.equal(getBigNumber("10000"))
         const poolBalance2 = await riskPool.balanceOf(this.signers[1].address)
-        expect(poolBalance2).to.equal(getBigNumber("10000"))
+        expect(poolBalance2).to.equal(getBigNumber("8500"))
+
+        const beforeBlockNumber = await ethers.provider.getBlockNumber()
         await advanceBlockTo(beforeBlockNumber + 10000)
         const afterBlockNumber = await ethers.provider.getBlockNumber()
+
         const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.rewardAttack.address)
         const pendingUnoRewardAfter2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
         console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
-        expect(pendingUnoRewardBefore2).to.be.not.equal(pendingUnoRewardAfter2)
-        const totalCaptial = await this.capitalAgent.totalCapitalStaked()
-        console.log(totalCaptial.toString())
+        expect(pendingUnoRewardAfter1).to.gt(pendingUnoRewardBefore1)
 
-        // harvesting caller address equal to target address
-        const userInfoBeforeHarvest1 = await this.singleSidedInsurancePool.userInfo(this.rewardAttack.address)
-        const userInfoBeforeHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
 
-        console.log(
-          "[user info before harvest]",
-          this.signers[0].address,
-          userInfoBeforeHarvest1.toString(),
-          userInfoBeforeHarvest2.toString(),
-        )
-        console.log("[mock uno address check ===>]", this.mockUNO.address)
-
+        // harvest with own address through contract
         const unoBalanceBeforeHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
         console.log("[unoBalanceBeforeHarvest]", unoBalanceBeforeHarvest.toString())
 
         const unoBalanceBeforeHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.address)
         console.log("[unoBalanceBeforeHarvest 2 ======]", unoBalanceBeforeHarvest2.toString())
 
-        // await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
-        //   "UnoRe: must be message sender",
-        // )
-
-        await (await this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[0].address)).wait()
-
-        // await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[0].address)).to.be.revertedWith(
-        //   "UnoRe: must be message sender",
-        // )
-        const unoBalanceAfterFirstHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
-        console.log(
-          "[unoBalanceAfterFirstHarvest]",
-          unoBalanceAfterFirstHarvest.toString(),
-          unoBalanceAfterFirstHarvest.sub(unoBalanceBeforeHarvest).toString(),
+        await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[0].address)).to.be.revertedWith(
+          "UnoRe: updated rewarddebt incorrectly",
         )
+        const unoBalanceAfterFirstHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
+        expect(unoBalanceAfterFirstHarvest.sub(unoBalanceBeforeHarvest)).to.equal(0)
 
         const unoBalanceAfterFirstHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.address)
-        console.log(
-          "[unoBalanceAfterFirstHarvest 2 ========]",
-          unoBalanceAfterFirstHarvest2.toString(),
-          unoBalanceAfterFirstHarvest2.sub(unoBalanceBeforeHarvest2).toString(),
-        )
+        expect(unoBalanceAfterFirstHarvest2.sub(unoBalanceBeforeHarvest2)).to.equal(0)
+
+        console.log('[try double attack]')
 
         await advanceBlockTo(afterBlockNumber + 10000)
         await ethers.provider.getBlockNumber()
 
-        await (await this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[0].address)).wait()
+        // harvest with different address through contract
+        const unoBalanceBeforeSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
+        const unoBalanceBeforeSecondHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.address)
+
+        await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.address, this.signers[1].address)).to.be.revertedWith(
+          "UnoRe: must be message sender",
+        )
 
         const unoBalanceAfterSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
-        console.log(
-          "[unoBalanceAfterSecondHarvest]",
-          unoBalanceAfterSecondHarvest.toString(),
-          unoBalanceAfterSecondHarvest.sub(unoBalanceAfterFirstHarvest).toString(),
-        )
+        expect(unoBalanceAfterSecondHarvest.sub(unoBalanceBeforeSecondHarvest)).to.equal(0)
 
         const unoBalanceAfterSecondHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.address)
-        console.log(
-          "[unoBalanceAfterSecondHarvest 2 ==========]",
-          unoBalanceAfterSecondHarvest2.toString(),
-          unoBalanceAfterSecondHarvest2.sub(unoBalanceAfterFirstHarvest2).toString(),
-        )
-
-        const userInfoAfterHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
-        const userInfoAfterHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
-
-        console.log("[user info after harvest]", userInfoAfterHarvest1.toString(), userInfoAfterHarvest2.toString())
+        expect(unoBalanceAfterSecondHarvest2.sub(unoBalanceBeforeSecondHarvest2)).to.equal(0)
 
         const pendingUnoRewardAfterHarvest1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardAfterHarvest2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)

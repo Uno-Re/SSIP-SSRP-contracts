@@ -13,6 +13,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 > symbol: SSSRP <br/>
 
 - Rewarder contract: 0x629D346448086ECCC6bD19EcA617074a2dF5b365
+- New Rewarder contract: 0xDAbbF682F09D2A01C34021EFE690A5ae2582a11e
 
 #### Selene - SSIP ETH Pool:
 - pool address: 0x1342b3dAec4f54F5Af01Aaa34839626f959B362a
@@ -26,6 +27,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 > symbol: SSSIP-ETH <br/>
 
 - Rewarder contract: 0xAeFEAB8f99b7705D11A94fc823908103cCADA92a
+- New Rewarder contract: 0xd3D3aED42f7F293A6D6e45F9a697BffC12Df7353
 
 #### Ares - SSIP UNO Pool:
 - pool address: 0x82E107d2b1Be4347b55FBba4a6fB99669dF3ceb1
@@ -39,6 +41,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 > symbol: SSSIP-UNO <br/>
 
 - Rewarder contract: 0xE5290071A40F8c724105a3f78036A0EA6b6F3CC3
+- New Rewarder contract: 0x147Fdb7DA91cf4BD2054B60cBfC9Ce029aD32a5f
 
 #### Hercules - SSIP USDT Pool:
 - pool address: 0xa476b3F7333796D4565a3D3666D54cF8557F0169
@@ -52,6 +55,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 > symbol: SSSIP-USDT <br/>
 
 - Rewarder contract: 0x0451863C4dc8480D95E9Fb87D73D4f427A671eB6
+- New Rewarder contract: 0x18336855F302C2e8A30F72A89EdF62b8241f605d
 
 #### Aphrodite - SSIP USDC Pool:
 - pool address: 0x72D1B61B1723900f64d041a80fe4f114d3F0942a
@@ -65,6 +69,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 > symbol: SSSIP-USDC <br/>
 
 - Rewarder contract: 0xFf0898C3C90c35DBb8A9c64F63f4d9c16C81a479
+- New Rewarder contract: 0x7A24B6f16B19496127d859Fe94f1A8746D6c7Aa9
 
 #### Policy Insurance:
 - SalesPolicyFactory: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
@@ -74,6 +79,7 @@ Main topic of discussion was to finalize the implementation logic for Cover Port
 - RiskPoolFactory: 0x60D00f3eb762AB197E6909da4a93aa2F53F041B4(old)
 - RiskPoolFactory: 0xe3Ffa053ae0d84280f01901e2d7813d7523CfCf6(new)
 - RewarderFactory: 0x87205a4d46D1Cd0b90fe04Aa8FE66F4c28842148
+- New RewarderFactory: 0xcdB18293E0738cffFc7EA37072311e22fEeBb7c3
 
 #### Common contracts:
 - UNO : 0x474021845C4643113458ea4414bdb7fB74A01A77

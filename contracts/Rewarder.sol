@@ -23,6 +23,8 @@ interface ISSIP {
     function poolInfo() external view returns (PoolInfo memory);
 
     function userInfo(address _user) external view returns (UserInfo memory);
+
+    function riskPool() external view returns (address);
 }
 
 contract Rewarder is IRewarder, ReentrancyGuard {
@@ -64,7 +66,11 @@ contract Rewarder is IRewarder, ReentrancyGuard {
         uint256 pendingUno = accumulatedUno - userRewardDebt[_to];
         userRewardDebt[_to] = accumulatedUno;
 
-        require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
+        address riskPool = ssip.riskPool();
+
+        if (ssip.userInfo(riskPool).rewardDebt != accumulatedUno) {
+            require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
+        }
         require(pendingUno >= _amount, "UnoRe: invalid reward amount");
 
         if (currency == address(0)) {
