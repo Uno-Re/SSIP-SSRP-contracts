@@ -38,6 +38,7 @@ contract Rewarder is IRewarder, ReentrancyGuard {
 
     event LogRewarderWithdraw(address indexed _rewarder, address _currency, address indexed _to, uint256 _amount);
     event LogTransferOwnerShip(address indexed _rewarder, address indexed _oldOperator, address indexed _newOperator);
+    event LogForceSetUserRewardDebt(address indexed _to, uint256 _debt);
 
     constructor(
         address _operator,
@@ -102,6 +103,12 @@ contract Rewarder is IRewarder, ReentrancyGuard {
                 }
             }
         }
+    }
+
+    function forceSetUserRewardDebt(address _to, uint256 _debt) external onlyOperator {
+        require(_to != address(0), "UnoRe: zero address");
+        userRewardDebt[_to] = _debt;
+        emit LogForceSetUserRewardDebt(_to, _debt);
     }
 
     function transferOwnership(address _to) external onlyOperator {
