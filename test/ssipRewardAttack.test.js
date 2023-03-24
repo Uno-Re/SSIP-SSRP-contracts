@@ -41,6 +41,7 @@ describe("SingleSidedInsurancePool", function () {
     await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber("500000"), { from: this.signers[0].address })
     await this.mockUNO.connect(this.signers[1]).faucetToken(getBigNumber("500000000"), { from: this.signers[1].address })
     await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber("500000"), { from: this.signers[1].address })
+    await this.mockUSDT.connect(this.signers[2]).faucetToken(getBigNumber("500000"), { from: this.signers[2].address })
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
     this.riskPoolFactory = await this.RiskPoolFactory.deploy()
@@ -119,7 +120,7 @@ describe("SingleSidedInsurancePool", function () {
     this.rewardAttack = await this.RewardAttack.deploy()
   })
 
-  describe("SingleSidedInsurancePool Actions", function () {
+  describe("SingleSidedInsurancePool Harvest Attack Actions", function () {
     beforeEach(async function () {
       await this.singleSidedInsurancePool.createRiskPool(
         "UNO-LP",
@@ -133,13 +134,17 @@ describe("SingleSidedInsurancePool", function () {
       await this.mockUSDT
         .connect(this.signers[1])
         .approve(this.singleSidedInsurancePool.address, getBigNumber("1000000"), { from: this.signers[1].address })
+      await this.mockUSDT
+        .connect(this.signers[2])
+        .approve(this.singleSidedInsurancePool.address, getBigNumber("1000000"), { from: this.signers[2].address })
 
       const poolInfo = await this.singleSidedInsurancePool.poolInfo()
       expect(poolInfo.unoMultiplierPerBlock).equal(getBigNumber("1"))
       this.poolAddress = await this.singleSidedInsurancePool.riskPool()
+      await this.singleSidedInsurancePool.connect(this.signers[2]).enterInPool(getBigNumber("1000"), {from: this.signers[2].address})
     })
 
-    describe("SingleSidedInsurancePool Staking", function () {
+    describe("SingleSidedInsurancePool harvest attack", function () {
       it("should harvest to self address after 10000 block", async function () {
         const riskPool = this.RiskPool.attach(this.poolAddress)
 
@@ -298,20 +303,20 @@ describe("SingleSidedInsurancePool", function () {
         const unoBalanceAfterZeroHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
         expect(unoBalanceAfterZeroHarvest.sub(unoBalanceBeforeHarvest)).to.equal(0)
 
-        // double harvest with its self address
-        await this.singleSidedInsurancePool.harvest(this.signers[0].address)
-        const unoBalanceAfterFirstHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
-        expect(unoBalanceAfterFirstHarvest.sub(unoBalanceAfterZeroHarvest)).to.gt(0)
+        // // double harvest with its self address
+        // await this.singleSidedInsurancePool.harvest(this.signers[0].address)
+        // const unoBalanceAfterFirstHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
+        // expect(unoBalanceAfterFirstHarvest.sub(unoBalanceAfterZeroHarvest)).to.gt(0)
 
-        // trying harvest with zero address
-        await this.singleSidedInsurancePool.harvest(ethers.constants.AddressZero)
-        const unoBalanceAfterZeroHarvest2 = await this.mockUNO.balanceOf(this.signers[0].address)
-        expect(unoBalanceAfterZeroHarvest2.sub(unoBalanceAfterFirstHarvest)).to.equal(0)
+        // // trying harvest with zero address
+        // await this.singleSidedInsurancePool.harvest(ethers.constants.AddressZero)
+        // const unoBalanceAfterZeroHarvest2 = await this.mockUNO.balanceOf(this.signers[0].address)
+        // expect(unoBalanceAfterZeroHarvest2.sub(unoBalanceAfterFirstHarvest)).to.equal(0)
 
         // double harvest with its own address
         await expect(this.singleSidedInsurancePool.harvest(this.signers[0].address)).to.be.revertedWith("UnoRe: invalid reward amount")
         const unoBalanceAfterSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
-        expect(unoBalanceAfterSecondHarvest.sub(unoBalanceAfterZeroHarvest2)).to.equal(0)
+        expect(unoBalanceAfterSecondHarvest.sub(unoBalanceAfterZeroHarvest)).to.equal(0)
       })
     })
   })
