@@ -36,8 +36,6 @@ contract Rewarder is IRewarder, ReentrancyGuard {
     address public immutable pool;
     address public operator;
 
-    mapping (address => uint256) public userRewardDebt;
-
     event LogRewarderWithdraw(address indexed _rewarder, address _currency, address indexed _to, uint256 _amount);
     event LogTransferOwnerShip(address indexed _rewarder, address indexed _oldOperator, address indexed _newOperator);
     event LogForceSetUserRewardDebt(address indexed _to, uint256 _debt);
@@ -63,15 +61,12 @@ contract Rewarder is IRewarder, ReentrancyGuard {
         ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
         uint256 accumulatedUno = (userInfos.amount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
 
-        uint256 pendingUno = accumulatedUno - userRewardDebt[_to];
-        userRewardDebt[_to] = accumulatedUno;
-
         address riskPool = ssip.riskPool();
 
         if (ssip.userInfo(riskPool).rewardDebt != accumulatedUno) {
             require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
         }
-        require(pendingUno >= _amount, "UnoRe: invalid reward amount");
+        require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
 
         if (currency == address(0)) {
             require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
@@ -109,12 +104,6 @@ contract Rewarder is IRewarder, ReentrancyGuard {
                 }
             }
         }
-    }
-
-    function forceSetUserRewardDebt(address _to, uint256 _debt) external onlyOperator {
-        require(_to != address(0), "UnoRe: zero address");
-        userRewardDebt[_to] = _debt;
-        emit LogForceSetUserRewardDebt(_to, _debt);
     }
 
     function transferOwnership(address _to) external onlyOperator {
