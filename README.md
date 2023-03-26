@@ -88,8 +88,9 @@ total faucet Limit: 500000000 $USDC
 > name: Synthetic SSIP-USDC <br/>
 > symbol: SSSIP-USDC <br/>
 
-- Rewarder contract: 0xc8FFf74f9AB50B68a727bf2c35afe3A3970910D3
-- New Rewarder contract: 0x99a428Deb40b470FDB35CbcaDbf50cCa878f37ce
+- Old Rewarder contract: 0xc8FFf74f9AB50B68a727bf2c35afe3A3970910D3
+- Old Rewarder contract 2: 0x99a428Deb40b470FDB35CbcaDbf50cCa878f37ce
+- New Rewarder contract: 0x5D75249C121681578a8c387AfFd196A31Ae15c46
 
 #### Ares - SSIP UNO Pool:
 - pool address: 0xbb5fe2d69694b44a64151eaF07199eF8420685dD
@@ -102,13 +103,15 @@ total faucet Limit: 500000000 $USDC
 > name: Synthetic SSIP-UNO <br/>
 > symbol: SSSIP-UNO <br/>
 
-- Rewarder contract: 0x9b9fa4bE1c98F5E9A8e774619b2e7056aF48384e
-- New Rewarder contract: 0x2dc1537BFadDc176076cC188426AEC86aE7Af797
+- Old Rewarder contract: 0x9b9fa4bE1c98F5E9A8e774619b2e7056aF48384e
+- Old Rewarder contract 2: 0x2dc1537BFadDc176076cC188426AEC86aE7Af797
+- New Rewarder contract: 0xf7FF16fdcA5e05fEB8D1609B2b303d5ee1A888c6
 
 #### Factories:
 - RiskPoolFactory: 0xc743508A6AD19c31Aff110778EFDE0867E4cEf08
-- RewarderFactory: 0xA722FdFBbECdadB79aB27aAE388015dC4FACF6Ca
-- New RewarderFactory: 0x7d9fEaBfB9c15770eAEcEbC12cc8a339b9086eE4
+- Old RewarderFactory: 0xA722FdFBbECdadB79aB27aAE388015dC4FACF6Ca
+- Old RewarderFactory 2: 0x7d9fEaBfB9c15770eAEcEbC12cc8a339b9086eE4
+- New RewarderFactory: 0x3ce9453EE47cf809de920884923C392e0fb84e99
 
 #### Common contracts:
 - UNO : 0x474021845c4643113458ea4414bdb7fb74a01a77
