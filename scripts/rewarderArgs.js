@@ -1,9 +1,10 @@
 const { getBigNumber } = require("./shared/utilities")
+const { UNO } = require("./shared/constants")
 
 module.exports = [
-  "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F", // operator
-  "0x474021845C4643113458ea4414bdb7fB74A01A77", // mockUSDT
-  "0x87e1f628225c170a5C0Bf895580686430DEb3322", // pool
+  process.env.NEW_FROM_ADDRESS, // operator
+  UNO.goerli, // mockUSDT
+  "0x73b15F31569449D81AF0Cde34c78B184f73EbD62", // pool
 ]
 
 // 0x0000000000000000000000000000000000000000

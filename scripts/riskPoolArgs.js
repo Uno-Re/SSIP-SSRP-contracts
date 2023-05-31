@@ -1,8 +1,8 @@
-const { getBigNumber } = require("./shared/utilities")
+const { UNO } = require("./shared/constants")
 
 module.exports = [
-  "Synthetic SSIP-USDT",
-  "SSSIP-USDT",
-  "0xa476b3F7333796D4565a3D3666D54cF8557F0169",
-  "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+  "Synthetic SSRP",
+  "SSSRP",
+  "0x73b15F31569449D81AF0Cde34c78B184f73EbD62",
+  UNO.goerli,
 ]

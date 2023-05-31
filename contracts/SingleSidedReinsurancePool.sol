@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -134,11 +134,7 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
         emit RiskPoolCreated(address(this), riskPool);
     }
 
-    function createRewarder(
-        address _operator,
-        address _factory,
-        address _currency
-    ) external onlyOwner nonReentrant {
+    function createRewarder(address _operator, address _factory, address _currency) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         require(_currency != address(0), "UnoRe: zero currency address");
@@ -239,11 +235,7 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
         emit LogLeaveFromPendingSSRP(msg.sender, withdrawAmount, withdrawAmountInUNO);
     }
 
-    function lpTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external override nonReentrant {
+    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         if (_from != syntheticSSRP && _to != syntheticSSRP) {
             _harvest(_from);
@@ -274,7 +266,7 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
         // Effects
-        userInfo[msg.sender].rewardDebt = accumulatedUno;
+        userInfo[_to].rewardDebt = accumulatedUno;
         uint256 rewardAmount = 0;
 
         if (rewarder != address(0) && _pendingUno != 0) {
@@ -305,16 +297,9 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
     /**
      * @dev get withdraw request amount in pending per user in UNO
      */
-    function getWithdrawRequestPerUser(address _user)
-        external
-        view
-        returns (
-            uint256 pendingAmount,
-            uint256 pendingAmountInUno,
-            uint256 originUnoAmount,
-            uint256 requestTime
-        )
-    {
+    function getWithdrawRequestPerUser(
+        address _user
+    ) external view returns (uint256 pendingAmount, uint256 pendingAmountInUno, uint256 originUnoAmount, uint256 requestTime) {
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
         (pendingAmount, requestTime, originUnoAmount) = IRiskPool(riskPool).getWithdrawRequest(_user);
         pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;

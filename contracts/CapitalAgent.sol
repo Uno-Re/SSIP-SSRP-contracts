@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -13,7 +13,6 @@ import "./interfaces/ICapitalAgent.sol";
 contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     address public exchangeAgent;
     address public salesPolicyFactory;
-    address public UNO_TOKEN;
     address public USDC_TOKEN;
     address public operator;
 
@@ -67,19 +66,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
     event LogRemovePoolWhiteList(address indexed _pool);
     event LogSetOperator(address indexed _operator);
 
-    constructor(
-        address _exchangeAgent,
-        address _UNO_TOKEN,
-        address _USDC_TOKEN,
-        address _multiSigWallet,
-        address _operator
-    ) {
+    constructor(address _exchangeAgent, address _USDC_TOKEN, address _multiSigWallet, address _operator) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
-        require(_UNO_TOKEN != address(0), "UnoRe: zero UNO address");
         require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
-        UNO_TOKEN = _UNO_TOKEN;
         USDC_TOKEN = _USDC_TOKEN;
         operator = _operator;
         transferOwnership(_multiSigWallet);
@@ -121,11 +112,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogRemovePoolWhiteList(_pool);
     }
 
-    function addPool(
-        address _ssip,
-        address _currency,
-        uint256 _scr
-    ) external override onlyPoolWhiteList {
+    function addPool(address _ssip, address _currency, uint256 _scr) external override onlyPoolWhiteList {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
@@ -133,11 +120,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogAddPool(_ssip, _currency, _scr);
     }
 
-    function addPoolByAdmin(
-        address _ssip,
-        address _currency,
-        uint256 _scr
-    ) external onlyOwner {
+    function addPoolByAdmin(address _ssip, address _currency, uint256 _scr) external onlyOwner {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
@@ -186,11 +169,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
     }
 
-    function SSIPPolicyCaim(
-        uint256 _withdrawAmount,
-        uint256 _policyId,
-        bool _isFinished
-    ) external override nonReentrant {
+    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isFinished) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
         if (_isFinished) {
@@ -242,11 +221,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuard, Ownable {
         emit LogMarkToClaimPolicy(policyInfo.policy, _policyId);
     }
 
-    function _updatePoolCapital(
-        address _pool,
-        uint256 _amount,
-        bool isAdd
-    ) private {
+    function _updatePoolCapital(address _pool, uint256 _amount, bool isAdd) private {
         address currency = poolInfo[_pool].currency;
         uint256 stakingAmountInUSDC;
         if (currency == USDC_TOKEN) {

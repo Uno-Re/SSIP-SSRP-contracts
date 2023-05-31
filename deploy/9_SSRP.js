@@ -5,22 +5,18 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deployer } = await getNamedAccounts()
   const owner = deployer
 
-  console.log('[check chain id and network]', getChainId())
-
   // const exchangeAgent = await deployments.get("ExchangeAgent")
-  const capitalAgent = await deployments.get("CapitalAgent")
+  // const capitalAgent = await deployments.get("CapitalAgent")
   // const multiSigWallet = await deployments.get("MultiSigWallet")
-  // const exchangeAgent = "0x0b0D83702acbD625aDD45c79c7307C08eecEff4B"
-  // const capitalAgent = "0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05"
   const multiSigWallet = process.env.NEW_FROM_ADDRESS
   const claimAssessor = process.env.NEW_FROM_ADDRESS
 
-  await deploy("SingleSidedInsurancePool", {
+  await deploy("SingleSidedReinsurancePool", {
     from: deployer,
-    args: [claimAssessor, capitalAgent.address, multiSigWallet],
+    args: [claimAssessor, multiSigWallet],
     log: true,
     deterministicDeployment: false,
   })
 }
 
-module.exports.tags = ["SingleSidedInsurancePoolUSDC", "UnoRe"]
+module.exports.tags = ["SSRP", "UnoRe"]
