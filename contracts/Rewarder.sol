@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -51,28 +51,29 @@ contract Rewarder is IRewarder, ReentrancyGuard {
     receive() external payable {}
 
     function onReward(address _to, uint256 _amount) external payable override onlyPOOL returns (uint256) {
-        require(tx.origin == _to, "UnoRe: must be message sender");
-        ISSIP ssip = ISSIP(pool);
-        ISSIP.UserInfo memory userInfos = ssip.userInfo(_to);
-        ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
-        uint256 accumulatedUno = (userInfos.amount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
+        // require(tx.origin == _to, "UnoRe: must be message sender");
+        // ISSIP ssip = ISSIP(pool);
+        // ISSIP.UserInfo memory userInfos = ssip.userInfo(_to);
+        // ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
+        // uint256 accumulatedUno = (userInfos.amount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
 
-        address riskPool = ssip.riskPool();
+        // address riskPool = ssip.riskPool();
 
-        if (ssip.userInfo(riskPool).rewardDebt != accumulatedUno) {
-            require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
-        }
-        require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
+        // if (ssip.userInfo(riskPool).rewardDebt != accumulatedUno) {
+        //     require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
+        // }
+        // require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
 
-        if (currency == address(0)) {
-            require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
-            TransferHelper.safeTransferETH(_to, _amount);
-            return _amount;
-        } else {
-            require(IERC20(currency).balanceOf(address(this)) >= _amount, "UnoRe: insufficient reward balance");
-            TransferHelper.safeTransfer(currency, _to, _amount);
-            return _amount;
-        }
+        // if (currency == address(0)) {
+        //     require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
+        //     TransferHelper.safeTransferETH(_to, _amount);
+        //     return _amount;
+        // } else {
+        //     require(IERC20(currency).balanceOf(address(this)) >= _amount, "UnoRe: insufficient reward balance");
+        //     TransferHelper.safeTransfer(currency, _to, _amount);
+        //     return _amount;
+        // }
+        return _amount;
     }
 
     function withdraw(address _to, uint256 _amount) external onlyOperator {
