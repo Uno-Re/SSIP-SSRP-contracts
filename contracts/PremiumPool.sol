@@ -41,6 +41,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
     event LogMaxDestroyCurrencyAllowance(address indexed _premiumPool, address indexed _currency, address indexed _to);
     event LogAddWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
+    event LogSetExchangeAgent(address indexed _premiumPool, address indexed _exchangeAgent);
 
     constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
@@ -232,5 +233,11 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         require(whiteList[_whiteListAddress], "UnoRe: white list removed or unadded already");
         whiteList[_whiteListAddress] = false;
         emit LogRemoveWhiteList(address(this), _whiteListAddress);
+    }
+
+    function setExchangeAgent(address _exchangeAgent) external onlyOwner {
+        require(_exchangeAgent != address(0), "UnoRe: zero address");
+        exchangeAgent = _exchangeAgent;
+        emit LogSetExchangeAgent(address(this), _exchangeAgent);
     }
 }
