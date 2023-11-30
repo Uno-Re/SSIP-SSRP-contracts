@@ -5,13 +5,14 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/ISyntheticSSRP.sol";
 import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
+contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
     address public migrateTo;
 
     uint256 public LOCK_TIME = 10 days;
@@ -23,6 +24,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
     uint256 lastRewardBlock;
     uint256 accRewardPerShare;
     uint256 public rewardPerBlock;
+    bool public kill;
 
     struct UserInfo {
         uint256 lastWithdrawTime;
@@ -47,6 +49,8 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
     event LogSetMigrateTo(address indexed _pool, address indexed _migrateTo);
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
+    event PoolKilled(address indexed owner);
+    event PoolRevived(address indexed owner);
 
     constructor(address _lpToken, address _multiSigWallet) Ownable(_multiSigWallet) {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -54,6 +58,29 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
         lpToken = _lpToken;
         rewardPerBlock = 1e18;
         // transferOwnership(_multiSigWallet);
+    }
+
+    modifier isPoolNotKilled() {
+        require(!kill, "UnoRe: pool is killed");
+        _;
+    }
+
+    function pausePool() external onlyOwner {
+        _pause();
+    }
+
+    function UnpausePool() external onlyOwner {
+        _unpause();
+    }
+
+    function killPool() external onlyOwner {
+        kill = true;
+        emit PoolKilled(msg.sender);
+    }
+
+    function revivePool() external onlyOwner {
+        kill = false;
+        emit PoolRevived(msg.sender);
     }
 
     function setRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
@@ -86,7 +113,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
 
-    function migrate() external nonReentrant {
+    function migrate() external isPoolNotKilled nonReentrant {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         if (
@@ -126,7 +153,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
         }
     }
 
-    function enterInPool(uint256 _amount) external override nonReentrant {
+    function enterInPool(uint256 _amount) external override isPoolNotKilled nonReentrant {
         require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
         TransferHelper.safeTransferFrom(lpToken, msg.sender, address(this), _amount);
@@ -139,7 +166,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused nonReentrant {
         // Withdraw desired amount from pool
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
@@ -156,7 +183,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
     /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending() external override nonReentrant {
+    function leaveFromPending() external override whenNotPaused nonReentrant {
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LOCK_TIME, "UnoRe: Locked time");
         _harvest(msg.sender);
         _leaveFromPending();
@@ -177,7 +204,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
         emit LogLeaveFromPending(msg.sender, address(this), pendingWR);
     }
 
-    function harvest(address _to) external override nonReentrant {
+    function harvest(address _to) external override whenNotPaused nonReentrant {
         _harvest(_to);
     }
 
