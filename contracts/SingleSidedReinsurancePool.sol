@@ -78,6 +78,7 @@ contract SingleSidedReinsurancePool is
         claimAssessor = _claimAssessor;
         STAKING_START_TIME = block.timestamp + 3 days;
         __ReentrancyGuard_init();
+        __Pausable_init();
         __Ownable_init(_multiSigWallet);
     }
 
