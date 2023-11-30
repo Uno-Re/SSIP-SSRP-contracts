@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./libraries/Counters.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ICapitalAgent.sol";
@@ -15,7 +16,7 @@ import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 import "./EIP712MetaTransaction.sol";
 
-contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), ERC721, ISalesPolicy, ReentrancyGuard {
+contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), ERC721, ISalesPolicy, ReentrancyGuard, Pausable {
     using Counters for Counters.Counter;
 
     address public immutable factory;
@@ -94,6 +95,14 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         _;
     }
 
+    function killPool() external onlyFactory {
+        _pause();
+    }
+
+    function revivePool() external onlyFactory {
+        _unpause();
+    }
+
     receive() external payable {}
 
     function buyPolicy(
@@ -107,7 +116,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         bytes32 r,
         bytes32 s,
         uint8 v
-    ) external payable nonReentrant {
+    ) external payable whenNotPaused nonReentrant {
         uint256 len = _protocols.length;
         require(len > 0, "UnoRe: no policy");
         require(len == _coverageAmount.length, "UnoRe: no match protocolIds with coverageAmount");
