@@ -5,12 +5,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 // import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
 
-contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
+contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
     // using Address for address;
 
     address public exchangeAgent;
@@ -20,6 +21,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
     address[] public availableCurrencyList;
     mapping(address => bool) public whiteList;
 
+    bool public kill;
     address public constant burnAddress = 0x000000000000000000000000000000000000dEaD;
     mapping(address => uint256) public SSRP_PREMIUM;
     mapping(address => uint256) public SSIP_PREMIUM;
@@ -41,6 +43,8 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
     event LogMaxDestroyCurrencyAllowance(address indexed _premiumPool, address indexed _currency, address indexed _to);
     event LogAddWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
+    event PoolKilled(address indexed owner);
+    event PoolRevived(address indexed owner);
 
     constructor(
         address _exchangeAgent,
@@ -69,9 +73,33 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         _;
     }
 
+    modifier isPoolNotKilled() {
+        require(!kill, "UnoRe: pool is killed");
+        _;
+    }
+
     receive() external payable {}
 
-    function collectPremiumInETH() external payable override nonReentrant onlyWhiteList {
+
+    function pausePool() external onlyOwner {
+        _pause();
+    }
+
+    function UnpausePool() external onlyOwner {
+        _unpause();
+    }
+
+    function killPool() external onlyOwner {
+        kill = true;
+        emit PoolKilled(msg.sender);
+    }
+
+    function revivePool() external onlyOwner {
+        kill = false;
+        emit PoolRevived(msg.sender);
+    }
+
+    function collectPremiumInETH() external payable override isPoolNotKilled nonReentrant onlyWhiteList {
         uint256 _premiumAmount = msg.value;
         uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
         uint256 _premium_SSIP = (_premiumAmount * 7000) / 10000;
@@ -84,6 +112,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
     function collectPremium(address _premiumCurrency, uint256 _premiumAmount)
         external
         override
+        isPoolNotKilled
         nonReentrant
         onlyAvailableCurrency(_premiumCurrency)
         onlyWhiteList
@@ -100,7 +129,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         emit LogCollectPremium(msg.sender, _premiumCurrency, _premiumAmount);
     }
 
-    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyOwner nonReentrant {
+    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyOwner isPoolNotKilled nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         uint256 usdcAmountToDeposit = 0;
@@ -135,7 +164,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         address _currency,
         address _rewarder,
         uint256 _amount
-    ) external onlyOwner nonReentrant {
+    ) external onlyOwner isPoolNotKilled nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
@@ -153,7 +182,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         }
     }
 
-    function buyBackAndBurn() external onlyOwner {
+    function buyBackAndBurn() external onlyOwner isPoolNotKilled {
         uint256 unoAmount = 0;
         if (BACK_BURN_PREMIUM_ETH > 0) {
             TransferHelper.safeTransferETH(exchangeAgent, BACK_BURN_PREMIUM_ETH);
@@ -181,7 +210,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         address _currency,
         address _to,
         uint256 _amount
-    ) external override onlyOwner {
+    ) external override onlyOwner whenNotPaused {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {
