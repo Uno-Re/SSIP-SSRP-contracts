@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRiskPoolFactory.sol";
 import "./interfaces/IRewarderFactory.sol";
@@ -14,7 +14,7 @@ import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGuard, Ownable {
+contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     address public claimAssessor;
     address public migrateTo;
     address public syntheticSSRP;
@@ -60,12 +60,14 @@ contract SingleSidedReinsurancePool is ISingleSidedReinsurancePool, ReentrancyGu
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
 
-    constructor(address _claimAssessor, address _multiSigWallet) {
+    function initialize(address _claimAssessor, address _multiSigWallet) public initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
+        __ReentrancyGuard_init();
+        __Ownable_init(_multiSigWallet);
         claimAssessor = _claimAssessor;
         STAKING_START_TIME = block.timestamp + 3 days;
-        transferOwnership(_multiSigWallet);
+        // transferOwnership(_multiSigWallet);
     }
 
     modifier onlyClaimAssessor() {
