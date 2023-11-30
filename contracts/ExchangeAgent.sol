@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -51,7 +51,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         address _uniswapRouter,
         address _uniswapFactory,
         address _multiSigWallet
-    ) {
+    ) Ownable(_multiSigWallet) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_uniswapRouter != address(0), "UnoRe: zero uniswapRouter address");
         require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
@@ -64,7 +64,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         oraclePriceFeed = _oraclePriceFeed;
         whiteList[msg.sender] = true;
         slippage = 5 * SLIPPAGE_PRECISION;
-        transferOwnership(_multiSigWallet);
+        // transferOwnership(_multiSigWallet);
     }
 
     modifier onlyWhiteList() {
