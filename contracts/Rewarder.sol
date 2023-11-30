@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
 
@@ -27,7 +28,7 @@ interface ISSIP {
     function riskPool() external view returns (address);
 }
 
-contract Rewarder is IRewarder, ReentrancyGuard {
+contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
     using Address for address;
 
     uint256 public constant ACC_UNO_PRECISION = 1e18;
@@ -54,7 +55,15 @@ contract Rewarder is IRewarder, ReentrancyGuard {
 
     receive() external payable {}
 
-    function onReward(address _to, uint256 _amount) external payable override onlyPOOL returns (uint256) {
+    function pausePool() external onlyOperator {
+        _pause();
+    }
+
+    function UnpausePool() external onlyOperator {
+        _unpause();
+    }
+
+    function onReward(address _to, uint256 _amount) external payable override onlyPOOL whenNotPaused returns (uint256) {
         require(tx.origin == _to, "UnoRe: must be message sender");
         ISSIP ssip = ISSIP(pool);
         ISSIP.UserInfo memory userInfos = ssip.userInfo(_to);
@@ -79,7 +88,7 @@ contract Rewarder is IRewarder, ReentrancyGuard {
         }
     }
 
-    function withdraw(address _to, uint256 _amount) external onlyOperator {
+    function withdraw(address _to, uint256 _amount) external onlyOperator whenNotPaused {
         require(_to != address(0), "UnoRe: zero address reward");
         if (currency == address(0)) {
             if (address(this).balance >= _amount) {
