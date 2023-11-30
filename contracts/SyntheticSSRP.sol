@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
@@ -48,12 +48,12 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable {
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
 
-    constructor(address _lpToken, address _multiSigWallet) {
+    constructor(address _lpToken, address _multiSigWallet) Ownable(_multiSigWallet) {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         require(_lpToken != address(0), "UnoRe: zero lp token address");
         lpToken = _lpToken;
         rewardPerBlock = 1e18;
-        transferOwnership(_multiSigWallet);
+        // transferOwnership(_multiSigWallet);
     }
 
     function setRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
