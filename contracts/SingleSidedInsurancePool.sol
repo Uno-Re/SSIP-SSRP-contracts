@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IExchangeAgent.sol";
@@ -17,19 +18,21 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardUpgradeable, OwnableUpgradeable {
+contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     address public claimAssessor;
     address private exchangeAgent;
     address public migrateTo;
     address public capitalAgent;
     address public syntheticSSIP;
 
+    bool public kill;
     uint256 public LOCK_TIME = 10 days;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
     uint256 public STAKING_START_TIME;
 
     address public rewarder;
     address public override riskPool;
+
     struct PoolInfo {
         uint128 lastRewardBlock;
         uint128 accUnoPerShare;
@@ -71,6 +74,8 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
+    event PoolKilled(address indexed owner);
+    event PoolRevived(address indexed owner);
 
     function initialize (
         address _claimAssessor,
@@ -83,6 +88,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         __ReentrancyGuard_init();
+        __Pausable_init();
         __Ownable_init(_multiSigWallet);
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
@@ -98,6 +104,29 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     modifier isStartTime() {
         require(block.timestamp >= STAKING_START_TIME, "UnoRe: not available time");
         _;
+    }
+
+    modifier isPoolNotKilled() {
+        require(!kill, "UnoRe: pool is killed");
+        _;
+    }
+
+    function pausePool() external onlyOwner {
+        _pause();
+    }
+
+    function UnpausePool() external onlyOwner {
+        _unpause();
+    }
+
+    function killPool() external onlyOwner {
+        kill = true;
+        emit PoolKilled(msg.sender);
+    }
+
+    function revivePool() external onlyOwner {
+        kill = false;
+        emit PoolRevived(msg.sender);
     }
 
     function setExchangeAgent(address _exchangeAgent) external onlyOwner {
@@ -187,7 +216,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         emit LogCreateSyntheticSSIP(address(this), syntheticSSIP, riskPool);
     }
 
-    function migrate() external nonReentrant {
+    function migrate() external nonReentrant isPoolNotKilled {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
@@ -224,7 +253,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         }
     }
 
-    function enterInPool(uint256 _amount) external payable override isStartTime nonReentrant {
+    function enterInPool(uint256 _amount) external payable override isStartTime isPoolNotKilled nonReentrant {
         require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
         address token = IRiskPool(riskPool).currency();
@@ -251,7 +280,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override isStartTime nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
         _harvest(msg.sender);
         require(ICapitalAgent(capitalAgent).checkCapitalByMCR(address(this), _amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
@@ -268,7 +297,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending() external override isStartTime nonReentrant {
+    function leaveFromPending() external override isStartTime whenNotPaused nonReentrant {
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LOCK_TIME, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
@@ -288,7 +317,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         address _from,
         address _to,
         uint256 _amount
-    ) external override nonReentrant {
+    ) external override nonReentrant whenNotPaused {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         if (_from != syntheticSSIP && _to != syntheticSSIP) {
             _harvest(_from);
@@ -308,7 +337,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         }
     }
 
-    function harvest(address _to) external override isStartTime nonReentrant {
+    function harvest(address _to) external override whenNotPaused isStartTime nonReentrant {
         _harvest(_to);
     }
 
@@ -339,7 +368,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         uint256 _amount,
         uint256 _policyId,
         bool _isFinished
-    ) external onlyClaimAssessor isStartTime nonReentrant {
+    ) external onlyClaimAssessor isStartTime isPoolNotKilled nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
