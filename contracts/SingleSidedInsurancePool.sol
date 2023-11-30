@@ -97,6 +97,7 @@ contract SingleSidedInsurancePool is
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
         __ReentrancyGuard_init();
+        __Pausable_init();
         __Ownable_init(_multiSigWallet);
     }
 
