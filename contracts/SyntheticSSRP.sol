@@ -204,7 +204,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
         emit LogLeaveFromPending(msg.sender, address(this), pendingWR);
     }
 
-    function harvest(address _to) external override whenNotPaused nonReentrant {
+    function harvest(address _to) external override whenNotPaused isPoolNotKilled nonReentrant {
         _harvest(_to);
     }
 
