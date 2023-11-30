@@ -337,7 +337,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         }
     }
 
-    function harvest(address _to) external override whenNotPaused isStartTime nonReentrant {
+    function harvest(address _to) external override whenNotPaused isPoolNotKilled isStartTime nonReentrant {
         _harvest(_to);
     }
 
