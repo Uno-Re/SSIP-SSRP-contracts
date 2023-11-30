@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IMigration.sol";
@@ -16,7 +17,7 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard, Ownable {
+contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     address public claimAssessor;
     address private exchangeAgent;
     address public migrateTo;
@@ -71,20 +72,22 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuard,
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
 
-    constructor(
+    function initialize (
         address _claimAssessor,
         address _exchangeAgent,
         address _capitalAgent,
         address _multiSigWallet
-    ) {
+    ) public initializer {
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        __ReentrancyGuard_init();
+        __Ownable_init(_multiSigWallet);
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
-        transferOwnership(_multiSigWallet);
+        // transferOwnership(_multiSigWallet);
     }
 
     modifier onlyClaimAssessor() {
