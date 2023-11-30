@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -15,7 +15,7 @@ contract MockUSDT is Ownable, ERC20 {
     mapping(address => uint256) private _faucets;
     uint256 public constant faucetLimit = 500000 * 10**18;
 
-    constructor() ERC20("USDT", "USDT") {
+    constructor() ERC20("USDT", "USDT") Ownable(msg.sender) {
         _mint(msg.sender, INITIAL_SUPPLY);
     }
 
