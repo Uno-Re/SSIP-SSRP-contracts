@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -69,7 +69,7 @@ contract SingleSidedReinsurancePool is
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
     event PoolAlived(address indexed _owner, bool _alive);
 
-    function initialize(address _claimAssessor, address _multiSigWallet) public initializer {
+    function initialize(address _claimAssessor, address _multiSigWallet) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         __ReentrancyGuard_init();
@@ -77,7 +77,8 @@ contract SingleSidedReinsurancePool is
         __Ownable_init(_multiSigWallet);
         claimAssessor = _claimAssessor;
         STAKING_START_TIME = block.timestamp + 3 days;
-        // transferOwnership(_multiSigWallet);
+        __ReentrancyGuard_init();
+        __Ownable_init(_multiSigWallet);
     }
 
     modifier onlyClaimAssessor() {

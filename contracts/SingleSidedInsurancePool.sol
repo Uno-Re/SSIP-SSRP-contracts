@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/ICapitalAgent.sol";
-import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/IRiskPoolFactory.sol";
@@ -86,7 +85,7 @@ contract SingleSidedInsurancePool is
         address _exchangeAgent,
         address _capitalAgent,
         address _multiSigWallet
-    ) public initializer {
+    ) external initializer {
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
@@ -97,7 +96,8 @@ contract SingleSidedInsurancePool is
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
-        // transferOwnership(_multiSigWallet);
+        __ReentrancyGuard_init();
+        __Ownable_init(_multiSigWallet);
     }
 
     modifier onlyClaimAssessor() {
