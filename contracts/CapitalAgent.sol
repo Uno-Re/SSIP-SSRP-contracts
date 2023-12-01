@@ -97,8 +97,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         _;
     }
 
-    function policyInfo() external view returns(address, uint256, bool) {
-        policyInfo memory _policy = policyInfo;
+    function getPolicyInfo() external view returns(address, uint256, bool) {
+        PolicyInfo memory _policy = policyInfo;
         return(_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
