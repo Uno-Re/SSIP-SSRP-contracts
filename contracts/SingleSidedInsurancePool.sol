@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/ICapitalAgent.sol";
-import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/IRiskPoolFactory.sol";
@@ -22,12 +21,13 @@ import "./libraries/TransferHelper.sol";
 contract SingleSidedInsurancePool is
     ISingleSidedInsurancePool,
     ReentrancyGuardUpgradeable,
-    OwnableUpgradeable,
-    PausableUpgradeable
+    PausableUpgradeable,
+    AccessControlUpgradeable
 {
-    address public claimAssessor;
-    address public governance;
-    address private exchangeAgent;
+    bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
+    bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
     address public migrateTo;
     address public capitalAgent;
     address public syntheticSSIP;
@@ -58,7 +58,7 @@ contract SingleSidedInsurancePool is
     }
 
     mapping(address => UserInfo) public userInfo;
-    mapping(uint256 => UserInfo) public policyInfo;
+    mapping(uint256 => PolicyInfo) public policyInfo;
 
     PoolInfo public poolInfo;
 
@@ -67,7 +67,6 @@ contract SingleSidedInsurancePool is
     event LeftPool(address indexed _staker, address indexed _pool, uint256 _requestAmount);
     event LogUpdatePool(uint128 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
-    event LogSetExchangeAgent(address indexed _exchangeAgent);
     event LogSetGovernance(address indexed _governance);
     event LogLeaveFromPendingSSIP(
         address indexed _user,
@@ -89,33 +88,17 @@ contract SingleSidedInsurancePool is
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
     event PoolAlived(address indexed _owner, bool _alive);
-    event PolicyApproved(address indexed _owner, bool _approve);
+    event PolicyApproved(address indexed _owner, uint256 _policyId);
+    event PolicyRejected(address indexed _owner, uint256 _policyId);
 
-    function initialize(
-        address _claimAssessor,
-        address _exchangeAgent,
-        address _capitalAgent,
-        address _multiSigWallet,
-        address _governance
-    ) public initializer {
-        require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
-        require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
+    function initialize(address _capitalAgent, address _multiSigWallet) public initializer {
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        require(_governance != address(0), "UnoRe: zero governance address");
+        capitalAgent = _capitalAgent;
         __ReentrancyGuard_init();
         __Pausable_init();
-        __Ownable_init(_multiSigWallet);
-        exchangeAgent = _exchangeAgent;
-        claimAssessor = _claimAssessor;
-        capitalAgent = _capitalAgent;
-        governance = _governance;
-        // transferOwnership(_multiSigWallet);
-    }
-
-    modifier onlyClaimAssessor() {
-        require(msg.sender == claimAssessor, "UnoRe: Forbidden");
-        _;
+        __AccessControl_init();
+        _grantRole(ADMIN_ROLE, _multiSigWallet);
     }
 
     modifier isStartTime() {
@@ -128,73 +111,69 @@ contract SingleSidedInsurancePool is
         _;
     }
 
-    function pausePool() external onlyOwner {
+    function pausePool() external onlyRole(ADMIN_ROLE) {
         _pause();
     }
 
-    function UnpausePool() external onlyOwner {
+    function UnpausePool() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
 
-    function killPool() external onlyOwner {
+    function killPool() external onlyRole(ADMIN_ROLE) {
         killed = true;
         emit PoolAlived(msg.sender, true);
     }
 
-    function revivePool() external onlyOwner {
+    function revivePool() external onlyRole(ADMIN_ROLE) {
         killed = false;
         emit PoolAlived(msg.sender, false);
     }
 
-    function setGovernance(address _governance) external onlyOwner {
-        require(_governance != address(0), "UnoRe: zero address");
-        governance = _governance;
-        emit LogSetGovernance(_governance);
+    function setGaurdianCouncil(address _gaurdianCouncil) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
+        require(_gaurdianCouncil != address(0), "UnoRe: zero address");
+        _revokeRole(GAURDIAN_COUNCIL_ROLE, msg.sender);
+        _grantRole(GAURDIAN_COUNCIL_ROLE, _gaurdianCouncil);
+        emit LogSetGovernance(_gaurdianCouncil);
     }
 
-    function setExchangeAgent(address _exchangeAgent) external onlyOwner {
-        require(_exchangeAgent != address(0), "UnoRe: zero address");
-        exchangeAgent = _exchangeAgent;
-        emit LogSetExchangeAgent(_exchangeAgent);
-    }
-
-    function setCapitalAgent(address _capitalAgent) external onlyOwner {
+    function setCapitalAgent(address _capitalAgent) external onlyRole(ADMIN_ROLE) {
         require(_capitalAgent != address(0), "UnoRe: zero address");
         capitalAgent = _capitalAgent;
         emit LogSetCapitalAgent(address(this), _capitalAgent);
     }
 
-    function setRewardMultiplier(uint256 _rewardMultiplier) external onlyOwner {
+    function setRewardMultiplier(uint256 _rewardMultiplier) external onlyRole(ADMIN_ROLE) {
         require(_rewardMultiplier > 0, "UnoRe: zero value");
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
         emit LogSetRewardMultiplier(address(this), _rewardMultiplier);
     }
 
-    function setClaimAssessor(address _claimAssessor) external onlyOwner {
+    function setClaimAssessor(address _claimAssessor) external onlyRole(CLAIM_ACCESSOR_ROLE) {
         require(_claimAssessor != address(0), "UnoRe: zero address");
-        claimAssessor = _claimAssessor;
+        _revokeRole(CLAIM_ACCESSOR_ROLE, msg.sender);
+        _grantRole(CLAIM_ACCESSOR_ROLE, _claimAssessor);
         emit LogSetClaimAssessor(address(this), _claimAssessor);
     }
 
-    function setMigrateTo(address _migrateTo) external onlyOwner {
+    function setMigrateTo(address _migrateTo) external onlyRole(ADMIN_ROLE) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         migrateTo = _migrateTo;
         emit LogSetMigrateTo(address(this), _migrateTo);
     }
 
-    function setMinLPCapital(uint256 _minLPCapital) external onlyOwner {
+    function setMinLPCapital(uint256 _minLPCapital) external onlyRole(ADMIN_ROLE) {
         require(_minLPCapital > 0, "UnoRe: not allow zero value");
         IRiskPool(riskPool).setMinLPCapital(_minLPCapital);
         emit LogSetMinLPCapital(address(this), _minLPCapital);
     }
 
-    function setLockTime(uint256 _lockTime) external onlyOwner {
+    function setLockTime(uint256 _lockTime) external onlyRole(ADMIN_ROLE) {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
         LOCK_TIME = _lockTime;
         emit LogSetLockTime(address(this), _lockTime);
     }
 
-    function setStakingStartTime(uint256 _startTime) external onlyOwner {
+    function setStakingStartTime(uint256 _startTime) external onlyRole(ADMIN_ROLE) {
         STAKING_START_TIME = _startTime + block.timestamp;
         emit LogSetStakingStartTime(address(this), STAKING_START_TIME);
     }
@@ -209,7 +188,7 @@ contract SingleSidedInsurancePool is
         address _currency,
         uint256 _rewardMultiplier,
         uint256 _SCR
-    ) external onlyOwner nonReentrant {
+    ) external nonReentrant onlyRole(ADMIN_ROLE) {
         require(riskPool == address(0), "UnoRe: risk pool created already");
         require(_factory != address(0), "UnoRe: zero factory address");
         riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
@@ -220,14 +199,14 @@ contract SingleSidedInsurancePool is
         emit RiskPoolCreated(address(this), riskPool);
     }
 
-    function createRewarder(address _operator, address _factory, address _currency) external onlyOwner nonReentrant {
+    function createRewarder(address _operator, address _factory, address _currency) external nonReentrant onlyRole(ADMIN_ROLE) {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         rewarder = IRewarderFactory(_factory).newRewarder(_operator, _currency, address(this));
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
 
-    function createSyntheticSSIP(address _multiSigWallet, address _factory) external onlyOwner nonReentrant {
+    function createSyntheticSSIP(address _multiSigWallet, address _factory) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_multiSigWallet != address(0), "UnoRe: zero owner address");
         require(_factory != address(0), "UnoRe:zero factory address");
         require(riskPool != address(0), "UnoRe:zero LP token address");
@@ -378,15 +357,20 @@ contract SingleSidedInsurancePool is
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
-    function approvePolicy(uint256 _policyId, bool _approve) external onlyClaimAssessor {
-        (address salesPolicy, ,) = ICapitalAgent(capitalAgent).policyInfo();
+    function approvePolicy(uint256 _policyId, uint256 _delay) external onlyRole(CLAIM_ACCESSOR_ROLE) {
+        (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
         PolicyInfo memory policy = policyInfo[_policyId];
-        policy.approved = _approve;
-        policy.delay = block.timestamp + 7 days;
+        policy.approved = true;
+        policy.delay = block.timestamp + _delay;
         policyInfo[_policyId] = policy;
-        emit policyApproved(_owner, _approve);
+        emit PolicyApproved(msg.sender, _policyId);
+    }
+
+    function rejectPolicy(uint256 _policyId) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
+        delete policyInfo[_policyId];
+        emit PolicyRejected(msg.sender, _policyId);
     }
 
     function policyClaim(
@@ -394,8 +378,7 @@ contract SingleSidedInsurancePool is
         uint256 _amount,
         uint256 _policyId,
         bool _isFinished
-    ) external isStartTime isAlive nonReentrant {
-        require(msg.sender == governance, "UnoRe: not governance");
+    ) external onlyRole(GAURDIAN_COUNCIL_ROLE) isStartTime isAlive nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         PolicyInfo memory _policy = policyInfo[_policyId];
@@ -403,6 +386,7 @@ contract SingleSidedInsurancePool is
         require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, _policyId, _isFinished);
+        delete policyInfo[_policyId];
         emit PolicyClaim(_to, realClaimAmount);
     }
 
