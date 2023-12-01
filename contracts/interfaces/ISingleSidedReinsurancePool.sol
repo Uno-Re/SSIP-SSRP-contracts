@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 interface ISingleSidedReinsurancePool {
     function updatePool() external;
@@ -12,11 +12,7 @@ interface ISingleSidedReinsurancePool {
 
     function harvest(address _to) external;
 
-    function lpTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external;
+    function lpTransfer(address _from, address _to, uint256 _amount) external;
 
     function riskPool() external view returns (address);
 }
