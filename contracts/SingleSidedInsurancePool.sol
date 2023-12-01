@@ -16,6 +16,7 @@ import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
+import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 
 contract SingleSidedInsurancePool is
@@ -25,6 +26,7 @@ contract SingleSidedInsurancePool is
     PausableUpgradeable
 {
     address public claimAssessor;
+    address public governance;
     address private exchangeAgent;
     address public migrateTo;
     address public capitalAgent;
@@ -50,7 +52,14 @@ contract SingleSidedInsurancePool is
         uint256 amount;
     }
 
+    struct PolicyInfo {
+        bool approved;
+        uint256 coveredAmount;
+        uint256 delay;
+    }
+
     mapping(address => UserInfo) public userInfo;
+    mapping(uint256 => UserInfo) public policyInfo;
 
     PoolInfo public poolInfo;
 
@@ -60,6 +69,7 @@ contract SingleSidedInsurancePool is
     event LogUpdatePool(uint128 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
     event LogSetExchangeAgent(address indexed _exchangeAgent);
+    event LogSetGovernance(address indexed _governance);
     event LogLeaveFromPendingSSIP(
         address indexed _user,
         address indexed _riskPool,
@@ -80,23 +90,27 @@ contract SingleSidedInsurancePool is
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
     event PoolAlived(address indexed _owner, bool _alive);
+    event PolicyApproved(address indexed _owner, bool _approve);
 
     function initialize(
         address _claimAssessor,
         address _exchangeAgent,
         address _capitalAgent,
-        address _multiSigWallet
+        address _multiSigWallet,
+        address _governance
     ) public initializer {
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(_governance != address(0), "UnoRe: zero governance address");
         __ReentrancyGuard_init();
         __Pausable_init();
         __Ownable_init(_multiSigWallet);
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
+        governance = _governance;
         // transferOwnership(_multiSigWallet);
     }
 
@@ -131,6 +145,12 @@ contract SingleSidedInsurancePool is
     function revivePool() external onlyOwner {
         killed = false;
         emit PoolAlived(msg.sender, false);
+    }
+
+    function setGovernance(address _governance) external onlyOwner {
+        require(_governance != address(0), "UnoRe: zero address");
+        governance = _governance;
+        emit LogSetGovernance(_governance);
     }
 
     function setExchangeAgent(address _exchangeAgent) external onlyOwner {
@@ -359,12 +379,24 @@ contract SingleSidedInsurancePool is
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
+    function approvePolicy(uint256 _policyId, bool _approve) external onlyClaimAssessor {
+        (address salesPolicy, ,) = ICapitalAgent(capitalAgent).policyInfo();
+        (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
+        require(_exist && !_expired, "UnoRe: policy expired or not exist");
+        PolicyInfo memory policy = policyInfo[_policyId];
+        policy.approved = _approve;
+        policy.delay = block.timestamp + 7 days;
+        policyInfo[_policyId] = policy;
+        emit policyApproved(_owner, _approve);
+    }
+
     function policyClaim(
         address _to,
         uint256 _amount,
         uint256 _policyId,
         bool _isFinished
-    ) external onlyClaimAssessor isStartTime isAlive nonReentrant {
+    ) external isStartTime isAlive nonReentrant {
+        require(msg.sender == governance, "UnoRe: not governance");
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
