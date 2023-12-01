@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 interface ISalesPolicy {
     function setPremiumPool(address _premiumPool) external;
@@ -22,12 +22,5 @@ interface ISalesPolicy {
 
     function allPoliciesLength() external view returns (uint256);
 
-    function getPolicyData(uint256 _policyId)
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        );
+    function getPolicyData(uint256 _policyId) external view returns (uint256, uint256, uint256);
 }
