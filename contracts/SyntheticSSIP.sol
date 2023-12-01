@@ -24,7 +24,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
     uint256 lastRewardBlock;
     uint256 accRewardPerShare;
     uint256 public rewardPerBlock;
-    bool public kill;
+    bool public killed;
 
     struct UserInfo {
         uint256 lastWithdrawTime;
@@ -49,8 +49,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
     event LogSetMigrateTo(address indexed _pool, address indexed _migrateTo);
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
-    event PoolKilled(address indexed owner);
-    event PoolRevived(address indexed owner);
+    event PoolAlived(address indexed _owner, bool _alive);
 
     constructor(address _lpToken, address _multiSigWallet) Ownable(_multiSigWallet) {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -60,8 +59,8 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
         // transferOwnership(_multiSigWallet);
     }
 
-    modifier isPoolNotKilled() {
-        require(!kill, "UnoRe: pool is killed");
+    modifier isAlive() {
+        require(!killed, "UnoRe: pool is killed");
         _;
     }
 
@@ -74,13 +73,13 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
     }
 
     function killPool() external onlyOwner {
-        kill = true;
-        emit PoolKilled(msg.sender);
+        killed = true;
+        emit PoolAlived(msg.sender, true);
     }
 
     function revivePool() external onlyOwner {
-        kill = false;
-        emit PoolRevived(msg.sender);
+        killed = false;
+        emit PoolAlived(msg.sender, false);
     }
 
     function setRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
@@ -101,11 +100,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
         emit LogSetLockTime(address(this), _lockTime);
     }
 
-    function createRewarder(
-        address _operator,
-        address _factory,
-        address _currency
-    ) external onlyOwner nonReentrant {
+    function createRewarder(address _operator, address _factory, address _currency) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         require(_currency != address(0), "UnoRe: zero currency address");
@@ -113,7 +108,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
 
-    function migrate() external isPoolNotKilled nonReentrant {
+    function migrate() external isAlive nonReentrant {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         if (
@@ -153,7 +148,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
         }
     }
 
-    function enterInPool(uint256 _amount) external override isPoolNotKilled nonReentrant {
+    function enterInPool(uint256 _amount) external override isAlive nonReentrant {
         require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
         TransferHelper.safeTransferFrom(lpToken, msg.sender, address(this), _amount);
@@ -204,7 +199,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
         emit LogLeaveFromPending(msg.sender, address(this), pendingWR);
     }
 
-    function harvest(address _to) external override whenNotPaused isPoolNotKilled nonReentrant {
+    function harvest(address _to) external override whenNotPaused isAlive nonReentrant {
         _harvest(_to);
     }
 

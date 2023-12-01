@@ -18,14 +18,19 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+contract SingleSidedInsurancePool is
+    ISingleSidedInsurancePool,
+    ReentrancyGuardUpgradeable,
+    OwnableUpgradeable,
+    PausableUpgradeable
+{
     address public claimAssessor;
     address private exchangeAgent;
     address public migrateTo;
     address public capitalAgent;
     address public syntheticSSIP;
 
-    bool public kill;
+    bool public killed;
     uint256 public LOCK_TIME = 10 days;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
     uint256 public STAKING_START_TIME;
@@ -74,10 +79,9 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
-    event PoolKilled(address indexed owner);
-    event PoolRevived(address indexed owner);
+    event PoolAlived(address indexed _owner, bool _alive);
 
-    function initialize (
+    function initialize(
         address _claimAssessor,
         address _exchangeAgent,
         address _capitalAgent,
@@ -106,8 +110,8 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         _;
     }
 
-    modifier isPoolNotKilled() {
-        require(!kill, "UnoRe: pool is killed");
+    modifier isAlive() {
+        require(!killed, "UnoRe: pool is killed");
         _;
     }
 
@@ -120,13 +124,13 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     }
 
     function killPool() external onlyOwner {
-        kill = true;
-        emit PoolKilled(msg.sender);
+        killed = true;
+        emit PoolAlived(msg.sender, true);
     }
 
     function revivePool() external onlyOwner {
-        kill = false;
-        emit PoolRevived(msg.sender);
+        killed = false;
+        emit PoolAlived(msg.sender, false);
     }
 
     function setExchangeAgent(address _exchangeAgent) external onlyOwner {
@@ -197,11 +201,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         emit RiskPoolCreated(address(this), riskPool);
     }
 
-    function createRewarder(
-        address _operator,
-        address _factory,
-        address _currency
-    ) external onlyOwner nonReentrant {
+    function createRewarder(address _operator, address _factory, address _currency) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         rewarder = IRewarderFactory(_factory).newRewarder(_operator, _currency, address(this));
@@ -216,7 +216,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         emit LogCreateSyntheticSSIP(address(this), syntheticSSIP, riskPool);
     }
 
-    function migrate() external nonReentrant isPoolNotKilled {
+    function migrate() external nonReentrant isAlive {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
@@ -253,7 +253,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         }
     }
 
-    function enterInPool(uint256 _amount) external payable override isStartTime isPoolNotKilled nonReentrant {
+    function enterInPool(uint256 _amount) external payable override isStartTime isAlive nonReentrant {
         require(_amount != 0, "UnoRe: ZERO Value");
         updatePool();
         address token = IRiskPool(riskPool).currency();
@@ -313,11 +313,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 
-    function lpTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external override nonReentrant whenNotPaused {
+    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         if (_from != syntheticSSIP && _to != syntheticSSIP) {
             _harvest(_from);
@@ -337,7 +333,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         }
     }
 
-    function harvest(address _to) external override whenNotPaused isPoolNotKilled isStartTime nonReentrant {
+    function harvest(address _to) external override whenNotPaused isAlive isStartTime nonReentrant {
         _harvest(_to);
     }
 
@@ -368,7 +364,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         uint256 _amount,
         uint256 _policyId,
         bool _isFinished
-    ) external onlyClaimAssessor isStartTime isPoolNotKilled nonReentrant {
+    ) external onlyClaimAssessor isStartTime isAlive nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
@@ -385,16 +381,9 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     /**
      * @dev get withdraw request amount in pending per user in UNO
      */
-    function getWithdrawRequestPerUser(address _user)
-        external
-        view
-        returns (
-            uint256 pendingAmount,
-            uint256 pendingAmountInUno,
-            uint256 originUnoAmount,
-            uint256 requestTime
-        )
-    {
+    function getWithdrawRequestPerUser(
+        address _user
+    ) external view returns (uint256 pendingAmount, uint256 pendingAmountInUno, uint256 originUnoAmount, uint256 requestTime) {
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
         (pendingAmount, requestTime, originUnoAmount) = IRiskPool(riskPool).getWithdrawRequest(_user);
         pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
