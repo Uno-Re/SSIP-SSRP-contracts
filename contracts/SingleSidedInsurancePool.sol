@@ -54,7 +54,6 @@ contract SingleSidedInsurancePool is
 
     struct PolicyInfo {
         bool approved;
-        uint256 coveredAmount;
         uint256 delay;
     }
 
@@ -399,6 +398,9 @@ contract SingleSidedInsurancePool is
         require(msg.sender == governance, "UnoRe: not governance");
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
+        PolicyInfo memory _policy = policyInfo[_policyId];
+        require(_policy.approved, "UnoRe: not approved");
+        require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, _policyId, _isFinished);
         emit PolicyClaim(_to, realClaimAmount);
