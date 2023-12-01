@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/ICapitalAgent.sol";
-import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/IRiskPoolFactory.sol";
@@ -72,22 +70,21 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
 
-    function initialize (
+    function initialize(
         address _claimAssessor,
         address _exchangeAgent,
         address _capitalAgent,
         address _multiSigWallet
-    ) public initializer {
+    ) external initializer {
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        __ReentrancyGuard_init();
-        __Ownable_init(_multiSigWallet);
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;
-        // transferOwnership(_multiSigWallet);
+        __ReentrancyGuard_init();
+        __Ownable_init(_multiSigWallet);
     }
 
     modifier onlyClaimAssessor() {
@@ -168,11 +165,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         emit RiskPoolCreated(address(this), riskPool);
     }
 
-    function createRewarder(
-        address _operator,
-        address _factory,
-        address _currency
-    ) external onlyOwner nonReentrant {
+    function createRewarder(address _operator, address _factory, address _currency) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         rewarder = IRewarderFactory(_factory).newRewarder(_operator, _currency, address(this));
@@ -284,11 +277,7 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 
-    function lpTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external override nonReentrant {
+    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         if (_from != syntheticSSIP && _to != syntheticSSIP) {
             _harvest(_from);
@@ -356,16 +345,9 @@ contract SingleSidedInsurancePool is ISingleSidedInsurancePool, ReentrancyGuardU
     /**
      * @dev get withdraw request amount in pending per user in UNO
      */
-    function getWithdrawRequestPerUser(address _user)
-        external
-        view
-        returns (
-            uint256 pendingAmount,
-            uint256 pendingAmountInUno,
-            uint256 originUnoAmount,
-            uint256 requestTime
-        )
-    {
+    function getWithdrawRequestPerUser(
+        address _user
+    ) external view returns (uint256 pendingAmount, uint256 pendingAmountInUno, uint256 originUnoAmount, uint256 requestTime) {
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
         (pendingAmount, requestTime, originUnoAmount) = IRiskPool(riskPool).getWithdrawRequest(_user);
         pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
