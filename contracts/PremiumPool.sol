@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -54,7 +54,6 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         UNO_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
         whiteList[msg.sender] = true;
-        // transferOwnership(_multiSigWallet);
     }
 
     modifier onlyAvailableCurrency(address _currency) {
