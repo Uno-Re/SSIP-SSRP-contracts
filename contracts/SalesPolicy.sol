@@ -294,13 +294,17 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         returns (
             uint256,
             uint256,
-            uint256
+            uint256,
+            bool,
+            bool
         )
     {
+        bool exist =  getPolicy[_policyId].exist;
+        bool expired =  getPolicy[_policyId].expired;
         uint256 coverageAmount = getPolicy[_policyId].coverageAmount;
         uint256 coverageDuration = getPolicy[_policyId].coverageDuration;
         uint256 coverStartAt = uint256(getPolicy[_policyId].coverStartAt);
-        return (coverageAmount, coverageDuration, coverStartAt);
+        return (coverageAmount, coverageDuration, coverStartAt, exist, expired);
     }
 
     function getSender(
