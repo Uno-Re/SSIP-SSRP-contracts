@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -64,7 +64,6 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         oraclePriceFeed = _oraclePriceFeed;
         whiteList[msg.sender] = true;
         slippage = 5 * SLIPPAGE_PRECISION;
-        // transferOwnership(_multiSigWallet);
     }
 
     modifier onlyWhiteList() {
@@ -110,19 +109,19 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     function getETHAmountForUSDC(uint256 _usdtAmount) external view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(USDC_TOKEN);
         uint256 tokenDecimal = IERC20Metadata(USDC_TOKEN).decimals();
-        return (_usdtAmount * ethPrice) / (10**tokenDecimal);
+        return (_usdtAmount * ethPrice) / (10 ** tokenDecimal);
     }
 
     function getETHAmountForToken(address _token, uint256 _tokenAmount) public view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
         uint256 tokenDecimal = IERC20Metadata(_token).decimals();
-        return (_tokenAmount * ethPrice) / (10**tokenDecimal);
+        return (_tokenAmount * ethPrice) / (10 ** tokenDecimal);
     }
 
     function getTokenAmountForETH(address _token, uint256 _ethAmount) public view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
         uint256 tokenDecimal = IERC20Metadata(_token).decimals();
-        return (_ethAmount * (10**tokenDecimal)) / ethPrice;
+        return (_ethAmount * (10 ** tokenDecimal)) / ethPrice;
     }
 
     function getNeededTokenAmount(
@@ -153,13 +152,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         return convertedAmount;
     }
 
-    function convertForETH(address _token, uint256 _convertAmount)
-        external
-        override
-        onlyWhiteList
-        nonReentrant
-        returns (uint256)
-    {
+    function convertForETH(
+        address _token,
+        uint256 _convertAmount
+    ) external override onlyWhiteList nonReentrant returns (uint256) {
         require(IERC20(_token).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
         if (_token != address(0)) {
             TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);
@@ -251,11 +247,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
      * @dev Get expected _token1 amount for _inputAmount of _token0
      * _desiredAmount should consider decimals based on _token1
      */
-    function _getNeededTokenAmount(
-        address _token0,
-        address _token1,
-        uint256 _token0Amount
-    ) private view returns (uint256) {
+    function _getNeededTokenAmount(address _token0, address _token1, uint256 _token0Amount) private view returns (uint256) {
         uint256 expectedToken1Amount = IOraclePriceFeed(oraclePriceFeed).consult(_token0, _token1, _token0Amount);
 
         return expectedToken1Amount;
