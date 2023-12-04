@@ -15,6 +15,7 @@ import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
+import "./interfaces/IGovernance.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 
@@ -28,6 +29,7 @@ contract SingleSidedInsurancePool is
     bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
+    address public governance;
     address public migrateTo;
     address public capitalAgent;
     address public syntheticSSIP;
@@ -91,14 +93,18 @@ contract SingleSidedInsurancePool is
     event PolicyApproved(address indexed _owner, uint256 _policyId);
     event PolicyRejected(address indexed _owner, uint256 _policyId);
 
-    function initialize(address _capitalAgent, address _multiSigWallet) public initializer {
+    function initialize(address _capitalAgent, address _multiSigWallet, address _governance) public initializer {
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         capitalAgent = _capitalAgent;
+        governance = _governance;
         __ReentrancyGuard_init();
         __Pausable_init();
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
+        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
     }
 
     modifier isStartTime() {
@@ -377,6 +383,7 @@ contract SingleSidedInsurancePool is
         address _to,
         uint256 _amount,
         uint256 _policyId,
+        uint256 _proposalId,
         bool _isFinished
     ) external onlyRole(GAURDIAN_COUNCIL_ROLE) isStartTime isAlive nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
@@ -384,6 +391,7 @@ contract SingleSidedInsurancePool is
         PolicyInfo memory _policy = policyInfo[_policyId];
         require(_policy.approved, "UnoRe: not approved");
         require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
+        require(IGovernance(governance).getProposalState(_proposalId) == IGovernance.ProposalState.Succeeded, "UnoRe: proposal not succeded");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, _policyId, _isFinished);
         delete policyInfo[_policyId];
