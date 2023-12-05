@@ -436,9 +436,6 @@ contract SingleSidedInsurancePool is
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
-        PolicyInfo memory _policy = policyInfo[_policyId];
-        require(_policy.approved, "UnoRe: not approved");
-        require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
         uint256 bond = oo.getMinimumBond(address(defaultCurrency));
         bytes32 _id = bytes32(_policyId);       
         assertionId = oo.assertTruth(
@@ -479,10 +476,6 @@ contract SingleSidedInsurancePool is
         Policy storage policy = policies[_policyId];
         if (policy.settled) return;
         policy.settled = true;
-
-        PolicyInfo memory _policy = policyInfo[uint256(_policyId)];
-        require(_policy.approved, "UnoRe: not approved");
-        require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(policy.payoutAddress, policy.insuranceAmount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
         delete policyInfo[uint256(_policyId)];
