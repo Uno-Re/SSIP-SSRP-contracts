@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "./ClaimData.sol";
+import "./interfaces/OptimisticOracleV3Interface.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IMigration.sol";
@@ -28,6 +30,17 @@ contract SingleSidedInsurancePool is
     bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
     bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
+    uint64 public constant assertionLiveness = 7200;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    OptimisticOracleV3Interface public immutable oo;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    IERC20 public immutable defaultCurrency;
+    
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    bytes32 public immutable defaultIdentifier;
 
     address public governance;
     address public migrateTo;
@@ -58,6 +71,17 @@ contract SingleSidedInsurancePool is
         bool approved;
         uint256 delay;
     }
+
+    struct Policy {
+        uint256 insuranceAmount;
+        address payoutAddress;
+        bytes insuredEvent;
+        bool settled;
+    }
+
+    mapping(bytes32 => bytes32) public assertedPolicies;
+
+    mapping(bytes32 => Policy) public policies;
 
     mapping(address => UserInfo) public userInfo;
     mapping(uint256 => PolicyInfo) public policyInfo;
@@ -92,6 +116,27 @@ contract SingleSidedInsurancePool is
     event PoolAlived(address indexed _owner, bool _alive);
     event PolicyApproved(address indexed _owner, uint256 _policyId);
     event PolicyRejected(address indexed _owner, uint256 _policyId);
+    event InsuranceIssued(
+        bytes32 indexed policyId,
+        bytes insuredEvent,
+        uint256 insuranceAmount,
+        address indexed payoutAddress
+    );
+
+    event InsurancePayoutRequested(bytes32 indexed policyId, bytes32 indexed assertionId);
+
+    event InsurancePayoutSettled(bytes32 indexed policyId, bytes32 indexed assertionId);
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(address _defaultCurrency, address _optimisticOracleV3) {
+        defaultCurrency = IERC20(_defaultCurrency);
+        oo = OptimisticOracleV3Interface(_optimisticOracleV3);
+        defaultIdentifier = oo.defaultIdentifier();
+
+        // Note that the contract is upgradeable. Use initialize() or reinitializers
+        // to set the state variables.
+        _disableInitializers();
+    }
 
     function initialize(address _capitalAgent, address _multiSigWallet, address _governance) public initializer {
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
@@ -363,41 +408,6 @@ contract SingleSidedInsurancePool is
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
-    function approvePolicy(uint256 _policyId, uint256 _delay) external onlyRole(CLAIM_ACCESSOR_ROLE) {
-        (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
-        (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
-        require(_exist && !_expired, "UnoRe: policy expired or not exist");
-        PolicyInfo memory policy = policyInfo[_policyId];
-        policy.approved = true;
-        policy.delay = block.timestamp + _delay;
-        policyInfo[_policyId] = policy;
-        emit PolicyApproved(msg.sender, _policyId);
-    }
-
-    function rejectPolicy(uint256 _policyId) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
-        delete policyInfo[_policyId];
-        emit PolicyRejected(msg.sender, _policyId);
-    }
-
-    function policyClaim(
-        address _to,
-        uint256 _amount,
-        uint256 _policyId,
-        uint256 _proposalId,
-        bool _isFinished
-    ) external onlyRole(GAURDIAN_COUNCIL_ROLE) isStartTime isAlive nonReentrant {
-        require(_to != address(0), "UnoRe: zero address");
-        require(_amount > 0, "UnoRe: zero amount");
-        PolicyInfo memory _policy = policyInfo[_policyId];
-        require(_policy.approved, "UnoRe: not approved");
-        require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
-        require(IGovernance(governance).getProposalState(_proposalId) == IGovernance.ProposalState.Succeeded, "UnoRe: proposal not succeded");
-        uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
-        ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, _policyId, _isFinished);
-        delete policyInfo[_policyId];
-        emit PolicyClaim(_to, realClaimAmount);
-    }
-
     function getStakedAmountPerUser(address _to) external view returns (uint256 unoAmount, uint256 lpAmount) {
         lpAmount = userInfo[_to].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
@@ -420,5 +430,63 @@ contract SingleSidedInsurancePool is
      */
     function getTotalWithdrawPendingAmount() external view returns (uint256) {
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
+    }
+
+    function requestPayout(uint256 _policyId) public returns (bytes32 assertionId) {
+        (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
+        (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
+        require(_exist && !_expired, "UnoRe: policy expired or not exist");
+        PolicyInfo memory _policy = policyInfo[_policyId];
+        require(_policy.approved, "UnoRe: not approved");
+        require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
+        uint256 bond = oo.getMinimumBond(address(defaultCurrency));
+        bytes32 _id = bytes32(_policyId);       
+        assertionId = oo.assertTruth(
+            abi.encodePacked(
+                "Insurance contract is claiming that insurance event ",
+                policies[_id].insuredEvent,
+                " had occurred as of ",
+                ClaimData.toUtf8BytesUint(block.timestamp),
+                "."
+            ),
+            msg.sender,
+            address(this),
+            address(0), // No sovereign security.
+            assertionLiveness,
+            defaultCurrency,
+            bond,
+            defaultIdentifier,
+            bytes32(0) // No domain.
+        );
+        assertedPolicies[assertionId] = _id;
+        emit InsurancePayoutRequested(_id, assertionId);
+    }
+
+    function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public {
+        require(msg.sender == address(oo));
+        // If the assertion was true, then the policy is settled.
+        if (assertedTruthfully) {
+            _settlePayout(assertionId);
+        }
+    }
+
+    function assertionDisputedCallback(bytes32 assertionId) public {}
+
+    function _settlePayout(bytes32 assertionId) internal {
+        // If already settled, do nothing. We don't revert because this function is called by the
+        // OptimisticOracleV3, which may block the assertion resolution.
+        bytes32 _policyId = assertedPolicies[assertionId];
+        Policy storage policy = policies[_policyId];
+        if (policy.settled) return;
+        policy.settled = true;
+
+        PolicyInfo memory _policy = policyInfo[uint256(_policyId)];
+        require(_policy.approved, "UnoRe: not approved");
+        require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
+        uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(policy.payoutAddress, policy.insuranceAmount);
+        ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
+        delete policyInfo[uint256(_policyId)];
+
+        emit InsurancePayoutSettled(_policyId, assertionId);
     }
 }
