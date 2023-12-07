@@ -383,11 +383,15 @@ contract SingleSidedInsurancePool is
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address _to) external isStartTime nonReentrant {
+    function rollOverReward(address _to) external isStartTime isAlive nonReentrant {
         require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
         updatePool();
 
         uint256 _pendingUno = _updateReward(_to);
+
+        if (rewarder != address(0) && _pendingUno != 0) {
+            IRewarder(rewarder).onReward(riskPool, _pendingUno);
+        }
 
         _enterInPool(_pendingUno, _to);
         
