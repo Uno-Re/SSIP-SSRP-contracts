@@ -41,7 +41,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
     uint256 public MCR;
     uint256 public MLR;
 
-    uint256 public CALC_PRECISION = 1e18;
+    uint256 public constant CALC_PRECISION = 1e18;
 
     mapping(address => bool) public poolWhiteList;
 
