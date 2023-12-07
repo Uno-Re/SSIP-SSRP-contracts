@@ -160,15 +160,19 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
         emit LogStakedInPool(msg.sender, address(this), _amount);
     }
 
-    function rollOverReward(address _to) external nonReentrant {
+    function rollOverReward(address _to) external isAlive nonReentrant {
         require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
         updatePool();
 
-        uint256 _pendingUno = _updateReward(_to);
+        uint256 _pendingReward = _updateReward(_to);
 
-        _enterInPool(_pendingUno, _to);
+        if (rewarder != address(0) && _pendingReward > 0) {
+            IRewarder(rewarder).onReward(address(this), _pendingReward);
+        }
+
+        _enterInPool(_pendingReward, _to);
         
-        emit RollOverReward(_to, address(this), _pendingUno);
+        emit RollOverReward(_to, address(this), _pendingReward);
     }
 
     /**
