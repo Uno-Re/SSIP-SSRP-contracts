@@ -48,7 +48,7 @@ contract SingleSidedInsurancePool is
     address public syntheticSSIP;
 
     bool public killed;
-    uint256 public LOCK_TIME = 10 days;
+    uint256 public LOCK_TIME;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
     uint256 public STAKING_START_TIME;
 
@@ -67,11 +67,6 @@ contract SingleSidedInsurancePool is
         uint256 amount;
     }
 
-    struct PolicyInfo {
-        bool approved;
-        uint256 delay;
-    }
-
     struct Policy {
         uint256 insuranceAmount;
         address payoutAddress;
@@ -79,12 +74,11 @@ contract SingleSidedInsurancePool is
         bool settled;
     }
 
-    mapping(bytes32 => bytes32) public assertedPolicies;
+    mapping(bytes32 => uint256) public assertedPolicies;
 
-    mapping(bytes32 => Policy) public policies;
+    mapping(uint256 => Policy) public policies;
 
     mapping(address => UserInfo) public userInfo;
-    mapping(uint256 => PolicyInfo) public policyInfo;
 
     PoolInfo public poolInfo;
 
@@ -123,9 +117,9 @@ contract SingleSidedInsurancePool is
         address indexed payoutAddress
     );
 
-    event InsurancePayoutRequested(bytes32 indexed policyId, bytes32 indexed assertionId);
+    event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
 
-    event InsurancePayoutSettled(bytes32 indexed policyId, bytes32 indexed assertionId);
+    event InsurancePayoutSettled(uint256 indexed policyId, bytes32 indexed assertionId);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(address _defaultCurrency, address _optimisticOracleV3) {
@@ -138,11 +132,12 @@ contract SingleSidedInsurancePool is
         _disableInitializers();
     }
 
-    function initialize(address _capitalAgent, address _multiSigWallet, address _governance) public initializer {
+    function initialize(address _capitalAgent, address _multiSigWallet, address _governance, address _claimProccessor) public initializer {
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         capitalAgent = _capitalAgent;
         governance = _governance;
+        LOCK_TIME = 10 days;
         __ReentrancyGuard_init();
         __Pausable_init();
         __AccessControl_init();
@@ -150,6 +145,8 @@ contract SingleSidedInsurancePool is
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
+        _grantRole(GAURDIAN_COUNCIL_ROLE, _governance);
+        _grantRole(CLAIM_ACCESSOR_ROLE, _claimProccessor);
     }
 
     modifier isStartTime() {
@@ -432,16 +429,19 @@ contract SingleSidedInsurancePool is
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
-    function requestPayout(uint256 _policyId) public returns (bytes32 assertionId) {
+    function requestPayout(uint256 _policyId, address _to, uint256 _amount) public onlyRole(CLAIM_ACCESSOR_ROLE) returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
         uint256 bond = oo.getMinimumBond(address(defaultCurrency));
-        bytes32 _id = bytes32(_policyId);       
+        Policy memory _policyData = policies[_policyId];
+        _policyData.insuranceAmount = _amount;
+        _policyData.payoutAddress = _to;
+        policies[_policyId] = _policyData;
         assertionId = oo.assertTruth(
             abi.encodePacked(
                 "Insurance contract is claiming that insurance event ",
-                policies[_id].insuredEvent,
+                _policyData.insuredEvent,
                 " had occurred as of ",
                 ClaimData.toUtf8BytesUint(block.timestamp),
                 "."
@@ -455,8 +455,8 @@ contract SingleSidedInsurancePool is
             defaultIdentifier,
             bytes32(0) // No domain.
         );
-        assertedPolicies[assertionId] = _id;
-        emit InsurancePayoutRequested(_id, assertionId);
+        assertedPolicies[assertionId] = _policyId;
+        emit InsurancePayoutRequested(_policyId, assertionId);
     }
 
     function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public {
@@ -472,13 +472,12 @@ contract SingleSidedInsurancePool is
     function _settlePayout(bytes32 assertionId) internal {
         // If already settled, do nothing. We don't revert because this function is called by the
         // OptimisticOracleV3, which may block the assertion resolution.
-        bytes32 _policyId = assertedPolicies[assertionId];
+        uint256 _policyId = assertedPolicies[assertionId];
         Policy storage policy = policies[_policyId];
         if (policy.settled) return;
         policy.settled = true;
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(policy.payoutAddress, policy.insuranceAmount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
-        delete policyInfo[uint256(_policyId)];
 
         emit InsurancePayoutSettled(_policyId, assertionId);
     }
