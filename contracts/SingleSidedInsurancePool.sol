@@ -65,6 +65,7 @@ contract SingleSidedInsurancePool is
         uint256 lastWithdrawTime;
         uint256 rewardDebt;
         uint256 amount;
+        bool isNotRollOver;
     }
 
     struct Policy {
@@ -120,6 +121,7 @@ contract SingleSidedInsurancePool is
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
 
     event InsurancePayoutSettled(uint256 indexed policyId, bytes32 indexed assertionId);
+    event RollOverReward(address indexed _staker, address indexed _pool, uint256 _amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(address _defaultCurrency, address _optimisticOracleV3) {
@@ -300,26 +302,8 @@ contract SingleSidedInsurancePool is
     }
 
     function enterInPool(uint256 _amount) external payable override isStartTime isAlive nonReentrant {
-        require(_amount != 0, "UnoRe: ZERO Value");
-        updatePool();
-        address token = IRiskPool(riskPool).currency();
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        if (token == address(0)) {
-            require(msg.value >= _amount, "UnoRe: insufficient paid");
-            if (msg.value > _amount) {
-                TransferHelper.safeTransferETH(msg.sender, msg.value - _amount);
-            }
-            TransferHelper.safeTransferETH(riskPool, _amount);
-        } else {
-            TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
-        }
-        IRiskPool(riskPool).enter(msg.sender, _amount);
-        userInfo[msg.sender].rewardDebt =
-            userInfo[msg.sender].rewardDebt +
-            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
-            ACC_UNO_PRECISION;
-        userInfo[msg.sender].amount = userInfo[msg.sender].amount + ((_amount * 1e18) / lpPriceUno);
-        ICapitalAgent(capitalAgent).SSIPStaking(_amount);
+        _depositIn(_amount);
+        _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
     }
 
@@ -385,19 +369,29 @@ contract SingleSidedInsurancePool is
 
     function _harvest(address _to) private {
         updatePool();
-        uint256 amount = userInfo[_to].amount;
-        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
-        uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
-        // Effects
-        userInfo[msg.sender].rewardDebt = accumulatedUno;
-        uint256 rewardAmount = 0;
+        uint256 _pendingUno = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingUno != 0) {
-            rewardAmount = IRewarder(rewarder).onReward(_to, _pendingUno);
+            IRewarder(rewarder).onReward(_to, _pendingUno);
         }
 
-        emit Harvest(msg.sender, _to, rewardAmount);
+        emit Harvest(msg.sender, _to, _pendingUno);
+    }
+
+    function toggleRollOver() external {
+        userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
+    }
+
+    function rollOverReward(address _to) external isStartTime nonReentrant {
+        require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+        updatePool();
+
+        uint256 _pendingUno = _updateReward(_to);
+
+        _enterInPool(_pendingUno, _to);
+        
+        emit RollOverReward(_to, riskPool, _pendingUno);
     }
 
     function cancelWithdrawRequest() external nonReentrant {
@@ -429,7 +423,7 @@ contract SingleSidedInsurancePool is
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
-    function requestPayout(uint256 _policyId, address _to, uint256 _amount) public onlyRole(CLAIM_ACCESSOR_ROLE) returns (bytes32 assertionId) {
+    function requestPayout(uint256 _policyId, address _to, uint256 _amount) public isAlive onlyRole(CLAIM_ACCESSOR_ROLE) returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
@@ -459,7 +453,7 @@ contract SingleSidedInsurancePool is
         emit InsurancePayoutRequested(_policyId, assertionId);
     }
 
-    function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public {
+    function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public isAlive {
         require(msg.sender == address(oo));
         // If the assertion was true, then the policy is settled.
         if (assertedTruthfully) {
@@ -481,4 +475,43 @@ contract SingleSidedInsurancePool is
 
         emit InsurancePayoutSettled(_policyId, assertionId);
     }
+
+    function _enterInPool(uint256 _amount, address _to) internal {
+        require(_amount != 0, "UnoRe: ZERO Value");
+        updatePool();
+        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
+        IRiskPool(riskPool).enter(_to, _amount);
+        UserInfo memory _userInfo = userInfo[_to];
+        _userInfo.rewardDebt =
+            _userInfo.rewardDebt +
+            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
+            ACC_UNO_PRECISION;
+        _userInfo.amount = _userInfo.amount + ((_amount * 1e18) / lpPriceUno);
+        userInfo[_to] = _userInfo;
+        ICapitalAgent(capitalAgent).SSIPStaking(_amount);
+    }
+
+    function _updateReward(address _to) internal returns(uint256) {
+        uint256 amount = userInfo[_to].amount;
+        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+        uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
+
+        // Effects
+        userInfo[_to].rewardDebt = accumulatedUno;
+        return _pendingUno;
+    }
+
+    function _depositIn(uint256 _amount) internal {
+        address token = IRiskPool(riskPool).currency();
+        if (token == address(0)) {
+            require(msg.value >= _amount, "UnoRe: insufficient paid");
+            if (msg.value > _amount) {
+                TransferHelper.safeTransferETH(msg.sender, msg.value - _amount);
+            }
+            TransferHelper.safeTransferETH(riskPool, _amount);
+        } else {
+            TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
+        }
+    }
+
 }
