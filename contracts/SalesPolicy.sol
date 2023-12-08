@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./libraries/Counters.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ICapitalAgent.sol";
-import "./interfaces/ISingleSidedReinsurancePool.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IPremiumPool.sol";
 import "./interfaces/ISalesPolicyFactory.sol";

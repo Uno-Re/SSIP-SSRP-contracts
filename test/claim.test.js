@@ -2,8 +2,10 @@ const { expect } = require("chai")
 const { ethers, network, upgrades } = require("hardhat")
 const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
 const { BigNumber } = ethers
+const { time } = require("@nomicfoundation/hardhat-network-helpers");
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
 const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
+const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
@@ -14,6 +16,7 @@ const {
   UNO_USDT_PRICE_FEED,
 } = require("../scripts/shared/constants")
 const { clearConfigCache } = require("prettier")
+const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
 
 describe.only("ssssss", function () {
   before(async function () {
@@ -31,6 +34,7 @@ describe.only("ssssss", function () {
     this.OptimisticOracleV3 = await ethers.getContractFactory("OptimisticOracleV3")
     this.SalesPolicy = await ethers.getContractFactory("MockSalesPolicy")
     this.SalesPolicyFactory = await ethers.getContractFactory("MockSalesPolicyFactory")
+    this.EscalationManager = await ethers.getContractFactory("EscalationManager")
     this.PremiumPool = await ethers.getContractFactory("PremiumPool")
     this.signers = await ethers.getSigners()
     this.zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -115,17 +119,20 @@ describe.only("ssssss", function () {
       this.signers[0].address,
     )
 
-    this.optimisticOracleV3 = await this.OptimisticOracleV3.deploy();
+    this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB");
+    this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address);
+
     this.singleSidedInsurancePool = await upgrades.deployProxy(
       this.SingleSidedInsurancePool, [
         this.capitalAgent.target,
         this.signers[0].address,
         this.signers[0].address,
-        this.signers[0].address
+        this.signers[0].address,
+        this.escalationManager.target
       ],
       {
         unsafeAllow: ["constructor", "state-variable-immutable"],
-        constructorArgs: [this.mockUNO.target, this.optimisticOracleV3.target],
+        constructorArgs: ["0x07865c6E87B9F70255377e024ace6630C1Eaa37F", this.optimisticOracleV3.target],
       },
     );
 
@@ -177,8 +184,10 @@ describe.only("ssssss", function () {
 
     describe("SingleSidedInsurancePool Claim", function () {
 
-      it.only("Should claim by claimAssessor and then check LP token worth", async function () {
+      it("Should claim by claimAssessor and then check LP token worth", async function () {
         // await this.capitalAgent.addPoolByAdmin(this.singleSidedInsurancePool.target, this.mockUNO.target, 0);
+        await this.escalationManager.toggleAssertionCaller(this.singleSidedInsurancePool.target);
+
         await this.capitalAgent.setMLR(getBigNumber("10"));
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
         const riskPool = this.RiskPool.attach(this.poolAddress)
@@ -192,13 +201,39 @@ describe.only("ssssss", function () {
         expect(lpPriceBefore).to.equal(getBigNumber("1"))
         let b = await this.salesPolicy.getPolicyData(1000);
         await this.singleSidedInsurancePool.setClaimAssessor(this.signers[0].address);
-        console.log(await this.singleSidedInsurancePool.hasRole("0x8114cb781eb72f8b61c388eb9caa27d853c88b65c67c47dd0f0207ba916190d6", this.signers[0].address));
-        await this.singleSidedInsurancePool
-          .requestPayout(1000, this.signers[5].address, getBigNumber("100"))
+        const tx = await this.singleSidedInsurancePool
+          .requestPayout(1000, this.signers[5].address, getBigNumber("105"))
 
-        await this.optimisticOracleV3.settle("0x6100000000000000000000000000000000000000000000000000000000000000", this.singleSidedInsurancePool.target);
-        console.log(await this.mockUSDT.balanceOf(this.signers[5].address));
-        expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("100"));
+        let id = await this.singleSidedInsurancePool.policiesAssertionId(1000);
+        await time.increaseTo(30000122335);
+        await this.optimisticOracleV3.settleAssertion(id);
+        expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("105"));
+      })
+
+      it("Should dispute policy", async function () {
+        await this.escalationManager.toggleAssertionCaller(this.singleSidedInsurancePool.target);
+        await this.escalationManager.toggleDisputer(this.signers[0].address);
+
+        await this.capitalAgent.setMLR(getBigNumber("10"));
+        await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
+        const riskPool = this.RiskPool.attach(this.poolAddress)
+        await this.capitalAgent.setSalesPolicyFactory(this.salesPolicyFactory.target);
+        let salesPolicy = await this.salesPolicyFactory.newSalesPolicy(this.exchangeAgent.target, this.mockUNO.target, this.capitalAgent.target);
+        let a = await this.capitalAgent.getPolicyInfo();
+        await this.singleSidedInsurancePool.enterInPool(getBigNumber("1000"))
+        this.salesPolicy = await ethers.getContractAt("MockSalesPolicy", a[0]);
+        await this.salesPolicy.buyPol(1000, this.mockUNO.target, getBigNumber("100"));
+        const lpPriceBefore = await riskPool.lpPriceUno()
+        expect(lpPriceBefore).to.equal(getBigNumber("1"))
+        let b = await this.salesPolicy.getPolicyData(1000);
+        await this.singleSidedInsurancePool.setClaimAssessor(this.signers[0].address);
+        const tx = await this.singleSidedInsurancePool
+          .requestPayout(1000, this.signers[5].address, getBigNumber("105"))
+
+        let id = await this.singleSidedInsurancePool.policiesAssertionId(1000);
+        await this.optimisticOracleV3.disputeAssertion(id, this.signers[0].address);
+        await time.increaseTo(40000122335);
+        await this.optimisticOracleV3.settleAssertion(id);
       })
     })
   })

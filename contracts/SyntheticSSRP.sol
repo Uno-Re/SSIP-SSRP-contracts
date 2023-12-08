@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
@@ -58,7 +57,6 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
         require(_lpToken != address(0), "UnoRe: zero lp token address");
         lpToken = _lpToken;
         rewardPerBlock = 1e18;
-        // transferOwnership(_multiSigWallet);
     }
 
     modifier isAlive() {
