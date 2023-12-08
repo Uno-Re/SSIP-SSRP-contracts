@@ -31,8 +31,6 @@ contract SingleSidedInsurancePool is
     bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    uint64 public constant assertionLiveness = 7200;
-
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     OptimisticOracleV3Interface public immutable oo;
 
@@ -42,6 +40,7 @@ contract SingleSidedInsurancePool is
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     bytes32 public immutable defaultIdentifier;
 
+    address public escalationManager;
     address public governance;
     address public migrateTo;
     address public capitalAgent;
@@ -121,6 +120,8 @@ contract SingleSidedInsurancePool is
 
     event InsurancePayoutSettled(uint256 indexed policyId, bytes32 indexed assertionId);
 
+    event LogSetEscalationManager(address indexed _SSIP, address indexed _escalatingManager);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(address _defaultCurrency, address _optimisticOracleV3) {
         defaultCurrency = IERC20(_defaultCurrency);
@@ -132,12 +133,13 @@ contract SingleSidedInsurancePool is
         _disableInitializers();
     }
 
-    function initialize(address _capitalAgent, address _multiSigWallet, address _governance, address _claimProccessor) public initializer {
+    function initialize(address _capitalAgent, address _multiSigWallet, address _governance, address _claimProccessor, address _escalationManager) public initializer {
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         capitalAgent = _capitalAgent;
         governance = _governance;
         LOCK_TIME = 10 days;
+        escalationManager = _escalationManager;
         __ReentrancyGuard_init();
         __Pausable_init();
         __AccessControl_init();
@@ -175,6 +177,11 @@ contract SingleSidedInsurancePool is
     function revivePool() external onlyRole(ADMIN_ROLE) {
         killed = false;
         emit PoolAlived(msg.sender, false);
+    }
+
+    function setEscalatingManager(address _escalatingManager) external onlyRole(ADMIN_ROLE) {
+        escalationManager = _escalatingManager;
+        emit LogSetEscalationManager(address(this), _escalatingManager);
     }
 
     function setGaurdianCouncil(address _gaurdianCouncil) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
@@ -448,8 +455,8 @@ contract SingleSidedInsurancePool is
             ),
             msg.sender,
             address(this),
-            address(0), // No sovereign security.
-            assertionLiveness,
+            escalationManager, // No sovereign security.
+            LOCK_TIME,
             defaultCurrency,
             bond,
             defaultIdentifier,
