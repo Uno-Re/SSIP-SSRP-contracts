@@ -456,7 +456,7 @@ contract SingleSidedInsurancePool is
             msg.sender,
             address(this),
             escalationManager, // No sovereign security.
-            LOCK_TIME,
+            uint64(LOCK_TIME),
             defaultCurrency,
             bond,
             defaultIdentifier,
@@ -467,7 +467,7 @@ contract SingleSidedInsurancePool is
     }
 
     function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public {
-        require(msg.sender == address(oo));
+        require(msg.sender == address(oo), "UnoRe: not authorized");
         // If the assertion was true, then the policy is settled.
         if (assertedTruthfully) {
             _settlePayout(assertionId);
