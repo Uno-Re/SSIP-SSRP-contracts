@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "./OptimisticOracleV3CallbackRecipientInterface.sol";
 
@@ -40,11 +40,7 @@ interface EscalationManagerInterface is OptimisticOracleV3CallbackRecipientInter
      * @param ancillaryData ancillary data of the price being requested.
      * @return price from the escalation manager to inform the resolution of the dispute.
      */
-    function getPrice(
-        bytes32 identifier,
-        uint256 time,
-        bytes memory ancillaryData
-    ) external returns (int256);
+    function getPrice(bytes32 identifier, uint256 time, bytes memory ancillaryData) external returns (int256);
 
     /**
      * @notice Implements price requesting logic for the escalation manager. This function is called by the Optimistic
@@ -53,9 +49,5 @@ interface EscalationManagerInterface is OptimisticOracleV3CallbackRecipientInter
      * @param time the time to fetch the price for.
      * @param ancillaryData ancillary data of the price being requested.
      */
-    function requestPrice(
-        bytes32 identifier,
-        uint256 time,
-        bytes memory ancillaryData
-    ) external;
+    function requestPrice(bytes32 identifier, uint256 time, bytes memory ancillaryData) external;
 }
