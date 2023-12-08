@@ -67,21 +67,11 @@ module.exports = {
       accounts
     },
     mainnet: {
-      url: `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
+      url: `https://mainnet.infura.io/v3/${process.env.MAINNET_INFURA_KEY}`,
       accounts,
       chainId: 1,
       live: false,
       saveDeployments: true
-    },
-    rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
-      accounts,
-      chainId: 4,
-      live: false,
-      saveDeployments: true,
-      tags: ["staging"],
-      gasPrice: 5000000000,
-      gasMultiplier: 2
     },
     bscTest: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
