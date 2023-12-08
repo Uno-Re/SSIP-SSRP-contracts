@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract MultiSigWallet is ReentrancyGuard {
     event Deposit(address indexed sender, uint256 amount, uint256 balance);
@@ -75,11 +75,7 @@ contract MultiSigWallet is ReentrancyGuard {
     /**
      * @dev when buying is failed, agent should send loan again to TribeOne.
      */
-    function submitTransaction(
-        address _to,
-        uint256 _value,
-        bytes memory _data
-    ) public payable onlySigner nonReentrant {
+    function submitTransaction(address _to, uint256 _value, bytes memory _data) public payable onlySigner nonReentrant {
         if (_value > 0) {
             require(msg.value == _value, "Should send value");
         }
@@ -90,13 +86,10 @@ contract MultiSigWallet is ReentrancyGuard {
         emit SubmitTransaction(msg.sender, txIndex, _to, _value, _data);
     }
 
-    function confirmTransaction(uint256 _txIndex, bool _execute)
-        public
-        onlySigner
-        txExists(_txIndex)
-        notExecuted(_txIndex)
-        notConfirmed(_txIndex)
-    {
+    function confirmTransaction(
+        uint256 _txIndex,
+        bool _execute
+    ) public onlySigner txExists(_txIndex) notExecuted(_txIndex) notConfirmed(_txIndex) {
         Transaction storage transaction = transactions[_txIndex];
         isConfirmed[_txIndex][msg.sender] = true;
         transaction.numConfirmations += 1;
@@ -148,17 +141,9 @@ contract MultiSigWallet is ReentrancyGuard {
         return transactions.length;
     }
 
-    function getTransaction(uint256 _txIndex)
-        public
-        view
-        returns (
-            address to,
-            uint256 value,
-            bytes memory data,
-            bool executed,
-            uint256 numConfirmations
-        )
-    {
+    function getTransaction(
+        uint256 _txIndex
+    ) public view returns (address to, uint256 value, bytes memory data, bool executed, uint256 numConfirmations) {
         Transaction storage transaction = transactions[_txIndex];
 
         return (transaction.to, transaction.value, transaction.data, transaction.executed, transaction.numConfirmations);

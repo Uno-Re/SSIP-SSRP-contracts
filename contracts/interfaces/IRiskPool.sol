@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
 
 interface IRiskPool {
     function enter(address _from, uint256 _amount) external;
@@ -12,11 +12,7 @@ interface IRiskPool {
 
     function policyClaim(address _to, uint256 _amount) external returns (uint256 realClaimAmount);
 
-    function migrateLP(
-        address _to,
-        address _migrateTo,
-        bool _isUnLocked
-    ) external returns (uint256);
+    function migrateLP(address _to, address _migrateTo, bool _isUnLocked) external returns (uint256);
 
     function setMinLPCapital(uint256 _minLPCapital) external;
 
@@ -24,14 +20,7 @@ interface IRiskPool {
 
     function getTotalWithdrawRequestAmount() external view returns (uint256);
 
-    function getWithdrawRequest(address _to)
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        );
+    function getWithdrawRequest(address _to) external view returns (uint256, uint256, uint256);
 
     function lpPriceUno() external view returns (uint256);
 }

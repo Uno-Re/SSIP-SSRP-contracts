@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./libraries/Counters.sol";
 import "./interfaces/ICapitalAgent.sol";
-import "./interfaces/ISingleSidedReinsurancePool.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/IPremiumPool.sol";
 import "./interfaces/ISalesPolicyFactory.sol";
@@ -163,7 +161,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         bool checkIfProtocolInWhitelistArray = ISalesPolicyFactory(factory).checkIfProtocolInWhitelistArray();
 
         for (uint256 ii = 0; ii < _protocols.length; ii++) {
-            lastIdx = policyIdx.current();
+            lastIdx = policyIdx.current;
             coverAmount = _coverageAmount[ii];
             coverDuration = _coverageDuration[ii];
             _protocol = _protocols[ii];
@@ -206,7 +204,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
                 coverDuration,
                 premiumPaid
             );
-            policyIdx.increment();
+            policyIdx.next();
         }
         if (_totalCoverage > 0) {
             ICapitalAgent(capitalAgent).policySale(_totalCoverage);
@@ -271,23 +269,14 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     }
 
     function allPoliciesLength() external view override returns (uint256) {
-        return policyIdx.current();
+        return policyIdx.current;
     }
 
     function _baseURI() internal view override returns (string memory) {
         return protocolURI;
     }
 
-    function getPolicyData(uint256 _policyId)
-        external
-        view
-        override
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    function getPolicyData(uint256 _policyId) external view override returns (uint256, uint256, uint256) {
         uint256 coverageAmount = getPolicy[_policyId].coverageAmount;
         uint256 coverageDuration = getPolicy[_policyId].coverageDuration;
         uint256 coverStartAt = uint256(getPolicy[_policyId].coverStartAt);

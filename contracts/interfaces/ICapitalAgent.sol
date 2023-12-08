@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
 
 interface ICapitalAgent {
-    function addPool(
-        address _ssip,
-        address _currency,
-        uint256 _scr
-    ) external;
+    function addPool(address _ssip, address _currency, uint256 _scr) external;
 
     function setPolicy(address _policy) external;
 
@@ -14,11 +10,7 @@ interface ICapitalAgent {
 
     function SSIPStaking(uint256 _stakingAmount) external;
 
-    function SSIPPolicyCaim(
-        uint256 _withdrawAmount,
-        uint256 _policyId,
-        bool _isFinished
-    ) external;
+    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isFinished) external;
 
     function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view returns (bool);
 

@@ -16,9 +16,16 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const capitalAgent = await deploy("CapitalAgent", {
     from: deployer,
-    args: [exchangeAgent, UNO, USDC, multiSigWallet, operator],
     log: true,
     deterministicDeployment: false,
+    proxy: {
+      execute: {
+        init: {
+          methodName: "initialize",
+          args: [exchangeAgent, UNO, USDC, multiSigWallet, operator],
+        },
+      },
+    },
   })
 
   console.log(`deploy at ${capitalAgent.address}`)

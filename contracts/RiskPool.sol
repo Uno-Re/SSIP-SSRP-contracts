@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./RiskPoolERC20.sol";
@@ -23,12 +23,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     event LogMigrateLP(address indexed _user, address indexed _migrateTo, uint256 _unoAmount);
     event LogLeaveFromPending(address indexed _user, uint256 _withdrawLpAmount, uint256 _withdrawUnoAmount);
 
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        address _SSRP,
-        address _currency
-    ) {
+    constructor(string memory _name, string memory _symbol, address _SSRP, address _currency) {
         require(_SSRP != address(0), "UnoRe: zero pool address");
         name = _name;
         symbol = _symbol;
@@ -131,11 +126,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         lpPriceUno = (cryptoBalance * 1e18) / totalSupply(); // UNO value per lp
     }
 
-    function migrateLP(
-        address _to,
-        address _migrateTo,
-        bool _isUnLocked
-    ) external override onlySSRP returns (uint256) {
+    function migrateLP(address _to, address _migrateTo, bool _isUnLocked) external override onlySSRP returns (uint256) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         uint256 migratedAmount;
         uint256 cryptoBalance;
@@ -192,17 +183,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         MIN_LP_CAPITAL = _minLPCapital;
     }
 
-    function getWithdrawRequest(address _to)
-        external
-        view
-        override
-        onlySSRP
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    function getWithdrawRequest(address _to) external view override onlySSRP returns (uint256, uint256, uint256) {
         return (
             uint256(withdrawRequestPerUser[_to].pendingAmount),
             uint256(withdrawRequestPerUser[_to].requestTime),
@@ -225,11 +206,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         return true;
     }
 
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         require(
             balanceOf(sender) - uint256(withdrawRequestPerUser[sender].pendingAmount) >= amount,
             "ERC20: transfer amount exceeds balance or pending WR"

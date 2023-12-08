@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
@@ -40,11 +41,7 @@ contract Rewarder is IRewarder, ReentrancyGuard {
     event LogTransferOwnerShip(address indexed _rewarder, address indexed _oldOperator, address indexed _newOperator);
     event LogForceSetUserRewardDebt(address indexed _to, uint256 _debt);
 
-    constructor(
-        address _operator,
-        address _currency,
-        address _pool
-    ) {
+    constructor(address _operator, address _currency, address _pool) {
         require(_operator != address(0), "UnoRe: zero operator address");
         require(_pool != address(0), "UnoRe: zero pool address");
         currency = _currency;

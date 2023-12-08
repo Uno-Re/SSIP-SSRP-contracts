@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
 
 contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
-    using Address for address;
 
     address public exchangeAgent;
     address public UNO_TOKEN;
@@ -42,12 +40,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
     event LogAddWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
 
-    constructor(
-        address _exchangeAgent,
-        address _unoToken,
-        address _usdcToken,
-        address _multiSigWallet
-    ) {
+    constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet) Ownable(_multiSigWallet) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
@@ -56,7 +49,6 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         UNO_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
         whiteList[msg.sender] = true;
-        transferOwnership(_multiSigWallet);
     }
 
     modifier onlyAvailableCurrency(address _currency) {
@@ -81,13 +73,10 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         emit LogCollectPremium(msg.sender, address(0), _premiumAmount);
     }
 
-    function collectPremium(address _premiumCurrency, uint256 _premiumAmount)
-        external
-        override
-        nonReentrant
-        onlyAvailableCurrency(_premiumCurrency)
-        onlyWhiteList
-    {
+    function collectPremium(
+        address _premiumCurrency,
+        uint256 _premiumAmount
+    ) external override nonReentrant onlyAvailableCurrency(_premiumCurrency) onlyWhiteList {
         require(IERC20(_premiumCurrency).balanceOf(msg.sender) >= _premiumAmount, "UnoRe: premium balance overflow");
         TransferHelper.safeTransferFrom(_premiumCurrency, msg.sender, address(this), _premiumAmount);
         uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
@@ -102,7 +91,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
 
     function depositToSyntheticSSRPRewarder(address _rewarder) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
-        require(_rewarder.isContract(), "UnoRe: no contract address");
+        enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         uint256 usdcAmountToDeposit = 0;
         if (SSRP_PREMIUM_ETH > 0) {
             TransferHelper.safeTransferETH(exchangeAgent, SSRP_PREMIUM_ETH);
@@ -137,7 +126,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         uint256 _amount
     ) external onlyOwner nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
-        require(_rewarder.isContract(), "UnoRe: no contract address");
+        enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
             require(_amount <= SSIP_PREMIUM_ETH, "UnoRe: premium balance overflow");
             TransferHelper.safeTransferETH(_rewarder, _amount);
@@ -177,11 +166,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         emit LogBuyBackAndBurn(msg.sender, address(this), unoAmount);
     }
 
-    function withdrawPremium(
-        address _currency,
-        address _to,
-        uint256 _amount
-    ) external override onlyOwner {
+    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyOwner {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {
@@ -244,5 +229,18 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable {
         require(whiteList[_whiteListAddress], "UnoRe: white list removed or unadded already");
         whiteList[_whiteListAddress] = false;
         emit LogRemoveWhiteList(address(this), _whiteListAddress);
+    }
+
+    /**
+     * @dev Ensure that the given address has contract code deployed
+     * @param _contract The address to check for contract code
+     * @param _errorMessage The error message to display if the contract code is not deployed
+     */
+    function enforceHasContractCode(address _contract, string memory _errorMessage) internal view {
+        uint256 contractSize;
+        assembly {
+            contractSize := extcodesize(_contract)
+        }
+        require(contractSize != 0, _errorMessage);
     }
 }

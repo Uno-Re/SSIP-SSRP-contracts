@@ -115,7 +115,7 @@ module.exports = {
   //   runOnCompile: true
   // },
   solidity: {
-    version: "0.8.0",
+    version: "0.8.23",
     settings: {
       optimizer: {
         enabled: true,

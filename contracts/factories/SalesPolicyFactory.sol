@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.0;
+pragma solidity =0.8.23;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libraries/Counters.sol";
 import "../SalesPolicy.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISalesPolicyFactory.sol";
@@ -41,7 +41,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         address _premiumPool,
         address _capitalAgent,
         address _multiSigWallet
-    ) {
+    ) Ownable(_multiSigWallet) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
@@ -51,14 +51,13 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
-        transferOwnership(_multiSigWallet);
     }
 
     // This action can be done only by owner
     // protoco id will be started from no.1 instead of no.0.
     function addProtocol(address _protocolAddress) external onlyOwner nonReentrant {
-        protocolIds.increment();
-        uint16 lastIdx = uint16(protocolIds.current());
+        protocolIds.next();
+        uint16 lastIdx = uint16(protocolIds.current);
 
         getProtocol[lastIdx] = Protocol({protocolAddress: _protocolAddress, isBlackList: false});
 
@@ -80,7 +79,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     }
 
     function allProtocolsLength() external view returns (uint256) {
-        return protocolIds.current();
+        return protocolIds.current;
     }
 
     function updateCheckIfProtocolInWhitelistArray(bool _status) external onlyOwner {
