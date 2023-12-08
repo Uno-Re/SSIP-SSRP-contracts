@@ -13,6 +13,7 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
     OptimisticOracleV3Interface public immutable optimisticOracleV3;
 
     mapping (address => bool) checkDisputers;
+    mapping (address => bool) checkAssertingCaller;
 
     modifier onlyOptimisticOracleV3() {
         require(msg.sender == address(optimisticOracleV3), "Not the Optimistic Oracle V3");
@@ -30,14 +31,14 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _grantRole(ADMIN_ROLE, _governance);
         _setRoleAdmin(OPTMISTIC_ORACLE_V3_ROLE, ADMIN_ROLE);
-        _grantRole(OPTMISTIC_ORACLE_V3_ROLE, _governance);
+        _grantRole(OPTMISTIC_ORACLE_V3_ROLE, _optimisticOracleV3);
     }
     
-    function getAssertionPolicy(bytes32 assertionId) external override pure returns (AssertionPolicy memory) {
+    function getAssertionPolicy(bytes32 assertionId) external override view returns (AssertionPolicy memory) {
         OptimisticOracleV3Interface.Assertion memory assertion = optimisticOracleV3.getAssertion(assertionId);
         return AssertionPolicy({
-            blockAssertion: !checkDisputers[assertion.escalationManagerSettings.assertingCaller],
-            arbitrateViaEscalationManager: false,
+            blockAssertion: !checkAssertingCaller[assertion.escalationManagerSettings.assertingCaller],
+            arbitrateViaEscalationManager: true,
             discardOracle: true,
             validateDisputers: true
         });
@@ -49,6 +50,10 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
 
     function toggleDisputer(address _disputer) external onlyRole(ADMIN_ROLE) {
         checkDisputers[_disputer] = !checkDisputers[_disputer];
+    }
+
+    function toggleAssertionCaller(address _caller) external onlyRole(ADMIN_ROLE) {
+        checkAssertingCaller[_caller] = !checkAssertingCaller[_caller];
     }
 
     function getPrice(
