@@ -162,6 +162,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
 
     function rollOverReward(address _to) external isAlive nonReentrant {
         require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+        require(lpToken == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
 
         uint256 _pendingReward = _updateReward(_to);

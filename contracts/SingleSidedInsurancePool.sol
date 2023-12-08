@@ -385,6 +385,7 @@ contract SingleSidedInsurancePool is
 
     function rollOverReward(address _to) external isStartTime isAlive nonReentrant {
         require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+        require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
 
         uint256 _pendingUno = _updateReward(_to);
