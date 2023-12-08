@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
@@ -90,9 +90,7 @@ contract SingleSidedInsurancePool is
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        __ReentrancyGuard_init();
-        __Pausable_init();
-        __Ownable_init(_multiSigWallet);
+
         exchangeAgent = _exchangeAgent;
         claimAssessor = _claimAssessor;
         capitalAgent = _capitalAgent;

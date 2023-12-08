@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRiskPoolFactory.sol";
 import "./interfaces/IRewarderFactory.sol";
@@ -72,9 +73,7 @@ contract SingleSidedReinsurancePool is
     function initialize(address _claimAssessor, address _multiSigWallet) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         require(_claimAssessor != address(0), "UnoRe: zero claimAssessor address");
-        __ReentrancyGuard_init();
-        __Pausable_init();
-        __Ownable_init(_multiSigWallet);
+
         claimAssessor = _claimAssessor;
         STAKING_START_TIME = block.timestamp + 3 days;
         __ReentrancyGuard_init();
