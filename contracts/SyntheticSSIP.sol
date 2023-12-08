@@ -30,6 +30,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
         uint256 rewardDebt;
         uint256 amount;
         uint256 pendingWithdrawAmount;
+        bool isNotRollOver;
     }
 
     mapping(address => UserInfo) public userInfo;
@@ -49,6 +50,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
     event PoolAlived(address indexed _owner, bool _alive);
+    event RollOverReward(address indexed _staker, address indexed _pool, uint256 _amount);
 
     constructor(address _lpToken, address _multiSigWallet) Ownable(_multiSigWallet) {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -147,13 +149,29 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
     }
 
     function enterInPool(uint256 _amount) external override isAlive nonReentrant {
-        require(_amount != 0, "UnoRe: ZERO Value");
-        updatePool();
         TransferHelper.safeTransferFrom(lpToken, msg.sender, address(this), _amount);
-        userInfo[msg.sender].rewardDebt = userInfo[msg.sender].rewardDebt + (_amount * accRewardPerShare) / ACC_REWARD_PRECISION;
-        userInfo[msg.sender].amount = userInfo[msg.sender].amount + _amount;
-        totalStakedLPAmount = totalStakedLPAmount + _amount;
+        _enterInPool(_amount, msg.sender);
         emit LogStakedInPool(msg.sender, address(this), _amount);
+    }
+
+    function toggleRollOver() external {
+        userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
+    }
+
+    function rollOverReward(address _to) external isAlive nonReentrant {
+        require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+        require(lpToken == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
+        updatePool();
+
+        uint256 _pendingReward = _updateReward(_to);
+
+        if (rewarder != address(0) && _pendingReward > 0) {
+            IRewarder(rewarder).onReward(address(this), _pendingReward);
+        }
+
+        _enterInPool(_pendingReward, _to);
+        
+        emit RollOverReward(_to, address(this), _pendingReward);
     }
 
     /**
@@ -203,19 +221,32 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, Ownable, Pausable {
 
     function _harvest(address _to) private {
         updatePool();
+
+        uint256 _pendingReward = _updateReward(_to);
+
+        if (rewarder != address(0) && _pendingReward > 0) {
+            IRewarder(rewarder).onReward(_to, _pendingReward);
+        }
+
+        emit LogHarvest(msg.sender, _to, _pendingReward);
+    }
+
+    function _updateReward(address _to) internal returns(uint256) {
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedReward = (amount * accRewardPerShare) / ACC_REWARD_PRECISION;
         uint256 _pendingReward = accumulatedReward - userInfo[_to].rewardDebt;
 
         // Effects
-        userInfo[msg.sender].rewardDebt = accumulatedReward;
+        userInfo[_to].rewardDebt = accumulatedReward;
+        return _pendingReward;
+    }
 
-        uint256 realRewardAmount = 0;
-        if (rewarder != address(0) && _pendingReward > 0) {
-            realRewardAmount = IRewarder(rewarder).onReward(_to, _pendingReward);
-        }
-
-        emit LogHarvest(msg.sender, _to, realRewardAmount);
+    function _enterInPool(uint256 _amount, address _to) internal {
+        require(_amount != 0, "UnoRe: ZERO Value");
+        updatePool();
+        userInfo[_to].rewardDebt = userInfo[_to].rewardDebt + (_amount * accRewardPerShare) / ACC_REWARD_PRECISION;
+        userInfo[_to].amount = userInfo[_to].amount + _amount;
+        totalStakedLPAmount = totalStakedLPAmount + _amount;
     }
 
     function cancelWithdrawRequest() external nonReentrant {

@@ -46,6 +46,7 @@ contract SingleSidedReinsurancePool is
         uint256 lastWithdrawTime;
         uint256 rewardDebt;
         uint256 amount;
+        bool isNotRollOver;
     }
 
     mapping(address => UserInfo) public userInfo;
@@ -71,6 +72,7 @@ contract SingleSidedReinsurancePool is
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
     event PoolAlived(address indexed _owner, bool _alive);
+    event RollOverReward(address indexed _staker, address indexed _pool, uint256 _amount);
 
     function initialize(address _multiSigWallet) public initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -222,17 +224,8 @@ contract SingleSidedReinsurancePool is
     }
 
     function enterInPool(uint256 _amount) external override isStartTime isAlive nonReentrant {
-        require(_amount != 0, "UnoRe: ZERO Value");
-        updatePool();
-        address token = IRiskPool(riskPool).currency();
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
-        IRiskPool(riskPool).enter(msg.sender, _amount);
-        userInfo[msg.sender].rewardDebt =
-            userInfo[msg.sender].rewardDebt +
-            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
-            ACC_UNO_PRECISION;
-        userInfo[msg.sender].amount = userInfo[msg.sender].amount + ((_amount * 1e18) / lpPriceUno);
+        _depositIn(_amount);
+        _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
     }
 
@@ -295,19 +288,34 @@ contract SingleSidedReinsurancePool is
 
     function _harvest(address _to) private {
         updatePool();
-        uint256 amount = userInfo[_to].amount;
-        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
-        uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
-        // Effects
-        userInfo[msg.sender].rewardDebt = accumulatedUno;
-        uint256 rewardAmount = 0;
+        uint256 _pendingUno = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingUno != 0) {
-            rewardAmount = IRewarder(rewarder).onReward(_to, _pendingUno);
+            IRewarder(rewarder).onReward(_to, _pendingUno);
         }
 
-        emit Harvest(msg.sender, _to, rewardAmount);
+        emit Harvest(msg.sender, _to, _pendingUno);
+    }
+
+    function toggleRollOver() external {
+        userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
+    }
+
+    function rollOverReward(address _to) external isStartTime isAlive nonReentrant {
+        require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+        require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
+        updatePool();
+
+        uint256 _pendingUno = _updateReward(_to);
+
+        if (rewarder != address(0) && _pendingUno != 0) {
+            IRewarder(rewarder).onReward(riskPool, _pendingUno);
+        }
+
+        _enterInPool(_pendingUno, _to);
+        
+        emit RollOverReward(_to, riskPool, _pendingUno);
     }
 
     function cancelWithdrawRequest() external nonReentrant {
@@ -344,5 +352,34 @@ contract SingleSidedReinsurancePool is
      */
     function getTotalWithdrawPendingAmount() external view returns (uint256) {
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
+    }
+
+    function _enterInPool(uint256 _amount, address _to) internal {
+        require(_amount != 0, "UnoRe: ZERO Value");
+        updatePool();
+        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
+        IRiskPool(riskPool).enter(_to, _amount);
+        UserInfo memory _userInfo = userInfo[_to];
+        _userInfo.rewardDebt =
+            _userInfo.rewardDebt +
+            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
+            ACC_UNO_PRECISION;
+        _userInfo.amount = _userInfo.amount + ((_amount * 1e18) / lpPriceUno);
+        userInfo[_to] = _userInfo;
+    }
+
+    function _updateReward(address _to) internal returns(uint256) {
+        uint256 amount = userInfo[_to].amount;
+        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+        uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
+
+        // Effects
+        userInfo[_to].rewardDebt = accumulatedUno;
+        return _pendingUno;
+    }
+
+    function _depositIn(uint256 _amount) internal {
+        address token = IRiskPool(riskPool).currency();
+        TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
     }
 }
