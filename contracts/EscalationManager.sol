@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/EscalationManagerInterface.sol";
@@ -34,8 +34,9 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
     }
     
     function getAssertionPolicy(bytes32 assertionId) external override pure returns (AssertionPolicy memory) {
+        OptimisticOracleV3Interface.Assertion memory assertion = optimisticOracleV3.getAssertion(assertionId);
         return AssertionPolicy({
-            blockAssertion: false,
+            blockAssertion: !checkDisputers[assertion.escalationManagerSettings.assertingCaller],
             arbitrateViaEscalationManager: false,
             discardOracle: true,
             validateDisputers: true
