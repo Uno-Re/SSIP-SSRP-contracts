@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-import "./ClaimData.sol";
+import "./uma/ClaimData.sol";
 import "./interfaces/OptimisticOracleV3Interface.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IMigration.sol";

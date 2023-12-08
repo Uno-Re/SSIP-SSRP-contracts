@@ -2,8 +2,8 @@
 pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/EscalationManagerInterface.sol";
-import "./interfaces/OptimisticOracleV3Interface.sol";
+import "../interfaces/EscalationManagerInterface.sol";
+import "../interfaces/OptimisticOracleV3Interface.sol";
 
 contract EscalationManager is EscalationManagerInterface, AccessControl{
 
