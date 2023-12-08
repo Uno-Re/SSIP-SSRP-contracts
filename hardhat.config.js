@@ -1,11 +1,13 @@
 const { utils } = require("ethers");
 
-require("@nomiclabs/hardhat-waffle");
+require("@nomicfoundation/hardhat-ethers");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
-require("@nomiclabs/hardhat-etherscan");
+require("@nomicfoundation/hardhat-verify");
 require("hardhat-contract-sizer");
-require("hardhat-gas-reporter")
+require("@nomicfoundation/hardhat-verify");
+require("hardhat-gas-reporter");
+require('@openzeppelin/hardhat-upgrades');
 require('dotenv').config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -58,7 +60,7 @@ module.exports = {
       forking: {
         url: 'https://eth-rinkeby.alchemyapi.io/v2/8SAQa7xMc0VXTR_hyfPvAt2pe3QrXybB',
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
-        enabled: false,
+        enabled: true,
         // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355        
       },
       gasPrice: "auto",

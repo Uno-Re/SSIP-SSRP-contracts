@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
+import "./uma/ClaimData.sol";
+import "./interfaces/OptimisticOracleV3Interface.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
@@ -15,7 +17,6 @@ import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
-import "./interfaces/IGovernance.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 
@@ -29,13 +30,23 @@ contract SingleSidedInsurancePool is
     bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    OptimisticOracleV3Interface public immutable oo;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    IERC20 public immutable defaultCurrency;
+    
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    bytes32 public immutable defaultIdentifier;
+
+    address public escalationManager;
     address public governance;
     address public migrateTo;
     address public capitalAgent;
     address public syntheticSSIP;
 
     bool public killed;
-    uint256 public LOCK_TIME = 10 days;
+    uint256 public LOCK_TIME;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
     uint256 public STAKING_START_TIME;
 
@@ -52,15 +63,22 @@ contract SingleSidedInsurancePool is
         uint256 lastWithdrawTime;
         uint256 rewardDebt;
         uint256 amount;
+        bool isNotRollOver;
     }
 
-    struct PolicyInfo {
-        bool approved;
-        uint256 delay;
+    struct Policy {
+        uint256 insuranceAmount;
+        address payoutAddress;
+        bytes insuredEvent;
+        bool settled;
     }
+
+    mapping(bytes32 => uint256) public assertedPolicies;
+    mapping(uint256 => bytes32) public policiesAssertionId;
+
+    mapping(uint256 => Policy) public policies;
 
     mapping(address => UserInfo) public userInfo;
-    mapping(uint256 => PolicyInfo) public policyInfo;
 
     PoolInfo public poolInfo;
 
@@ -92,12 +110,38 @@ contract SingleSidedInsurancePool is
     event PoolAlived(address indexed _owner, bool _alive);
     event PolicyApproved(address indexed _owner, uint256 _policyId);
     event PolicyRejected(address indexed _owner, uint256 _policyId);
+    event InsuranceIssued(
+        bytes32 indexed policyId,
+        bytes insuredEvent,
+        uint256 insuranceAmount,
+        address indexed payoutAddress
+    );
 
-    function initialize(address _capitalAgent, address _multiSigWallet, address _governance) public initializer {
+    event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
+
+    event InsurancePayoutSettled(uint256 indexed policyId, bytes32 indexed assertionId);
+    event RollOverReward(address indexed _staker, address indexed _pool, uint256 _amount);
+
+    event LogSetEscalationManager(address indexed _SSIP, address indexed _escalatingManager);
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(address _defaultCurrency, address _optimisticOracleV3) {
+        defaultCurrency = IERC20(_defaultCurrency);
+        oo = OptimisticOracleV3Interface(_optimisticOracleV3);
+        defaultIdentifier = oo.defaultIdentifier();
+
+        // Note that the contract is upgradeable. Use initialize() or reinitializers
+        // to set the state variables.
+        _disableInitializers();
+    }
+
+    function initialize(address _capitalAgent, address _multiSigWallet, address _governance, address _claimProccessor, address _escalationManager) public initializer {
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         capitalAgent = _capitalAgent;
         governance = _governance;
+        LOCK_TIME = 10 days;
+        escalationManager = _escalationManager;
         __ReentrancyGuard_init();
         __Pausable_init();
         __AccessControl_init();
@@ -105,6 +149,8 @@ contract SingleSidedInsurancePool is
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
+        _grantRole(GAURDIAN_COUNCIL_ROLE, _governance);
+        _grantRole(CLAIM_ACCESSOR_ROLE, _claimProccessor);
     }
 
     modifier isStartTime() {
@@ -133,6 +179,11 @@ contract SingleSidedInsurancePool is
     function revivePool() external onlyRole(ADMIN_ROLE) {
         killed = false;
         emit PoolAlived(msg.sender, false);
+    }
+
+    function setEscalatingManager(address _escalatingManager) external onlyRole(ADMIN_ROLE) {
+        escalationManager = _escalatingManager;
+        emit LogSetEscalationManager(address(this), _escalatingManager);
     }
 
     function setGaurdianCouncil(address _gaurdianCouncil) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
@@ -258,26 +309,8 @@ contract SingleSidedInsurancePool is
     }
 
     function enterInPool(uint256 _amount) external payable override isStartTime isAlive nonReentrant {
-        require(_amount != 0, "UnoRe: ZERO Value");
-        updatePool();
-        address token = IRiskPool(riskPool).currency();
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        if (token == address(0)) {
-            require(msg.value >= _amount, "UnoRe: insufficient paid");
-            if (msg.value > _amount) {
-                TransferHelper.safeTransferETH(msg.sender, msg.value - _amount);
-            }
-            TransferHelper.safeTransferETH(riskPool, _amount);
-        } else {
-            TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
-        }
-        IRiskPool(riskPool).enter(msg.sender, _amount);
-        userInfo[msg.sender].rewardDebt =
-            userInfo[msg.sender].rewardDebt +
-            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
-            ACC_UNO_PRECISION;
-        userInfo[msg.sender].amount = userInfo[msg.sender].amount + ((_amount * 1e18) / lpPriceUno);
-        ICapitalAgent(capitalAgent).SSIPStaking(_amount);
+        _depositIn(_amount);
+        _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
     }
 
@@ -343,59 +376,39 @@ contract SingleSidedInsurancePool is
 
     function _harvest(address _to) private {
         updatePool();
-        uint256 amount = userInfo[_to].amount;
-        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
-        uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
-        // Effects
-        userInfo[msg.sender].rewardDebt = accumulatedUno;
-        uint256 rewardAmount = 0;
+        uint256 _pendingUno = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingUno != 0) {
-            rewardAmount = IRewarder(rewarder).onReward(_to, _pendingUno);
+            IRewarder(rewarder).onReward(_to, _pendingUno);
         }
 
-        emit Harvest(msg.sender, _to, rewardAmount);
+        emit Harvest(msg.sender, _to, _pendingUno);
+    }
+
+    function toggleRollOver() external {
+        userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
+    }
+
+    function rollOverReward(address _to) external isStartTime isAlive nonReentrant {
+        require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+        require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
+        updatePool();
+
+        uint256 _pendingUno = _updateReward(_to);
+
+        if (rewarder != address(0) && _pendingUno != 0) {
+            IRewarder(rewarder).onReward(riskPool, _pendingUno);
+        }
+
+        _enterInPool(_pendingUno, _to);
+        
+        emit RollOverReward(_to, riskPool, _pendingUno);
     }
 
     function cancelWithdrawRequest() external nonReentrant {
         (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithrawRequest(msg.sender);
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
-    }
-
-    function approvePolicy(uint256 _policyId, uint256 _delay) external onlyRole(CLAIM_ACCESSOR_ROLE) {
-        (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
-        (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
-        require(_exist && !_expired, "UnoRe: policy expired or not exist");
-        PolicyInfo memory policy = policyInfo[_policyId];
-        policy.approved = true;
-        policy.delay = block.timestamp + _delay;
-        policyInfo[_policyId] = policy;
-        emit PolicyApproved(msg.sender, _policyId);
-    }
-
-    function rejectPolicy(uint256 _policyId) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
-        delete policyInfo[_policyId];
-        emit PolicyRejected(msg.sender, _policyId);
-    }
-
-    function policyClaim(
-        address _to,
-        uint256 _amount,
-        uint256 _policyId,
-        uint256 _proposalId,
-        bool _isFinished
-    ) external onlyRole(GAURDIAN_COUNCIL_ROLE) isStartTime isAlive nonReentrant {
-        require(_to != address(0), "UnoRe: zero address");
-        require(_amount > 0, "UnoRe: zero amount");
-        PolicyInfo memory _policy = policyInfo[_policyId];
-        require(_policy.approved, "UnoRe: not approved");
-        require(block.timestamp >= _policy.delay, "UnoRe: delay not passed");
-        require(IGovernance(governance).getProposalState(_proposalId) == IGovernance.ProposalState.Succeeded, "UnoRe: proposal not succeded");
-        uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
-        ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, _policyId, _isFinished);
-        delete policyInfo[_policyId];
-        emit PolicyClaim(_to, realClaimAmount);
     }
 
     function getStakedAmountPerUser(address _to) external view returns (uint256 unoAmount, uint256 lpAmount) {
@@ -421,4 +434,97 @@ contract SingleSidedInsurancePool is
     function getTotalWithdrawPendingAmount() external view returns (uint256) {
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
+
+    function requestPayout(uint256 _policyId, address _to, uint256 _amount) public isAlive onlyRole(CLAIM_ACCESSOR_ROLE) returns (bytes32 assertionId) {
+        (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
+        (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
+        require(_exist && !_expired, "UnoRe: policy expired or not exist");
+        uint256 bond = oo.getMinimumBond(address(defaultCurrency));
+        Policy memory _policyData = policies[_policyId];
+        _policyData.insuranceAmount = _amount;
+        _policyData.payoutAddress = _to;
+        policies[_policyId] = _policyData;
+        assertionId = oo.assertTruth(
+            abi.encodePacked(
+                "Insurance contract is claiming that insurance event ",
+                _policyData.insuredEvent,
+                " had occurred as of ",
+                ClaimData.toUtf8BytesUint(block.timestamp),
+                "."
+            ),
+            msg.sender,
+            address(this),
+            escalationManager, // No sovereign security.
+            uint64(LOCK_TIME),
+            defaultCurrency,
+            bond,
+            defaultIdentifier,
+            bytes32(0) // No domain.
+        );
+        assertedPolicies[assertionId] = _policyId;
+        policiesAssertionId[_policyId] = assertionId;
+        emit InsurancePayoutRequested(_policyId, assertionId);
+    }
+
+    function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public isAlive {
+        require(msg.sender == address(oo), "UnoRe: not authorized");
+        // If the assertion was true, then the policy is settled.
+        if (assertedTruthfully) {
+            _settlePayout(assertionId);
+        }
+    }
+
+    function assertionDisputedCallback(bytes32 assertionId) public {}
+
+    function _settlePayout(bytes32 assertionId) internal {
+        // If already settled, do nothing. We don't revert because this function is called by the
+        // OptimisticOracleV3, which may block the assertion resolution.
+        uint256 _policyId = assertedPolicies[assertionId];
+        Policy storage policy = policies[_policyId];
+        if (policy.settled) return;
+        policy.settled = true;
+        uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(policy.payoutAddress, policy.insuranceAmount);
+        ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
+
+        emit InsurancePayoutSettled(_policyId, assertionId);
+    }
+
+    function _enterInPool(uint256 _amount, address _to) internal {
+        require(_amount != 0, "UnoRe: ZERO Value");
+        updatePool();
+        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
+        IRiskPool(riskPool).enter(_to, _amount);
+        UserInfo memory _userInfo = userInfo[_to];
+        _userInfo.rewardDebt =
+            _userInfo.rewardDebt +
+            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
+            ACC_UNO_PRECISION;
+        _userInfo.amount = _userInfo.amount + ((_amount * 1e18) / lpPriceUno);
+        userInfo[_to] = _userInfo;
+        ICapitalAgent(capitalAgent).SSIPStaking(_amount);
+    }
+
+    function _updateReward(address _to) internal returns(uint256) {
+        uint256 amount = userInfo[_to].amount;
+        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+        uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
+
+        // Effects
+        userInfo[_to].rewardDebt = accumulatedUno;
+        return _pendingUno;
+    }
+
+    function _depositIn(uint256 _amount) internal {
+        address token = IRiskPool(riskPool).currency();
+        if (token == address(0)) {
+            require(msg.value >= _amount, "UnoRe: insufficient paid");
+            if (msg.value > _amount) {
+                TransferHelper.safeTransferETH(msg.sender, msg.value - _amount);
+            }
+            TransferHelper.safeTransferETH(riskPool, _amount);
+        } else {
+            TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
+        }
+    }
+
 }

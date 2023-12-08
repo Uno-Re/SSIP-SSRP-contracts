@@ -15,7 +15,7 @@ function getCreate2CohortAddress(actuaryAddress, { cohortName, sender, nonce }, 
 
 // Defaults to e18 using amount * 10^18
 function getBigNumber(amount, decimals = 18) {
-  return ethers.utils.parseUnits(amount, decimals)
+  return ethers.parseUnits(amount, decimals)
 }
 
 function getNumber(amount, decimals = 18) {
