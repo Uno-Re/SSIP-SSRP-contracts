@@ -6,14 +6,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
 
 contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
     // using Address for address;
-
     address public exchangeAgent;
     address public UNO_TOKEN;
     address public USDC_TOKEN;
