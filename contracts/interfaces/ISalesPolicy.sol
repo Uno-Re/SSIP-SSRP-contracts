@@ -22,5 +22,14 @@ interface ISalesPolicy {
 
     function allPoliciesLength() external view returns (uint256);
 
-    function getPolicyData(uint256 _policyId) external view returns (uint256, uint256, uint256);
+    function getPolicyData(uint256 _policyId)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            bool,
+            bool
+        );
 }
