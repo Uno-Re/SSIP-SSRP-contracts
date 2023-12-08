@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "../libraries/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libraries/Counters.sol";
 import "../SalesPolicy.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISalesPolicyFactory.sol";
@@ -41,7 +41,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         address _premiumPool,
         address _capitalAgent,
         address _multiSigWallet
-    ) Ownable(_multiSigWallet) { 
+    ) Ownable(_multiSigWallet) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
@@ -51,7 +51,6 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
-        // transferOwnership(_multiSigWallet);
     }
 
     // This action can be done only by owner
