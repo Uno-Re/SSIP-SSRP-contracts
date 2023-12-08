@@ -17,7 +17,6 @@ import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
-import "./interfaces/IGovernance.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 
@@ -74,6 +73,7 @@ contract SingleSidedInsurancePool is
     }
 
     mapping(bytes32 => uint256) public assertedPolicies;
+    mapping(uint256 => bytes32) public policiesAssertionId;
 
     mapping(uint256 => Policy) public policies;
 
@@ -463,6 +463,7 @@ contract SingleSidedInsurancePool is
             bytes32(0) // No domain.
         );
         assertedPolicies[assertionId] = _policyId;
+        policiesAssertionId[_policyId] = assertionId;
         emit InsurancePayoutRequested(_policyId, assertionId);
     }
 
