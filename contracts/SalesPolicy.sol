@@ -4,6 +4,7 @@ pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./libraries/Counters.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IExchangeAgent.sol";
@@ -13,7 +14,7 @@ import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 import "./EIP712MetaTransaction.sol";
 
-contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), ERC721, ISalesPolicy, ReentrancyGuard {
+contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), ERC721, ISalesPolicy, ReentrancyGuard, Pausable {
     using Counters for Counters.Counter;
 
     address public immutable factory;
@@ -92,6 +93,14 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         _;
     }
 
+    function killPool() external onlyFactory {
+        _pause();
+    }
+
+    function revivePool() external onlyFactory {
+        _unpause();
+    }
+
     receive() external payable {}
 
     function buyPolicy(
@@ -105,7 +114,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         bytes32 r,
         bytes32 s,
         uint8 v
-    ) external payable nonReentrant {
+    ) external payable whenNotPaused nonReentrant {
         uint256 len = _protocols.length;
         require(len > 0, "UnoRe: no policy");
         require(len == _coverageAmount.length, "UnoRe: no match protocolIds with coverageAmount");
@@ -276,11 +285,24 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         return protocolURI;
     }
 
-    function getPolicyData(uint256 _policyId) external view override returns (uint256, uint256, uint256) {
+    function getPolicyData(uint256 _policyId)
+        external
+        view
+        override
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            bool,
+            bool
+        )
+    {
+        bool exist =  getPolicy[_policyId].exist;
+        bool expired =  getPolicy[_policyId].expired;
         uint256 coverageAmount = getPolicy[_policyId].coverageAmount;
         uint256 coverageDuration = getPolicy[_policyId].coverageDuration;
         uint256 coverStartAt = uint256(getPolicy[_policyId].coverStartAt);
-        return (coverageAmount, coverageDuration, coverStartAt);
+        return (coverageAmount, coverageDuration, coverStartAt, exist, expired);
     }
 
     function getSender(

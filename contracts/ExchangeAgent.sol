@@ -4,6 +4,7 @@ pragma solidity =0.8.23;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IUniswapFactory.sol";
 import "./interfaces/IUniswapRouter02.sol";
@@ -11,7 +12,7 @@ import "./interfaces/IOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 
-contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
+contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable{
     address public immutable override USDC_TOKEN;
     address public immutable UNISWAP_FACTORY;
     address public immutable UNISWAP_ROUTER;
@@ -72,6 +73,14 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
     }
 
     receive() external payable {}
+
+    function killPool() external onlyOwner {
+        _pause();
+    }
+
+    function revivePool() external onlyOwner {
+        _unpause();
+    }
 
     function addWhiteList(address _whiteListAddress) external onlyOwner {
         require(_whiteListAddress != address(0), "UnoRe: zero address");
@@ -136,7 +145,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         address _token0,
         address _token1,
         uint256 _token0Amount
-    ) external override onlyWhiteList nonReentrant returns (uint256) {
+    ) external override onlyWhiteList whenNotPaused nonReentrant returns (uint256) {
         uint256 twapPrice = 0;
         if (_token0 != address(0)) {
             require(IERC20(_token0).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
@@ -152,10 +161,14 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable {
         return convertedAmount;
     }
 
-    function convertForETH(
-        address _token,
-        uint256 _convertAmount
-    ) external override onlyWhiteList nonReentrant returns (uint256) {
+    function convertForETH(address _token, uint256 _convertAmount)
+        external
+        override
+        onlyWhiteList
+        whenNotPaused
+        nonReentrant
+        returns (uint256)
+    {
         require(IERC20(_token).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
         if (_token != address(0)) {
             TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);

@@ -94,6 +94,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         _;
     }
 
+    function getPolicyInfo() external view returns(address, uint256, bool) {
+        PolicyInfo memory _policy = policyInfo;
+        return(_policy.policy, _policy.utilizedAmount, _policy.exist);
+    }
+
     function setSalesPolicyFactory(address _factory) external onlyOwner nonReentrant {
         require(_factory != address(0), "UnoRe: zero factory address");
         salesPolicyFactory = _factory;
@@ -207,7 +212,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
 
     function updatePolicyStatus(uint256 _policyId) external override nonReentrant {
         require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
-        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt) = ISalesPolicy(policyInfo.policy)
+        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt, ,) = ISalesPolicy(policyInfo.policy)
             .getPolicyData(_policyId);
         bool isExpired = block.timestamp >= _coverageDuration + _coverStartAt;
         if (isExpired) {
@@ -223,7 +228,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
 
     function _markToClaimPolicy(uint256 _policyId) private {
         require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
-        (uint256 _coverageAmount, , ) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
+        (uint256 _coverageAmount, , , ,) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
         _updatePolicyCoverage(_coverageAmount, false);
         ISalesPolicy(policyInfo.policy).markToClaim(_policyId);
         emit LogMarkToClaimPolicy(policyInfo.policy, _policyId);
