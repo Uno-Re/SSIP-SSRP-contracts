@@ -22,7 +22,7 @@ contract SingleSidedReinsurancePool is
     AccessControlUpgradeable,
     PausableUpgradeable
 {
-    bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
+    bytes32 public constant GUARDIAN_COUNCIL_ROLE = keccak256("GUARDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address public migrateTo;
@@ -66,7 +66,7 @@ contract SingleSidedReinsurancePool is
     event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
     event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
     event LogSetRewardMultiplier(address indexed _SSIP, uint256 _rewardMultiplier);
-    event LogSetGovernance(address indexed _SSIP, address indexed _gaurdianCouncil);
+    event LogSetGovernance(address indexed _SSIP, address indexed _guardianCouncil);
     event LogSetMigrateTo(address indexed _SSIP, address indexed _migrateTo);
     event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
@@ -82,7 +82,7 @@ contract SingleSidedReinsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
     }
 
     modifier isStartTime() {
@@ -119,11 +119,11 @@ contract SingleSidedReinsurancePool is
         emit LogSetRewardMultiplier(address(this), _rewardMultiplier);
     }
 
-    function setGaurdianCouncil(address _gaurdianCouncil) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
-        require(_gaurdianCouncil != address(0), "UnoRe: zero address");
-        _revokeRole(GAURDIAN_COUNCIL_ROLE, msg.sender);
-        _grantRole(GAURDIAN_COUNCIL_ROLE, _gaurdianCouncil);
-        emit LogSetGovernance(address(this), _gaurdianCouncil);
+    function setGuardianCouncil(address _guardianCouncil) external onlyRole(GUARDIAN_COUNCIL_ROLE) {
+        require(_guardianCouncil != address(0), "UnoRe: zero address");
+        _revokeRole(GUARDIAN_COUNCIL_ROLE, msg.sender);
+        _grantRole(GUARDIAN_COUNCIL_ROLE, _guardianCouncil);
+        emit LogSetGovernance(address(this), _guardianCouncil);
     }
 
     function setMigrateTo(address _migrateTo) external onlyRole(ADMIN_ROLE) {
@@ -314,7 +314,7 @@ contract SingleSidedReinsurancePool is
         }
 
         _enterInPool(_pendingUno, _to);
-        
+
         emit RollOverReward(_to, riskPool, _pendingUno);
     }
 
@@ -323,7 +323,7 @@ contract SingleSidedReinsurancePool is
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
-    function policyClaim(address _to, uint256 _amount) external onlyRole(GAURDIAN_COUNCIL_ROLE) isStartTime isAlive nonReentrant {
+    function policyClaim(address _to, uint256 _amount) external onlyRole(GUARDIAN_COUNCIL_ROLE) isStartTime isAlive nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
@@ -368,7 +368,7 @@ contract SingleSidedReinsurancePool is
         userInfo[_to] = _userInfo;
     }
 
-    function _updateReward(address _to) internal returns(uint256) {
+    function _updateReward(address _to) internal returns (uint256) {
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;

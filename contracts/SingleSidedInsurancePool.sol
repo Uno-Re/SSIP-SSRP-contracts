@@ -28,7 +28,7 @@ contract SingleSidedInsurancePool is
     AccessControlUpgradeable
 {
     bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
-    bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
+    bytes32 public constant GUARDIAN_COUNCIL_ROLE = keccak256("GUARDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
@@ -36,7 +36,7 @@ contract SingleSidedInsurancePool is
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     IERC20 public immutable defaultCurrency;
-    
+
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     bytes32 public immutable defaultIdentifier;
 
@@ -148,9 +148,9 @@ contract SingleSidedInsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
-        _grantRole(GAURDIAN_COUNCIL_ROLE, _governance);
+        _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
         _grantRole(CLAIM_ACCESSOR_ROLE, _claimProccessor);
     }
 
@@ -187,11 +187,11 @@ contract SingleSidedInsurancePool is
         emit LogSetEscalationManager(address(this), _escalatingManager);
     }
 
-    function setGaurdianCouncil(address _gaurdianCouncil) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
-        require(_gaurdianCouncil != address(0), "UnoRe: zero address");
-        _revokeRole(GAURDIAN_COUNCIL_ROLE, msg.sender);
-        _grantRole(GAURDIAN_COUNCIL_ROLE, _gaurdianCouncil);
-        emit LogSetGovernance(_gaurdianCouncil);
+    function setGuardianCouncil(address _guardianCouncil) external onlyRole(GUARDIAN_COUNCIL_ROLE) {
+        require(_guardianCouncil != address(0), "UnoRe: zero address");
+        _revokeRole(GUARDIAN_COUNCIL_ROLE, msg.sender);
+        _grantRole(GUARDIAN_COUNCIL_ROLE, _guardianCouncil);
+        emit LogSetGovernance(_guardianCouncil);
     }
 
     function setCapitalAgent(address _capitalAgent) external onlyRole(ADMIN_ROLE) {
@@ -403,7 +403,7 @@ contract SingleSidedInsurancePool is
         }
 
         _enterInPool(_pendingUno, _to);
-        
+
         emit RollOverReward(_to, riskPool, _pendingUno);
     }
 
@@ -507,7 +507,7 @@ contract SingleSidedInsurancePool is
         ICapitalAgent(capitalAgent).SSIPStaking(_amount);
     }
 
-    function _updateReward(address _to) internal returns(uint256) {
+    function _updateReward(address _to) internal returns (uint256) {
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
@@ -529,5 +529,4 @@ contract SingleSidedInsurancePool is
             TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
         }
     }
-
 }
