@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./uma/ClaimData.sol";
 import "./interfaces/OptimisticOracleV3Interface.sol";
@@ -435,9 +436,11 @@ contract SingleSidedInsurancePool is
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
-    function requestPayout(uint256 _policyId, address _to, uint256 _amount) public isAlive onlyRole(CLAIM_ACCESSOR_ROLE) returns (bytes32 assertionId) {
+    function requestPayout(uint256 _policyId, uint256 _amount, address _to) public isAlive returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
-        (, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
+        require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
+        (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
+        require(_amount <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
         uint256 bond = oo.getMinimumBond(address(defaultCurrency));
         Policy memory _policyData = policies[_policyId];
@@ -452,7 +455,7 @@ contract SingleSidedInsurancePool is
                 ClaimData.toUtf8BytesUint(block.timestamp),
                 "."
             ),
-            msg.sender,
+            _to,
             address(this),
             escalationManager, // No sovereign security.
             uint64(LOCK_TIME),
