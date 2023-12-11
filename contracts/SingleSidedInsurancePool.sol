@@ -436,7 +436,7 @@ contract SingleSidedInsurancePool is
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
-    function requestPayout(uint256 _policyId, uint256 _amount) public isAlive returns (bytes32 assertionId) {
+    function requestPayout(uint256 _policyId, uint256 _amount, address _to) public isAlive returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
         (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
@@ -445,7 +445,7 @@ contract SingleSidedInsurancePool is
         uint256 bond = oo.getMinimumBond(address(defaultCurrency));
         Policy memory _policyData = policies[_policyId];
         _policyData.insuranceAmount = _amount;
-        _policyData.payoutAddress = msg.sender;
+        _policyData.payoutAddress = _to;
         policies[_policyId] = _policyData;
         assertionId = oo.assertTruth(
             abi.encodePacked(
@@ -455,7 +455,7 @@ contract SingleSidedInsurancePool is
                 ClaimData.toUtf8BytesUint(block.timestamp),
                 "."
             ),
-            msg.sender,
+            _to,
             address(this),
             escalationManager, // No sovereign security.
             uint64(LOCK_TIME),
