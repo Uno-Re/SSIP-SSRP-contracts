@@ -126,6 +126,4 @@ Factory contract to create SyntheticSSRP contract, call by SSRP contract.
 
 ## SSIP claim policy coverage splitting into different pools 
 
-- Previously claim accessor manually split coverage amount in differents pools and request for policy to claim like if user has 100 amount of coverage amount than claim accessor claim policy in USDC SSIP pool of 30 amount and 70 from UNO SSIP pool
-- Now, we are going set a state variable which, calculates what percentage of coverage amount will going to distribute from pool 
-- Then user just have to pass policy id in param and pools will fetch corresponding coverage amount from sales policy contract of that policy id and multiply with this percentage value to get coverage amount this pools will be going to transfer to policy holder 
+Previously claim accessor manually split coverage amount into differents pools and request for policy to claim in different pools. After intergration of UMA, user have to manually split coverage amount into different pools and claim for policy in different pools
