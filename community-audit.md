@@ -1,13 +1,17 @@
 # Changes in contracts 
 
+
 ## Capital Agent: 
 This contract manages and store sales policy and SSIP-SSRP pools capital and utilised funds
+
 
 ## SingleSidedInsurancePool: 
 In this pool staker stake funds to generate rewards, and policyholder claims its policy in this contract 
 
+
 ### UMA integration: 
 User can claim its policy, by requesting to uma governance and dao can disputes this policy in uma, if policy is not rejected user can claim funds after delay 
+
 
 #### flow:
 - When comes for claim, it call requestPayout function in SSIP pool
@@ -21,45 +25,58 @@ User can claim its policy, by requesting to uma governance and dao can disputes 
 Issues: 
 - Only claim accessor can claim policy and there was no checks to check if claiming amount is valid or not 
 
+
 ## SingleSidedRensurancePool: 
 In this pool staker stake funds to generate rewards, and policyholder claims its policy in this contract 
 
 Issues: 
 - Only claim accessor can claim policy and there was no checks to check if claiming amount is valid or not 
 
+
 ## EscalatingManager: 
 To check if assertion is valid or not at the time of asserTruth and to disputes assertion id, as these function are called by OptimisticOracleV3 
+
 
 ## Counters:
 Used to increment index of policy id and fetch current policy id
 As new package version of openzeppeline remove counter contract
 
+
 ## ExchangeAgent: 
 Get oracle price feed data and used to convert currency amount for USDC and USDC to currency or token to token 
+
 
 ## PremiumPool: 
 Collect premium from user into this address and check for available currency to collect premium
 
+
 # Rewarder: 
 This contract used to distribute rewards to stake holder of SSIP and SSRP pools 
+
 
 ## RiskPool:
 when user leave and enter in pools riskPool ERC20 token burns into their address, this contract function can only be called by SSIP-SSRP pools
 
+
 ## SalesPolicy:
 This contract provides a policy to the user to buy, and collect premium from the user. This policy is ERC721 token id which is burn and mint at the time of buy and sell policy 
+
 
 ## RiskPoolFactory:
 Factory contract to create riskPool contract, call by SSIP and SSRP contract to create riskPool
 
+
 ## RewarderFactory:
 Factory contract to create rewarder contract, call by SSIP and SSRP contract to distribute rewards token 
+
 
 ## SalesPolicyFactory:
 Factory contract to create salesPolicy contract.
 
+
 ## SyntheticSSIPFactory:
 Factory contract to create SyntheticSSIP contract, call by SSIP contract.
+
 
 ## SyntheticSSRPFactory:
 Factory contract to create SyntheticSSRP contract, call by SSRP contract.
@@ -106,3 +123,9 @@ Factory contract to create SyntheticSSRP contract, call by SSRP contract.
     - SyntheticSSIP
     - SyntheticSSRP
 
+
+## SSIP claim policy coverage splitting into different pools 
+
+- Previously claim accessor manually split coverage amount in differents pools and request for policy to claim like if user has 100 amount of coverage amount than claim accessor claim policy in USDC SSIP pool of 30 amount and 70 from UNO SSIP pool
+- Now, we are going set a state variable which, calculates what percentage of coverage amount will going to distribute from pool 
+- Then user just have to pass policy id in param and pools will fetch corresponding coverage amount from sales policy contract of that policy id and multiply with this percentage value to get coverage amount this pools will be going to transfer to policy holder 
