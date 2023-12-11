@@ -34,10 +34,9 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         _grantRole(OPTMISTIC_ORACLE_V3_ROLE, _optimisticOracleV3);
     }
     
-    function getAssertionPolicy(bytes32 assertionId) external override view returns (AssertionPolicy memory) {
-        OptimisticOracleV3Interface.Assertion memory assertion = optimisticOracleV3.getAssertion(assertionId);
+    function getAssertionPolicy(bytes32) external override pure returns (AssertionPolicy memory) {
         return AssertionPolicy({
-            blockAssertion: !checkAssertingCaller[assertion.escalationManagerSettings.assertingCaller],
+            blockAssertion: false,
             arbitrateViaEscalationManager: true,
             discardOracle: true,
             validateDisputers: true
