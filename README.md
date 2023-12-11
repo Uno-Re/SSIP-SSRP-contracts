@@ -27,7 +27,7 @@ Changes in SSIP:
     Add a PolicyInfo struct to store policy-approved delay information.
     Remove Ownable and use AccessControl.
     Add policy approval function; use the CLAIM_ACCESSOR_ROLE to approve the policy.
-    Add policy rejection function; use the GAURDIAN_COUNCIL_ROLE to reject the policy.
+    Add policy rejection function; use the GUARDIAN_COUNCIL_ROLE to reject the policy.
     Use the guardian council to claim policy.
     Add delay in policy claim.
 
