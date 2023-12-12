@@ -19,6 +19,7 @@ import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./interfaces/ISyntheticSSIPFactory.sol";
 import "./interfaces/ISalesPolicy.sol";
+import "./interfaces/IGnosisSafe.sol";
 import "./libraries/TransferHelper.sol";
 
 contract SingleSidedInsurancePool is
@@ -28,7 +29,7 @@ contract SingleSidedInsurancePool is
     AccessControlUpgradeable
 {
     bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
-    bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
+    bytes32 public constant GUARDIAN_COUNCIL_ROLE = keccak256("GUARDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
@@ -36,7 +37,7 @@ contract SingleSidedInsurancePool is
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     IERC20 public immutable defaultCurrency;
-    
+
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     bytes32 public immutable defaultIdentifier;
 
@@ -70,7 +71,6 @@ contract SingleSidedInsurancePool is
     struct Policy {
         uint256 insuranceAmount;
         address payoutAddress;
-        bytes insuredEvent;
         bool settled;
     }
 
@@ -111,17 +111,12 @@ contract SingleSidedInsurancePool is
     event PoolAlived(address indexed _owner, bool _alive);
     event PolicyApproved(address indexed _owner, uint256 _policyId);
     event PolicyRejected(address indexed _owner, uint256 _policyId);
-    event InsuranceIssued(
-        bytes32 indexed policyId,
-        bytes insuredEvent,
-        uint256 insuranceAmount,
-        address indexed payoutAddress
-    );
+    event InsuranceIssued(bytes32 indexed policyId, bytes insuredEvent, uint256 insuranceAmount, address indexed payoutAddress);
 
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
 
     event InsurancePayoutSettled(uint256 indexed policyId, bytes32 indexed assertionId);
-    event RollOverReward(address indexed _staker, address indexed _pool, uint256 _amount);
+    event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
 
     event LogSetEscalationManager(address indexed _SSIP, address indexed _escalatingManager);
 
@@ -136,7 +131,13 @@ contract SingleSidedInsurancePool is
         _disableInitializers();
     }
 
-    function initialize(address _capitalAgent, address _multiSigWallet, address _governance, address _claimProccessor, address _escalationManager) public initializer {
+    function initialize(
+        address _capitalAgent,
+        address _multiSigWallet,
+        address _governance,
+        address _claimAssessor,
+        address _escalationManager
+    ) public initializer {
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         capitalAgent = _capitalAgent;
@@ -148,9 +149,11 @@ contract SingleSidedInsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _grantRole(GAURDIAN_COUNCIL_ROLE, _governance);
-        _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
-        _grantRole(CLAIM_ACCESSOR_ROLE, _claimProccessor);
+        _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
+        _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
+        require(IGnosisSafe(_claimAssessor).getOwners().length > 2, "UnoRe: more than two owners requied");
+        require(IGnosisSafe(_claimAssessor).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
+        _grantRole(CLAIM_ACCESSOR_ROLE, _claimAssessor);
         _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
     }
 
@@ -187,11 +190,11 @@ contract SingleSidedInsurancePool is
         emit LogSetEscalationManager(address(this), _escalatingManager);
     }
 
-    function setGaurdianCouncil(address _gaurdianCouncil) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
-        require(_gaurdianCouncil != address(0), "UnoRe: zero address");
-        _revokeRole(GAURDIAN_COUNCIL_ROLE, msg.sender);
-        _grantRole(GAURDIAN_COUNCIL_ROLE, _gaurdianCouncil);
-        emit LogSetGovernance(_gaurdianCouncil);
+    function setGuardianCouncil(address _guardianCouncil) external onlyRole(GUARDIAN_COUNCIL_ROLE) {
+        require(_guardianCouncil != address(0), "UnoRe: zero address");
+        _revokeRole(GUARDIAN_COUNCIL_ROLE, msg.sender);
+        _grantRole(GUARDIAN_COUNCIL_ROLE, _guardianCouncil);
+        emit LogSetGovernance(_guardianCouncil);
     }
 
     function setCapitalAgent(address _capitalAgent) external onlyRole(ADMIN_ROLE) {
@@ -208,6 +211,8 @@ contract SingleSidedInsurancePool is
 
     function setClaimAssessor(address _claimAssessor) external onlyRole(CLAIM_ACCESSOR_ROLE) {
         require(_claimAssessor != address(0), "UnoRe: zero address");
+        require(IGnosisSafe(_claimAssessor).getOwners().length > 2, "UnoRe: more than two owners requied");
+        require(IGnosisSafe(_claimAssessor).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         _revokeRole(CLAIM_ACCESSOR_ROLE, msg.sender);
         _grantRole(CLAIM_ACCESSOR_ROLE, _claimAssessor);
         emit LogSetClaimAssessor(address(this), _claimAssessor);
@@ -391,20 +396,23 @@ contract SingleSidedInsurancePool is
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address _to) external isStartTime isAlive nonReentrant { // TODO: Address of array
-        require(!userInfo[_to].isNotRollOver, "UnoRe: rollover is not set");
+    function rollOverReward(address[] memory _to) external isStartTime isAlive nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
+        uint256 _totalPendingUno;
+        for (uint256 i; i < _to.length; i++) {
+            require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
-        uint256 _pendingUno = _updateReward(_to);
+            uint256 _pendingUno = _updateReward(_to[i]);
+            _totalPendingUno += _pendingUno;
 
-        if (rewarder != address(0) && _pendingUno != 0) {
-            IRewarder(rewarder).onReward(riskPool, _pendingUno);
+            _enterInPool(_pendingUno, _to[i]);
         }
 
-        _enterInPool(_pendingUno, _to);
-        
-        emit RollOverReward(_to, riskPool, _pendingUno);
+        if (rewarder != address(0) && _totalPendingUno != 0) {
+            IRewarder(rewarder).onReward(riskPool, _totalPendingUno);
+        }
+        emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
 
     function cancelWithdrawRequest() external nonReentrant {
@@ -450,7 +458,6 @@ contract SingleSidedInsurancePool is
         assertionId = oo.assertTruth(
             abi.encodePacked(
                 "Insurance contract is claiming that insurance event ",
-                _policyData.insuredEvent,
                 " had occurred as of ",
                 ClaimData.toUtf8BytesUint(block.timestamp),
                 "."
@@ -507,7 +514,7 @@ contract SingleSidedInsurancePool is
         ICapitalAgent(capitalAgent).SSIPStaking(_amount);
     }
 
-    function _updateReward(address _to) internal returns(uint256) {
+    function _updateReward(address _to) internal returns (uint256) {
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
@@ -529,5 +536,4 @@ contract SingleSidedInsurancePool is
             TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
         }
     }
-
 }
