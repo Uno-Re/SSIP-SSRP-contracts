@@ -4,13 +4,16 @@ pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
 
-contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
+contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
+
+    bytes32 public constant GUARDIAN_COUCIL_ROLE = keccak256("GUARDIAN_COUCIL_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     // using Address for address;
     address public exchangeAgent;
     address public UNO_TOKEN;
@@ -43,7 +46,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
     event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event PoolAlived(address indexed _owner, bool _alive);
 
-    constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet) Ownable(_multiSigWallet) {
+    constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet, address _guardianCouncil) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
@@ -52,6 +55,10 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         UNO_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
         whiteList[msg.sender] = true;
+        _grantRole(ADMIN_ROLE, _multiSigWallet);
+        _grantRole(GUARDIAN_COUCIL_ROLE, _guardianCouncil);
+        _setRoleAdmin(GUARDIAN_COUCIL_ROLE, ADMIN_ROLE);
+
     }
 
     modifier onlyAvailableCurrency(address _currency) {
@@ -71,20 +78,20 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
 
     receive() external payable {}
 
-    function pausePool() external onlyOwner {
+    function pausePool() external onlyRole(ADMIN_ROLE) {
         _pause();
     }
 
-    function UnpausePool() external onlyOwner {
+    function UnpausePool() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
 
-    function killPool() external onlyOwner {
+    function killPool() external onlyRole(ADMIN_ROLE) {
         killed = true;
         emit PoolAlived(msg.sender, true);
     }
 
-    function revivePool() external onlyOwner {
+    function revivePool() external onlyRole(ADMIN_ROLE) {
         killed = false;
         emit PoolAlived(msg.sender, false);
     }
@@ -115,7 +122,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         emit LogCollectPremium(msg.sender, _premiumCurrency, _premiumAmount);
     }
 
-    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyOwner isAlive nonReentrant {
+    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyRole(ADMIN_ROLE) isAlive nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         uint256 usdcAmountToDeposit = 0;
@@ -150,7 +157,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         address _currency,
         address _rewarder,
         uint256 _amount
-    ) external onlyOwner isAlive nonReentrant {
+    ) external onlyRole(ADMIN_ROLE) isAlive nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
@@ -168,7 +175,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         }
     }
 
-    function buyBackAndBurn() external onlyOwner isAlive {
+    function buyBackAndBurn() external onlyRole(ADMIN_ROLE) isAlive {
         uint256 unoAmount = 0;
         if (BACK_BURN_PREMIUM_ETH > 0) {
             TransferHelper.safeTransferETH(exchangeAgent, BACK_BURN_PREMIUM_ETH);
@@ -192,7 +199,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         emit LogBuyBackAndBurn(msg.sender, address(this), unoAmount);
     }
 
-    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyOwner whenNotPaused { // TODO: accessed through only governance module
+    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyRole(GUARDIAN_COUCIL_ROLE) whenNotPaused {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {
@@ -205,7 +212,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         emit PremiumWithdraw(_currency, _to, _amount);
     }
 
-    function addCurrency(address _currency) external onlyOwner {
+    function addCurrency(address _currency) external onlyRole(ADMIN_ROLE) {
         require(!availableCurrencies[_currency], "Already available");
         availableCurrencies[_currency] = true;
         availableCurrencyList.push(_currency);
@@ -213,7 +220,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         emit LogAddCurrency(address(this), _currency);
     }
 
-    function removeCurrency(address _currency) external onlyOwner {
+    function removeCurrency(address _currency) external onlyRole(ADMIN_ROLE) {
         require(availableCurrencies[_currency], "Not available yet");
         availableCurrencies[_currency] = false;
         uint256 len = availableCurrencyList.length;
@@ -229,28 +236,28 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         emit LogRemoveCurrency(address(this), _currency);
     }
 
-    function maxApproveCurrency(address _currency, address _to) public onlyOwner nonReentrant {
+    function maxApproveCurrency(address _currency, address _to) public onlyRole(ADMIN_ROLE) nonReentrant {
         if (IERC20(_currency).allowance(address(this), _to) < MAX_INTEGER) {
             TransferHelper.safeApprove(_currency, _to, MAX_INTEGER);
             emit LogMaxApproveCurrency(address(this), _currency, _to);
         }
     }
 
-    function destroyCurrencyAllowance(address _currency, address _to) public onlyOwner nonReentrant {
+    function destroyCurrencyAllowance(address _currency, address _to) public onlyRole(ADMIN_ROLE) nonReentrant {
         if (IERC20(_currency).allowance(address(this), _to) > 0) {
             TransferHelper.safeApprove(_currency, _to, 0);
             emit LogMaxDestroyCurrencyAllowance(address(this), _currency, _to);
         }
     }
 
-    function addWhiteList(address _whiteListAddress) external onlyOwner {
+    function addWhiteList(address _whiteListAddress) external onlyRole(ADMIN_ROLE) {
         require(_whiteListAddress != address(0), "UnoRe: zero address");
         require(!whiteList[_whiteListAddress], "UnoRe: white list already");
         whiteList[_whiteListAddress] = true;
         emit LogAddWhiteList(address(this), _whiteListAddress);
     }
 
-    function removeWhiteList(address _whiteListAddress) external onlyOwner {
+    function removeWhiteList(address _whiteListAddress) external onlyRole(ADMIN_ROLE) {
         require(_whiteListAddress != address(0), "UnoRe: zero address");
         require(whiteList[_whiteListAddress], "UnoRe: white list removed or unadded already");
         whiteList[_whiteListAddress] = false;
