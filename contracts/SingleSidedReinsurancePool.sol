@@ -22,7 +22,7 @@ contract SingleSidedReinsurancePool is
     AccessControlUpgradeable,
     PausableUpgradeable
 {
-    bytes32 public constant GAURDIAN_COUNCIL_ROLE = keccak256("GAURDIAN_COUNCIL_ROLE");
+    bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address public migrateTo;
@@ -66,23 +66,24 @@ contract SingleSidedReinsurancePool is
     event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
     event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
     event LogSetRewardMultiplier(address indexed _SSIP, uint256 _rewardMultiplier);
-    event LogSetGovernance(address indexed _SSIP, address indexed _gaurdianCouncil);
+    event LogSetGovernance(address indexed _SSIP, address indexed _guardianCouncil);
     event LogSetMigrateTo(address indexed _SSIP, address indexed _migrateTo);
     event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
     event PoolAlived(address indexed _owner, bool _alive);
-    event RollOverReward(address indexed _staker, address indexed _pool, uint256 _amount);
+    event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
 
-    function initialize(address _multiSigWallet) public initializer {
+    function initialize(address _multiSigWallet, address _claimAccessor) public initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         STAKING_START_TIME = block.timestamp + 3 days;
         __ReentrancyGuard_init();
         __Pausable_init();
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
+        _grantRole(CLAIM_ACCESSOR_ROLE, _claimAccessor);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
     }
 
     modifier isStartTime() {
@@ -119,11 +120,11 @@ contract SingleSidedReinsurancePool is
         emit LogSetRewardMultiplier(address(this), _rewardMultiplier);
     }
 
-    function setGaurdianCouncil(address _gaurdianCouncil) external onlyRole(GAURDIAN_COUNCIL_ROLE) {
-        require(_gaurdianCouncil != address(0), "UnoRe: zero address");
-        _revokeRole(GAURDIAN_COUNCIL_ROLE, msg.sender);
-        _grantRole(GAURDIAN_COUNCIL_ROLE, _gaurdianCouncil);
-        emit LogSetGovernance(address(this), _gaurdianCouncil);
+    function setClaimAccessor(address _claimAccesssor) external onlyRole(CLAIM_ACCESSOR_ROLE) {
+        require(_claimAccesssor != address(0), "UnoRe: zero address");
+        _revokeRole(CLAIM_ACCESSOR_ROLE, msg.sender);
+        _grantRole(CLAIM_ACCESSOR_ROLE, _claimAccesssor);
+        emit LogSetGovernance(address(this), _claimAccesssor);
     }
 
     function setMigrateTo(address _migrateTo) external onlyRole(ADMIN_ROLE) {
@@ -302,20 +303,25 @@ contract SingleSidedReinsurancePool is
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address _to) external isStartTime isAlive nonReentrant {
-        require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+    function rollOverReward(address[] memory _to) external isStartTime isAlive nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
+        uint256 _totalPendingUno;
+        for (uint256 i; i < _to.length; i++) {
+            require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
-        uint256 _pendingUno = _updateReward(_to);
+            uint256 _pendingUno = _updateReward(_to[i]);
+            _totalPendingUno += _pendingUno;
 
-        if (rewarder != address(0) && _pendingUno != 0) {
-            IRewarder(rewarder).onReward(riskPool, _pendingUno);
+
+            _enterInPool(_pendingUno, _to[i]);
+
         }
-
-        _enterInPool(_pendingUno, _to);
+        if (rewarder != address(0) && _totalPendingUno != 0) {
+            IRewarder(rewarder).onReward(riskPool, _totalPendingUno);
+        }
         
-        emit RollOverReward(_to, riskPool, _pendingUno);
+        emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
 
     function cancelWithdrawRequest() external nonReentrant {
@@ -323,7 +329,7 @@ contract SingleSidedReinsurancePool is
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
-    function policyClaim(address _to, uint256 _amount) external onlyRole(GAURDIAN_COUNCIL_ROLE) isStartTime isAlive nonReentrant {
+    function policyClaim(address _to, uint256 _amount) external onlyRole(CLAIM_ACCESSOR_ROLE) isStartTime isAlive nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);

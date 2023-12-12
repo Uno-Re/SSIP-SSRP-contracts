@@ -50,7 +50,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
     event PoolAlived(address indexed _owner, bool _alive);
-    event RollOverReward(address indexed _staker, address indexed _pool, uint256 _amount);
+    event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
 
     constructor(address _lpToken, address _multiSigWallet) Ownable(_multiSigWallet) {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -158,20 +158,26 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
         emit LogStakedInPool(msg.sender, address(this), _amount);
     }
 
-    function rollOverReward(address _to) external isAlive nonReentrant {
-        require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+    function rollOverReward(address[] memory _to) external isAlive nonReentrant {
         require(lpToken == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
 
-        uint256 _pendingReward = _updateReward(_to);
+        uint256 _totalPendingReward;
+        for (uint256 i; i < _to.length; i++) {
+        require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
-        if (rewarder != address(0) && _pendingReward > 0) {
-            IRewarder(rewarder).onReward(address(this), _pendingReward);
+        uint256 _pendingReward = _updateReward(_to[i]);
+        _totalPendingReward += _pendingReward;
+
+        _enterInPool(_pendingReward, _to[i]);
+
         }
 
-        _enterInPool(_pendingReward, _to);
+        if (rewarder != address(0) && _totalPendingReward > 0) {
+            IRewarder(rewarder).onReward(address(this), _totalPendingReward);
+        }
         
-        emit RollOverReward(_to, address(this), _pendingReward);
+        emit RollOverReward(_to, address(this), _totalPendingReward);
     }
 
     /**
