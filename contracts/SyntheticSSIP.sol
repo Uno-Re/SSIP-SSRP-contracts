@@ -16,18 +16,19 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
 
-    address public migrateTo;
-
-    uint256 public LOCK_TIME = 10 days;
     uint256 public constant ACC_REWARD_PRECISION = 1e18;
 
+
+    uint256 public lockTime = 10 days;
+
+    address public migrateTo;
     address public rewarder;
     address public lpToken;
+    bool public killed;
 
     uint256 lastRewardBlock;
     uint256 accRewardPerShare;
     uint256 public rewardPerBlock;
-    bool public killed;
 
     struct UserInfo {
         uint256 lastWithdrawTime;
@@ -102,7 +103,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
 
     function setLockTime(uint256 _lockTime) external onlyRole(ADMIN_ROLE) {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
-        LOCK_TIME = _lockTime;
+        lockTime = _lockTime;
         emit LogSetLockTime(address(this), _lockTime);
     }
 
@@ -118,7 +119,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         if (
-            userInfo[msg.sender].pendingWithdrawAmount > 0 && block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LOCK_TIME
+            userInfo[msg.sender].pendingWithdrawAmount > 0 && block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime
         ) {
             _leaveFromPending();
         } else {
@@ -206,7 +207,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
     function leaveFromPending() external override whenNotPaused nonReentrant {
-        require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LOCK_TIME, "UnoRe: Locked time");
+        require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
         _leaveFromPending();
     }
