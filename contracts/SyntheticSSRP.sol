@@ -3,7 +3,7 @@
 pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IMigration.sol";
 import "./interfaces/IRewarderFactory.sol";
@@ -11,7 +11,11 @@ import "./interfaces/ISyntheticSSRP.sol";
 import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
 
-contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
+contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausable {
+
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
+
     address public migrateTo;
 
     uint256 public LOCK_TIME = 10 days;
@@ -50,13 +54,15 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
     event PoolAlived(address indexed _owner, bool _alive);
-    event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
+    event RollOverReward(address indexed _pool, address[] indexed _staker, uint256 _amount);
 
-    constructor(address _lpToken, address _multiSigWallet) Ownable(_multiSigWallet) {
+    constructor(address _lpToken, address _multiSigWallet) {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
         require(_lpToken != address(0), "UnoRe: zero lp token address");
         lpToken = _lpToken;
         rewardPerBlock = 1e18;
+        _grantRole(ADMIN_ROLE, _multiSigWallet);
+        _setRoleAdmin(BOT_ROLE, ADMIN_ROLE);
     }
 
     modifier isAlive() {
@@ -64,43 +70,43 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
         _;
     }
 
-    function pause() external onlyOwner {
+    function pause() external onlyRole(ADMIN_ROLE) {
         _pause();
     }
 
-    function unPause() external onlyOwner {
+    function unPause() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
 
-    function killPool() external onlyOwner {
+    function killPool() external onlyRole(ADMIN_ROLE) {
         killed = true;
         emit PoolAlived(msg.sender, true);
     }
 
-    function revivePool() external onlyOwner {
+    function revivePool() external onlyRole(ADMIN_ROLE) {
         killed = false;
         emit PoolAlived(msg.sender, false);
     }
 
-    function setRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
+    function setRewardPerBlock(uint256 _rewardPerBlock) external onlyRole(ADMIN_ROLE) {
         require(_rewardPerBlock > 0, "UnoRe: zero value");
         rewardPerBlock = _rewardPerBlock;
         emit LogSetRewardPerBlock(address(this), _rewardPerBlock);
     }
 
-    function setMigrateTo(address _migrateTo) external onlyOwner {
+    function setMigrateTo(address _migrateTo) external onlyRole(ADMIN_ROLE) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         migrateTo = _migrateTo;
         emit LogSetMigrateTo(address(this), _migrateTo);
     }
 
-    function setLockTime(uint256 _lockTime) external onlyOwner {
+    function setLockTime(uint256 _lockTime) external onlyRole(ADMIN_ROLE) {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
         LOCK_TIME = _lockTime;
         emit LogSetLockTime(address(this), _lockTime);
     }
 
-    function createRewarder(address _operator, address _factory, address _currency) external onlyOwner nonReentrant {
+    function createRewarder(address _operator, address _factory, address _currency) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         require(_currency != address(0), "UnoRe: zero currency address");
@@ -158,7 +164,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
         emit LogStakedInPool(msg.sender, address(this), _amount);
     }
 
-    function rollOverReward(address[] memory _to) external isAlive nonReentrant {
+    function rollOverReward(address[] memory _to) external isAlive onlyRole(BOT_ROLE) nonReentrant {
         require(lpToken == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
 
@@ -177,7 +183,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, Ownable, Pausable {
             IRewarder(rewarder).onReward(address(this), _totalPendingReward);
         }
         
-        emit RollOverReward(_to, address(this), _totalPendingReward);
+        emit RollOverReward(address(this), _to, _totalPendingReward);
     }
 
     /**
