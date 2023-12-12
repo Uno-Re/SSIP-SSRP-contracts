@@ -31,6 +31,7 @@ contract SingleSidedInsurancePool is
     bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
     bytes32 public constant GUARDIAN_COUNCIL_ROLE = keccak256("GUARDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant APPROVED_ROLE = keccak256("APPROVED_ROLEVEL");
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     OptimisticOracleV3Interface public immutable oo;
@@ -42,13 +43,14 @@ contract SingleSidedInsurancePool is
     bytes32 public immutable defaultIdentifier;
 
     address public escalationManager;
-    address public governance;
     address public migrateTo;
     address public capitalAgent;
     address public syntheticSSIP;
 
     bool public killed;
+    bool public failed;
     uint256 public LOCK_TIME;
+    uint256 public assertionliveTime;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
     uint256 public STAKING_START_TIME;
 
@@ -74,6 +76,11 @@ contract SingleSidedInsurancePool is
         bool settled;
     }
 
+    struct RoleLockTime {
+        uint256 gaurdianRoleTime;
+        uint256 claimAccessorRoleTime;
+    }
+
     mapping(bytes32 => uint256) public assertedPolicies;
     mapping(uint256 => bytes32) public policiesAssertionId;
 
@@ -82,6 +89,7 @@ contract SingleSidedInsurancePool is
     mapping(address => UserInfo) public userInfo;
 
     PoolInfo public poolInfo;
+    RoleLockTime public roleLockTime;
 
     event RiskPoolCreated(address indexed _SSIP, address indexed _pool);
     event StakedInPool(address indexed _staker, address indexed _pool, uint256 _amount);
@@ -107,8 +115,10 @@ contract SingleSidedInsurancePool is
     event LogSetMigrateTo(address indexed _SSIP, address indexed _migrateTo);
     event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
+    event LogSetAssertionAliveTime(address indexed _SSIP, uint256 _assertionAliveTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
     event PoolAlived(address indexed _owner, bool _alive);
+    event PoolFailed(address indexed _owner, bool _fail);
     event PolicyApproved(address indexed _owner, uint256 _policyId);
     event PolicyRejected(address indexed _owner, uint256 _policyId);
     event InsuranceIssued(bytes32 indexed policyId, bytes insuredEvent, uint256 insuranceAmount, address indexed payoutAddress);
@@ -119,6 +129,7 @@ contract SingleSidedInsurancePool is
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
 
     event LogSetEscalationManager(address indexed _SSIP, address indexed _escalatingManager);
+    event RoleAccepted(address indexed _SSIP, address indexed _previousOwner, address indexed _newOwner);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(address _defaultCurrency, address _optimisticOracleV3) {
@@ -141,8 +152,8 @@ contract SingleSidedInsurancePool is
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         capitalAgent = _capitalAgent;
-        governance = _governance;
         LOCK_TIME = 10 days;
+        assertionliveTime = 10 days;
         escalationManager = _escalationManager;
         __ReentrancyGuard_init();
         __Pausable_init();
@@ -185,6 +196,11 @@ contract SingleSidedInsurancePool is
         emit PoolAlived(msg.sender, false);
     }
 
+    function setFailed(bool _failed) external onlyRole(GUARDIAN_COUNCIL_ROLE) {
+        failed = _failed;
+        emit PoolFailed(msg.sender, _failed);
+    }
+
     function setEscalatingManager(address _escalatingManager) external onlyRole(ADMIN_ROLE) {
         escalationManager = _escalatingManager;
         emit LogSetEscalationManager(address(this), _escalatingManager);
@@ -192,8 +208,8 @@ contract SingleSidedInsurancePool is
 
     function setGuardianCouncil(address _guardianCouncil) external onlyRole(GUARDIAN_COUNCIL_ROLE) {
         require(_guardianCouncil != address(0), "UnoRe: zero address");
-        _revokeRole(GUARDIAN_COUNCIL_ROLE, msg.sender);
-        _grantRole(GUARDIAN_COUNCIL_ROLE, _guardianCouncil);
+        roleLockTime.gaurdianRoleTime = block.timestamp;
+        _grantRole(APPROVED_ROLE, _guardianCouncil);
         emit LogSetGovernance(_guardianCouncil);
     }
 
@@ -213,9 +229,27 @@ contract SingleSidedInsurancePool is
         require(_claimAssessor != address(0), "UnoRe: zero address");
         require(IGnosisSafe(_claimAssessor).getOwners().length > 2, "UnoRe: more than two owners requied");
         require(IGnosisSafe(_claimAssessor).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
-        _revokeRole(CLAIM_ACCESSOR_ROLE, msg.sender);
-        _grantRole(CLAIM_ACCESSOR_ROLE, _claimAssessor);
+        roleLockTime.claimAccessorRoleTime = block.timestamp;
+        _grantRole(APPROVED_ROLE, _claimAssessor);
         emit LogSetClaimAssessor(address(this), _claimAssessor);
+    }
+
+    function acceptClaimAccessorRole(address _previousOwner) external onlyRole(APPROVED_ROLE) {
+        require(block.timestamp >= roleLockTime.claimAccessorRoleTime + 10 days, "UnoRe: lock time not passed");
+        _checkRole(CLAIM_ACCESSOR_ROLE, _previousOwner);
+        _revokeRole(CLAIM_ACCESSOR_ROLE, _previousOwner);
+        _revokeRole(APPROVED_ROLE, msg.sender);
+        _grantRole(CLAIM_ACCESSOR_ROLE, msg.sender);
+        emit RoleAccepted(address(this), _previousOwner, msg.sender);
+    }
+
+    function acceptGuardianCouncilRole(address _previousOwner) external onlyRole(APPROVED_ROLE) {
+        require(block.timestamp >= roleLockTime.gaurdianRoleTime + 10 days, "UnoRe: lock time not passed");
+        _checkRole(GUARDIAN_COUNCIL_ROLE, _previousOwner);
+        _revokeRole(GUARDIAN_COUNCIL_ROLE, _previousOwner);
+        _revokeRole(APPROVED_ROLE, msg.sender);
+        _grantRole(GUARDIAN_COUNCIL_ROLE, msg.sender);
+        emit RoleAccepted(address(this), _previousOwner, msg.sender);
     }
 
     function setMigrateTo(address _migrateTo) external onlyRole(ADMIN_ROLE) {
@@ -234,6 +268,12 @@ contract SingleSidedInsurancePool is
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
         LOCK_TIME = _lockTime;
         emit LogSetLockTime(address(this), _lockTime);
+    }
+
+    function setAliveness(uint256 _assertionliveTime) external onlyRole(ADMIN_ROLE) {
+        require(_assertionliveTime > 0, "UnoRe: not allow zero lock time");
+        assertionliveTime = _assertionliveTime;
+        emit LogSetAssertionAliveTime(address(this), _assertionliveTime);
     }
 
     function setStakingStartTime(uint256 _startTime) external onlyRole(ADMIN_ROLE) {
@@ -444,7 +484,19 @@ contract SingleSidedInsurancePool is
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
+    function claimByGovernance(uint256 _policyId) external isAlive onlyRole(GUARDIAN_COUNCIL_ROLE) {
+        Policy storage policy = policies[_policyId];
+        require(!policy.settled, "UnoRe: policyId already settled");
+        policy.settled = true;
+        bytes32 _assertionId = policiesAssertionId[_policyId];
+        delete policiesAssertionId[_policyId];
+        delete assertedPolicies[_assertionId];
+        uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(policy.payoutAddress, policy.insuranceAmount);
+        ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
+    }
+
     function requestPayout(uint256 _policyId, uint256 _amount, address _to) public isAlive returns (bytes32 assertionId) {
+        require(!failed, "UnoRe: can not request");
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
         (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
@@ -478,6 +530,7 @@ contract SingleSidedInsurancePool is
 
     function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public isAlive {
         require(msg.sender == address(oo), "UnoRe: not authorized");
+        require(!failed, "UnoRe: can not settle policy");
         // If the assertion was true, then the policy is settled.
         if (assertedTruthfully) {
             _settlePayout(assertionId);
