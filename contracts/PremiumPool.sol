@@ -192,7 +192,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, Ownable, Pausable {
         emit LogBuyBackAndBurn(msg.sender, address(this), unoAmount);
     }
 
-    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyOwner whenNotPaused {
+    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyOwner whenNotPaused { // TODO: accessed through only governance module
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {

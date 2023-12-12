@@ -148,10 +148,10 @@ contract SingleSidedInsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
-        _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
         _grantRole(GAURDIAN_COUNCIL_ROLE, _governance);
+        _setRoleAdmin(GAURDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _grantRole(CLAIM_ACCESSOR_ROLE, _claimProccessor);
+        _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
     }
 
     modifier isStartTime() {
@@ -391,8 +391,8 @@ contract SingleSidedInsurancePool is
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address _to) external isStartTime isAlive nonReentrant {
-        require(!userInfo[msg.sender].isNotRollOver, "UnoRe: rollover is not set");
+    function rollOverReward(address _to) external isStartTime isAlive nonReentrant { // TODO: Address of array
+        require(!userInfo[_to].isNotRollOver, "UnoRe: rollover is not set");
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
 
@@ -454,10 +454,10 @@ contract SingleSidedInsurancePool is
                 " had occurred as of ",
                 ClaimData.toUtf8BytesUint(block.timestamp),
                 "."
-            ),
+            ), // TODO: pass more information to UMA side from this string part
             _to,
             address(this),
-            escalationManager, // No sovereign security.
+            escalationManager, // No sovereign security. TODO make claim assessor role as this.
             uint64(LOCK_TIME),
             defaultCurrency,
             bond,
