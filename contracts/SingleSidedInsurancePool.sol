@@ -505,7 +505,7 @@ contract SingleSidedInsurancePool is
 
     function assertionDisputedCallback(bytes32 assertionId) external {}
 
-    function settlePayout(uint256 _policyId, bytes32 _assertionId) public onlyRole(CLAIM_PROCESSOR_ROLE)  roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
+    function settlePayout(uint256 _policyId, bytes32 _assertionId) public isAlive onlyRole(CLAIM_PROCESSOR_ROLE)  roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
         // If already settled, do nothing. We don't revert because this function is called by the
         // OptimisticOracleV3, which may block the assertion resolution.
         Policy storage policy = policies[_policyId];
