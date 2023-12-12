@@ -58,6 +58,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _grantRole(GOVERNANCE_ROLE, _governance);
         _setRoleAdmin(GOVERNANCE_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
 
     }
 

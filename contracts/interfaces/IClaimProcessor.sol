@@ -3,6 +3,6 @@
 
 pragma solidity =0.8.23;
 
-interface IClaimProccessor {
+interface IClaimProcessor {
     function requestPolicyId(uint256 _policyId) external;
 }
