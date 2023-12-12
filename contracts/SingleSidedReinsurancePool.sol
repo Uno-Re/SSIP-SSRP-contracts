@@ -14,6 +14,7 @@ import "./interfaces/ISingleSidedReinsurancePool.sol";
 import "./interfaces/ISyntheticSSRPFactory.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
+import "./interfaces/IGnosisSafe.sol";
 import "./libraries/TransferHelper.sol";
 
 contract SingleSidedReinsurancePool is
@@ -24,11 +25,12 @@ contract SingleSidedReinsurancePool is
 {
     bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
 
     address public migrateTo;
     address public syntheticSSRP;
 
-    uint256 public LOCK_TIME = 10 days;
+    uint256 public LockTime = 10 days;
     uint256 public constant ACC_UNO_PRECISION = 1e18;
     uint256 public STAKING_START_TIME;
 
@@ -50,6 +52,7 @@ contract SingleSidedReinsurancePool is
     }
 
     mapping(address => UserInfo) public userInfo;
+    mapping(bytes32 => mapping(address => uint256)) public roleLockTime;
 
     PoolInfo public poolInfo;
 
@@ -66,7 +69,7 @@ contract SingleSidedReinsurancePool is
     event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
     event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
     event LogSetRewardMultiplier(address indexed _SSIP, uint256 _rewardMultiplier);
-    event LogSetGovernance(address indexed _SSIP, address indexed _guardianCouncil);
+    event LogSetRole(address indexed _SSIP, bytes32 _role, address indexed _account);
     event LogSetMigrateTo(address indexed _SSIP, address indexed _migrateTo);
     event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
@@ -74,8 +77,10 @@ contract SingleSidedReinsurancePool is
     event PoolAlived(address indexed _owner, bool _alive);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
 
-    function initialize(address _multiSigWallet, address _claimAccessor) public initializer {
+    function initialize(address _multiSigWallet, address _claimAccessor) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
+        require(IGnosisSafe(_claimAccessor).getOwners().length > 3, "UnoRe: more than three owners required");
+        require(IGnosisSafe(_claimAccessor).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         STAKING_START_TIME = block.timestamp + 3 days;
         __ReentrancyGuard_init();
         __Pausable_init();
@@ -120,11 +125,11 @@ contract SingleSidedReinsurancePool is
         emit LogSetRewardMultiplier(address(this), _rewardMultiplier);
     }
 
-    function setClaimAccessor(address _claimAccesssor) external onlyRole(CLAIM_ACCESSOR_ROLE) {
-        require(_claimAccesssor != address(0), "UnoRe: zero address");
-        _revokeRole(CLAIM_ACCESSOR_ROLE, msg.sender);
-        _grantRole(CLAIM_ACCESSOR_ROLE, _claimAccesssor);
-        emit LogSetGovernance(address(this), _claimAccesssor);
+    function setRole(bytes32 _role, address _account) external onlyRole(_role) {
+        require(_account != address(0), "UnoRe: zero address");
+        _grantRole(_role, _account);
+        roleLockTime[_role][_account] = block.timestamp + LockTime;
+        emit LogSetRole(address(this), _role, _account);
     }
 
     function setMigrateTo(address _migrateTo) external onlyRole(ADMIN_ROLE) {
@@ -141,7 +146,7 @@ contract SingleSidedReinsurancePool is
 
     function setLockTime(uint256 _lockTime) external onlyRole(ADMIN_ROLE) {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
-        LOCK_TIME = _lockTime;
+        LockTime = _lockTime;
         emit LogSetLockTime(address(this), _lockTime);
     }
 
@@ -191,7 +196,7 @@ contract SingleSidedReinsurancePool is
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
-        bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LOCK_TIME;
+        bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > LockTime;
         uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
         IMigration(migrateTo).onMigration(msg.sender, amount, "");
         userInfo[msg.sender].amount = 0;
@@ -250,7 +255,7 @@ contract SingleSidedReinsurancePool is
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
     function leaveFromPending() external override isStartTime whenNotPaused nonReentrant {
-        require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LOCK_TIME, "UnoRe: Locked time");
+        require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= LockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
         (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
@@ -303,7 +308,7 @@ contract SingleSidedReinsurancePool is
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address[] memory _to) external isStartTime isAlive nonReentrant {
+    function rollOverReward(address[] memory _to) external isStartTime isAlive onlyRole(BOT_ROLE) nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
@@ -330,6 +335,7 @@ contract SingleSidedReinsurancePool is
     }
 
     function policyClaim(address _to, uint256 _amount) external onlyRole(CLAIM_ACCESSOR_ROLE) isStartTime isAlive nonReentrant {
+        require(block.timestamp >= roleLockTime[CLAIM_ACCESSOR_ROLE][msg.sender], "UnoRe: lock time not passed");
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
