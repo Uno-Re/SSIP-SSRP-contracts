@@ -9,18 +9,18 @@ module.exports = async function ({getNamedAccounts, deployments}) {
 
 
   // const exchangeAgent = "0x0b0D83702acbD625aDD45c79c7307C08eecEff4B"
-  const exchangeAgent = hre.deployments.get("ExchangeAgent")
+  const exchangeAgent = await hre.deployments.get("ExchangeAgent")
   // const capitalAgent = "0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05"
-  const capitalAgent = hre.deployments.get("CapitalAgent")
-  const multiSigWallet = "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F"
-  const claimAssessor = "0x6c78D94AB7a94A982B773aE453a6E000Da663b62"
+  const capitalAgent = await hre.deployments.get("CapitalAgent")
+  const multiSigWallet = "0x4CB61C3B9a46bf96E2e394f2B00a5722836BA6Eb"
+  const claimAssessor = "0x4CB61C3B9a46bf96E2e394f2B00a5722836BA6Eb"
   const claimProcessor = await hre.deployments.get("ClaimProcessor")
   const escalationManager = await hre.deployments.get("EscalationManager")
-  const defaultCurrency = ""
-  const optimisticOracleV3 = ""
-  const governance = ""
+  const defaultCurrency = "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
+  const optimisticOracleV3 = "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB"
+  const governance = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
   
-  await deploy("SingleSidedInsurancePool", {
+  const a = await deploy("SingleSidedInsurancePool", {
     from: deployer,
     contract: 'SingleSidedInsurancePool',
     log: true,
@@ -29,11 +29,14 @@ module.exports = async function ({getNamedAccounts, deployments}) {
       execute: {
         init: {
           methodName: 'initialize',
-          args: [capitalAgent, multiSigWallet, governance, claimProcessor, escalationManager, defaultCurrency, optimisticOracleV3],
+          args: [capitalAgent.address, multiSigWallet, governance, claimProcessor.address, escalationManager.address, defaultCurrency, optimisticOracleV3],
         },
       },
+      proxyContract: "OpenZeppelinTransparentProxy",
     },
   });
+
+  console.log(`deploted at ${a.address}`);
 };
 
-module.exports.tags = ["SingleSidedInsurancePoolUSDC", "UnoRe"]
+module.exports.tags = ["UnoRe"]

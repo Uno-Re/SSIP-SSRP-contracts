@@ -5,10 +5,10 @@ module.exports = async function ({getNamedAccounts, deployments}) {
     const { deployer, proxyAdminOwner } = await getNamedAccounts();
     const owner = deployer
   
-    const multiSigWallet = "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F"
-    const claimAccessor = "0x6c78D94AB7a94A982B773aE453a6E000Da663b62"
+    const multiSigWallet = "0x4CB61C3B9a46bf96E2e394f2B00a5722836BA6Eb"
+    const claimAccessor = "0x4CB61C3B9a46bf96E2e394f2B00a5722836BA6Eb"
     
-    await deploy("SingleSidedReinsurancePool", {
+   const a =  await deploy("SingleSidedReinsurancePool", {
       from: deployer,
       contract: "SingleSidedReinsurancePool",
       log: true,
@@ -20,8 +20,11 @@ module.exports = async function ({getNamedAccounts, deployments}) {
             args: [multiSigWallet, claimAccessor],
           },
         },
+        proxyContract: "OpenZeppelinTransparentProxy",
       },
     });
+
+    console.log(`deploy at ${a.address}`)
   };
   
   module.exports.tags = ["SingleSidedReinsurancePool"]

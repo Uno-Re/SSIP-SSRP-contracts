@@ -4,7 +4,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const governance = ""
+  const governance = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
 
   const claimProcessor = await deploy("ClaimProcessor", {
     from: deployer,
