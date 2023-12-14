@@ -137,8 +137,8 @@ contract SingleSidedInsurancePool is
         address _optimisticOracleV3
     ) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        require(IGnosisSafe(_claimProcessor).getOwners().length > 3, "UnoRe: more than three owners requied");
-        require(IGnosisSafe(_claimProcessor).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         capitalAgent = _capitalAgent;
         lockTime = 10 days;
         assertionliveTime = 10 days;

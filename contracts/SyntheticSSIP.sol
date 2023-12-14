@@ -64,6 +64,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         rewardPerBlock = 1e18;
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _setRoleAdmin(BOT_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
     }
 
     modifier isAlive() {

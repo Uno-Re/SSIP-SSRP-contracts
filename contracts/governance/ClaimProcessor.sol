@@ -28,6 +28,7 @@ contract ClaimProcessor is AccessControl {
     constructor(address _governance) {
         _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
         _setRoleAdmin(SSIP_ROLE, GUARDIAN_COUNCIL_ROLE);
+        _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, GUARDIAN_COUNCIL_ROLE);
     }
     
     function requestPolicyId(uint256 _policyId) external onlyRole(SSIP_ROLE) {
