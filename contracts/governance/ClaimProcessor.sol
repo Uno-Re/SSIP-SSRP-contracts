@@ -19,7 +19,7 @@ contract ClaimProcessor is AccessControl {
 
     uint256 public lastIndex;
 
-    mapping (uint256 => Claim) assertion;
+    mapping (uint256 => Claim) public assertion;
 
     event PolicyRequested(address indexed _ssip, uint256 indexed _assertionId, uint256 indexed _policyId);
     event PolicyApproved(uint256 indexed _assertionId);
