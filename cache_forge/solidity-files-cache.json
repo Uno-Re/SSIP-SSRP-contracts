@@ -13,8 +13,8 @@
   },
   "files": {
     "contracts/CapitalAgent.sol": {
-      "lastModificationDate": 1702564080902,
-      "contentHash": "6a5e6bb74acdcdd84820625798047b34",
+      "lastModificationDate": 1702649832304,
+      "contentHash": "0b9cd3853e33be262ab112ea2bbe58bb",
       "sourceName": "contracts/CapitalAgent.sol",
       "solcConfig": {
         "settings": {
@@ -49,10 +49,13 @@
         "contracts/interfaces/ICapitalAgent.sol",
         "contracts/interfaces/IExchangeAgent.sol",
         "contracts/interfaces/ISalesPolicy.sol",
-        "node_modules/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControl.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol",
+        "node_modules/@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol",
-        "node_modules/@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol"
+        "node_modules/@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol",
+        "node_modules/@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol"
       ],
       "versionRequirement": "=0.8.23",
       "artifacts": {
@@ -105,7 +108,7 @@
       }
     },
     "contracts/ExchangeAgent.sol": {
-      "lastModificationDate": 1702277857722,
+      "lastModificationDate": 1702627700572,
       "contentHash": "1333ef17888c601759c3ee35f233ab2f",
       "sourceName": "contracts/ExchangeAgent.sol",
       "solcConfig": {
@@ -381,8 +384,8 @@
       }
     },
     "contracts/Mocks/MockUNO.sol": {
-      "lastModificationDate": 1702636426161,
-      "contentHash": "f50dcec0bd58c82e99e2795c4f44bda1",
+      "lastModificationDate": 1702650515800,
+      "contentHash": "a84c199ce26017ee79a7d4c0a20e3079",
       "sourceName": "contracts/Mocks/MockUNO.sol",
       "solcConfig": {
         "settings": {
@@ -428,8 +431,8 @@
       }
     },
     "contracts/Mocks/MockUSDT.sol": {
-      "lastModificationDate": 1702635071917,
-      "contentHash": "bf91bb5510bb4bd8da8f441f850e8d84",
+      "lastModificationDate": 1702650520820,
+      "contentHash": "34b86520bcfb6dff2edc04d67d8a8d4a",
       "sourceName": "contracts/Mocks/MockUSDT.sol",
       "solcConfig": {
         "settings": {
@@ -606,7 +609,7 @@
       }
     },
     "contracts/PremiumPool.sol": {
-      "lastModificationDate": 1702550175442,
+      "lastModificationDate": 1702649893429,
       "contentHash": "50b8197e137c1b64cc40ff7064fb6638",
       "sourceName": "contracts/PremiumPool.sol",
       "solcConfig": {
@@ -659,7 +662,7 @@
       }
     },
     "contracts/Rewarder.sol": {
-      "lastModificationDate": 1702277857722,
+      "lastModificationDate": 1702649903809,
       "contentHash": "5709344ee98b15bdf6ee4669ebcc878d",
       "sourceName": "contracts/Rewarder.sol",
       "solcConfig": {
@@ -711,7 +714,7 @@
       }
     },
     "contracts/RiskPool.sol": {
-      "lastModificationDate": 1702277857722,
+      "lastModificationDate": 1702649919277,
       "contentHash": "659daa31f82a332edf1060388a50a1fc",
       "sourceName": "contracts/RiskPool.sol",
       "solcConfig": {
@@ -805,7 +808,7 @@
       }
     },
     "contracts/SalesPolicy.sol": {
-      "lastModificationDate": 1702482493145,
+      "lastModificationDate": 1702649930997,
       "contentHash": "9e7efbf4de52895413a6756e44079eaf",
       "sourceName": "contracts/SalesPolicy.sol",
       "solcConfig": {
@@ -869,8 +872,8 @@
       }
     },
     "contracts/SingleSidedInsurancePool.sol": {
-      "lastModificationDate": 1702637242222,
-      "contentHash": "1e9bdca758b7ea1f7a2aac7d9e412af0",
+      "lastModificationDate": 1702650642501,
+      "contentHash": "61e0cdca3b16b40f5097e6785371af47",
       "sourceName": "contracts/SingleSidedInsurancePool.sol",
       "solcConfig": {
         "settings": {
@@ -936,7 +939,7 @@
       }
     },
     "contracts/SingleSidedReinsurancePool.sol": {
-      "lastModificationDate": 1702552323018,
+      "lastModificationDate": 1702650423140,
       "contentHash": "2a01e8c12eb59504cc3f1b713b7f9841",
       "sourceName": "contracts/SingleSidedReinsurancePool.sol",
       "solcConfig": {
@@ -996,7 +999,7 @@
       }
     },
     "contracts/SyntheticSSIP.sol": {
-      "lastModificationDate": 1702550920738,
+      "lastModificationDate": 1702650431792,
       "contentHash": "62c66725db547a829d11be7e55159c7c",
       "sourceName": "contracts/SyntheticSSIP.sol",
       "solcConfig": {
@@ -1050,7 +1053,7 @@
       }
     },
     "contracts/SyntheticSSRP.sol": {
-      "lastModificationDate": 1702550943590,
+      "lastModificationDate": 1702650447164,
       "contentHash": "1a679e51b9234e08f698f6434f1aba7d",
       "sourceName": "contracts/SyntheticSSRP.sol",
       "solcConfig": {
@@ -2585,7 +2588,7 @@
       }
     },
     "contracts/interfaces/OptimisticOracleV3Interface.sol": {
-      "lastModificationDate": 1702638464741,
+      "lastModificationDate": 1702650683517,
       "contentHash": "5134b3743cf9e238534d4c190bc85257",
       "sourceName": "contracts/interfaces/OptimisticOracleV3Interface.sol",
       "solcConfig": {
@@ -2878,8 +2881,8 @@
       }
     },
     "contracts/uma/EscalationManager.sol": {
-      "lastModificationDate": 1702633989771,
-      "contentHash": "dea5a15185d73517ae5aed1c556164b4",
+      "lastModificationDate": 1702650465120,
+      "contentHash": "6c563107362b2f58ae6232df45b6c203",
       "sourceName": "contracts/uma/EscalationManager.sol",
       "solcConfig": {
         "settings": {
@@ -3848,7 +3851,7 @@
       "versionRequirement": "^0.8.20",
       "artifacts": {
         "Ownable": {
-          "0.8.23+commit.f704f362.Linux.gcc": "Ownable.sol/Ownable.json"
+          "0.8.23+commit.f704f362.Linux.gcc": "access/Ownable.sol/Ownable.json"
         }
       }
     },
@@ -4213,7 +4216,7 @@
       "versionRequirement": "^0.8.20",
       "artifacts": {
         "Address": {
-          "0.8.23+commit.f704f362.Linux.gcc": "Address.sol/Address.json"
+          "0.8.23+commit.f704f362.Linux.gcc": "utils/Address.sol/Address.json"
         }
       }
     },
@@ -4254,7 +4257,7 @@
       "versionRequirement": "^0.8.20",
       "artifacts": {
         "Context": {
-          "0.8.23+commit.f704f362.Linux.gcc": "Context.sol/Context.json"
+          "0.8.23+commit.f704f362.Linux.gcc": "utils/Context.sol/Context.json"
         }
       }
     },
@@ -4425,7 +4428,7 @@
       "versionRequirement": "^0.8.20",
       "artifacts": {
         "Ownable": {
-          "0.8.23+commit.f704f362.Linux.gcc": "Ownable.sol/Ownable.json"
+          "0.8.23+commit.f704f362.Linux.gcc": "contracts/access/Ownable.sol/Ownable.json"
         }
       }
     },
@@ -4823,7 +4826,7 @@
       "versionRequirement": "^0.8.20",
       "artifacts": {
         "Address": {
-          "0.8.23+commit.f704f362.Linux.gcc": "Address.sol/Address.json"
+          "0.8.23+commit.f704f362.Linux.gcc": "contracts/utils/Address.sol/Address.json"
         }
       }
     },
@@ -4864,7 +4867,7 @@
       "versionRequirement": "^0.8.20",
       "artifacts": {
         "Context": {
-          "0.8.23+commit.f704f362.Linux.gcc": "Context.sol/Context.json"
+          "0.8.23+commit.f704f362.Linux.gcc": "contracts/utils/Context.sol/Context.json"
         }
       }
     },
@@ -5206,50 +5209,6 @@
       "artifacts": {
         "AccessControlUpgradeable": {
           "0.8.23+commit.f704f362.Linux.gcc": "AccessControlUpgradeable.sol/AccessControlUpgradeable.json"
-        }
-      }
-    },
-    "node_modules/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol": {
-      "lastModificationDate": 1701851540463,
-      "contentHash": "77d30f3cd93f46b80b6f8f1ebc574ee4",
-      "sourceName": "node_modules/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "useLiteralContent": false,
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "paris",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "node_modules/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
-        "node_modules/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol"
-      ],
-      "versionRequirement": "^0.8.20",
-      "artifacts": {
-        "OwnableUpgradeable": {
-          "0.8.23+commit.f704f362.Linux.gcc": "OwnableUpgradeable.sol/OwnableUpgradeable.json"
         }
       }
     },
@@ -5652,7 +5611,6 @@
         "node_modules/@openzeppelin/contracts/utils/math/Math.sol",
         "node_modules/@openzeppelin/contracts/utils/math/SignedMath.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol",
-        "node_modules/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol",
@@ -5798,7 +5756,6 @@
         "node_modules/@openzeppelin/contracts/utils/math/Math.sol",
         "node_modules/@openzeppelin/contracts/utils/math/SignedMath.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol",
-        "node_modules/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol",
         "node_modules/@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol",
