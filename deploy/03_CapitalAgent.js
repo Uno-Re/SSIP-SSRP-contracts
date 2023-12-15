@@ -1,18 +1,21 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
 
+const hre = require("hardhat")
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
   // const exchangeAgent = await deployments.get("ExchangeAgent")
-  // const mockUNO = "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5"
-  // const mockUSDT = "0x40c035016AD732b6cFce34c3F881040B6C6cf71E"
+  const mockUNO = await hre.deployments.get("MockUNO")
+  const mockUSDT = await hre.deployments.get("MockUSDT")
   // const multiSigWallet = await deployments.get("MultiSigWallet")
-  const UNO = "0x474021845c4643113458ea4414bdb7fb74a01a77"
-  const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-  const exchangeAgent = "0x6aC1081CBb92524170E61CFFD37bDaF3b38FBC4c"
-  const multiSigWallet = "0x8c3d5c9538256DAB8Eb4B197370574340fe3254F"
-  const operator = "0x721d214267247568DA3A9123abfAc71fc18a5EE4"
+  // const UNO = "0x474021845c4643113458ea4414bdb7fb74a01a77"
+  // const UNO = await hre.deployments.get("MockUNO")
+  // const USDC = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557"
+  // const exchangeAgent = "0x6aC1081CBb92524170E61CFFD37bDaF3b38FBC4c"
+  const exchangeAgent = await hre.deployments.get("ExchangeAgent")
+  const multiSigWallet = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
+  const operator = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
 
   const capitalAgent = await deploy("CapitalAgent", {
     from: deployer,
@@ -22,9 +25,10 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
       execute: {
         init: {
           methodName: "initialize",
-          args: [exchangeAgent, UNO, USDC, multiSigWallet, operator],
+          args: [exchangeAgent.address, mockUNO.address, mockUSDT.address, multiSigWallet, operator],
         },
       },
+      proxyContract: "OpenZeppelinTransparentProxy",
     },
   })
 
