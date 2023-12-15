@@ -12,7 +12,7 @@ import "./interfaces/IPremiumPool.sol";
 
 contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
 
-    bytes32 public constant GUARDIAN_COUCIL_ROLE = keccak256("GUARDIAN_COUCIL_ROLE");
+    bytes32 public constant GOVERNANCE_ROLE = keccak256("GOVERNANCE_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     // using Address for address;
     address public exchangeAgent;
@@ -46,7 +46,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
     event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event PoolAlived(address indexed _owner, bool _alive);
 
-    constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet, address _guardianCouncil) {
+    constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet, address _governance) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
@@ -56,8 +56,9 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         USDC_TOKEN = _usdcToken;
         whiteList[msg.sender] = true;
         _grantRole(ADMIN_ROLE, _multiSigWallet);
-        _grantRole(GUARDIAN_COUCIL_ROLE, _guardianCouncil);
-        _setRoleAdmin(GUARDIAN_COUCIL_ROLE, ADMIN_ROLE);
+        _grantRole(GOVERNANCE_ROLE, _governance);
+        _setRoleAdmin(GOVERNANCE_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
 
     }
 
@@ -199,7 +200,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         emit LogBuyBackAndBurn(msg.sender, address(this), unoAmount);
     }
 
-    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyRole(GUARDIAN_COUCIL_ROLE) whenNotPaused {
+    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyRole(GOVERNANCE_ROLE) whenNotPaused {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {
