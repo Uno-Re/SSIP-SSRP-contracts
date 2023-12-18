@@ -88,10 +88,14 @@ module.exports = {
       accounts: {mnemonic: process.env.MNEMONIC},
       live: true,
       saveDeployments: true
-    }
+    },
+  goerli: {
+    url: process.env.GOERLI_URL,
+    accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2]
+  }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY // BSC_API_KEY
+    apiKey: process.env.API_KEY // BSC_API_KEY
   },
   paths: {
     deploy: "deploy",
