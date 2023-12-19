@@ -23,18 +23,19 @@ function getNumber(amount, decimals = 18) {
 }
 
 function getPaddedHexStrFromBN(bn) {
-  const hexStr = ethers.utils.hexlify(bn)
-  return ethers.utils.hexZeroPad(hexStr, 32)
+  console.log(bn);
+  const hexStr = ethers.toBeHex(bn)
+  return ethers.zeroPadValue(hexStr, 32)
 }
 
 function getPaddedHexStrFromBNArray(bnArray) {
   let hexData
   for (let k = 0; k < bnArray.length; k++) {
-    const hexStr = ethers.utils.hexlify(bnArray[k])
+    const hexStr = ethers.toBeHex(bnArray[k])
     if (k !== 0) {
-      hexData += ethers.utils.hexZeroPad(hexStr, 32).slice(2)
+      hexData += ethers.zeroPadValue(hexStr, 32).slice(2)
     } else {
-      hexData = ethers.utils.hexZeroPad(hexStr, 32)
+      hexData = ethers.zeroPadValue(hexStr, 32)
     }
   }
   return hexData
@@ -42,7 +43,7 @@ function getPaddedHexStrFromBNArray(bnArray) {
 
 function getHexStrFromStr(str) {
   const strBytes = ethers.utils.toUtf8Bytes(str)
-  return ethers.utils.hexlify(strBytes)
+  return ethers.toBeHex(strBytes)
 }
 
 async function advanceBlock() {
@@ -61,13 +62,13 @@ async function getChainId() {
 }
 
 const getSignatureParameters = (signature) => {
-  if (!ethers.utils.isHexString(signature)) {
+  if (!ethers.isHexString(signature)) {
     throw new Error('Given value "'.concat(signature, '" is not a valid hex string.'))
   }
   var r = signature.slice(0, 66)
   var s = "0x".concat(signature.slice(66, 130))
   var v = "0x".concat(signature.slice(130, 132))
-  v = ethers.BigNumber.from(v).toNumber()
+  v = Number(BigInt(v))
   if (![27, 28].includes(v)) v += 27
   return {
     r: r,
