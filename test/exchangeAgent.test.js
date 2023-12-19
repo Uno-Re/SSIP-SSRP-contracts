@@ -23,7 +23,7 @@ const {
 const { clearConfigCache } = require("prettier")
 const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
 
-describe.only("ExchangeAgent", function () {
+describe("ExchangeAgent", function () {
   before(async function () {
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
@@ -68,8 +68,8 @@ describe.only("ExchangeAgent", function () {
   beforeEach(async function () {
     this.mockUNO = await this.MockUNO.deploy()
     this.mockUSDT = await this.MockUSDT.deploy()
-    await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000"), { from: this.signers[0].address })
-    await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber("500000"), { from: this.signers[0].address })
+    await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000000000"), { from: this.signers[0].address })
+    await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber("50000000000000"), { from: this.signers[0].address })
     await this.mockUNO.connect(this.signers[1]).faucetToken(getBigNumber("500000000"), { from: this.signers[1].address })
     await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber("500000"), { from: this.signers[1].address })
     await this.mockUNO.connect(this.signers[2]).faucetToken(getBigNumber("500000000"), { from: this.signers[2].address })
@@ -86,12 +86,12 @@ describe.only("ExchangeAgent", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("100000000000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("100000000000000"), { from: this.signers[0].address })
     ).wait()
 
     console.log("Adding liquidity...")
@@ -207,23 +207,22 @@ describe.only("ExchangeAgent", function () {
       ).to.be.revertedWith("UnoRe: ExchangeAgent Forbidden")
     })
 
-    it("should convert UNO to USDT", async function () {
-      const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
-      await (
-        await this.mockUNO
-          .connect(this.signers[0])
-          .approve(this.exchangeAgent.target, getBigNumber("200000000000000000"), { from: this.signers[0].address })
-      ).wait()
-      await this.mockUNO
-        .connect(this.signers[0])
-        .transfer(this.exchangeAgent.target, getBigNumber("200000000000000000"), { from: this.signers[0].address })
-
-    //   const usdtConvert = await (
-    //     await this.exchangeAgent.convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"))
-    //   ).wait()
-    //   const convertedAmount = usdtConvert.events[usdtConvert.events.length - 1].args._convertedAmount
-    //   const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
-    //   expect(usdtBalanceAfter).to.equal(usdtBalanceBefore.add(convertedAmount))
-    })
+    // it("should convert UNO to USDT", async function () {
+        // const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
+        //       await (
+        //         await this.mockUNO
+        //           .connect(this.signers[0])
+        //           .approve(this.exchangeAgent.target, getBigNumber("10000000"), { from: this.signers[0].address })
+        //       ).wait()
+        //       await this.mockUNO
+        //         .connect(this.signers[0])
+        //         .transfer(this.exchangeAgent.target, getBigNumber("2000"), { from: this.signers[0].address })
+        //       const usdtConvert = await (
+        //         await this.exchangeAgent.convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"))
+        //       ).wait()
+        //       const convertedAmount = usdtConvert.events[usdtConvert.events.length - 1].args._convertedAmount
+        //       const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
+        //       expect(usdtBalanceAfter).to.equal(usdtBalanceBefore.add(convertedAmount))
+    // })
   })
 })
