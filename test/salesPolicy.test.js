@@ -104,8 +104,6 @@ describe("SalesPolicy", function () {
         .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
 
-    console.log("Adding liquidity...")
-
     await (
       await this.routerContract
         .connect(this.signers[0])
@@ -121,7 +119,6 @@ describe("SalesPolicy", function () {
           { from: this.signers[0].address, gasLimit: 9999999 },
         )
     ).wait()
-    console.log("Added liquidity!!")
 
     this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired);
     this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
@@ -149,7 +146,6 @@ describe("SalesPolicy", function () {
       this.multiSigWallet.target,
       this.multiSigWallet.target,
     ])
-    console.log("capital agent", this.capitalAgent.target)
     this.salesPolicyFactory = await this.SalesPolicyFactory.deploy(
       this.mockUSDT.target,
       this.exchangeAgent.target,
@@ -157,7 +153,6 @@ describe("SalesPolicy", function () {
       this.capitalAgent.target,
       this.multiSigWallet.target,
     )
-    console.log("sales policy factory")
 
     let encodedCallData
     this.txIdx = 0
@@ -264,7 +259,6 @@ describe("SalesPolicy", function () {
       "0x1000000000000000000000000000000000",
     ]);
     this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6");
-console.log("started")
     await this.singleSidedInsurancePool.connect(this.multisig).createRiskPool(
       "UNO-LP",
       "UNO-LP",
@@ -273,7 +267,6 @@ console.log("started")
       getBigNumber("1"),
       getBigNumber("10", 6),
     )
-console.log("Done?")
     if (false) {
       encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createRiskPool", [
         "UNO-LP",
@@ -309,14 +302,12 @@ console.log("Done?")
     //     .connect(this.signers[0])
     //     .transfer(this.rewarder.address, getBigNumber(100000), { from: this.signers[0].address })
     // ).wait()
-console.log("enter in pool")
     await this.singleSidedInsurancePool.enterInPool(getBigNumber("100000"))
 
     // block number when deposit in pool for the first time
     const beforeBlockNumber = await ethers.provider.getBlockNumber()
 
     await advanceBlockTo(beforeBlockNumber + 10000)
-console.log("again")
     // another one will deposit in pool with the same amount
     await this.singleSidedInsurancePool
       .connect(this.signers[1])
@@ -335,7 +326,6 @@ console.log("again")
     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
       .to.emit(this.multiSigWallet, "ConfirmTransaction")
       .withArgs(this.signers[1].address, this.txIdx)
-console.log("setMCR")
     this.txIdx++
 
     encodedCallData = this.capitalAgent.interface.encodeFunctionData("setMLR", [getBigNumber("3")])
@@ -351,7 +341,6 @@ console.log("setMCR")
     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
       .to.emit(this.multiSigWallet, "ConfirmTransaction")
       .withArgs(this.signers[1].address, this.txIdx)
-console.log("setMLR")
     this.txIdx++
 
     encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("newSalesPolicy", [
@@ -371,12 +360,21 @@ console.log("setMLR")
     await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
       .to.emit(this.multiSigWallet, "ConfirmTransaction")
       .withArgs(this.signers[1].address, this.txIdx)
-console.log("newSalesPolicy")
     this.txIdx++
 
     this.salesPolicyAddress = await this.salesPolicyFactory.salesPolicy()
-    console.log(this.salesPolicyAddress)
     this.salesPolicy = await this.SalesPolicy.attach(await this.salesPolicyFactory.salesPolicy())
+
+    {
+      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+        this.signers[0].address
+      ]);
+      const index = await this.multiSigWallet.getTransactionCount();
+      await (await this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData)).wait()
+      await (await this.multiSigWallet.confirmTransaction(index, false)).wait();
+      await (await this.multiSigWallet.connect(this.signers[1]).confirmTransaction(index, true)).wait();
+      this.txIdx++;
+    }
   })
 
   describe("Sales policy Action", function () {
@@ -395,14 +393,12 @@ console.log("newSalesPolicy")
       const privateKey = process.env.PRIVATE_KEY
 
       const protocol = await this.salesPolicyFactory.getProtocol(1)
-
       let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.address,
+        this.mockUSDT.target,
       ])
-
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
+      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
+        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData)
 
       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
         .to.emit(this.multiSigWallet, "ConfirmTransaction")
@@ -414,11 +410,11 @@ console.log("newSalesPolicy")
 
       this.txIdx++
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setSignerInPolicy", [this.signers[5].address])
+      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setSignerInPolicy", [this.signers[0].address])
 
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))
+      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.address, 0, encodedCallData)
+        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData)
 
       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
         .to.emit(this.multiSigWallet, "ConfirmTransaction")
@@ -430,11 +426,11 @@ console.log("newSalesPolicy")
 
       this.txIdx++
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.address])
+      encodedCallData = this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.target])
 
-      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
+      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.address, 0, encodedCallData)
+        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData)
 
       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
         .to.emit(this.multiSigWallet, "ConfirmTransaction")
@@ -448,17 +444,18 @@ console.log("newSalesPolicy")
 
       // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
       // await (await this.salesPolicyFactory.setSignerInPolicy(this.signers[5].address)).wait()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber(100000000))).wait()
+      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("1000000000"))).wait()
       // await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
       // await (await this.salesPolicyFactory.updateCheckIfProtocolInWhitelistArray(true)).wait()
       // await (await this.salesPolicyFactory.setBlackListProtocolById(0)).wait()
 
       //   prepare sign data
-      const policyPrice = getBigNumber(300, 6)
+      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
-      const coverageDuration = [BigNumber.from(24 * 3600 * 30), BigNumber.from(24 * 3600 * 15)]
-      const coverageAmount = [getBigNumber(100, 6), getBigNumber(100, 6)]
-      const deadline = getBigNumber(timestamp - 7 * 3600, 0)
+      const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
+      const coverageAmount = [getBigNumber("100", 6), getBigNumber("100", 6)]
+      const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
 
       const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
       const paddedProtocolsHexStr =
@@ -474,13 +471,25 @@ console.log("newSalesPolicy")
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.address.slice(2)
+        this.mockUSDT.target.slice(2)
 
-      const flatSig = await this.signers[5].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
-      const splitSig = ethers.utils.splitSignature(flatSig)
+      const flatSig = await this.signers[0].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
+      const splitSig = ethers.Signature.from(flatSig)
 
       const chainId = await getChainId()
-      console.log("chainId", chainId)
+
+      const functionSignature = this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
+        assets,
+        protocols,
+        coverageAmount,
+        coverageDuration,
+        policyPrice,
+        deadline,
+        this.mockUSDT.target,
+        splitSig.r,
+        splitSig.s,
+        splitSig.v,
+      ])
 
       const domainData = {
         name: "BuyPolicyMetaTransaction",
@@ -489,21 +498,17 @@ console.log("newSalesPolicy")
         salt: getPaddedHexStrFromBN(chainId),
       }
 
-      const functionSignature = this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
-        protocols,
-        coverageAmount,
-        coverageDuration,
-        policyPrice,
-        deadline,
-        this.mockUSDT.address,
-        splitSig.r,
-        splitSig.s,
-        splitSig.v,
-      ])
+      const types = {
+        MetaTransaction: [
+          { name: "nonce", type: "uint256" },
+          { name: "from", type: "address" },
+          { name: "functionSignature", type: "bytes" },
+        ]
+      }
 
       const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
       const message = {
-        nonce: nonce.toNumber(),
+        nonce: Number(nonce),
         from: this.signers[0].address,
         functionSignature: functionSignature,
       }
@@ -518,12 +523,11 @@ console.log("newSalesPolicy")
         message: message,
       }
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.address)
+      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
 
-      const signature = sigUtil.signTypedMessage(new Buffer.from(privateKey, "hex"), { data: dataToSign }, "V3")
+      const signature = await this.signers[0].signTypedData(domainData, types, message);
       let { r, s, v } = getSignatureParameters(signature)
-
       try {
         let tx = await this.salesPolicy.executeMetaTransaction(this.signers[0].address, functionSignature, r, s, v, {
           gasLimit: 1000000,
@@ -533,15 +537,14 @@ console.log("newSalesPolicy")
       } catch (error) {
         console.log("[error]", error)
       }
-
-      const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.address)
-      const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.address)
-      const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.address)
-      const premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.address)
-      expect(premiumPoolBalanceAfter).to.equal(getBigNumber(300, 6))
-      expect(premiumForSSRP).to.equal(getBigNumber(30, 6))
-      expect(premiumForSSIP).to.equal(getBigNumber(210, 6))
-      expect(premiumForBackBurn).to.equal(getBigNumber(60, 6))
+      const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.target)
+      const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
+      const premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+      expect(premiumPoolBalanceAfter).to.equal(getBigNumber("300", 6))
+      expect(premiumForSSRP).to.equal(getBigNumber("30", 6))
+      expect(premiumForSSIP).to.equal(getBigNumber("210", 6))
+      expect(premiumForBackBurn).to.equal(getBigNumber("60", 6))
     })
 
     // it("Should buy policy in USDT directly", async function () {
