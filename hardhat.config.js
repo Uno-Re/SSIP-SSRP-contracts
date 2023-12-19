@@ -9,6 +9,7 @@ require("@nomicfoundation/hardhat-verify");
 require("hardhat-gas-reporter");
 require('@openzeppelin/hardhat-upgrades');
 require("@nomicfoundation/hardhat-foundry");
+require("@nomicfoundation/hardhat-chai-matchers")
 require('dotenv').config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -49,12 +50,12 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      hardfork: "london",
+      // hardfork: "london",
       allowUnlimitedContractSize: true,
       settings: {
         optimizer: {
           enabled: true,
-          runs: 9999,
+          runs: 200,
         },
       },
       evmVersion: "byzantium",
