@@ -19,7 +19,7 @@ function getBigNumber(amount, decimals = 18) {
 }
 
 function getNumber(amount, decimals = 18) {
-  return Number(ethers.utils.formatUnits(amount, decimals))
+  return Number(ethers.formatUnits(amount, decimals))
 }
 
 function getPaddedHexStrFromBN(bn) {
