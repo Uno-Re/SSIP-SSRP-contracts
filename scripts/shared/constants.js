@@ -1,5 +1,5 @@
 const WETH_ADDRESS = {
-  rinkeby: "0xc778417E063141139Fce010982780140Aa0cD5Ab", // this is WETH address in Uniswap router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D on rinkeby
+  rinkeby: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6", // this is WETH address in Uniswap router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D on rinkeby
 }
 
 const UNISWAP_FACTORY_ADDRESS = {
@@ -23,7 +23,7 @@ const USDT = {
 }
 
 const UNO_USDT_PRICE_FEED = {
-  rinkeby: "0x8EAD48786e0F1569625f95b650a5aC63222b9bF2",
+  rinkeby: "0x8E8074be1A0627574659E746B4Af1E5078F4B72c",
 }
 
 module.exports = {
