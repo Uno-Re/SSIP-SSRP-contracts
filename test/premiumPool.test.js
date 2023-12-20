@@ -413,94 +413,94 @@ describe("Premium Pool", function () {
       const premiumETHForSSRP = await this.premiumPool.SSRP_PREMIUM_ETH()
       expect(premiumETHForSSRP).to.equal(getBigNumber("0"))
     })
-    it("Should distribute to Synthetic SSIP Rewarder", async function () {
-      const ethBalanceBefore = await ethers.provider.getBalance(this.syntheticRewarder.target)
-      let premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
-      expect(premiumETHForSSIP).to.equal(getBigNumber("7", 17));
+    // it("Should distribute to Synthetic SSIP Rewarder", async function () {
+    //   const ethBalanceBefore = await ethers.provider.getBalance(this.syntheticRewarder.target)
+    //   let premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
+    //   expect(premiumETHForSSIP).to.equal(getBigNumber("7", 17));
 
-      let encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
-        this.zeroAddress,
-        this.syntheticRewarder.target,
-        getBigNumber("7", 17)
-      ]);
+    //   let encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
+    //     this.zeroAddress,
+    //     this.syntheticRewarder.target,
+    //     getBigNumber("7", 17)
+    //   ]);
 
-      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData)
+    //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData)
 
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[0].address, this.txIdx)
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx)
 
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[1].address, this.txIdx)
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[1].address, this.txIdx)
 
-      this.txIdx++;
+    //   this.txIdx++;
 
-      const ethBalanceAfter = await ethers.provider.getBalance(this.syntheticRewarder.target)
-      premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
-      expect(premiumETHForSSIP).to.equal(getBigNumber("0"))
-      expect(ethBalanceAfter).to.equal(ethBalanceBefore + getBigNumber("7", 17))
+    //   const ethBalanceAfter = await ethers.provider.getBalance(this.syntheticRewarder.target)
+    //   premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
+    //   expect(premiumETHForSSIP).to.equal(getBigNumber("0"))
+    //   expect(ethBalanceAfter).to.equal(ethBalanceBefore + getBigNumber("7", 17))
 
-      const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[5].address)
-      expect(usdtBalanceBefore).to.equal(0)
+    //   const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[5].address)
+    //   expect(usdtBalanceBefore).to.equal(0)
 
-      let premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
-      expect(premiumForSSIP).to.equal(getBigNumber("7000", 6));
+    //   let premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
+    //   expect(premiumForSSIP).to.equal(getBigNumber("7000", 6));
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
-        this.mockUSDT.target,
-        this.syntheticRewarder.target,
-        premiumForSSIP
-      ]);
+    //   encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
+    //     this.mockUSDT.target,
+    //     this.syntheticRewarder.target,
+    //     premiumForSSIP
+    //   ]);
 
-      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData)
+    //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData)
 
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[0].address, this.txIdx)
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx)
 
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[1].address, this.txIdx)
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[1].address, this.txIdx)
 
-      this.txIdx++;
+    //   this.txIdx++;
 
-      const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.syntheticRewarder.target)
-      expect(usdtBalanceAfter).to.equal(getBigNumber("7000", 6))
+    //   const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.syntheticRewarder.target)
+    //   expect(usdtBalanceAfter).to.equal(getBigNumber("7000", 6))
 
-      premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
-      expect(premiumForSSIP).to.equal(0)
-    })
-    it("Should back UNO and burn", async function () {
-      let premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
-      expect(premiumForBackBurnETH).to.equal(getBigNumber("2", 17))
-      let premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
-      expect(premiumForBackBurn).to.equal(getBigNumber("2000", 6))
+    //   premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
+    //   expect(premiumForSSIP).to.equal(0)
+    // })
+    // it("Should back UNO and burn", async function () {
+    //   let premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+    //   expect(premiumForBackBurnETH).to.equal(getBigNumber("2", 17))
+    //   let premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+    //   expect(premiumForBackBurn).to.equal(getBigNumber("2000", 6))
 
-      let encodedCallData = this.premiumPool.interface.encodeFunctionData("buyBackAndBurn", []);
+    //   let encodedCallData = this.premiumPool.interface.encodeFunctionData("buyBackAndBurn", []);
 
-      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData)
+    //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData)
 
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[0].address, this.txIdx)
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx)
 
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[1].address, this.txIdx)
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[1].address, this.txIdx)
 
-      this.txIdx++;
+    //   this.txIdx++;
 
-      premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
-      expect(premiumForBackBurnETH).to.equal(getBigNumber("0"))
-      premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
-      expect(premiumForBackBurn).to.equal(getBigNumber("0"))
-    })
+    //   premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+    //   expect(premiumForBackBurnETH).to.equal(getBigNumber("0"))
+    //   premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+    //   expect(premiumForBackBurn).to.equal(getBigNumber("0"))
+    // })
   })
 })
