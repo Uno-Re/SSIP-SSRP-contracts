@@ -23,7 +23,7 @@ const {
 const { clearConfigCache } = require("prettier")
 const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
 
-describe.only("SingleSidedInsurancePool", function () {
+describe("SingleSidedInsurancePool", function () {
   before(async function () {
     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
     this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
