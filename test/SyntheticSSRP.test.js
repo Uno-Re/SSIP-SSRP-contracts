@@ -1,266 +1,302 @@
-// const { expect } = require("chai")
-// const { ethers, network } = require("hardhat")
-// const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
-// const { BigNumber } = ethers
-// const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
-// const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
-// const {
-//   WETH_ADDRESS,
-//   UNISWAP_FACTORY_ADDRESS,
-//   UNISWAP_ROUTER_ADDRESS,
-//   TWAP_ORACLE_PRICE_FEED_FACTORY,
-//   UNO,
-//   USDT,
-//   UNO_USDT_PRICE_FEED,
-// } = require("../scripts/shared/constants")
+const { expect } = require("chai")
+// const chai = require('chai');
+//  const eventemitter2 = require('chai-eventemitter2');
+//  chai.use(eventemitter2());
+// const { expect, emit, withArgs } = require("@nomicfoundation/hardhat-chai-matchers");
 
-// describe("Synthetic SSRP", function () {
-//   before(async function () {
-//     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
-//     this.SingleSidedReinsurancePool = await ethers.getContractFactory("SingleSidedReinsurancePool")
-//     this.SyntheticSSRP = await ethers.getContractFactory("SyntheticSSRP")
-//     this.PremiumPool = await ethers.getContractFactory("PremiumPool")
-//     this.RiskPoolFactory = await ethers.getContractFactory("RiskPoolFactory")
-//     this.RiskPool = await ethers.getContractFactory("RiskPool")
-//     this.Rewarder = await ethers.getContractFactory("Rewarder")
-//     this.RewarderFactory = await ethers.getContractFactory("RewarderFactory")
-//     this.SyntheticSSRPFactory = await ethers.getContractFactory("SyntheticSSRPFactory")
-//     this.MockUNO = await ethers.getContractFactory("MockUNO")
-//     this.MockUSDT = await ethers.getContractFactory("MockUSDT")
-//     this.signers = await ethers.getSigners()
-//     this.zeroAddress = ethers.constants.AddressZero
-//     this.routerContract = new ethers.Contract(
-//       UNISWAP_ROUTER_ADDRESS.rinkeby,
-//       JSON.stringify(UniswapV2Router.abi),
-//       ethers.provider,
-//     )
-//   })
+const { ethers, network, upgrades } = require("hardhat")
+const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
+const { BigNumber } = require("ethers")
+const { time } = require("@nomicfoundation/hardhat-network-helpers");
+const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
+const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
+const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
+const {
+  WETH_ADDRESS,
+  UNISWAP_FACTORY_ADDRESS,
+  UNISWAP_ROUTER_ADDRESS,
+  TWAP_ORACLE_PRICE_FEED_FACTORY,
+  UNO,
+  USDT,
+  UNO_USDT_PRICE_FEED,
+} = require("../scripts/shared/constants")
+const { clearConfigCache } = require("prettier")
+const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
 
-//   beforeEach(async function () {
+describe("Synthetic SSRP", function () {
+  before(async function () {
+    this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
+    this.SingleSidedReinsurancePool = await ethers.getContractFactory("SingleSidedReinsurancePool")
+    this.SyntheticSSRP = await ethers.getContractFactory("SyntheticSSRP")
+    this.PremiumPool = await ethers.getContractFactory("PremiumPool")
+    this.RiskPoolFactory = await ethers.getContractFactory("RiskPoolFactory")
+    this.RiskPool = await ethers.getContractFactory("RiskPool")
+    this.Rewarder = await ethers.getContractFactory("Rewarder")
+    this.RewarderFactory = await ethers.getContractFactory("RewarderFactory")
+    this.SyntheticSSRPFactory = await ethers.getContractFactory("SyntheticSSRPFactory")
+    this.MockUNO = await ethers.getContractFactory("MockUNO")
+    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
+    this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
+    this.signers = await ethers.getSigners()
+    this.zeroAddress = "0x0000000000000000000000000000000000000000";
+    this.routerContract = new ethers.Contract(
+      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      JSON.stringify(UniswapV2Router.abi),
+      ethers.provider,
+    )
+  })
+
+  beforeEach(async function () {
 //     this.mockUNO = this.MockUNO.attach(UNO.rinkeby)
 //     this.mockUSDT = this.MockUSDT.attach(USDT.rinkeby)
-//     await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber(500000000), { from: this.signers[0].address })
-//     await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber(500000, 6), { from: this.signers[0].address })
-//     this.masterChefOwner = this.signers[0].address
-//     this.claimAssessor = this.signers[3].address
-//     this.riskPoolFactory = await this.RiskPoolFactory.deploy()
-//     this.rewarderFactory = await this.RewarderFactory.deploy()
-//     this.syntheticSSRPFactory = await this.SyntheticSSRPFactory.deploy()
+    this.mockUNO = await this.MockUNO.deploy()
+    this.mockUSDT = await this.MockUSDT.deploy()
+    await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000"), { from: this.signers[0].address })
+    await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber("500000", 6), { from: this.signers[0].address })
+    this.masterChefOwner = this.signers[0].address
+    this.claimAssessor = this.signers[3].address
+    this.riskPoolFactory = await this.RiskPoolFactory.deploy()
+    this.rewarderFactory = await this.RewarderFactory.deploy()
+    this.syntheticSSRPFactory = await this.SyntheticSSRPFactory.deploy()
 
-//     this.mockUNO.transfer(this.signers[1].address, getBigNumber(2000000))
-//     this.mockUNO.transfer(this.signers[2].address, getBigNumber(3000000))
+    this.mockUNO.transfer(this.signers[1].address, getBigNumber("2000000"))
+    this.mockUNO.transfer(this.signers[2].address, getBigNumber("3000000"))
 
 //     const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
 
-//     const timestamp = new Date().getTime()
+    const timestamp = new Date().getTime()
 
-//     await (
-//       await this.mockUNO
-//         .connect(this.signers[0])
-//         .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber(10000000), { from: this.signers[0].address })
-//     ).wait()
-//     await (
-//       await this.mockUSDT
-//         .connect(this.signers[0])
-//         .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber(10000000), { from: this.signers[0].address })
-//     ).wait()
+    await (
+      await this.mockUNO
+        .connect(this.signers[0])
+        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+    ).wait()
+    await (
+      await this.mockUSDT
+        .connect(this.signers[0])
+        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+    ).wait()
 
-//     console.log("Adding liquidity...")
+    console.log("Adding liquidity...")
 
-//     await (
-//       await this.routerContract
-//         .connect(this.signers[0])
-//         .addLiquidity(
-//           this.mockUNO.address,
-//           this.mockUSDT.address,
-//           getBigNumber(3000000),
-//           getBigNumber(3000, 6),
-//           getBigNumber(3000000),
-//           getBigNumber(3000, 6),
-//           this.signers[0].address,
-//           timestamp,
-//           { from: this.signers[0].address, gasLimit: 9999999 },
-//         )
-//     ).wait()
+    await (
+      await this.routerContract
+        .connect(this.signers[0])
+        .addLiquidity(
+          this.mockUNO.target,
+          this.mockUSDT.target,
+          getBigNumber("3000000"),
+          getBigNumber("3000", 6),
+          getBigNumber("3000000"),
+          getBigNumber("3000", 6),
+          this.signers[0].address,
+          timestamp,
+          { from: this.signers[0].address, gasLimit: 9999999 },
+        )
+    ).wait()
 
-//     this.exchangeAgent = await this.ExchangeAgent.deploy(
-//       this.mockUSDT.address,
-//       WETH_ADDRESS.rinkeby,
-//       TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
-//       UNISWAP_ROUTER_ADDRESS.rinkeby,
-//       UNISWAP_FACTORY_ADDRESS.rinkeby,
-//     )
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
 
-//     this.premiumPool = await this.PremiumPool.deploy(this.exchangeAgent.address, this.mockUNO.address, this.mockUSDT.address)
+    this.exchangeAgent = await this.ExchangeAgent.deploy(
+        this.mockUSDT.target,
+        WETH_ADDRESS.rinkeby,
+        this.mockOraclePriceFeed.target,
+        UNISWAP_ROUTER_ADDRESS.rinkeby,
+        UNISWAP_FACTORY_ADDRESS.rinkeby,
+        this.signers[0].address
+      )
 
-//     await this.exchangeAgent.addWhiteList(this.premiumPool.address)
+    this.premiumPool = await this.PremiumPool.deploy(this.exchangeAgent.target, this.mockUNO.target, this.mockUSDT.target, this.signers[0].address, this.signers[0].address)
 
-//     await (
-//       await this.mockUSDT
-//         .connect(this.signers[0])
-//         .approve(this.premiumPool.address, getBigNumber(10000000), { from: this.signers[0].address })
-//     ).wait()
-//     await (await this.premiumPool.addCurrency(this.mockUSDT.address)).wait()
+    await this.exchangeAgent.addWhiteList(this.premiumPool.target)
 
-//     await (await this.premiumPool.collectPremium(this.mockUSDT.address, getBigNumber(10000, 6))).wait()
+    await (
+      await this.mockUSDT
+        .connect(this.signers[0])
+        .approve(this.premiumPool.target, getBigNumber("10000000"), { from: this.signers[0].address })
+    ).wait()
+    await (await this.premiumPool.addCurrency(this.mockUSDT.target)).wait()
 
-//     this.singleSidedReinsurancePool = await this.SingleSidedReinsurancePool.deploy(this.masterChefOwner, this.claimAssessor)
-//     await this.singleSidedReinsurancePool.createRewarder(
-//       this.signers[0].address,
-//       this.rewarderFactory.address,
-//       this.mockUNO.address,
-//     )
-//     this.rewarderAddress = await this.singleSidedReinsurancePool.rewarder()
-//     this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
+    await (await this.premiumPool.collectPremium(this.mockUSDT.target, getBigNumber("10000", 6))).wait()
 
-//     expect(this.rewarder.address).equal(await this.singleSidedReinsurancePool.rewarder())
+    await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+      });
+  
+      await network.provider.send("hardhat_setBalance", [
+        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+        "0x1000000000000000000000000000000000",
+      ]);
+  
+      this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
 
-//     await (
-//       await this.singleSidedReinsurancePool.createRiskPool(
-//         "UNO-LP",
-//         "UNO-LP",
-//         this.riskPoolFactory.address,
-//         this.mockUNO.address,
-//         getBigNumber(1),
-//       )
-//     ).wait()
+      this.singleSidedReinsurancePool = await upgrades.deployProxy(
+        this.SingleSidedReinsurancePool, [
+            this.signers[0].address,
+          "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+        ]
+    );
 
-//     this.riskPoolAddress = await this.singleSidedReinsurancePool.riskPool()
+    await this.singleSidedReinsurancePool.createRewarder(
+      this.signers[0].address,
+      this.rewarderFactory.target,
+      this.mockUNO.target,
+    )
+    this.rewarderAddress = await this.singleSidedReinsurancePool.rewarder()
+    this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
 
-//     this.riskPool = await this.RiskPool.attach(this.riskPoolAddress)
+    expect(this.rewarder.target).equal(await this.singleSidedReinsurancePool.rewarder())
 
-//     await this.singleSidedReinsurancePool.createSyntheticSSRP(this.signers[0].address, this.syntheticSSRPFactory.address)
-//     this.syntheticSSRPAddr = await this.singleSidedReinsurancePool.syntheticSSRP()
-//     console.log(this.syntheticSSRPAddr)
+    await (
+      await this.singleSidedReinsurancePool.createRiskPool(
+        "UNO-LP",
+        "UNO-LP",
+        this.riskPoolFactory.target,
+        this.mockUNO.target,
+        getBigNumber("1"),
+      )
+    ).wait()
 
-//     this.syntheticSSRP = await this.SyntheticSSRP.attach(this.syntheticSSRPAddr)
+    this.riskPoolAddress = await this.singleSidedReinsurancePool.riskPool()
 
-//     await this.syntheticSSRP.createRewarder(this.signers[0].address, this.rewarderFactory.address, this.mockUSDT.address)
-//     this.syntheticRewarderAddr = await this.syntheticSSRP.rewarder()
-//     this.syntheticRewarder = await this.Rewarder.attach(this.syntheticRewarderAddr)
+    this.riskPool = await this.RiskPool.attach(this.riskPoolAddress)
 
-//     await (
-//       await this.riskPool
-//         .connect(this.signers[0])
-//         .approve(this.syntheticSSRP.address, getBigNumber(10000000), { from: this.signers[0].address })
-//     ).wait()
-//     await (
-//       await this.riskPool
-//         .connect(this.signers[1])
-//         .approve(this.syntheticSSRP.address, getBigNumber(10000000), { from: this.signers[1].address })
-//     ).wait()
+    await this.singleSidedReinsurancePool.createSyntheticSSRP(this.signers[0].address, this.syntheticSSRPFactory.target)
+    this.syntheticSSRPAddr = await this.singleSidedReinsurancePool.syntheticSSRP()
+    console.log(this.syntheticSSRPAddr)
 
-//     await this.mockUSDT.transfer(this.syntheticRewarder.address, getBigNumber(100000, 6))
-//   })
+    this.syntheticSSRP = await this.SyntheticSSRP.attach(this.syntheticSSRPAddr)
 
-//   describe("Synthetic SSRP Basic", function () {
-//     // it("Should set reward per block factor", async function () {
-//     //   const poolInfoBefore = await this.syntheticSSRP.rewardPerBlock()
-//     //   expect(poolInfoBefore).equal(getBigNumber(1))
-//     //   await this.syntheticSSRP.setRewardPerBlock(getBigNumber(2))
-//     //   const poolInfoAfter = await this.syntheticSSRP.rewardPerBlock()
-//     //   expect(poolInfoAfter).equal(getBigNumber(2))
-//     // })
-//   })
+    await this.syntheticSSRP.createRewarder(this.signers[0].address, this.rewarderFactory.target, this.mockUSDT.target)
+    this.syntheticRewarderAddr = await this.syntheticSSRP.rewarder()
+    this.syntheticRewarder = await this.Rewarder.attach(this.syntheticRewarderAddr)
 
-//   describe("Synthetic SSRP Actions", function () {
-//     beforeEach(async function () {
-//       await (await this.mockUNO.approve(this.singleSidedReinsurancePool.address, getBigNumber(100000000))).wait()
-//       await (
-//         await this.mockUNO
-//           .connect(this.signers[1])
-//           .approve(this.singleSidedReinsurancePool.address, getBigNumber(100000000), { from: this.signers[1].address })
-//       ).wait()
-//       await (await this.singleSidedReinsurancePool.enterInPool(getBigNumber(10000))).wait()
-//       await (
-//         await this.singleSidedReinsurancePool
-//           .connect(this.signers[1])
-//           .enterInPool(getBigNumber(10000), { from: this.signers[1].address })
-//       ).wait()
-//     })
+    await (
+      await this.riskPool
+        .connect(this.signers[0])
+        .approve(this.syntheticSSRP.target, getBigNumber("10000000"), { from: this.signers[0].address })
+    ).wait()
+    await (
+      await this.riskPool
+        .connect(this.signers[1])
+        .approve(this.syntheticSSRP.target, getBigNumber("10000000"), { from: this.signers[1].address })
+    ).wait()
 
-//     describe("Synthetic SSRP Staking", function () {
-//       // it("Should enter in pool and check pending reward after generate 10000 blocks", async function () {
-//       //   const pendingUnoRewardBefore = await this.syntheticSSRP.pendingReward(this.signers[0].address)
-//       //   console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore.toString())
-//       //   await this.syntheticSSRP.enterInPool(getBigNumber(1000))
-//       //   const beforeBlockNumber = await ethers.provider.getBlockNumber()
-//       //   const userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
-//       //   const stakedAmount = userInfo.amount
-//       //   expect(stakedAmount).to.equal(getBigNumber(1000))
-//       //   await advanceBlockTo(beforeBlockNumber + 10000)
-//       //   const afterBlockNumber = await ethers.provider.getBlockNumber()
-//       //   const pendingUnoRewardAfter = await this.syntheticSSRP.pendingReward(this.signers[0].address)
-//       //   console.log("[pendingUnoRewardAfter]", pendingUnoRewardAfter.toString(), getNumber(pendingUnoRewardAfter))
-//       //   expect(pendingUnoRewardBefore).to.be.not.equal(pendingUnoRewardAfter)
-//       // })
-//       // it("Should enter in pool by multiple users and check pending reward after generate 10000 blocks", async function () {
-//       //   const pendingUnoRewardBefore = await this.syntheticSSRP.pendingReward(this.signers[0].address)
-//       //   expect(pendingUnoRewardBefore).to.equal(0)
-//       //   await this.syntheticSSRP.enterInPool(getBigNumber(1000))
-//       //   // block number when deposit in pool for the first time
-//       //   const beforeBlockNumber = await ethers.provider.getBlockNumber()
-//       //   const userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
-//       //   const stakedAmount = userInfo.amount
-//       //   expect(stakedAmount).to.equal(getBigNumber(1000))
-//       //   await advanceBlockTo(beforeBlockNumber + 10000)
-//       //   // pending reward after 10000 blocks
-//       //   const pendingUnoRewardAfter = await this.syntheticSSRP.pendingReward(this.signers[0].address)
-//       //   console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter))
-//       //   // another one will deposit in pool with the same amount
-//       //   await this.syntheticSSRP
-//       //     .connect(this.signers[1])
-//       //     .enterInPool(getBigNumber(1000), { from: this.signers[1].address })
-//       //   // pending reward of the signer 0 and 1 after another 10000 blocks
-//       //   const afterBlockNumber1 = await ethers.provider.getBlockNumber()
-//       //   await advanceBlockTo(afterBlockNumber1 + 10000)
-//       //   const pendingUnoRewardAfter1 = await this.syntheticSSRP.pendingReward(this.signers[0].address)
-//       //   const pendingUnoRewardAfter2 = await this.syntheticSSRP.pendingReward(this.signers[1].address)
-//       //   console.log("[pendingUnoRewardAfter1,2]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
-//       //   expect(pendingUnoRewardAfter1).to.gte(pendingUnoRewardAfter)
-//       //   expect(pendingUnoRewardAfter2).to.be.not.equal(0)
-//       // })
-//     })
+    await this.mockUSDT.transfer(this.syntheticRewarder.target, getBigNumber("100000", 6))
 
-//     describe("Synthetic SSRP withdraw", function () {
-//       beforeEach(async function () {
-//         const premiumUSDTBalance = await this.mockUSDT.balanceOf(this.premiumPool.address)
-//         console.log("[premiumUSDTBalance]", premiumUSDTBalance.toString())
-//         await this.premiumPool.depositToSyntheticSSRPRewarder(this.syntheticRewarder.address)
-//         const premiumUSDTBalance2 = await this.mockUSDT.balanceOf(this.premiumPool.address)
-//         console.log("[premiumUSDTBalance2]", premiumUSDTBalance2.toString())
+    await this.singleSidedReinsurancePool.setStakingStartTime(Math.round(timestamp / 1000 - 3600 * 7))
+    console.log(Math.round(timestamp / 1000 - 3600 * 7))
+  })
 
-//         await this.syntheticSSRP.enterInPool(getBigNumber(1000))
+  describe("Synthetic SSRP Basic", function () {
+    it("Should set reward per block factor", async function () {
+      const poolInfoBefore = await this.syntheticSSRP.rewardPerBlock()
+      expect(poolInfoBefore).equal(getBigNumber("1"))
+      await this.syntheticSSRP.setRewardPerBlock(getBigNumber("2"))
+      const poolInfoAfter = await this.syntheticSSRP.rewardPerBlock()
+      expect(poolInfoAfter).equal(getBigNumber("2"))
+    })
+  })
 
-//         // block number when deposit in pool for the first time
-//         const beforeBlockNumber = await ethers.provider.getBlockNumber()
+  describe("Synthetic SSRP Actions", function () {
+    beforeEach(async function () {
+      await (await this.mockUNO.approve(this.singleSidedReinsurancePool.target, getBigNumber("100000000"))).wait()
+      await (
+        await this.mockUNO
+          .connect(this.signers[1])
+          .approve(this.singleSidedReinsurancePool.target, getBigNumber("100000000"), { from: this.signers[1].address })
+      ).wait()
+      await (await this.singleSidedReinsurancePool.enterInPool(getBigNumber("10000"))).wait()
+      await (
+        await this.singleSidedReinsurancePool
+          .connect(this.signers[1])
+          .enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
+      ).wait()
+    })
 
-//         await advanceBlockTo(beforeBlockNumber + 10000)
+    describe("Synthetic SSRP Staking", function () {
+      it("Should enter in pool and check pending reward after generate 10000 blocks", async function () {
+        const pendingUnoRewardBefore = await this.syntheticSSRP.pendingReward(this.signers[0].address)
+        console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore.toString())
+        await this.syntheticSSRP.enterInPool(getBigNumber("1000"))
+        const beforeBlockNumber = await ethers.provider.getBlockNumber()
+        const userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
+        const stakedAmount = userInfo.amount
+        expect(stakedAmount).to.equal(getBigNumber("1000"))
+        await advanceBlockTo(beforeBlockNumber + 10000)
+        const afterBlockNumber = await ethers.provider.getBlockNumber()
+        const pendingUnoRewardAfter = await this.syntheticSSRP.pendingReward(this.signers[0].address)
+        console.log("[pendingUnoRewardAfter]", pendingUnoRewardAfter.toString(), getNumber(pendingUnoRewardAfter))
+        expect(pendingUnoRewardBefore).to.be.not.equal(pendingUnoRewardAfter)
+      })
+      it("Should enter in pool by multiple users and check pending reward after generate 10000 blocks", async function () {
+        const pendingUnoRewardBefore = await this.syntheticSSRP.pendingReward(this.signers[0].address)
+        expect(pendingUnoRewardBefore).to.equal(0)
+        await this.syntheticSSRP.enterInPool(getBigNumber("1000"))
+        // block number when deposit in pool for the first time
+        const beforeBlockNumber = await ethers.provider.getBlockNumber()
+        const userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
+        const stakedAmount = userInfo.amount
+        expect(stakedAmount).to.equal(getBigNumber("1000"))
+        await advanceBlockTo(beforeBlockNumber + 10000)
+        // pending reward after 10000 blocks
+        const pendingUnoRewardAfter = await this.syntheticSSRP.pendingReward(this.signers[0].address)
+        console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter))
+        // another one will deposit in pool with the same amount
+        await this.syntheticSSRP
+          .connect(this.signers[1])
+          .enterInPool(getBigNumber("1000"), { from: this.signers[1].address })
+        // pending reward of the signer 0 and 1 after another 10000 blocks
+        const afterBlockNumber1 = await ethers.provider.getBlockNumber()
+        await advanceBlockTo(afterBlockNumber1 + 10000)
+        const pendingUnoRewardAfter1 = await this.syntheticSSRP.pendingReward(this.signers[0].address)
+        const pendingUnoRewardAfter2 = await this.syntheticSSRP.pendingReward(this.signers[1].address)
+        console.log("[pendingUnoRewardAfter1,2]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
+        expect(pendingUnoRewardAfter1).to.gte(pendingUnoRewardAfter)
+        expect(pendingUnoRewardAfter2).to.be.not.equal(0)
+      })
+    })
 
-//         // another one will deposit in pool with the same amount
-//         await this.syntheticSSRP.connect(this.signers[1]).enterInPool(getBigNumber(1000), { from: this.signers[1].address })
+    describe("Synthetic SSRP withdraw", function () {
+      beforeEach(async function () {
+        const premiumUSDTBalance = await this.mockUSDT.balanceOf(this.premiumPool.target)
+        console.log("[premiumUSDTBalance]", premiumUSDTBalance.toString())
+        await this.premiumPool.depositToSyntheticSSRPRewarder(this.syntheticRewarder.target)
+        const premiumUSDTBalance2 = await this.mockUSDT.balanceOf(this.premiumPool.target)
+        console.log("[premiumUSDTBalance2]", premiumUSDTBalance2.toString())
 
-//         // pending reward of the signer 0 and 1 after another 10000 blocks
-//         const afterBlockNumber1 = await ethers.provider.getBlockNumber()
-//         await advanceBlockTo(afterBlockNumber1 + 10000)
-//       })
+        await this.syntheticSSRP.enterInPool(getBigNumber("1000"))
 
-//       //   it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
-//       //     //check the uno and risk pool LP token balance of the singer 0 before withdraw
-//       //     const usdcBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
-//       //     let userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
-//       //     let stakedAmount = userInfo.amount
-//       //     expect(stakedAmount).to.equal(getBigNumber(1000))
-//       //     // signer 0 submit WR for the 1000 UNO
-//       //     await this.syntheticSSRP.leaveFromPoolInPending(getBigNumber(1000))
-//       //     // check the uno and risk pool LP token balance of the singer 0 after withdraw
-//       //     const usdcBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
-//       //     userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
-//       //     stakedAmount = userInfo.amount
-//       //     expect(stakedAmount).to.equal(getBigNumber(1000))
-//       //     console.log("[script]", usdcBalanceAfter.sub(usdcBalanceBefore).toString())
-//       //     expect(usdcBalanceBefore).to.lt(usdcBalanceAfter)
-//       //   })
+        // block number when deposit in pool for the first time
+        const beforeBlockNumber = await ethers.provider.getBlockNumber()
+
+        await advanceBlockTo(beforeBlockNumber + 10000)
+
+        // another one will deposit in pool with the same amount
+        await this.syntheticSSRP.connect(this.signers[1]).enterInPool(getBigNumber("1000"), { from: this.signers[1].address })
+
+        // pending reward of the signer 0 and 1 after another 10000 blocks
+        const afterBlockNumber1 = await ethers.provider.getBlockNumber()
+        await advanceBlockTo(afterBlockNumber1 + 10000)
+      })
+
+        it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
+          //check the uno and risk pool LP token balance of the singer 0 before withdraw
+          const usdcBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
+          let userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
+          let stakedAmount = userInfo.amount
+          expect(stakedAmount).to.equal(getBigNumber("1000"))
+          // signer 0 submit WR for the 1000 UNO
+        //   await this.syntheticSSRP.connect(this.signers[1]).leaveFromPoolInPending(getBigNumber("1000"))
+        //   // check the uno and risk pool LP token balance of the singer 0 after withdraw
+        //   const usdcBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
+        //   userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
+        //   stakedAmount = userInfo.amount
+        //   expect(stakedAmount).to.equal(getBigNumber("1000"))
+        //   console.log("[script]", usdcBalanceAfter.sub(usdcBalanceBefore).toString())
+        //   expect(usdcBalanceBefore).to.lt(usdcBalanceAfter)
+        })
 
 //       //   it("Sould check withdraw pending status", async function () {
 //       //     // signer 0 submit WR for the 1000 UNO
@@ -325,14 +361,14 @@
 //       //   expect(stakedAmountAfter).to.equal(getBigNumber(0))
 //       // })
 
-//       // it("Should harvest", async function () {
-//       //   // signer's uno balance before harvest
-//       //   const usdcBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
-//       //   await this.syntheticSSRP.harvest(this.signers[0].address)
-//       //   // signer's uno balance after harvest
-//       //   const usdcBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
-//       //   expect(usdcBalanceAfter.sub(usdcBalanceBefore)).to.gt(0)
-//       // })
+    //   it.only("Should harvest", async function () {
+    //     // signer's uno balance before harvest
+    //     const usdcBalanceBefore = await this.mockUSDT.balanceOf(this.signers[1].address)
+    //     await this.syntheticSSRP.connect(this.signers[1]).harvest(this.signers[1].address)
+    //     // signer's uno balance after harvest
+    //     const usdcBalanceAfter = await this.mockUSDT.balanceOf(this.signers[1].address)
+    //     expect(usdcBalanceAfter - (usdcBalanceBefore)).to.gt(0)
+    //   })
 
 //       // it("Should cancel withdraw request", async function () {
 //       //   // signer 0 submit WR for the 1000 UNO
@@ -345,7 +381,7 @@
 //       //   const withdrawRequestAfter = userInfo.pendingWithdrawAmount
 //       //   expect(withdrawRequestAfter).to.equal(getBigNumber(0))
 //       // })
-//     })
+    })
 //     describe("Check SSRP by link to SyntheticSSRP", function () {
 //       beforeEach(async function () {
 //         const premiumUSDTBalance = await this.mockUSDT.balanceOf(this.premiumPool.address)
@@ -424,5 +460,5 @@
 //       //   expect(lpBalanceInMigrate).to.equal(getBigNumber(10000));
 //       // })
 //     })
-//   })
-// })
+  })
+})
