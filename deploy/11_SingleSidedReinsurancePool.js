@@ -5,8 +5,8 @@ module.exports = async function ({getNamedAccounts, deployments}) {
     const { deployer, proxyAdminOwner } = await getNamedAccounts();
     const owner = deployer
   
-    const multiSigWallet = "0x4CB61C3B9a46bf96E2e394f2B00a5722836BA6Eb"
-    const claimAccessor = "0x4CB61C3B9a46bf96E2e394f2B00a5722836BA6Eb"
+    const multiSigWallet = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
+    const claimAccessor = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
     
    const a =  await deploy("SingleSidedReinsurancePool", {
       from: deployer,
