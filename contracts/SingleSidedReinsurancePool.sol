@@ -17,8 +17,6 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/IGnosisSafe.sol";
 import "./libraries/TransferHelper.sol";
 
-import "hardhat/console.sol";
-
 contract SingleSidedReinsurancePool is
     ISingleSidedReinsurancePool,
     ReentrancyGuardUpgradeable,
