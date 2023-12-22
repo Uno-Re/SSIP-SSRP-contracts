@@ -26,23 +26,25 @@ const {
 } = require("../scripts/shared/constants")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 
-describe("SalesPolicy", function () {
+describe.only("SalesPolicy", function () {
   before(async function () {
-    // this.MultiSigWallet = await ethers.getContractAt("MultiSigWallet")
-    this.CapitalAgent = await ethers.getContractAt("CapitalAgent")
-    this.PremiumPool = await ethers.getContractAt("PremiumPool")
-    this.Rewarder = await ethers.getContractAt("Rewarder")
-    this.RewarderFactory = await ethers.getContractAt("RewarderFactory")
+    this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
+    this.MockUNO = await ethers.getContractFactory("MockUNO")
+    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
+    this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
+    this.PremiumPool = await ethers.getContractFactory("PremiumPool")
+    this.Rewarder = await ethers.getContractFactory("Rewarder")
+    this.RewarderFactory = await ethers.getContractFactory("RewarderFactory")
     this.RiskPoolFactory = await ethers.getContractFactory("RiskPoolFactory")
-    this.RiskPool = await ethers.getContractAt("RiskPool")
-    this.ExchangeAgent = await ethers.getContractAt("ExchangeAgent")
-    this.MockUNO = await ethers.getContractAt("MockUNO")
-    this.MockUSDT = await ethers.getContractAt("MockUSDT")
-    this.SalesPolicyFactory = await ethers.getContractAt("SalesPolicyFactory")
+    this.RiskPool = await ethers.getContractFactory("RiskPool")
+    this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
+    this.MockUNO = await ethers.getContractFactory("MockUNO")
+    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
+    this.SalesPolicyFactory = await ethers.getContractFactory("SalesPolicyFactory")
     this.SalesPolicy = await ethers.getContractFactory("SalesPolicy")
-    this.SingleSidedInsurancePool = await ethers.getContractAt("SingleSidedInsurancePool")
-    this.MockOraclePriceFeed = await ethers.getContractAt("MockOraclePriceFeed")
-    this.EscalationManager = await ethers.getContractAt("EscalationManager")
+    this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
+    this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
+    this.EscalationManager = await ethers.getContractFactory("EscalationManager")
     this.signers = await ethers.getSigners()
     this.zeroAddress = ethers.ZeroAddress;
     this.routerContract = new ethers.Contract(
