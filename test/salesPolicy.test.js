@@ -536,7 +536,7 @@ describe("SalesPolicy", function () {
     //   expect(premiumForSSIP).to.equal(getBigNumber("210", 6))
     //   expect(premiumForBackBurn).to.equal(getBigNumber("60", 6))
     // })
-
+ 
     
     // it("Should buy policy in USDT directly", async function () {
     //   let hexData
