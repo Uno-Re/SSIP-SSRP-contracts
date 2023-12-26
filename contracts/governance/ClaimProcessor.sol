@@ -32,7 +32,7 @@ contract ClaimProcessor is AccessControl {
     }
     
     function requestPolicyId(uint256 _policyId) external onlyRole(SSIP_ROLE) {
-        uint256 _lastIndex = ++lastIndex;
+        uint256 _lastIndex = lastIndex;
         Claim memory _claim = assertion[_lastIndex];
         _claim.ssip = msg.sender;
         _claim.policyId = _policyId;

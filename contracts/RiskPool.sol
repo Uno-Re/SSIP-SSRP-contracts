@@ -139,7 +139,6 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
                 } else {
                     TransferHelper.safeTransferETH(_to, pendingAmountInUno);
                 }
-                migratedAmount += pendingAmountInUno;
                 _withdrawImplement(_to);
             } else {
                 if (currency != address(0)) {
@@ -147,7 +146,6 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
                 } else {
                     TransferHelper.safeTransferETH(_to, cryptoBalance - MIN_LP_CAPITAL);
                 }
-                migratedAmount += cryptoBalance - MIN_LP_CAPITAL;
                 _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
             }
         } else {

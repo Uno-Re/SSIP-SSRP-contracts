@@ -12,12 +12,10 @@ import "./interfaces/IRewarder.sol";
 import "./libraries/TransferHelper.sol";
 
 contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausable {
-
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
 
     uint256 public constant ACC_REWARD_PRECISION = 1e18;
-
 
     uint256 public lockTime = 10 days;
 
@@ -171,20 +169,20 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
         updatePool();
 
         uint256 _totalPendingReward;
+        uint256 _accumulatedAmount;
         for (uint256 i; i < _to.length; i++) {
-        require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
+            require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
-        uint256 _pendingReward = _updateReward(_to[i]);
-        _totalPendingReward += _pendingReward;
-
-        _enterInPool(_pendingReward, _to[i]);
-
+            uint256 _pendingReward = _updateReward(_to[i]);
+            _totalPendingReward += _pendingReward;
+            _accumulatedAmount += userInfo[_to[i]].amount;
+            _enterInPool(_pendingReward, _to[i]);
         }
 
         if (rewarder != address(0) && _totalPendingReward > 0) {
-            IRewarder(rewarder).onReward(address(this), _totalPendingReward);
+            IRewarder(rewarder).onRewardForRollOver(address(this), _totalPendingReward, _accumulatedAmount);
         }
-        
+
         emit RollOverReward(address(this), _to, _totalPendingReward);
     }
 
@@ -245,7 +243,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
         emit LogHarvest(msg.sender, _to, _pendingReward);
     }
 
-    function _updateReward(address _to) internal returns(uint256) {
+    function _updateReward(address _to) internal returns (uint256) {
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedReward = (amount * accRewardPerShare) / ACC_REWARD_PRECISION;
         uint256 _pendingReward = accumulatedReward - userInfo[_to].rewardDebt;

@@ -113,7 +113,8 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address _premiumCurrency,
         bytes32 r,
         bytes32 s,
-        uint8 v
+        uint8 v,
+        uint256 nonce
     ) external payable whenNotPaused nonReentrant {
         uint256 len = _protocols.length;
         require(len > 0, "UnoRe: no policy");
@@ -128,7 +129,8 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             _premiumCurrency,
             r,
             s,
-            v
+            v,
+            nonce
         );
         require(_signer != address(0) && _signer == signer, "UnoRe: invalid signer");
         require(_signedTime <= block.timestamp && block.timestamp - _signedTime < maxDeadline, "UnoRe: signature expired");
@@ -314,11 +316,12 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         address _premiumCurrency,
         bytes32 r,
         bytes32 s,
-        uint8 v
+        uint8 v,
+        uint256 nonce
     ) private pure returns (address) {
         // bytes32 digest = getSignedMsgHash(productName, priceInUSD, period, conciergePrice);
         bytes32 msgHash = keccak256(
-            abi.encodePacked(_policyPrice, _protocols, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency)
+            abi.encodePacked(_policyPrice, _protocols, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency, nonce)
         );
 
         // bytes32 msgHash = keccak256(abi.encodePacked(productName));
