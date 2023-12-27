@@ -26,7 +26,7 @@ describe("SingleSidedInsurancePool", function () {
     this.MockUSDT = await ethers.getContractFactory("MockUSDT")
     this.RewardAttack = await ethers.getContractFactory("RewardAttack")
     this.signers = await ethers.getSigners()
-    this.zeroAddress = ethers.constants.AddressZero
+    this.zeroAddress = ethers.AddressZero
     this.routerContract = new ethers.Contract(
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       JSON.stringify(UniswapV2Router.abi),

@@ -40,7 +40,7 @@ describe("SingleSidedInsurancePool", function () {
     this.EscalationManager = await ethers.getContractFactory("EscalationManager")
     this.OptimisticOracleV3 = await ethers.getContractFactory("OptimisticOracleV3")
     this.signers = await ethers.getSigners()
-    this.zeroAddress = "0x0000000000000000000000000000000000000000";
+    this.zeroAddress = ethers.AddressZero
     this.routerContract = new ethers.Contract(
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       JSON.stringify(UniswapV2Router.abi),
