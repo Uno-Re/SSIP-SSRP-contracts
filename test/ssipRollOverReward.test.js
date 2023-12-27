@@ -1,19 +1,14 @@
 const { expect } = require("chai")
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
+const { getBigNumber, getNumber, advanceBlockTo } = require("../scripts/shared/utilities")
 const { BigNumber } = require("ethers")
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
-const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
   UNISWAP_ROUTER_ADDRESS,
-  TWAP_ORACLE_PRICE_FEED_FACTORY,
-  UNO,
-  USDT,
-  UNO_USDT_PRICE_FEED,
 } = require("../scripts/shared/constants")
 const { clearConfigCache } = require("prettier")
 const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
@@ -55,7 +50,6 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
     this.rewarderFactory = await this.RewarderFactory.deploy()
     this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.deploy()
 
-    const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
 
     const timestamp = new Date().getTime()
 
@@ -199,7 +193,6 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
 
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
         await advanceBlockTo(beforeBlockNumber + 10000)
-        const afterBlockNumber = await ethers.provider.getBlockNumber()
 
         const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardAfter2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
