@@ -19,7 +19,7 @@ contract MockUSDT is ERC20 {
     }
 
     function faucetToken(uint256 _amount) external {
-        require(_faucets[msg.sender] + _amount <= faucetLimit, "Uno: Faucet amount limitation");
+        // require(_faucets[msg.sender] + _amount <= faucetLimit, "Uno: Faucet amount limitation");
         _mint(msg.sender, _amount);
     }
 }
