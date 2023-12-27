@@ -26,11 +26,9 @@ const {
 } = require("../scripts/shared/constants")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 
-describe.only("SalesPolicy", function () {
+describe("SalesPolicy", function () {
   before(async function () {
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
-    this.MockUNO = await ethers.getContractFactory("MockUNO")
-    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
     this.PremiumPool = await ethers.getContractFactory("PremiumPool")
     this.Rewarder = await ethers.getContractFactory("Rewarder")
