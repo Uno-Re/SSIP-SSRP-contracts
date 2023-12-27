@@ -133,6 +133,8 @@ interface OptimisticOracleV3Interface {
      */
     function getAssertionResult(bytes32 assertionId) external view returns (bool);
 
+    function disputeAssertion(bytes32 assertionId, address disputer) external;
+
     /**
      * @notice Returns the minimum bond amount required to make an assertion. This is calculated as the final fee of the
      * currency divided by the burnedBondPercentage. If burn percentage is 50% then the min bond is 2x the final fee.

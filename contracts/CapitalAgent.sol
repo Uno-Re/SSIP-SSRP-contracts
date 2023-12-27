@@ -3,12 +3,15 @@
 pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ICapitalAgent.sol";
 
-contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgradeable {
+contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
+
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
     address public exchangeAgent;
     address public salesPolicyFactory;
     address public UNO_TOKEN;
@@ -81,7 +84,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         USDC_TOKEN = _USDC_TOKEN;
         operator = _operator;
         __ReentrancyGuard_init();
-        __Ownable_init(_multiSigWallet);
+        __AccessControl_init();
+        _grantRole(ADMIN_ROLE, _multiSigWallet);
+        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
     }
 
     modifier onlyPoolWhiteList() {
@@ -99,26 +104,26 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         return(_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
-    function setSalesPolicyFactory(address _factory) external onlyOwner nonReentrant {
+    function setSalesPolicyFactory(address _factory) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_factory != address(0), "UnoRe: zero factory address");
         salesPolicyFactory = _factory;
         emit LogSetSalesPolicyFactory(_factory);
     }
 
-    function setOperator(address _operator) external onlyOwner nonReentrant {
+    function setOperator(address _operator) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_operator != address(0), "UnoRe: zero operator address");
         operator = _operator;
         emit LogSetOperator(_operator);
     }
 
-    function addPoolWhiteList(address _pool) external onlyOwner nonReentrant {
+    function addPoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_pool != address(0), "UnoRe: zero pool address");
         require(!poolWhiteList[_pool], "UnoRe: white list already");
         poolWhiteList[_pool] = true;
         emit LogAddPoolWhiteList(_pool);
     }
 
-    function removePoolWhiteList(address _pool) external onlyOwner nonReentrant {
+    function removePoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_pool != address(0), "UnoRe: zero pool address");
         require(poolWhiteList[_pool], "UnoRe: no white list");
         poolWhiteList[_pool] = false;
@@ -133,7 +138,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         emit LogAddPool(_ssip, _currency, _scr);
     }
 
-    function addPoolByAdmin(address _ssip, address _currency, uint256 _scr) external onlyOwner {
+    function addPoolByAdmin(address _ssip, address _currency, uint256 _scr) external onlyRole(ADMIN_ROLE) {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
@@ -141,7 +146,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         emit LogAddPool(_ssip, _currency, _scr);
     }
 
-    function removePool(address _ssip) external onlyOwner nonReentrant {
+    function removePool(address _ssip) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_ssip != address(0), "UnoRe: zero address");
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
         if (poolInfo[_ssip].totalCapital > 0) {
@@ -159,14 +164,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         emit LogSetPolicy(_policy);
     }
 
-    function setPolicyByAdmin(address _policy) external onlyOwner nonReentrant {
+    function setPolicyByAdmin(address _policy) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_policy != address(0), "UnoRe: zero address");
         policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});
 
         emit LogSetPolicy(_policy);
     }
 
-    function removePolicy() external onlyOwner nonReentrant {
+    function removePolicy() external onlyRole(ADMIN_ROLE) nonReentrant {
         require(policyInfo.exist, "UnoRe: no exit pool");
         totalUtilizedAmount = 0;
         address _policy = policyInfo.policy;
@@ -222,7 +227,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         }
     }
 
-    function markToClaimPolicy(uint256 _policyId) external onlyOwner nonReentrant {
+    function markToClaimPolicy(uint256 _policyId) external onlyRole(ADMIN_ROLE) nonReentrant {
         _markToClaimPolicy(_policyId);
     }
 
@@ -301,7 +306,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, OwnableUpgra
         emit LogSetSCR(msg.sender, address(this), _pool, _SCR);
     }
 
-    function setExchangeAgent(address _exchangeAgent) external onlyOwner nonReentrant {
+    function setExchangeAgent(address _exchangeAgent) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_exchangeAgent != address(0), "UnoRe: zero address");
         exchangeAgent = _exchangeAgent;
         emit LogSetExchangeAgent(msg.sender, address(this), _exchangeAgent);

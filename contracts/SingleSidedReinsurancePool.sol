@@ -17,6 +17,8 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/IGnosisSafe.sol";
 import "./libraries/TransferHelper.sol";
 
+import "hardhat/console.sol";
+
 contract SingleSidedReinsurancePool is
     ISingleSidedReinsurancePool,
     ReentrancyGuardUpgradeable,
@@ -33,7 +35,7 @@ contract SingleSidedReinsurancePool is
     address public migrateTo;
     address public syntheticSSRP;
 
-    uint256 public lockTime = 10 days;
+    uint256 public lockTime;
     uint256 public stakingStartTime;
 
     address public rewarder;
@@ -84,6 +86,7 @@ contract SingleSidedReinsurancePool is
         require(IGnosisSafe(_claimAccessor).getOwners().length > 3, "UnoRe: more than three owners required");
         require(IGnosisSafe(_claimAccessor).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         stakingStartTime = block.timestamp + 3 days;
+        lockTime = 10 days;
         __ReentrancyGuard_init();
         __Pausable_init();
         __AccessControl_init();
