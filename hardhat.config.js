@@ -76,7 +76,7 @@ module.exports = {
     bscTest: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
-      accounts: { mnemonic: process.env.MNEMONIC },
+      accounts,
       live: true,
       saveDeployments: true,
       gasMultiplier: 2,
@@ -84,7 +84,7 @@ module.exports = {
     bscMain: {
       url: "https://bsc-dataseed.binance.org/",
       chainId: 56,
-      accounts: { mnemonic: process.env.MNEMONIC },
+      accounts,
       live: true,
       saveDeployments: true,
     },
