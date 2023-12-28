@@ -379,7 +379,7 @@ contract SingleSidedInsurancePool is
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
             ((pendingAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
         userInfo[msg.sender].amount = amount - withdrawAmount;
 
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
