@@ -9,12 +9,10 @@ import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ICapitalAgent.sol";
 
 contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
-
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address public exchangeAgent;
     address public salesPolicyFactory;
-    address public UNO_TOKEN;
     address public USDC_TOKEN;
     address public operator;
 
@@ -70,17 +68,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     function initialize(
         address _exchangeAgent,
-        address _UNO_TOKEN,
         address _USDC_TOKEN,
         address _multiSigWallet,
         address _operator
     ) external initializer {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
-        require(_UNO_TOKEN != address(0), "UnoRe: zero UNO address");
         require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         exchangeAgent = _exchangeAgent;
-        UNO_TOKEN = _UNO_TOKEN;
         USDC_TOKEN = _USDC_TOKEN;
         operator = _operator;
         __ReentrancyGuard_init();
@@ -99,9 +94,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         _;
     }
 
-    function getPolicyInfo() external view returns(address, uint256, bool) {
+    function getPolicyInfo() external view returns (address, uint256, bool) {
         PolicyInfo memory _policy = policyInfo;
-        return(_policy.policy, _policy.utilizedAmount, _policy.exist);
+        return (_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
     function setSalesPolicyFactory(address _factory) external onlyRole(ADMIN_ROLE) nonReentrant {
@@ -217,7 +212,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     function updatePolicyStatus(uint256 _policyId) external override nonReentrant {
         require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
-        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt, ,) = ISalesPolicy(policyInfo.policy)
+        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt, , ) = ISalesPolicy(policyInfo.policy)
             .getPolicyData(_policyId);
         bool isExpired = block.timestamp >= _coverageDuration + _coverStartAt;
         if (isExpired) {
@@ -233,30 +228,18 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     function _markToClaimPolicy(uint256 _policyId) private {
         require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
-        (uint256 _coverageAmount, , , ,) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
+        (uint256 _coverageAmount, , , , ) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
         _updatePolicyCoverage(_coverageAmount, false);
         ISalesPolicy(policyInfo.policy).markToClaim(_policyId);
         emit LogMarkToClaimPolicy(policyInfo.policy, _policyId);
     }
 
     function _updatePoolCapital(address _pool, uint256 _amount, bool isAdd) private {
-        address currency = poolInfo[_pool].currency;
-        uint256 stakingAmountInUSDC;
-        if (currency == USDC_TOKEN) {
-            stakingAmountInUSDC = _amount;
-        } else {
-            stakingAmountInUSDC = currency != address(0)
-                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(currency, USDC_TOKEN, _amount)
-                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _amount);
-        }
-
         if (!isAdd) {
-            require(poolInfo[_pool].totalCapital >= stakingAmountInUSDC, "UnoRe: pool capital overflow");
+            require(poolInfo[_pool].totalCapital >= _amount, "UnoRe: pool capital overflow");
         }
-        poolInfo[_pool].totalCapital = isAdd
-            ? poolInfo[_pool].totalCapital + stakingAmountInUSDC
-            : poolInfo[_pool].totalCapital - stakingAmountInUSDC;
-        totalCapitalStaked = isAdd ? totalCapitalStaked + stakingAmountInUSDC : totalCapitalStaked - stakingAmountInUSDC;
+        poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
+        totalCapitalStaked = isAdd ? totalCapitalStaked + _amount : totalCapitalStaked - _amount;
         emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked);
     }
 
@@ -271,17 +254,31 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     function _checkCapitalByMCRAndSCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
         address currency = poolInfo[_pool].currency;
-        uint256 withdrawAmountInUSDC;
-        if (currency == USDC_TOKEN) {
-            withdrawAmountInUSDC = _withdrawAmount;
-        } else {
-            withdrawAmountInUSDC = currency != address(0)
-                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(currency, USDC_TOKEN, _withdrawAmount)
-                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _withdrawAmount);
-        }
-        bool isMCRPass = totalCapitalStaked - withdrawAmountInUSDC >= (totalCapitalStaked * MCR) / CALC_PRECISION;
-        bool isSCRPass = poolInfo[_pool].totalCapital - withdrawAmountInUSDC >= poolInfo[_pool].SCR;
+        uint256 totalCapitalStakedInUSDC;
+        uint256 mcrInUSDC;
+        uint256 scrInUSDC;
+
+        totalCapitalStakedInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked);
+        mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked - _withdrawAmount);
+        scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
+        
+        bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDC * MCR) / CALC_PRECISION;
+        bool isSCRPass = scrInUSDC >= poolInfo[_pool].SCR;
+
         return isMCRPass && isSCRPass;
+    }
+
+    function _convertTokenToUSDC(address _currency, uint256 _amount) private view returns (uint256) {
+        uint256 tokenInUSDC;
+        if (_currency == USDC_TOKEN) {
+            tokenInUSDC = _amount;
+        } else {
+            tokenInUSDC = _currency != address(0)
+                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(_currency, USDC_TOKEN, _amount)
+                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _amount);
+        }
+
+        return tokenInUSDC;
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
