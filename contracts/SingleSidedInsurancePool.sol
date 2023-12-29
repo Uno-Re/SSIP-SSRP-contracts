@@ -304,8 +304,11 @@ contract SingleSidedInsurancePool is
     function migrate() external nonReentrant isAlive {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
+        uint256 lpPrice = IRiskPool(riskPool).lpPriceUno();
+        uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
-        uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
+        IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
+        uint256 migratedAmount = (amount * lpPrice) / 1e18;
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(migratedAmount, 0, false);
         IMigration(migrateTo).onMigration(msg.sender, migratedAmount, "");
         userInfo[msg.sender].amount = 0;
@@ -368,16 +371,17 @@ contract SingleSidedInsurancePool is
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
-        
-        uint256 accumulatedUno = (withdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+
+        (uint256 pendingAmount, , uint256 pendingAmountInUNO) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
+        ICapitalAgent(capitalAgent).SSIPWithdraw(pendingAmountInUNO);
+
+        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
             ((pendingAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
         userInfo[msg.sender].amount = amount - withdrawAmount;
-        ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
+
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 
