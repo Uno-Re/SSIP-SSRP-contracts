@@ -108,7 +108,6 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
       this.exchangeAgent.target,
-      this.mockUNO.target,
       this.mockUSDT.target,
       "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
       this.signers[0].address]
