@@ -478,6 +478,7 @@ describe("SalesPolicy", function () {
 
       const chainId = await getChainId()
 
+      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
       const functionSignature = this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
         assets,
         protocols,
@@ -489,6 +490,7 @@ describe("SalesPolicy", function () {
         splitSig.r,
         splitSig.s,
         splitSig.v,
+        Number(nonce)
       ])
 
       const domainData = {
@@ -506,7 +508,6 @@ describe("SalesPolicy", function () {
         ]
       }
 
-      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
       const message = {
         nonce: Number(nonce),
         from: this.signers[0].address,
@@ -642,6 +643,7 @@ describe("SalesPolicy", function () {
         splitSig.r,
         splitSig.s,
         splitSig.v,
+        Number(nonce),
         {
           gasLimit: 1000000,
         })
