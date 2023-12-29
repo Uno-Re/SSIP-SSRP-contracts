@@ -110,7 +110,7 @@ Factory contract to create SyntheticSSRP contract, call by SSRP contract.
     - assertionResolvedCallback function called by uma to claim funds to policy holder
 - SSRP changes
     - remove Ownable and use AccessControl as more than one role is required 
-    - use GAURDIAN_COUNCIL_ROLE to claim policy
+    - use GUARDIAN_COUNCIL_ROLE to claim policy
     - use admin role instead of owner
     - pausable and kill pool functionality
     - add killPool and revivePool function

@@ -17,14 +17,13 @@ import "./interfaces/IRiskPool.sol";
 import "./interfaces/IGnosisSafe.sol";
 import "./libraries/TransferHelper.sol";
 
-import "hardhat/console.sol";
-
 contract SingleSidedReinsurancePool is
     ISingleSidedReinsurancePool,
     ReentrancyGuardUpgradeable,
     AccessControlUpgradeable,
     PausableUpgradeable
 {
+
     bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
@@ -328,7 +327,6 @@ contract SingleSidedReinsurancePool is
             uint256 _pendingUno = _updateReward(_to[i]);
             _totalPendingUno += _pendingUno;
 
-
             _enterInPool(_pendingUno, _to[i]);
 
         }
@@ -390,7 +388,7 @@ contract SingleSidedReinsurancePool is
         userInfo[_to] = _userInfo;
     }
 
-    function _updateReward(address _to) internal returns(uint256) {
+    function _updateReward(address _to) internal returns (uint256) {
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;

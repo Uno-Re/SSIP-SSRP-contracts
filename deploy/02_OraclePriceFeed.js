@@ -5,13 +5,12 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-
-  const mockUNO = "0x491e7B202Ca6eB8beFb5eC4C6a3D68ce2159dcF2";
-  const mockUSDT = "0xb1Ce55d27FaF8D4499b840A3EDf509E4df43f9E1";
+  const mockUNO = await hre.deployments.get("MockUNO")
+  const mockUSDT = await hre.deployments.get("MockUSDT")
 
   const oraclePriceFeed = await deploy("MockOraclePriceFeed", {
     from: deployer,
-    args: [mockUNO, mockUSDT],
+    args: [mockUNO.address, mockUSDT.address],
     log: true,
     deterministicDeployment: false,
   })
