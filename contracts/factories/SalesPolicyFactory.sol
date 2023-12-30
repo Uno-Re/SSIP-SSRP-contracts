@@ -34,6 +34,13 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     event LogSetPremiumPool(address indexed _premiumPool);
     event LogUpdateCheckIfProtocolInWhitelistArray(bool _status);
     event LogSetBlackListProtocol(uint16 _protocolId, address indexed _protocol);
+    event LogSetExchangeAgentInPolicy(address _exchangeAgent);
+    event LogSetBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline);
+    event LogSetPremiumPoolInPolicy(address _premiumPool);
+    event LogSetSignerInPolicy(address _signer);
+    event LogSetCapitalAgentInPolicy(address _capitalAgent);
+    event LogSetProtocolURIInPolicy(string _uri);
+    event LogApprovePremiumInPolicy(address _premiumCurrency);
 
     constructor(
         address _usdcToken,
@@ -108,34 +115,41 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     function setExchangeAgentInPolicy(address _exchangeAgent) external onlyOwner {
         require(_exchangeAgent != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setExchangeAgent(_exchangeAgent);
+        emit LogSetExchangeAgentInPolicy(_exchangeAgent);
     }
 
     function setBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline) external onlyOwner {
         require(_maxDeadline > 0, "UnoRe: zero max deadline");
         ISalesPolicy(salesPolicy).setBuyPolicyMaxDeadline(_maxDeadline);
+        emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline);
     }
 
     function setPremiumPoolInPolicy(address _premiumPool) external onlyOwner {
         require(_premiumPool != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setPremiumPool(_premiumPool);
+        emit LogSetPremiumPoolInPolicy(_premiumPool);
     }
 
     function setSignerInPolicy(address _signer) external onlyOwner {
         require(_signer != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setSigner(_signer);
+        emit LogSetSignerInPolicy(_signer);
     }
 
     function setCapitalAgentInPolicy(address _capitalAgent) external onlyOwner {
         require(_capitalAgent != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setCapitalAgent(_capitalAgent);
+        emit LogSetCapitalAgentInPolicy(_capitalAgent);
     }
 
     function setProtocolURIInPolicy(string memory _uri) external onlyOwner {
         ISalesPolicy(salesPolicy).setProtocolURI(_uri);
+        emit LogSetProtocolURIInPolicy(_uri);
     }
 
     function approvePremiumInPolicy(address _premiumCurrency) external onlyOwner {
         ISalesPolicy(salesPolicy).approvePremium(_premiumCurrency);
+        emit LogApprovePremiumInPolicy(_premiumCurrency);
     }
 
     function getProtocolData(uint16 _protocolIdx) external view override returns (address protocolAddress, bool isBlackList) {
