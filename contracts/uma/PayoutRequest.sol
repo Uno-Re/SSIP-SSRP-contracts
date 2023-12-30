@@ -73,6 +73,7 @@ contract PayoutRequest is PausableUpgradeable {
         if (!isUMAFailed) {
             uint256 bond = optimisticOracle.getMinimumBond(address(defaultCurrency));
             TransferHelper.safeTransferFrom(address(defaultCurrency), msg.sender, address(this), bond);
+            defaultCurrency.approve(address(optimisticOracle), bond);
             assertionId = optimisticOracle.assertTruth(
                 abi.encodePacked(
                     "Insurance contract is claiming that insurance event ",
