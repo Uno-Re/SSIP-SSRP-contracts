@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./ClaimData.sol";
+import "../libraries/TransferHelper.sol";
 import "../interfaces/OptimisticOracleV3Interface.sol";
 import "../interfaces/ICapitalAgent.sol";
 import "../interfaces/ISalesPolicy.sol";
@@ -32,6 +33,7 @@ contract PayoutRequest is PausableUpgradeable {
     mapping(uint256 => Policy) public policies;
     mapping(bytes32 => uint256) public assertedPolicies;
     mapping(uint256 => bytes32) public policiesAssertionId;
+    mapping(uint256 => bool) public isRequestInit;
     bool public isUMAFailed;
 
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
@@ -70,6 +72,7 @@ contract PayoutRequest is PausableUpgradeable {
         policies[_policyId] = _policyData;
         if (!isUMAFailed) {
             uint256 bond = optimisticOracle.getMinimumBond(address(defaultCurrency));
+            TransferHelper.safeTransferFrom(address(defaultCurrency), msg.sender, address(this), bond);
             assertionId = optimisticOracle.assertTruth(
                 abi.encodePacked(
                     "Insurance contract is claiming that insurance event ",
@@ -92,19 +95,23 @@ contract PayoutRequest is PausableUpgradeable {
         } else {
             IClaimProcessor(claimProcessor).requestPolicyId(_policyId, address(ssip), _to, _amount);
         }
+        isRequestInit[_policyId] = true;
     }
 
     function assertionResolvedCallback(bytes32 _assertionId, bool _assertedTruthfully) external whenNotPaused {
         require(!isUMAFailed, "RPayout: pool failed");
+        require(msg.sender == address(optimisticOracle), "RPayout: !optimistic oracle");
         // If the assertion was true, then the policy is settled.
+        uint256 _policyId = assertedPolicies[_assertionId];
         if (_assertedTruthfully) {
-            uint256 _policyId = assertedPolicies[_assertionId];
             // If already settled, do nothing. We don't revert because this function is called by the
             // OptimisticOracleV3, which may block the assertion resolution.
             Policy storage policy = policies[_policyId];
             if (policy.settled) return;
             policy.settled = true;
             ssip.settlePayout(_policyId, policy.payoutAddress, policy.insuranceAmount);
+        } else {
+            isRequestInit[_policyId] = false;
         }
     }
 
