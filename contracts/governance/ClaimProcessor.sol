@@ -8,13 +8,15 @@ import "../interfaces/ISingleSidedInsurancePool.sol";
 contract ClaimProcessor is AccessControl {
 
     bytes32 public constant GUARDIAN_COUNCIL_ROLE = keccak256("GUARDIAN_COUNCIL_ROLE");
-    bytes32 public constant SSIP_ROLE = keccak256("SSIP_ROLE");
+    bytes32 public constant PAYOUT_REQUEST_ROLE = keccak256("PAYOUT_REQUEST_ROLE");
 
     struct Claim {
         bool approved;
         bool settled;
         address ssip;
         uint256 policyId;
+        address payoutAddress;
+        uint256 insureAmount;
     }
 
     uint256 public lastIndex;
@@ -27,18 +29,20 @@ contract ClaimProcessor is AccessControl {
 
     constructor(address _governance) {
         _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
-        _setRoleAdmin(SSIP_ROLE, GUARDIAN_COUNCIL_ROLE);
+        _setRoleAdmin(PAYOUT_REQUEST_ROLE, GUARDIAN_COUNCIL_ROLE);
         _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, GUARDIAN_COUNCIL_ROLE);
     }
     
-    function requestPolicyId(uint256 _policyId) external onlyRole(SSIP_ROLE) {
+    function requestPolicyId(uint256 _policyId, address _ssip, address _to, uint256 _amount) external onlyRole(PAYOUT_REQUEST_ROLE) {
         uint256 _lastIndex = ++lastIndex;
         Claim memory _claim = assertion[_lastIndex];
-        _claim.ssip = msg.sender;
+        _claim.ssip = _ssip;
         _claim.policyId = _policyId;
+        _claim.payoutAddress = _to;
+        _claim.insureAmount = _amount;
         assertion[_lastIndex] = _claim;
         lastIndex++;
-        emit PolicyRequested(msg.sender, _lastIndex, _policyId);
+        emit PolicyRequested(_ssip, _lastIndex, _policyId);
     }
 
     function approvePolicy(uint256 _assertionId) external onlyRole(GUARDIAN_COUNCIL_ROLE) {
@@ -51,7 +55,7 @@ contract ClaimProcessor is AccessControl {
         Claim memory _policy = assertion[_assertionId];
         require(_policy.approved && !_policy.settled, "UnoRe: not approved or already settled");
         _policy.settled = true;
-        ISingleSidedInsurancePool(_policy.ssip).settlePayout(_policy.policyId, bytes32(0));
+        ISingleSidedInsurancePool(_policy.ssip).settlePayout(_policy.policyId, _policy.payoutAddress, _policy.insureAmount);
         
         emit PolicyClaimed(msg.sender, _assertionId, _policy.ssip);
     }
