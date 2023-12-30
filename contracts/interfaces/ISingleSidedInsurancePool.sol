@@ -16,5 +16,5 @@ interface ISingleSidedInsurancePool {
 
     function riskPool() external view returns (address);
 
-    function settlePayout(uint256 _policyId, bytes32 _assertionId) external;
+    function settlePayout(uint256 _policyId, address _payout, uint256 _amount) external;
 }
