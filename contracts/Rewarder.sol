@@ -61,17 +61,29 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
     }
 
     function onReward(address _to, uint256 _amount) external payable override onlyPOOL whenNotPaused returns (uint256) {
-        require(tx.origin == _to, "UnoRe: must be message sender");
         ISSIP ssip = ISSIP(pool);
         ISSIP.UserInfo memory userInfos = ssip.userInfo(_to);
         ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
         uint256 accumulatedUno = (userInfos.amount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
 
-        address riskPool = ssip.riskPool();
+        require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
 
-        if (ssip.userInfo(riskPool).rewardDebt != accumulatedUno) {
-            require(userInfos.rewardDebt == accumulatedUno, "UnoRe: updated rewarddebt incorrectly");
+        if (currency == address(0)) {
+            require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
+            TransferHelper.safeTransferETH(_to, _amount);
+            return _amount;
+        } else {
+            require(IERC20(currency).balanceOf(address(this)) >= _amount, "UnoRe: insufficient reward balance");
+            TransferHelper.safeTransfer(currency, _to, _amount);
+            return _amount;
         }
+    }
+
+    function onRewardForRollOver(address _to, uint256 _amount, uint256 _accumulatedAmount) external payable onlyPOOL whenNotPaused returns (uint256) {
+        ISSIP ssip = ISSIP(pool);
+        ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
+        uint256 accumulatedUno = (_accumulatedAmount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
+
         require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
 
         if (currency == address(0)) {

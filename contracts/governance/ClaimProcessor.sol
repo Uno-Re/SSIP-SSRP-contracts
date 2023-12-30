@@ -32,7 +32,7 @@ contract ClaimProcessor is AccessControl {
         _setRoleAdmin(PAYOUT_REQUEST_ROLE, GUARDIAN_COUNCIL_ROLE);
         _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, GUARDIAN_COUNCIL_ROLE);
     }
-    
+
     function requestPolicyId(uint256 _policyId, address _ssip, address _to, uint256 _amount) external onlyRole(PAYOUT_REQUEST_ROLE) {
         uint256 _lastIndex = ++lastIndex;
         Claim memory _claim = assertion[_lastIndex];

@@ -23,7 +23,6 @@ contract SingleSidedReinsurancePool is
     AccessControlUpgradeable,
     PausableUpgradeable
 {
-
     bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
@@ -185,7 +184,11 @@ contract SingleSidedReinsurancePool is
         emit RiskPoolCreated(address(this), riskPool);
     }
 
-    function createRewarder(address _operator, address _factory, address _currency) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
+    function createRewarder(
+        address _operator,
+        address _factory,
+        address _currency
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         require(_currency != address(0), "UnoRe: zero currency address");
@@ -193,7 +196,10 @@ contract SingleSidedReinsurancePool is
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
 
-    function createSyntheticSSRP(address _owner, address _factory) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
+    function createSyntheticSSRP(
+        address _owner,
+        address _factory
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
         require(_owner != address(0), "UnoRe: zero owner address");
         require(_factory != address(0), "UnoRe:zero factory address");
         require(riskPool != address(0), "UnoRe:zero LP token address");
@@ -321,19 +327,19 @@ contract SingleSidedReinsurancePool is
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
+        uint256 _accumulatedAmount;
         for (uint256 i; i < _to.length; i++) {
             require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
             uint256 _pendingUno = _updateReward(_to[i]);
             _totalPendingUno += _pendingUno;
-
+            _accumulatedAmount += userInfo[_to[i]].amount;
             _enterInPool(_pendingUno, _to[i]);
-
         }
         if (rewarder != address(0) && _totalPendingUno != 0) {
-            IRewarder(rewarder).onReward(riskPool, _totalPendingUno);
+            IRewarder(rewarder).onRewardForRollOver(riskPool, _totalPendingUno, _accumulatedAmount);
         }
-        
+
         emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
 
@@ -342,7 +348,10 @@ contract SingleSidedReinsurancePool is
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
-    function policyClaim(address _to, uint256 _amount) external onlyRole(CLAIM_ACCESSOR_ROLE) roleLockTimePassed(CLAIM_ACCESSOR_ROLE) isStartTime isAlive nonReentrant {
+    function policyClaim(
+        address _to,
+        uint256 _amount
+    ) external onlyRole(CLAIM_ACCESSOR_ROLE) roleLockTimePassed(CLAIM_ACCESSOR_ROLE) isStartTime isAlive nonReentrant {
         require(block.timestamp >= roleLockTime[CLAIM_ACCESSOR_ROLE][msg.sender], "UnoRe: lock time not passed");
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");

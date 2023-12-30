@@ -165,7 +165,7 @@ contract SingleSidedInsurancePool is
         require(_account != address(0), "UnoRe: zero address");
         roleLockTime[_role][_account] = block.timestamp + lockTime;
         _grantRole(_role, _account);
-        emit LogSetRole(address(this),_role, _account);
+        emit LogSetRole(address(this), _role, _account);
     }
 
     function setCapitalAgent(address _capitalAgent) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
@@ -224,14 +224,21 @@ contract SingleSidedInsurancePool is
         emit RiskPoolCreated(address(this), riskPool);
     }
 
-    function createRewarder(address _operator, address _factory, address _currency) external nonReentrant onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+    function createRewarder(
+        address _operator,
+        address _factory,
+        address _currency
+    ) external nonReentrant onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_factory != address(0), "UnoRe: rewarder factory no exist");
         require(_operator != address(0), "UnoRe: zero operator address");
         rewarder = IRewarderFactory(_factory).newRewarder(_operator, _currency, address(this));
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
 
-    function createSyntheticSSIP(address _multiSigWallet, address _factory) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
+    function createSyntheticSSIP(
+        address _multiSigWallet,
+        address _factory
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
         require(_multiSigWallet != address(0), "UnoRe: zero owner address");
         require(_factory != address(0), "UnoRe:zero factory address");
         require(riskPool != address(0), "UnoRe:zero LP token address");
@@ -309,6 +316,7 @@ contract SingleSidedInsurancePool is
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
+
         (uint256 pendingAmount, , uint256 pendingAmountInUNO) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
         ICapitalAgent(capitalAgent).SSIPWithdraw(pendingAmountInUNO);
 
@@ -366,17 +374,18 @@ contract SingleSidedInsurancePool is
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
+        uint256 _accumulatedAmount;
         for (uint256 i; i < _to.length; i++) {
             require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
             uint256 _pendingUno = _updateReward(_to[i]);
             _totalPendingUno += _pendingUno;
-
+            _accumulatedAmount += userInfo[_to[i]].amount;
             _enterInPool(_pendingUno, _to[i]);
         }
 
         if (rewarder != address(0) && _totalPendingUno != 0) {
-            IRewarder(rewarder).onReward(riskPool, _totalPendingUno);
+            IRewarder(rewarder).onRewardForRollOver(riskPool, _totalPendingUno, _accumulatedAmount);
         }
         emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
