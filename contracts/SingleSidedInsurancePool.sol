@@ -317,14 +317,15 @@ contract SingleSidedInsurancePool is
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
 
-        (uint256 pendingAmount, , uint256 pendingAmountInUNO) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
-        ICapitalAgent(capitalAgent).SSIPWithdraw(pendingAmountInUNO);
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
+
+        ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
 
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
-            ((pendingAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
+            ((withdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
+        
         userInfo[msg.sender].amount = amount - withdrawAmount;
 
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);

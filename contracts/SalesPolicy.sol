@@ -40,6 +40,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     Counters.Counter private policyIdx;
 
     mapping(uint256 => Policy) public getPolicy;
+    mapping(bytes32 => address) public usedHash;
 
     uint256 private MAX_INTEGER = type(uint256).max;
 
@@ -130,7 +131,8 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             r,
             s,
             v,
-            nonce
+            nonce,
+            msg.sender
         );
         require(_signer != address(0) && _signer == signer, "UnoRe: invalid signer");
         require(_signedTime <= block.timestamp && block.timestamp - _signedTime < maxDeadline, "UnoRe: signature expired");
@@ -317,12 +319,17 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         bytes32 r,
         bytes32 s,
         uint8 v,
-        uint256 nonce
-    ) private pure returns (address) {
+        uint256 nonce,
+        address sender
+    ) private returns (address) {
         // bytes32 digest = getSignedMsgHash(productName, priceInUSD, period, conciergePrice);
         bytes32 msgHash = keccak256(
-            abi.encodePacked(_policyPrice, _protocols, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency, nonce)
+            abi.encodePacked(_policyPrice, _protocols, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency, nonce, sender)
         );
+
+        require(usedHash[msgHash] == address(0), "Already used hash");
+
+        usedHash[msgHash] = sender;
 
         // bytes32 msgHash = keccak256(abi.encodePacked(productName));
         bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));

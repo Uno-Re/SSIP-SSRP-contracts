@@ -141,7 +141,6 @@ describe("SalesPolicy", function () {
     )
     this.capitalAgent = await upgrades.deployProxy(this.CapitalAgent, [
       this.exchangeAgent.target,
-      this.mockUNO.target,
       this.mockUSDT.target,
       this.multiSigWallet.target,
       this.multiSigWallet.target,
@@ -456,6 +455,7 @@ describe("SalesPolicy", function () {
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
       const coverageAmount = [getBigNumber("100", 6), getBigNumber("100", 6)]
       const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
+      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
 
       const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
       const paddedProtocolsHexStr =
@@ -463,6 +463,7 @@ describe("SalesPolicy", function () {
       const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+      const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
 
       hexData =
         "0x" +
@@ -471,14 +472,14 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2)
+        this.mockUSDT.target.slice(2) +
+        paddedNonceHexStr.slice(2) +
+        this.salesPolicy.target.slice(2)
 
       const flatSig = await this.signers[0].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
 
       const chainId = await getChainId()
-
-      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
       const functionSignature = this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
         assets,
         protocols,
@@ -490,7 +491,7 @@ describe("SalesPolicy", function () {
         splitSig.r,
         splitSig.s,
         splitSig.v,
-        Number(nonce)
+        nonce
       ])
 
       const domainData = {
@@ -518,6 +519,7 @@ describe("SalesPolicy", function () {
       expect(premiumPoolBalanceBefore).to.equal(0)
 
       const signature = await this.signers[0].signTypedData(domainData, types, message);
+
       let { r, s, v } = getSignatureParameters(signature)
       try {
         let tx = await this.salesPolicy.executeMetaTransaction(this.signers[0].address, functionSignature, r, s, v, {
@@ -609,12 +611,14 @@ describe("SalesPolicy", function () {
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
       const coverageAmount = [getBigNumber("100", 6), getBigNumber("100", 6)]
       const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
+      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
 
       const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
       const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
       const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+      const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
 
       hexData =
         "0x" +
@@ -623,7 +627,9 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2)
+        this.mockUSDT.target.slice(2) +
+        paddedNonceHexStr.slice(2) +
+        this.salesPolicy.target.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
@@ -643,7 +649,7 @@ describe("SalesPolicy", function () {
         splitSig.r,
         splitSig.s,
         splitSig.v,
-        Number(nonce),
+        nonce,
         {
           gasLimit: 1000000,
         })

@@ -210,10 +210,9 @@ contract SingleSidedReinsurancePool is
     function migrate() external isAlive nonReentrant {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
-        uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
         uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
-        IMigration(migrateTo).onMigration(msg.sender, amount, "");
+        IMigration(migrateTo).onMigration(msg.sender, migratedAmount, "");
         userInfo[msg.sender].amount = 0;
         userInfo[msg.sender].rewardDebt = 0;
         emit LogMigrate(msg.sender, migrateTo, migratedAmount);
@@ -273,12 +272,14 @@ contract SingleSidedReinsurancePool is
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
+
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+        
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
-            ((pendingAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
+            ((withdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
+        
         userInfo[msg.sender].amount = amount - withdrawAmount;
         emit LogLeaveFromPendingSSRP(msg.sender, withdrawAmount, withdrawAmountInUNO);
     }

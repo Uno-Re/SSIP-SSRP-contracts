@@ -5,8 +5,6 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  // const exchangeAgent = await deployments.get("ExchangeAgent")
-  const mockUNO = await hre.deployments.get("MockUNO")
   const mockUSDT = await hre.deployments.get("MockUSDT")
   const exchangeAgent = await hre.deployments.get("ExchangeAgent")
   const multiSigWallet = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
@@ -20,7 +18,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
       execute: {
         init: {
           methodName: "initialize",
-          args: [exchangeAgent.address, mockUNO.address, mockUSDT.address, multiSigWallet, operator],
+          args: [exchangeAgent.address, mockUSDT.address, multiSigWallet, operator],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
