@@ -125,7 +125,7 @@ describe("SingleSidedReinsurancePool", function () {
         ]
     );
 
-    await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.CLAIM_ACCESSOR_ROLE()), this.claimAssessor);
+    await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.CLAIM_ASSESSOR_ROLE()), this.claimAssessor);
 
     await this.singleSidedReinsurancePool.createRewarder(
       this.signers[0].address,

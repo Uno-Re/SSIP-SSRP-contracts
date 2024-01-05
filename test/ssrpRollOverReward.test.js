@@ -126,7 +126,7 @@ describe("SingleSidedReinsurancePool RollOverReward", function () {
     );
 
     await this.singleSidedReinsurancePool.grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
-    await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.CLAIM_ACCESSOR_ROLE()), this.claimAssessor);
+    await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.CLAIM_ASSESSOR_ROLE()), this.claimAssessor);
     await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.BOT_ROLE()), this.signers[1].address);
 
     await this.singleSidedReinsurancePool.setStakingStartTime(Math.round(timestamp / 1000 - 3600 * 7))

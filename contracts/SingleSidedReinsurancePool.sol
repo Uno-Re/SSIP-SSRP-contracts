@@ -23,7 +23,7 @@ contract SingleSidedReinsurancePool is
     AccessControlUpgradeable,
     PausableUpgradeable
 {
-    bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
+    bytes32 public constant CLAIM_ASSESSOR_ROLE = keccak256("CLAIM_ASSESSOR_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
 
@@ -88,9 +88,9 @@ contract SingleSidedReinsurancePool is
         __Pausable_init();
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
-        _grantRole(CLAIM_ACCESSOR_ROLE, _claimAccessor);
+        _grantRole(CLAIM_ASSESSOR_ROLE, _claimAccessor);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setRoleAdmin(CLAIM_ACCESSOR_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(CLAIM_ASSESSOR_ROLE, ADMIN_ROLE);
         _setRoleAdmin(BOT_ROLE, ADMIN_ROLE);
     }
 
@@ -352,8 +352,8 @@ contract SingleSidedReinsurancePool is
     function policyClaim(
         address _to,
         uint256 _amount
-    ) external onlyRole(CLAIM_ACCESSOR_ROLE) roleLockTimePassed(CLAIM_ACCESSOR_ROLE) isStartTime isAlive nonReentrant {
-        require(block.timestamp >= roleLockTime[CLAIM_ACCESSOR_ROLE][msg.sender], "UnoRe: lock time not passed");
+    ) external onlyRole(CLAIM_ASSESSOR_ROLE) roleLockTimePassed(CLAIM_ASSESSOR_ROLE) isStartTime isAlive nonReentrant {
+        require(block.timestamp >= roleLockTime[CLAIM_ASSESSOR_ROLE][msg.sender], "UnoRe: lock time not passed");
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
