@@ -353,7 +353,6 @@ contract SingleSidedReinsurancePool is
         address _to,
         uint256 _amount
     ) external onlyRole(CLAIM_ASSESSOR_ROLE) roleLockTimePassed(CLAIM_ASSESSOR_ROLE) isStartTime isAlive nonReentrant {
-        require(block.timestamp >= roleLockTime[CLAIM_ASSESSOR_ROLE][msg.sender], "UnoRe: lock time not passed");
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
