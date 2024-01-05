@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
+import "./interfaces/IGnosisSafe.sol";
 
 contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
-
     bytes32 public constant GOVERNANCE_ROLE = keccak256("GOVERNANCE_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     // using Address for address;
@@ -51,6 +51,8 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         exchangeAgent = _exchangeAgent;
         UNO_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
@@ -59,7 +61,6 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         _grantRole(GOVERNANCE_ROLE, _governance);
         _setRoleAdmin(GOVERNANCE_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-
     }
 
     modifier onlyAvailableCurrency(address _currency) {
@@ -200,7 +201,11 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         emit LogBuyBackAndBurn(msg.sender, address(this), unoAmount);
     }
 
-    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyRole(GOVERNANCE_ROLE) whenNotPaused {
+    function withdrawPremium(
+        address _currency,
+        address _to,
+        uint256 _amount
+    ) external override onlyRole(GOVERNANCE_ROLE) whenNotPaused {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {

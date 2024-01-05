@@ -11,8 +11,9 @@ import "./interfaces/IUniswapRouter02.sol";
 import "./interfaces/IOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
+import "./interfaces/IGnosisSafe.sol";
 
-contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable{
+contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
     address public immutable override USDC_TOKEN;
     address public immutable UNISWAP_FACTORY;
     address public immutable UNISWAP_ROUTER;
@@ -58,6 +59,8 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable{
         require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
         require(_WETH != address(0), "UnoRe: zero WETH address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         USDC_TOKEN = _usdcToken;
         UNISWAP_FACTORY = _uniswapFactory;
         UNISWAP_ROUTER = _uniswapRouter;
@@ -161,14 +164,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable{
         return convertedAmount;
     }
 
-    function convertForETH(address _token, uint256 _convertAmount)
-        external
-        override
-        onlyWhiteList
-        whenNotPaused
-        nonReentrant
-        returns (uint256)
-    {
+    function convertForETH(
+        address _token,
+        uint256 _convertAmount
+    ) external override onlyWhiteList whenNotPaused nonReentrant returns (uint256) {
         require(IERC20(_token).balanceOf(msg.sender) > 0, "UnoRe: zero balance");
         if (_token != address(0)) {
             TransferHelper.safeTransferFrom(_token, msg.sender, address(this), _convertAmount);

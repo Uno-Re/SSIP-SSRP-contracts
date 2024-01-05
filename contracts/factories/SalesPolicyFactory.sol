@@ -7,6 +7,7 @@ import "../libraries/Counters.sol";
 import "../SalesPolicy.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISalesPolicyFactory.sol";
+import "../interfaces/IGnosisSafe.sol";
 
 contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     using Counters for Counters.Counter;
@@ -54,6 +55,8 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         USDC_TOKEN = _usdcToken;
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;

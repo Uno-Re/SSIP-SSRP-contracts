@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "./interfaces/ISalesPolicy.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ICapitalAgent.sol";
+import "./interfaces/IGnosisSafe.sol";
 
 contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -75,6 +76,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         exchangeAgent = _exchangeAgent;
         USDC_TOKEN = _USDC_TOKEN;
         operator = _operator;
@@ -261,7 +264,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         totalCapitalStakedInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked);
         mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked - _withdrawAmount);
         scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
-        
+
         bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDC * MCR) / CALC_PRECISION;
         bool isSCRPass = scrInUSDC >= poolInfo[_pool].SCR;
 
