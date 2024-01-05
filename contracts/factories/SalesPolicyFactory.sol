@@ -158,4 +158,12 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     function getProtocolData(uint16 _protocolIdx) external view override returns (address protocolAddress, bool isBlackList) {
         return (getProtocol[_protocolIdx].protocolAddress, getProtocol[_protocolIdx].isBlackList);
     }
+
+    function killSalesPolicyPool() external onlyOwner {
+        ISalesPolicy(salesPolicy).killPool();
+    }
+
+    function reviveSalesPolicyPool() external onlyOwner {
+        ISalesPolicy(salesPolicy).revivePool();
+    }
 }
