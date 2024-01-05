@@ -236,10 +236,10 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
                 availableCurrencyList[ii] = lastCurrency;
                 availableCurrencyList.pop();
                 destroyCurrencyAllowance(_currency, exchangeAgent);
+                emit LogRemoveCurrency(address(this), _currency);
                 return;
             }
         }
-        emit LogRemoveCurrency(address(this), _currency);
     }
 
     function maxApproveCurrency(address _currency, address _to) public onlyRole(ADMIN_ROLE) nonReentrant {
