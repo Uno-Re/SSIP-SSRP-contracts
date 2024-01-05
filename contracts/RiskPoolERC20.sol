@@ -311,6 +311,7 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
 
     function _withdrawRequest(address _user, uint256 _amount, uint256 _amountInUno) internal {
         require(balanceOf(_user) >= _amount, "UnoRe: balance overflow");
+        require(_amount <= type(uint128).max, "Amount exceeds max uint128");
         if (withdrawRequestPerUser[_user].pendingAmount == 0 && withdrawRequestPerUser[_user].requestTime == 0) {
             withdrawRequestPerUser[_user] = UserWithdrawRequestInfo({
                 pendingAmount: uint128(_amount),
