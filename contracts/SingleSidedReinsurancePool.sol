@@ -399,6 +399,12 @@ contract SingleSidedReinsurancePool is
     }
 
     function _updateReward(address _to) internal returns (uint256) {
+        uint256 requestTime;
+        (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
+        if (requestTime > 0) {
+            return 0;
+        }
+        
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
