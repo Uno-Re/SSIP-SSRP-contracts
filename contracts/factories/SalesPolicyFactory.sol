@@ -116,7 +116,6 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     }
 
     function setExchangeAgentInPolicy(address _exchangeAgent) external onlyOwner {
-        require(_exchangeAgent != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setExchangeAgent(_exchangeAgent);
         emit LogSetExchangeAgentInPolicy(_exchangeAgent);
     }
@@ -128,19 +127,16 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     }
 
     function setPremiumPoolInPolicy(address _premiumPool) external onlyOwner {
-        require(_premiumPool != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setPremiumPool(_premiumPool);
         emit LogSetPremiumPoolInPolicy(_premiumPool);
     }
 
     function setSignerInPolicy(address _signer) external onlyOwner {
-        require(_signer != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setSigner(_signer);
         emit LogSetSignerInPolicy(_signer);
     }
 
     function setCapitalAgentInPolicy(address _capitalAgent) external onlyOwner {
-        require(_capitalAgent != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setCapitalAgent(_capitalAgent);
         emit LogSetCapitalAgentInPolicy(_capitalAgent);
     }
