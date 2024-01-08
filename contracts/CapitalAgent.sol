@@ -155,6 +155,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     }
 
     function setPolicy(address _policy) external override nonReentrant {
+        require(!policyInfo.exist, "UnoRe: Policy exists");
         require(salesPolicyFactory != address(0), "UnoRe: not set factory address yet");
         require(salesPolicyFactory == msg.sender, "UnoRe: only salesPolicyFactory can call");
         policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});
