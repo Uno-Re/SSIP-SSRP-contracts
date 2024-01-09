@@ -25,6 +25,7 @@ const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/he
 
 describe("SingleSidedInsurancePool", function () {
   before(async function () {
+    this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
     this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
@@ -64,6 +65,16 @@ describe("SingleSidedInsurancePool", function () {
     this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.deploy()
 
     const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
+    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+    });
+
+    await network.provider.send("hardhat_setBalance", [
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x1000000000000000000000000000000000",
+    ]);
 
     const timestamp = new Date().getTime()
 
@@ -104,25 +115,12 @@ describe("SingleSidedInsurancePool", function () {
       this.mockOraclePriceFeed.target,
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.signers[0].address,
-    )
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
-    });
-
-    await network.provider.send("hardhat_setBalance", [
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-      "0x1000000000000000000000000000000000",
-    ]);
-
-    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+      this.multisig.address,
+    )   
 
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
         this.exchangeAgent.target, 
-        this.mockUNO.target,
         this.mockUSDT.target,
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address]
@@ -139,9 +137,8 @@ describe("SingleSidedInsurancePool", function () {
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address,
         this.signers[0].address,
-        this.escalationManager.target,
-        "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", 
-        this.optimisticOracleV3.target
+        this.signers[0].address,
+
       ]
     );
 

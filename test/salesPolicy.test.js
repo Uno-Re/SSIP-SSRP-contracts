@@ -163,7 +163,7 @@ describe("SalesPolicy", function () {
       ]);
 
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
-      .to.emit(this.multiSigWallet, 'SubmitTransaction')
+        .to.emit(this.multiSigWallet, 'SubmitTransaction')
         .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
 
       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
@@ -205,9 +205,7 @@ describe("SalesPolicy", function () {
       "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
       this.signers[0].address,
       this.signers[0].address,
-      this.escalationManager.target,
-      "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", 
-      this.optimisticOracleV3.target
+      this.signers[0].address,
     ]);
 
     encodedCallData = this.capitalAgent.interface.encodeFunctionData("addPoolWhiteList", [this.singleSidedInsurancePool.target])
@@ -275,19 +273,19 @@ describe("SalesPolicy", function () {
         getBigNumber("1"),
         getBigNumber("10", 6),
       ])
-  
+
       await expect(this.multiSigWallet.submitTransaction(this.singleSidedInsurancePool.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
         .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.target, 0, encodedCallData)
-  
+
       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
         .to.emit(this.multiSigWallet, "ConfirmTransaction")
         .withArgs(this.signers[0].address, this.txIdx)
-  
+
       await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
         .to.emit(this.multiSigWallet, "ConfirmTransaction")
         .withArgs(this.signers[1].address, this.txIdx)
-  
+
       this.txIdx++
     }
 
@@ -639,20 +637,20 @@ describe("SalesPolicy", function () {
 
       try {
         let tx = await this.salesPolicy.buyPolicy(
-        assets,
-        protocols,
-        coverageAmount,
-        coverageDuration,
-        policyPrice,
-        deadline,
-        this.mockUSDT.target,
-        splitSig.r,
-        splitSig.s,
-        splitSig.v,
-        nonce,
-        {
-          gasLimit: 1000000,
-        })
+          assets,
+          protocols,
+          coverageAmount,
+          coverageDuration,
+          policyPrice,
+          deadline,
+          this.mockUSDT.target,
+          splitSig.r,
+          splitSig.s,
+          splitSig.v,
+          nonce,
+          {
+            gasLimit: 1000000,
+          })
         const receipt = await tx.wait()
         console.log("metatransaction receipt", receipt.status)
       } catch (error) {

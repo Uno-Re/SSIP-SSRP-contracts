@@ -155,7 +155,6 @@ describe("Premium Pool", function () {
     this.capitalAgent = await upgrades.deployProxy(
         this.CapitalAgent, [
           this.exchangeAgent.target, 
-          this.mockUNO.target,
           this.mockUSDT.target,
           this.multiSigWallet.target,
           this.signers[0].address]
