@@ -14,7 +14,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     address public exchangeAgent;
     address public salesPolicyFactory;
-    address public USDC_TOKEN;
+    address public usdcToken;
     address public operator;
 
     struct PoolInfo {
@@ -79,7 +79,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
         require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         exchangeAgent = _exchangeAgent;
-        USDC_TOKEN = _USDC_TOKEN;
+        usdcToken = _USDC_TOKEN;
         operator = _operator;
         __ReentrancyGuard_init();
         __AccessControl_init();
@@ -274,12 +274,12 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     function _convertTokenToUSDC(address _currency, uint256 _amount) private view returns (uint256) {
         uint256 tokenInUSDC;
-        if (_currency == USDC_TOKEN) {
+        if (_currency == usdcToken) {
             tokenInUSDC = _amount;
         } else {
             tokenInUSDC = _currency != address(0)
-                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(_currency, USDC_TOKEN, _amount)
-                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _amount);
+                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(_currency, usdcToken, _amount)
+                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(usdcToken, _amount);
         }
 
         return tokenInUSDC;

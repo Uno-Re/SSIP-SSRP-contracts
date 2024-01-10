@@ -529,9 +529,9 @@ describe("SalesPolicy", function () {
         console.log("[error]", error)
       }
       const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
-      const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.target)
-      const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
-      const premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
+      const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
+      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
       expect(premiumPoolBalanceAfter).to.equal(getBigNumber("300", 6))
       expect(premiumForSSRP).to.equal(getBigNumber("30", 6))
       expect(premiumForSSIP).to.equal(getBigNumber("210", 6))
@@ -658,9 +658,9 @@ describe("SalesPolicy", function () {
       }
 
       const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
-      const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.target)
-      const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
-      const premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
+      const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
+      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
       expect(premiumPoolBalanceAfter).to.equal(getBigNumber("300", 6))
       expect(premiumForSSRP).to.equal(getBigNumber("30", 6))
       expect(premiumForSSIP).to.equal(getBigNumber("210", 6))

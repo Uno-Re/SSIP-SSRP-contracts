@@ -15,7 +15,7 @@ import "./libraries/TransferHelper.sol";
 import "./interfaces/IGnosisSafe.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
-    address public immutable override USDC_TOKEN;
+    address public immutable override usdcToken;
     address public immutable UNISWAP_FACTORY;
     address public immutable UNISWAP_ROUTER;
     address public immutable WETH;
@@ -62,7 +62,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
         require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
-        USDC_TOKEN = _usdcToken;
+        usdcToken = _usdcToken;
         UNISWAP_FACTORY = _uniswapFactory;
         UNISWAP_ROUTER = _uniswapRouter;
         WETH = _WETH;
@@ -115,13 +115,13 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
 
     // estimate token amount for amount in USDC
     function getTokenAmountForUSDC(address _token, uint256 _usdtAmount) external view override returns (uint256) {
-        return _getNeededTokenAmount(USDC_TOKEN, _token, _usdtAmount);
+        return _getNeededTokenAmount(usdcToken, _token, _usdtAmount);
     }
 
     // estimate ETH amount for amount in USDC
     function getETHAmountForUSDC(uint256 _usdtAmount) external view override returns (uint256) {
-        uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(USDC_TOKEN);
-        uint256 tokenDecimal = IERC20Metadata(USDC_TOKEN).decimals();
+        uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(usdcToken);
+        uint256 tokenDecimal = IERC20Metadata(usdcToken).decimals();
         return (_usdtAmount * ethPrice) / (10 ** tokenDecimal);
     }
 

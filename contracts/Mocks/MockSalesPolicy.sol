@@ -16,7 +16,13 @@ import "../interfaces/ISalesPolicy.sol";
 import "../libraries/TransferHelper.sol";
 import "../EIP712MetaTransaction.sol";
 
-contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), ERC721, ISalesPolicy, ReentrancyGuard, Pausable {
+contract MockSalesPolicy is
+    EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"),
+    ERC721,
+    ISalesPolicy,
+    ReentrancyGuard,
+    Pausable
+{
     using Counters for Counters.Counter;
 
     address public immutable factory;
@@ -35,7 +41,7 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
     address public premiumPool;
     address public capitalAgent;
     address public signer;
-    address public immutable USDC_TOKEN; //
+    address public immutable usdcToken; //
 
     string private protocolURI;
 
@@ -43,7 +49,7 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
 
     mapping(uint256 => Policy) public getPolicy;
 
-    uint256 private MAX_INTEGER = type(uint256).max;
+    uint256 private maxInteger = type(uint256).max;
 
     event BuyPolicy(
         address indexed _owner,
@@ -80,7 +86,7 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
         factory = _factory;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
-        USDC_TOKEN = _usdcToken;
+        usdcToken = _usdcToken;
         premiumPool = _premiumPool;
         maxDeadline = 7 days;
     }
@@ -107,14 +113,14 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
 
     function buyPol(uint256 _lastIndx, address _premiumCurrency, uint256 _coverageAmount) external {
         getPolicy[_lastIndx] = Policy({
-                protocolAddress: address(0),
-                coverageAmount: _coverageAmount,
-                coverageDuration: 100000,
-                coverStartAt: block.timestamp,
-                premiumCurrency: _premiumCurrency,
-                exist: true,
-                expired: false
-            });
+            protocolAddress: address(0),
+            coverageAmount: _coverageAmount,
+            coverageDuration: 100000,
+            coverStartAt: block.timestamp,
+            premiumCurrency: _premiumCurrency,
+            exist: true,
+            expired: false
+        });
 
         _mint(msgSender(), _lastIndx);
         ICapitalAgent(capitalAgent).policySale(getPolicy[_lastIndx].coverageAmount);
@@ -159,7 +165,7 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
             }
             IPremiumPool(premiumPool).collectPremiumInETH{value: premiumPaid}();
         } else {
-            premiumPaid = _premiumCurrency != USDC_TOKEN
+            premiumPaid = _premiumCurrency != usdcToken
                 ? IExchangeAgent(exchangeAgent).getTokenAmountForUSDC(_premiumCurrency, _policyPriceInUSDC)
                 : _policyPriceInUSDC;
             TransferHelper.safeTransferFrom(_premiumCurrency, msgSender(), address(this), premiumPaid);
@@ -240,7 +246,7 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
     function approvePremium(address _premiumCurrency) external override onlyFactory {
         require(_premiumCurrency != address(0), "UnoRe: zero address");
         require(premiumPool != address(0), "UnoRe: not defiend premiumPool");
-        TransferHelper.safeApprove(_premiumCurrency, premiumPool, MAX_INTEGER);
+        TransferHelper.safeApprove(_premiumCurrency, premiumPool, maxInteger);
         emit LogapprovePremiumIInPolicy(address(this), _premiumCurrency, premiumPool);
     }
 
@@ -302,20 +308,9 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
         return protocolURI;
     }
 
-    function getPolicyData(uint256 _policyId)
-        external
-        view
-        override
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            bool,
-            bool
-        )
-    {
-        bool exist =  getPolicy[_policyId].exist;
-        bool expired =  getPolicy[_policyId].expired;
+    function getPolicyData(uint256 _policyId) external view override returns (uint256, uint256, uint256, bool, bool) {
+        bool exist = getPolicy[_policyId].exist;
+        bool expired = getPolicy[_policyId].expired;
         uint256 coverageAmount = getPolicy[_policyId].coverageAmount;
         uint256 coverageDuration = getPolicy[_policyId].coverageDuration;
         uint256 coverStartAt = uint256(getPolicy[_policyId].coverStartAt);

@@ -29,7 +29,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     mapping(address => uint16) public override getProtocolId;
     Counters.Counter private protocolIds;
 
-    address public USDC_TOKEN;
+    address public usdcToken;
 
     event ProtocolCreated(uint16 _protocolIdx, address _protocol);
     event LogSetPremiumPool(address indexed _premiumPool);
@@ -57,7 +57,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
         require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
-        USDC_TOKEN = _usdcToken;
+        usdcToken = _usdcToken;
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
@@ -81,7 +81,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         address _premiumPool,
         address _capitalAgent
     ) external onlyOwner nonReentrant returns (address) {
-        SalesPolicy _salesPolicy = new SalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, USDC_TOKEN);
+        SalesPolicy _salesPolicy = new SalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, usdcToken);
         salesPolicy = address(_salesPolicy);
         ICapitalAgent(capitalAgent).setPolicy(address(_salesPolicy));
 

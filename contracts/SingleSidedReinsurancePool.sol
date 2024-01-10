@@ -113,7 +113,7 @@ contract SingleSidedReinsurancePool is
         _pause();
     }
 
-    function UnpausePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+    function unpausePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         _unpause();
     }
 
@@ -275,11 +275,11 @@ contract SingleSidedReinsurancePool is
 
         (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
-        
+
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
             ((withdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-        
+
         userInfo[msg.sender].amount = amount - withdrawAmount;
         emit LogLeaveFromPendingSSRP(msg.sender, withdrawAmount, withdrawAmountInUNO);
     }

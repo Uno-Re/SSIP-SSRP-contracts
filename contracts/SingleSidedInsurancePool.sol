@@ -147,7 +147,7 @@ contract SingleSidedInsurancePool is
         _pause();
     }
 
-    function UnpausePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+    function unpausePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         _unpause();
     }
 
@@ -161,7 +161,10 @@ contract SingleSidedInsurancePool is
         emit PoolAlived(msg.sender, false);
     }
 
-    function setRole(bytes32 _role, address _account) external onlyRole(GUARDIAN_COUNCIL_ROLE) roleLockTimePassed(GUARDIAN_COUNCIL_ROLE) {
+    function setRole(
+        bytes32 _role,
+        address _account
+    ) external onlyRole(GUARDIAN_COUNCIL_ROLE) roleLockTimePassed(GUARDIAN_COUNCIL_ROLE) {
         require(_account != address(0), "UnoRe: zero address");
         roleLockTime[_role][_account] = block.timestamp + lockTime;
         _grantRole(_role, _account);
@@ -325,7 +328,7 @@ contract SingleSidedInsurancePool is
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
             ((withdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-        
+
         userInfo[msg.sender].amount = amount - withdrawAmount;
 
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
@@ -420,7 +423,11 @@ contract SingleSidedInsurancePool is
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
-    function settlePayout(uint256 _policyId, address _payout, uint256 _amount) public isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
+    function settlePayout(
+        uint256 _policyId,
+        address _payout,
+        uint256 _amount
+    ) public isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_payout, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
 

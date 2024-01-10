@@ -2,7 +2,7 @@
 pragma solidity =0.8.23;
 
 interface IExchangeAgent {
-    function USDC_TOKEN() external view returns (address);
+    function usdcToken() external view returns (address);
 
     function getTokenAmountForUSDC(address _token, uint256 _usdtAmount) external view returns (uint256);
 
