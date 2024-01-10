@@ -13,9 +13,11 @@ import "./interfaces/ISalesPolicyFactory.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 import "./EIP712MetaTransaction.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), ERC721, ISalesPolicy, ReentrancyGuard, Pausable {
     using Counters for Counters.Counter;
+    using ECDSA for bytes32;
 
     address public immutable factory;
     struct Policy {
@@ -332,7 +334,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         // bytes32 msgHash = keccak256(abi.encodePacked(productName));
         bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
         // (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
-        address recoveredAddress = ecrecover(digest, v, r, s);
+        address recoveredAddress = digest.recover(v, r, s);
         return recoveredAddress;
     }
 }

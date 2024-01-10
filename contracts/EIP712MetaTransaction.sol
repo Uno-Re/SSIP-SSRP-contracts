@@ -1,9 +1,12 @@
 //SPDX-License-Identifier: MIT
 pragma solidity =0.8.23;
 
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./libraries/EIP712Base.sol";
 
 contract EIP712MetaTransaction is EIP712Base {
+    using ECDSA for bytes32;
+
     bytes32 private constant META_TRANSACTION_TYPEHASH =
         keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
 
@@ -72,7 +75,8 @@ contract EIP712MetaTransaction is EIP712Base {
         bytes32 sigS,
         uint8 sigV
     ) internal view returns (bool) {
-        address signer = ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
+        bytes32 message = toTypedMessageHash(hashMetaTransaction(metaTx));
+        address signer = message.recover(sigV, sigR, sigS);
         require(signer != address(0), "Invalid signature");
         return signer == user;
     }
