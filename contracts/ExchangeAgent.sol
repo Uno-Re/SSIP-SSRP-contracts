@@ -3,6 +3,7 @@ pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -237,7 +238,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
         IUniswapRouter02 _dexRouter = IUniswapRouter02(_dexAddress);
         address _factory = _dexRouter.factory();
         uint256 ethBalanceBeforeSwap = address(msg.sender).balance;
-        TransferHelper.safeApprove(_token, address(_dexRouter), _convertAmount);
+        SafeERC20.forceApprove(IERC20(_token), address(_dexRouter), _convertAmount);
         if (IUniswapFactory(_factory).getPair(_token, WETH) != address(0)) {
             address[] memory path = new address[](2);
             path[0] = _token;
