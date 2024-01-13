@@ -268,12 +268,12 @@ contract SingleSidedReinsurancePool is
     /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending() external override isStartTime whenNotPaused nonReentrant {
+    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
 
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender);
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender, _amount);
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         
         userInfo[msg.sender].rewardDebt =
@@ -399,6 +399,12 @@ contract SingleSidedReinsurancePool is
     }
 
     function _updateReward(address _to) internal returns (uint256) {
+        uint256 requestTime;
+        (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
+        if (requestTime > 0) {
+            return 0;
+        }
+        
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
