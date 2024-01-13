@@ -94,7 +94,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         }
     }
 
-    function cancelWithrawRequest(address _to) external override onlySSRP returns (uint256, uint256) {
+    function cancelWithdrawRequest(address _to) external override onlySSRP returns (uint256, uint256) {
         uint256 _pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
         require(_pendingAmount > 0, "UnoRe: zero amount");
         _cancelWithdrawRequest(_to);

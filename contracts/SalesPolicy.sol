@@ -119,8 +119,10 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     ) external payable whenNotPaused nonReentrant {
         uint256 len = _protocols.length;
         require(len > 0, "UnoRe: no policy");
+        require(len == _assets.length, "UnoRe: no match protocolIds with assets");
         require(len == _coverageAmount.length, "UnoRe: no match protocolIds with coverageAmount");
         require(len == _coverageDuration.length, "UnoRe: no match protocolIds with coverageDuration");
+
         address _signer = getSender(
             _policyPriceInUSDC,
             _protocols,
@@ -226,7 +228,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     function approvePremium(address _premiumCurrency) external override onlyFactory {
         require(_premiumCurrency != address(0), "UnoRe: zero address");
-        require(premiumPool != address(0), "UnoRe: not defiend premiumPool");
+        require(premiumPool != address(0), "UnoRe: not defined premiumPool");
         TransferHelper.safeApprove(_premiumCurrency, premiumPool, MAX_INTEGER);
         emit LogapprovePremiumIInPolicy(address(this), _premiumCurrency, premiumPool);
     }

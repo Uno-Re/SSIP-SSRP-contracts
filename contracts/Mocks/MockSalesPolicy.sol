@@ -239,7 +239,7 @@ contract MockSalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1
 
     function approvePremium(address _premiumCurrency) external override onlyFactory {
         require(_premiumCurrency != address(0), "UnoRe: zero address");
-        require(premiumPool != address(0), "UnoRe: not defiend premiumPool");
+        require(premiumPool != address(0), "UnoRe: not defined premiumPool");
         TransferHelper.safeApprove(_premiumCurrency, premiumPool, MAX_INTEGER);
         emit LogapprovePremiumIInPolicy(address(this), _premiumCurrency, premiumPool);
     }

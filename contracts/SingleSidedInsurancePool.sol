@@ -44,8 +44,8 @@ contract SingleSidedInsurancePool is
     uint256 public stakingStartTime;
 
     struct PoolInfo {
-        uint128 lastRewardBlock;
-        uint128 accUnoPerShare;
+        uint256 lastRewardBlock;
+        uint256 accUnoPerShare;
         uint256 unoMultiplierPerBlock;
     }
 
@@ -73,7 +73,7 @@ contract SingleSidedInsurancePool is
     event RiskPoolCreated(address indexed _SSIP, address indexed _pool);
     event StakedInPool(address indexed _staker, address indexed _pool, uint256 _amount);
     event LeftPool(address indexed _staker, address indexed _pool, uint256 _requestAmount);
-    event LogUpdatePool(uint128 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
+    event LogUpdatePool(uint256 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
     event LogLeaveFromPendingSSIP(
         address indexed _user,
@@ -96,12 +96,9 @@ contract SingleSidedInsurancePool is
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
     event PoolAlived(address indexed _owner, bool _alive);
     event PoolFailed(address indexed _owner, bool _fail);
-    event PolicyApproved(address indexed _owner, uint256 _policyId);
-    event PolicyRejected(address indexed _owner, uint256 _policyId);
-    event InsuranceIssued(bytes32 indexed policyId, bytes insuredEvent, uint256 insuranceAmount, address indexed payoutAddress);
+    event KillPool(address indexed _owner, bool _killed);
     event InsurancePayoutSettled(uint256 indexed policyId, address indexed payout, uint256 amount);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
-    event RoleAccepted(address indexed _SSIP, address indexed _previousOwner, address indexed _newOwner);
 
     function initialize(
         address _capitalAgent,
@@ -111,8 +108,8 @@ contract SingleSidedInsurancePool is
         address _claimProcessor
     ) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
-        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners required to verify");
         capitalAgent = _capitalAgent;
         lockTime = 10 days;
         __ReentrancyGuard_init();
@@ -153,7 +150,7 @@ contract SingleSidedInsurancePool is
 
     function killPool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         killed = true;
-        emit PoolAlived(msg.sender, true);
+        emit KillPool(msg.sender, true);
     }
 
     function revivePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
@@ -220,7 +217,7 @@ contract SingleSidedInsurancePool is
         require(riskPool == address(0), "UnoRe: risk pool created already");
         require(_factory != address(0), "UnoRe: zero factory address");
         riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
-        poolInfo.lastRewardBlock = uint128(block.number);
+        poolInfo.lastRewardBlock = block.number;
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
         ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
@@ -266,11 +263,11 @@ contract SingleSidedInsurancePool is
 
     function pendingUno(address _to) external view returns (uint256 pending) {
         uint256 tokenSupply = IERC20(riskPool).totalSupply();
-        uint128 accUnoPerShare = poolInfo.accUnoPerShare;
+        uint256 accUnoPerShare = poolInfo.accUnoPerShare;
         if (block.number > poolInfo.lastRewardBlock && tokenSupply != 0) {
             uint256 blocks = block.number - uint256(poolInfo.lastRewardBlock);
             uint256 unoReward = blocks * poolInfo.unoMultiplierPerBlock;
-            accUnoPerShare = accUnoPerShare + uint128((unoReward * ACC_UNO_PRECISION) / tokenSupply);
+            accUnoPerShare = accUnoPerShare + (unoReward * ACC_UNO_PRECISION) / tokenSupply;
         }
         uint256 userBalance = userInfo[_to].amount;
         pending = (userBalance * uint256(accUnoPerShare)) / ACC_UNO_PRECISION - userInfo[_to].rewardDebt;
@@ -282,9 +279,9 @@ contract SingleSidedInsurancePool is
             if (tokenSupply > 0) {
                 uint256 blocks = block.number - uint256(poolInfo.lastRewardBlock);
                 uint256 unoReward = blocks * poolInfo.unoMultiplierPerBlock;
-                poolInfo.accUnoPerShare = poolInfo.accUnoPerShare + uint128(((unoReward * ACC_UNO_PRECISION) / tokenSupply));
+                poolInfo.accUnoPerShare = poolInfo.accUnoPerShare + ((unoReward * ACC_UNO_PRECISION) / tokenSupply);
             }
-            poolInfo.lastRewardBlock = uint128(block.number);
+            poolInfo.lastRewardBlock = block.number;
             emit LogUpdatePool(poolInfo.lastRewardBlock, tokenSupply, poolInfo.accUnoPerShare);
         }
     }
@@ -396,7 +393,7 @@ contract SingleSidedInsurancePool is
     }
 
     function cancelWithdrawRequest() external nonReentrant {
-        (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithrawRequest(msg.sender);
+        (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
