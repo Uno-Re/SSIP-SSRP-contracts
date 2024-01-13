@@ -276,7 +276,17 @@ describe("SingleSidedReinsurancePool", function () {
         const afterBlockNumber1 = await ethers.provider.getBlockNumber()
         await advanceBlockTo(afterBlockNumber1 + 10000)
       })
+      it("emergency withdraw", async function () {
+        //check the uno and risk pool LP token balance of the singer 0 before withdraw
+        const riskPool = this.RiskPool.attach(this.poolAddress)
+        const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
 
+        expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
+        // signer 0 emergency Withdraw
+        await this.singleSidedReinsurancePool.emergencyWithdraw()
+        const userinfo = await this.singleSidedReinsurancePool.userInfo(this.signers[0].address);
+        expect(userinfo.amount).to.equal(0);
+      })
       it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
         //check the uno and risk pool LP token balance of the singer 0 before withdraw
         // const riskPool = this.RiskPool.attach(this.poolAddress)
