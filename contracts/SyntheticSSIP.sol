@@ -90,7 +90,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     }
 
     function setRewardPerBlock(uint256 _rewardPerBlock) external onlyRole(ADMIN_ROLE) {
-        require(_rewardPerBlock > 0 && _rewardPerBlock <= 1000 * 1e18, "UnoRe: zero value");
+        require(_rewardPerBlock > 0 && _rewardPerBlock <= 1000 * 1e18, "UnoRe: invalid value, should be between 0 and 1000 * 1e18");
         rewardPerBlock = _rewardPerBlock;
         emit LogSetRewardPerBlock(address(this), _rewardPerBlock);
     }
