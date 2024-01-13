@@ -6,9 +6,9 @@ interface IRiskPool {
 
     function leaveFromPoolInPending(address _to, uint256 _amount) external;
 
-    function leaveFromPending(address _to) external returns (uint256, uint256);
+    function leaveFromPending(address _to, uint256 _amount) external returns (uint256, uint256);
 
-    function cancelWithrawRequest(address _to) external returns (uint256, uint256);
+    function cancelWithdrawRequest(address _to) external returns (uint256, uint256);
 
     function policyClaim(address _to, uint256 _amount) external returns (uint256 realClaimAmount);
 

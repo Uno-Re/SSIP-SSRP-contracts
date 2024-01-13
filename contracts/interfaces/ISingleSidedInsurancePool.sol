@@ -8,7 +8,7 @@ interface ISingleSidedInsurancePool {
 
     function leaveFromPoolInPending(uint256 _amount) external;
 
-    function leaveFromPending() external;
+    function leaveFromPending(uint256 _amount) external;
 
     function harvest(address _to) external;
 

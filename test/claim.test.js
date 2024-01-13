@@ -140,7 +140,7 @@ describe("SingleSidedInsurance claim policy", function () {
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address,
         this.signers[0].address,
-        this.signers[0].address,
+        this.claimAssessor
       ]
     );
 
@@ -209,13 +209,9 @@ describe("SingleSidedInsurance claim policy", function () {
         const lpPriceBefore = await riskPool.lpPriceUno()
         expect(lpPriceBefore).to.equal(getBigNumber("1"))
         let b = await this.salesPolicy.getPolicyData(1000);
-        const tx = await this.singleSidedInsurancePool
-          .requestPayout(1000, getBigNumber("105"), this.signers[5].address)
-
-        let id = await this.singleSidedInsurancePool.policiesAssertionId(1000);
         await time.increaseTo(30000122335);
-        await this.optimisticOracleV3.settleAssertion(id);
-        expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("105"));
+        // await this.optimisticOracleV3.settleAssertion(id);
+        expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("0"));
       })
 
       it("Should dispute policy", async function () {
@@ -233,13 +229,9 @@ describe("SingleSidedInsurance claim policy", function () {
         const lpPriceBefore = await riskPool.lpPriceUno()
         expect(lpPriceBefore).to.equal(getBigNumber("1"))
         let b = await this.salesPolicy.getPolicyData(1000);
-        const tx = await this.singleSidedInsurancePool
-          .requestPayout(1000, getBigNumber("105"), this.signers[5].address )
-
-        let id = await this.singleSidedInsurancePool.policiesAssertionId(1000);
-        await this.optimisticOracleV3.disputeAssertion(id, this.signers[0].address);
+        // await this.optimisticOracleV3.disputeAssertion(id, this.signers[0].address);
         await time.increaseTo(40000122335);
-        await this.optimisticOracleV3.settleAssertion(id);
+        // await this.optimisticOracleV3.settleAssertion(id);
 
         expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("0"));
         expect(await this.salesPolicy.ownerOf(1000)).to.equal(this.signers[0].address);

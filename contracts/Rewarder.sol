@@ -11,8 +11,8 @@ import "./libraries/TransferHelper.sol";
 
 interface ISSIP {
     struct PoolInfo {
-        uint128 lastRewardBlock;
-        uint128 accUnoPerShare;
+        uint256 lastRewardBlock;
+        uint256 accUnoPerShare;
         uint256 unoMultiplierPerBlock;
     }
 
@@ -40,7 +40,6 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
 
     event LogRewarderWithdraw(address indexed _rewarder, address _currency, address indexed _to, uint256 _amount);
     event LogTransferOwnerShip(address indexed _rewarder, address indexed _oldOperator, address indexed _newOperator);
-    event LogForceSetUserRewardDebt(address indexed _to, uint256 _debt);
 
     constructor(address _operator, address _currency, address _pool) {
         require(_operator != address(0), "UnoRe: zero operator address");
