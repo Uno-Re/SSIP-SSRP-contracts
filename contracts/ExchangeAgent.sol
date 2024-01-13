@@ -22,6 +22,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
     address public oraclePriceFeed;
     uint256 public slippage;
     uint256 private constant SLIPPAGE_PRECISION = 100;
+    uint256 public swapDeadline;
 
     mapping(address => bool) public whiteList;
 
@@ -69,6 +70,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
         oraclePriceFeed = _oraclePriceFeed;
         whiteList[msg.sender] = true;
         slippage = 5 * SLIPPAGE_PRECISION;
+        swapDeadline = 60;
     }
 
     modifier onlyWhiteList() {
@@ -84,6 +86,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
 
     function revivePool() external onlyOwner {
         _unpause();
+    }
+
+    function setSwapDeadline(uint256 _swapDeadline) external onlyOwner {
+        swapDeadline = _swapDeadline;
     }
 
     function addWhiteList(address _whiteListAddress) external onlyOwner {
@@ -205,7 +211,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
                     _desiredAmount,
                     path,
                     msg.sender,
-                    block.timestamp
+                    block.timestamp + swapDeadline
                 );
             } else {
                 _dexRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
@@ -248,7 +254,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
                 _desiredAmount,
                 path,
                 msg.sender,
-                block.timestamp
+                block.timestamp + swapDeadline
             );
         }
         uint256 ethBalanceAfterSwap = address(msg.sender).balance;

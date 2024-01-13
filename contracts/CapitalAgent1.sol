@@ -9,7 +9,7 @@ import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IGnosisSafe.sol";
 
-contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
+contract CapitalAgent1 is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address public exchangeAgent;
@@ -44,6 +44,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     uint256 public constant CALC_PRECISION = 1e18;
 
     mapping(address => bool) public poolWhiteList;
+    uint256 num;
 
     event LogAddPool(address indexed _ssip, address _currency, uint256 _scr);
     event LogRemovePool(address indexed _ssip);

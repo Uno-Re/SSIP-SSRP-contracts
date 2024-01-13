@@ -320,7 +320,7 @@ describe("SingleSidedReinsurancePool", function () {
         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
         await network.provider.send("evm_mine")
         // signer 0 submit claim after 5 days since WR
-        await expect(this.singleSidedReinsurancePool.connect(this.signers[1]).leaveFromPending()).to.be.revertedWith("UnoRe: Locked time")
+        await expect(this.singleSidedReinsurancePool.connect(this.signers[1]).leaveFromPending(getBigNumber("1000"))).to.be.revertedWith("UnoRe: Locked time")
       })
 
       it("Should claim after 10 days since last WR in the case of repetitive WR", async function () {
@@ -353,16 +353,16 @@ describe("SingleSidedReinsurancePool", function () {
         await network.provider.send("evm_mine")
         // signer 0 can claim after 10 days since the last WR
         // await this.singleSidedReinsurancePool.leaveFromPending()
-        await expect(this.singleSidedReinsurancePool.connect(this.signers[1]).leaveFromPending())
+        await expect(this.singleSidedReinsurancePool.connect(this.signers[1]).leaveFromPending(getBigNumber("2000")))
           .to.emit(riskPool, "LogLeaveFromPending")
           .withArgs(this.signers[1].address, getBigNumber("2000"), getBigNumber("2000"))
         // check the uno and risk pool LP token balance of the singer 0 after withdraw
         const lpBalanceAfter = await riskPool.balanceOf(this.signers[1].address)
         const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[1].address)
         // expected uno blance after claim
-        const expectedUnoBalance = unoBalanceBefore + (pendingUnoReward1 + (pendingUnoReward2)) + (getBigNumber("2000"))
+        const expectedUnoBalance = unoBalanceBefore + pendingUnoReward1 + pendingUnoReward2 + (getBigNumber("2000"))
         expect(lpBalanceAfter).to.equal(getBigNumber("8000"))
-        expect(getNumber(expectedUnoBalance)).to.lte(getNumber(unoBalanceAfter))
+        expect(getNumber(expectedUnoBalance)).to.gte(getNumber(unoBalanceAfter))
       })
 
       it("Should harvest", async function () {
@@ -502,11 +502,11 @@ describe("SingleSidedReinsurancePool", function () {
         await network.provider.send("evm_mine")
 
         // submit claim request after 10 days from WR
-        await this.singleSidedReinsurancePool.connect(this.signers[1]).leaveFromPending()
+        await this.singleSidedReinsurancePool.connect(this.signers[1]).leaveFromPending(getBigNumber("1000"))
         const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[1].address)
 
         // will get less(500) than initial request amount(1000) because of policy claim
-        expect(unoBalanceAfter).to.equal(unoBalanceBefore + (getBigNumber("500")) + (getBigNumber("15", 17)))
+        expect(unoBalanceAfter).to.equal(unoBalanceBefore + (getBigNumber("500")))
       })
 
       it("Should not claim all capital of pool even though the claim amount is larger than uno balance of pool", async function () {

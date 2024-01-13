@@ -121,8 +121,10 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     ) external payable whenNotPaused nonReentrant {
         uint256 len = _protocols.length;
         require(len > 0, "UnoRe: no policy");
+        require(len == _assets.length, "UnoRe: no match protocolIds with assets");
         require(len == _coverageAmount.length, "UnoRe: no match protocolIds with coverageAmount");
         require(len == _coverageDuration.length, "UnoRe: no match protocolIds with coverageDuration");
+
         address _signer = getSender(
             _policyPriceInUSDC,
             _protocols,

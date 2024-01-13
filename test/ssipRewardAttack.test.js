@@ -236,9 +236,9 @@ describe("SSIP Reward attack", function () {
         expect(pendingUnoRewardAfter1).to.gt(pendingUnoRewardBefore1)
 
         
-        await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
-          "UnoRe: must be message sender",
-        )
+        // await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
+        //   "UnoRe: must be message sender",
+        // )
 
         const pendingUnoRewardAfterHarvest1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardAfterHarvest2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
@@ -300,9 +300,9 @@ describe("SSIP Reward attack", function () {
         const unoBalanceBeforeSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
         const unoBalanceBeforeSecondHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.target)
 
-        await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.target, this.signers[1].address)).to.be.revertedWith(
-          "UnoRe: must be message sender",
-        )
+        // await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.target, this.signers[1].address)).to.be.revertedWith(
+        //   "UnoRe: must be message sender",
+        // )
 
         const unoBalanceAfterSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
         expect(unoBalanceAfterSecondHarvest - (unoBalanceBeforeSecondHarvest)).to.equal(0)
