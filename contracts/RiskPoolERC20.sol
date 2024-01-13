@@ -35,25 +35,14 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
     mapping(address => mapping(address => uint256)) internal _allowances;
 
     struct UserWithdrawRequestInfo {
-        uint128 pendingAmount;
-        uint128 requestTime;
+        uint256 pendingAmount;
+        uint256 requestTime;
         uint256 pendingUno;
     }
     mapping(address => UserWithdrawRequestInfo) internal withdrawRequestPerUser;
     uint256 internal totalWithdrawPending;
 
     uint256 private _totalSupply;
-
-    /**
-     * @dev Sets the values for {name} and {symbol}.
-     *
-     * The default value of {decimals} is 18. To select a different value for
-     * {decimals} you should overload it.
-     *
-     * All two of these values are immutable: they can only be set once during
-     * construction.
-     */
-    constructor() {}
 
     /**
      * @dev Returns the number of decimals used to get its user representation.
@@ -313,14 +302,14 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
         require(balanceOf(_user) >= _amount, "UnoRe: balance overflow");
         if (withdrawRequestPerUser[_user].pendingAmount == 0 && withdrawRequestPerUser[_user].requestTime == 0) {
             withdrawRequestPerUser[_user] = UserWithdrawRequestInfo({
-                pendingAmount: uint128(_amount),
-                requestTime: uint128(block.timestamp),
+                pendingAmount: _amount,
+                requestTime: block.timestamp,
                 pendingUno: _amountInUno
             });
         } else {
-            withdrawRequestPerUser[_user].pendingAmount += uint128(_amount);
+            withdrawRequestPerUser[_user].pendingAmount += _amount;
             withdrawRequestPerUser[_user].pendingUno += _amountInUno;
-            withdrawRequestPerUser[_user].requestTime = uint128(block.timestamp);
+            withdrawRequestPerUser[_user].requestTime = block.timestamp;
         }
         totalWithdrawPending += _amount;
     }

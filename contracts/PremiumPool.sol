@@ -45,12 +45,14 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
     event LogAddWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event PoolAlived(address indexed _owner, bool _alive);
+    event KillPool(address indexed _owner, bool _killed);
 
     constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet, address _governance) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(_governance != address(0), "UnoRe: zero governance address");
         exchangeAgent = _exchangeAgent;
         UNO_TOKEN = _unoToken;
         USDC_TOKEN = _usdcToken;
@@ -89,7 +91,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
 
     function killPool() external onlyRole(ADMIN_ROLE) {
         killed = true;
-        emit PoolAlived(msg.sender, true);
+        emit KillPool(msg.sender, true);
     }
 
     function revivePool() external onlyRole(ADMIN_ROLE) {

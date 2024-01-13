@@ -119,7 +119,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     }
 
     function removePoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {
-        require(_pool != address(0), "UnoRe: zero pool address");
         require(poolWhiteList[_pool], "UnoRe: no white list");
         poolWhiteList[_pool] = false;
         emit LogRemovePoolWhiteList(_pool);
@@ -142,7 +141,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     }
 
     function removePool(address _ssip) external onlyRole(ADMIN_ROLE) nonReentrant {
-        require(_ssip != address(0), "UnoRe: zero address");
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
         if (poolInfo[_ssip].totalCapital > 0) {
             totalCapitalStaked = totalCapitalStaked - poolInfo[_ssip].totalCapital;
@@ -152,7 +150,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     }
 
     function setPolicy(address _policy) external override nonReentrant {
-        require(salesPolicyFactory != address(0), "UnoRe: not set factory address yet");
         require(salesPolicyFactory == msg.sender, "UnoRe: only salesPolicyFactory can call");
         policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});
 
