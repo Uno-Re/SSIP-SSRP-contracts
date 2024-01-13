@@ -332,6 +332,15 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
         delete withdrawRequestPerUser[_user];
     }
 
+    function _emergencyWithdraw(address _user) internal {
+        uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
+        totalWithdrawPending -= _pendingAmount;
+        if (_pendingAmount > 0) {
+            _burn(_user, _pendingAmount);
+        }
+        delete withdrawRequestPerUser[_user];
+    }
+
     function _cancelWithdrawRequest(address _user) internal {
         uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
         totalWithdrawPending -= _pendingAmount;

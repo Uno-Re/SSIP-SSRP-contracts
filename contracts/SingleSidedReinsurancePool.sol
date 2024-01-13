@@ -78,6 +78,7 @@ contract SingleSidedReinsurancePool is
     event PoolAlived(address indexed _owner, bool _alive);
     event KillPool(address indexed _owner, bool _killed);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
+    event EmergencyWithdraw(address indexed user, uint256 amount);
 
     function initialize(address _multiSigWallet, address _claimAccessor) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -350,6 +351,16 @@ contract SingleSidedReinsurancePool is
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
+    // Withdraw without caring about rewards. EMERGENCY ONLY.
+    function emergencyWithdraw() public nonReentrant {
+        UserInfo memory user = userInfo[msg.sender];
+        uint256 amount = user.amount;
+        require(amount > 0, "Unore: Zero user amount");
+        delete userInfo[msg.sender];
+        IRiskPool(riskPool).emergencyWithdraw(msg.sender, amount);
+        emit EmergencyWithdraw(msg.sender, amount);
+    }
+
     function policyClaim(
         address _to,
         uint256 _amount
@@ -404,7 +415,7 @@ contract SingleSidedReinsurancePool is
         if (requestTime > 0) {
             return 0;
         }
-        
+
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;

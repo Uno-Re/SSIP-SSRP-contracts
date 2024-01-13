@@ -99,6 +99,7 @@ contract SingleSidedInsurancePool is
     event KillPool(address indexed _owner, bool _killed);
     event InsurancePayoutSettled(uint256 indexed policyId, address indexed payout, uint256 amount);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
+    event EmergencyWithdraw(address indexed user, uint256 amount);
 
     function initialize(
         address _capitalAgent,
@@ -330,6 +331,16 @@ contract SingleSidedInsurancePool is
         userInfo[msg.sender].amount = amount - withdrawAmount;
 
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
+    }
+
+    // Withdraw without caring about rewards. EMERGENCY ONLY.
+    function emergencyWithdraw() public nonReentrant {
+        UserInfo memory user = userInfo[msg.sender];
+        uint256 amount = user.amount;
+        require(amount > 0, "Unore: Zero user amount");
+        delete userInfo[msg.sender];
+        IRiskPool(riskPool).emergencyWithdraw(msg.sender, amount);
+        emit EmergencyWithdraw(msg.sender, amount);
     }
 
     function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused {

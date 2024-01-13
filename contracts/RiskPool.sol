@@ -127,6 +127,18 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         lpPriceUno = (cryptoBalance * 1e18) / totalSupply(); // UNO value per lp
     }
 
+    function emergencyWithdraw(address _to, uint256 _amount) external override onlySSRP returns (bool) {
+        uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
+        require(cryptoBalance > 0, "UnoRe: zero uno balance");
+        _emergencyWithdraw(_to);
+        if (currency != address(0)) {
+            TransferHelper.safeTransfer(currency, _to, _amount);
+        } else {
+            TransferHelper.safeTransferETH(_to, _amount);
+        }
+        return true;
+    }
+
     function migrateLP(address _to, address _migrateTo, bool _isUnLocked) external override onlySSRP returns (uint256) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         uint256 migratedAmount;

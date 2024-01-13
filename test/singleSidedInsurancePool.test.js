@@ -137,7 +137,12 @@ describe("SingleSidedInsurancePool", function () {
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address,
         this.signers[0].address,
+<<<<<<< HEAD
+        this.signers[0].address,
+
+=======
         this.claimAssessor
+>>>>>>> cdc0d873c64db119e537916a50b3cb4553064383
       ]
     );
 
@@ -425,6 +430,24 @@ describe("SingleSidedInsurancePool", function () {
 
         await this.capitalAgent.setMCR(getBigNumber("1", 16))
       })
+      it("emergency withdraw", async function () {
+        //check the uno and risk pool LP token balance of the singer 0 before withdraw
+        const riskPool = this.RiskPool.attach(this.poolAddress)
+        const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
+        const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
+        expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
+        // signer 0 emergency Withdraw
+        await this.singleSidedInsurancePool.emergencyWithdraw()
+        // check the uno and risk pool LP token balance of the singer 0 after withdraw
+        const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
+        const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
+        expect(lpBalanceAfter).to.equal(getBigNumber("10000"))
+        expect(usdtBalanceBefore).to.lt(usdtBalanceAfter);
+
+        const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+        expect(pendingUnoRewardAfter).to.equal(0)
+      })
+
 
       it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
         //check the uno and risk pool LP token balance of the singer 0 before withdraw
