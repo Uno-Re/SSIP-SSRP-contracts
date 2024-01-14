@@ -112,6 +112,7 @@
 //       TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
 //       UNISWAP_ROUTER_ADDRESS.rinkeby,
 //       UNISWAP_FACTORY_ADDRESS.rinkeby,
+//       getBigNumber("60")
 //     )
 
 //     this.premiumPool = await this.PremiumPool.deploy(this.exchangeAgent.address, this.mockUNO.address, this.mockUSDT.address)

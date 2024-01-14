@@ -254,7 +254,7 @@ contract SingleSidedReinsurancePool is
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override isStartTime nonReentrant {
         _harvest(msg.sender);
         // Withdraw desired amount from pool
         uint256 amount = userInfo[msg.sender].amount;

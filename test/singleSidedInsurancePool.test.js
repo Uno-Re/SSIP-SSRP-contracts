@@ -116,6 +116,7 @@ describe("SingleSidedInsurancePool", function () {
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
       this.multisig.address,
+      getBigNumber("60")
     )   
 
     this.capitalAgent = await upgrades.deployProxy(
@@ -137,12 +138,7 @@ describe("SingleSidedInsurancePool", function () {
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address,
         this.signers[0].address,
-<<<<<<< HEAD
         this.signers[0].address,
-
-=======
-        this.claimAssessor
->>>>>>> cdc0d873c64db119e537916a50b3cb4553064383
       ]
     );
 

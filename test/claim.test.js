@@ -114,6 +114,7 @@ describe("SingleSidedInsurance claim policy", function () {
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
       this.multisig.address,
+      getBigNumber("60")
     )
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [

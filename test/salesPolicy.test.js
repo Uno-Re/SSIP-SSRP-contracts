@@ -131,6 +131,7 @@ describe("SalesPolicy", function () {
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
       this.multiSigWallet.target,
+      getBigNumber("60")
     )
 
     this.premiumPool = await this.PremiumPool.deploy(
