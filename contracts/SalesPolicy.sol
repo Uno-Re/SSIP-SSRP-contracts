@@ -325,7 +325,8 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
                 _signedTime,
                 _premiumCurrency,
                 nonce,
-                sender
+                sender,
+                block.chainid
             )
         );
 
