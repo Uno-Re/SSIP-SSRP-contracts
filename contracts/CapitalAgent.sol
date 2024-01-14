@@ -34,7 +34,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     address[] private currencyList;
     mapping(address => bool) private existedCurrencies;
-    mapping(address => uint256) public totalCapitalStaked;
+    mapping(address => uint256) private totalCapitalStakedByCurrency;
 
     PolicyInfo public policyInfo;
 
@@ -129,6 +129,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         emit LogRemovePoolWhiteList(_pool);
     }
 
+    function totalCapitalStaked() public view returns(uint256) {
+        return _getTotalCapitalStakedInUSDC();
+    }
+
     function addPool(address _ssip, address _currency, uint256 _scr) external override onlyPoolWhiteList {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
@@ -159,7 +163,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
         if (poolInfo[_ssip].totalCapital > 0) {
             address currency = poolInfo[_ssip].currency;
-            totalCapitalStaked[currency] = totalCapitalStaked[currency] - poolInfo[_ssip].totalCapital;
+            totalCapitalStakedByCurrency[currency] = totalCapitalStakedByCurrency[currency] - poolInfo[_ssip].totalCapital;
         }
         delete poolInfo[_ssip];
         emit LogRemovePool(_ssip);
@@ -254,8 +258,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         }
         address currency = poolInfo[_pool].currency;
         poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
-        totalCapitalStaked[currency] = isAdd ? totalCapitalStaked[currency] + _amount : totalCapitalStaked[currency] - _amount;
-        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked[currency]);
+        totalCapitalStakedByCurrency[currency] = isAdd ? totalCapitalStakedByCurrency[currency] + _amount : totalCapitalStakedByCurrency[currency] - _amount;
+        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStakedByCurrency[currency]);
     }
 
     function _updatePolicyCoverage(uint256 _amount, bool isAdd) private {
@@ -274,7 +278,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 scrInUSDC;
 
         totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();
-        mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked[currency] - _withdrawAmount);
+        mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency] - _withdrawAmount);
         scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
 
         bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDC * MCR) / CALC_PRECISION;
@@ -300,7 +304,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 totalCapitalStakedInUSDC;
         for (uint256 i = 0; i < currencyList.length; i++) {
             address currency = currencyList[i];
-            totalCapitalStakedInUSDC = totalCapitalStakedInUSDC + _convertTokenToUSDC(currency, totalCapitalStaked[currency]);
+            totalCapitalStakedInUSDC = totalCapitalStakedInUSDC + _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
         }
 
         return totalCapitalStakedInUSDC;
