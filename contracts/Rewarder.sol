@@ -55,7 +55,7 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
         _pause();
     }
 
-    function UnpausePool() external onlyOperator {
+    function unpausePool() external onlyOperator {
         _unpause();
     }
 
@@ -78,7 +78,11 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
         }
     }
 
-    function onRewardForRollOver(address _to, uint256 _amount, uint256 _accumulatedAmount) external payable onlyPOOL whenNotPaused returns (uint256) {
+    function onRewardForRollOver(
+        address _to,
+        uint256 _amount,
+        uint256 _accumulatedAmount
+    ) external payable onlyPOOL whenNotPaused returns (uint256) {
         ISSIP ssip = ISSIP(pool);
         ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
         uint256 accumulatedUno = (_accumulatedAmount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;

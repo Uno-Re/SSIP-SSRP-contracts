@@ -75,7 +75,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         _pause();
     }
 
-    function UnpausePool() external onlyRole(ADMIN_ROLE) {
+    function unpausePool() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
 

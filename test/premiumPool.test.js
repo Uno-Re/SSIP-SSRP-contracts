@@ -44,7 +44,7 @@ describe("Premium Pool", function () {
     this.EscalationManager = await ethers.getContractFactory("EscalationManager")
     this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
     this.PremiumPool = await ethers.getContractFactory("PremiumPool")
-    
+
     this.SyntheticSSRP = await ethers.getContractFactory("SyntheticSSRP")
     this.SyntheticSSRPFactory = await ethers.getContractFactory("SyntheticSSRPFactory")
 
@@ -153,13 +153,12 @@ describe("Premium Pool", function () {
     )
 
     this.capitalAgent = await upgrades.deployProxy(
-        this.CapitalAgent, [
-          this.exchangeAgent.target, 
-          this.mockUNO.target,
-          this.mockUSDT.target,
-          this.multiSigWallet.target,
-          this.signers[0].address]
-      );
+      this.CapitalAgent, [
+      this.exchangeAgent.target,
+      this.mockUSDT.target,
+      this.multiSigWallet.target,
+      this.signers[0].address]
+    );
 
     this.txIdx = 0
     let encodedCallData
@@ -212,23 +211,23 @@ describe("Premium Pool", function () {
 
     this.txIdx++
     await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
-      });
-  
-      await network.provider.send("hardhat_setBalance", [
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        "0x1000000000000000000000000000000000",
-      ]);
-  
-      this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+      method: "hardhat_impersonateAccount",
+      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+    });
+
+    await network.provider.send("hardhat_setBalance", [
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x1000000000000000000000000000000000",
+    ]);
+
+    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
 
     this.singleSidedReinsurancePool = await upgrades.deployProxy(
-        this.SingleSidedReinsurancePool, [
-            this.signers[0].address,
-          "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        ]
-      );
+      this.SingleSidedReinsurancePool, [
+      this.signers[0].address,
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+    ]
+    );
 
     await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.ADMIN_ROLE()), this.multiSigWallet.target);
 
@@ -343,9 +342,9 @@ describe("Premium Pool", function () {
 
     it("Should collet USDT", async function () {
       await (await this.premiumPool.collectPremium(this.mockUSDT.target, getBigNumber("10000", 6))).wait()
-      const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.target)
-      const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
-      const premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
+      const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
+      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
       expect(premiumForSSRP).to.equal(getBigNumber("1000", 6))
       expect(premiumForSSIP).to.equal(getBigNumber("7000", 6))
       expect(premiumForBackBurn).to.equal(getBigNumber("2000", 6))
@@ -356,9 +355,9 @@ describe("Premium Pool", function () {
           .connect(this.signers[0])
           .collectPremiumInETH({ from: this.signers[0].address, value: getBigNumber("100") })
       ).wait()
-      const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM_ETH()
-      const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
-      const premiumForBackBurn = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+      const premiumForSSRP = await this.premiumPool.ssrpPremiumEth()
+      const premiumForSSIP = await this.premiumPool.ssipPremiumEth()
+      const premiumForBackBurn = await this.premiumPool.backBurnPremiumEth()
       expect(premiumForSSRP).to.equal(getBigNumber("10"))
       expect(premiumForSSIP).to.equal(getBigNumber("70"))
       expect(premiumForBackBurn).to.equal(getBigNumber("20"))
@@ -382,7 +381,7 @@ describe("Premium Pool", function () {
     it("Should deposit to Synthetic SSRP Rewarder", async function () {
       const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.syntheticRewarder.target)
       expect(usdtBalanceBefore).to.equal(0)
-      const premiumForSSRP1 = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.target)
+      const premiumForSSRP1 = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
       expect(premiumForSSRP1).to.equal(getBigNumber("1000", 6))
 
       let encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSRPRewarder", [
@@ -405,17 +404,17 @@ describe("Premium Pool", function () {
 
       const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.syntheticRewarder.target)
       console.log("[eth balance of rewarder after distribute]", usdtBalanceAfter.toString())
-      console.log(getBigNumber("1000",6));
+      console.log(getBigNumber("1000", 6));
       console.log(usdtBalanceAfter, "adfdasfdas");
       expect(usdtBalanceAfter).to.be.equal(getBigNumber("1000", 6))
-      const premiumForSSRP2 = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.target)
+      const premiumForSSRP2 = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
       expect(premiumForSSRP2).to.equal(getBigNumber("0"))
-      const premiumETHForSSRP = await this.premiumPool.SSRP_PREMIUM_ETH()
+      const premiumETHForSSRP = await this.premiumPool.ssrpPremiumEth()
       expect(premiumETHForSSRP).to.equal(getBigNumber("0"))
     })
     // it("Should distribute to Synthetic SSIP Rewarder", async function () {
     //   const ethBalanceBefore = await ethers.provider.getBalance(this.syntheticRewarder.target)
-    //   let premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
+    //   let premiumETHForSSIP = await this.premiumPool.ssipPremiumEth()
     //   expect(premiumETHForSSIP).to.equal(getBigNumber("7", 17));
 
     //   let encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
@@ -439,14 +438,14 @@ describe("Premium Pool", function () {
     //   this.txIdx++;
 
     //   const ethBalanceAfter = await ethers.provider.getBalance(this.syntheticRewarder.target)
-    //   premiumETHForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
+    //   premiumETHForSSIP = await this.premiumPool.ssipPremiumEth()
     //   expect(premiumETHForSSIP).to.equal(getBigNumber("0"))
     //   expect(ethBalanceAfter).to.equal(ethBalanceBefore + getBigNumber("7", 17))
 
     //   const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[5].address)
     //   expect(usdtBalanceBefore).to.equal(0)
 
-    //   let premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
+    //   let premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
     //   expect(premiumForSSIP).to.equal(getBigNumber("7000", 6));
 
     //   encodedCallData = this.premiumPool.interface.encodeFunctionData("depositToSyntheticSSIPRewarder", [
@@ -472,13 +471,13 @@ describe("Premium Pool", function () {
     //   const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.syntheticRewarder.target)
     //   expect(usdtBalanceAfter).to.equal(getBigNumber("7000", 6))
 
-    //   premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.target)
+    //   premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
     //   expect(premiumForSSIP).to.equal(0)
     // })
     // it("Should back UNO and burn", async function () {
-    //   let premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+    //   let premiumForBackBurnETH = await this.premiumPool.backBurnPremiumEth()
     //   expect(premiumForBackBurnETH).to.equal(getBigNumber("2", 17))
-    //   let premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+    //   let premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
     //   expect(premiumForBackBurn).to.equal(getBigNumber("2000", 6))
 
     //   let encodedCallData = this.premiumPool.interface.encodeFunctionData("buyBackAndBurn", []);
@@ -497,9 +496,9 @@ describe("Premium Pool", function () {
 
     //   this.txIdx++;
 
-    //   premiumForBackBurnETH = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+    //   premiumForBackBurnETH = await this.premiumPool.backBurnPremiumEth()
     //   expect(premiumForBackBurnETH).to.equal(getBigNumber("0"))
-    //   premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.target)
+    //   premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
     //   expect(premiumForBackBurn).to.equal(getBigNumber("0"))
     // })
   })

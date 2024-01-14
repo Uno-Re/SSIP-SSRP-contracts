@@ -25,6 +25,7 @@ const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/he
 
 describe("SingleSidedInsurancePool", function () {
   before(async function () {
+    this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
     this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
@@ -64,6 +65,16 @@ describe("SingleSidedInsurancePool", function () {
     this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.deploy()
 
     const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
+    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+    });
+
+    await network.provider.send("hardhat_setBalance", [
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x1000000000000000000000000000000000",
+    ]);
 
     const timestamp = new Date().getTime()
 
@@ -104,20 +115,8 @@ describe("SingleSidedInsurancePool", function () {
       this.mockOraclePriceFeed.target,
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.signers[0].address,
-    )
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
-    });
-
-    await network.provider.send("hardhat_setBalance", [
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-      "0x1000000000000000000000000000000000",
-    ]);
-
-    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+      this.multisig.address,
+    )   
 
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
@@ -138,7 +137,12 @@ describe("SingleSidedInsurancePool", function () {
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address,
         this.signers[0].address,
+<<<<<<< HEAD
+        this.signers[0].address,
+
+=======
         this.claimAssessor
+>>>>>>> cdc0d873c64db119e537916a50b3cb4553064383
       ]
     );
 
@@ -426,6 +430,24 @@ describe("SingleSidedInsurancePool", function () {
 
         await this.capitalAgent.setMCR(getBigNumber("1", 16))
       })
+      it("emergency withdraw", async function () {
+        //check the uno and risk pool LP token balance of the singer 0 before withdraw
+        const riskPool = this.RiskPool.attach(this.poolAddress)
+        const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
+        const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
+        expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
+        // signer 0 emergency Withdraw
+        await this.singleSidedInsurancePool.emergencyWithdraw()
+        // check the uno and risk pool LP token balance of the singer 0 after withdraw
+        const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
+        const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
+        expect(lpBalanceAfter).to.equal(getBigNumber("10000"))
+        expect(usdtBalanceBefore).to.lt(usdtBalanceAfter);
+
+        const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+        expect(pendingUnoRewardAfter).to.equal(0)
+      })
+
 
       it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
         //check the uno and risk pool LP token balance of the singer 0 before withdraw

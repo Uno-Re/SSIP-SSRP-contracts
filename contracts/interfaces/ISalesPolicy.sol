@@ -22,6 +22,10 @@ interface ISalesPolicy {
 
     function allPoliciesLength() external view returns (uint256);
 
+    function killPool() external;
+
+    function revivePool() external;
+
     function getPolicyData(uint256 _policyId)
         external
         view

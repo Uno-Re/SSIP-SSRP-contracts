@@ -72,6 +72,14 @@ contract MultiSigWallet is ReentrancyGuard {
         emit Deposit(msg.sender, msg.value, address(this).balance);
     }
 
+    function getThreshold() external view returns (uint256) {
+        return numConfirmationsRequired;
+    }
+
+    function getOwners() external view returns (address[] memory) {
+        return signers;
+    }
+
     /**
      * @dev when buying is failed, agent should send loan again to TribeOne.
      */

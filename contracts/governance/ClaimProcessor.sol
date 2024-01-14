@@ -52,7 +52,7 @@ contract ClaimProcessor is AccessControl {
     }
 
     function claimPolicy(uint256 _assertionId) external {
-        Claim memory _policy = assertion[_assertionId];
+        Claim storage _policy = assertion[_assertionId];
         require(_policy.approved && !_policy.settled, "UnoRe: not approved or already settled");
         _policy.settled = true;
         ISingleSidedInsurancePool(_policy.ssip).settlePayout(_policy.policyId, _policy.payoutAddress, _policy.insureAmount);

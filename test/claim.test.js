@@ -54,7 +54,8 @@ describe("SingleSidedInsurance claim policy", function () {
     await this.mockUNO.connect(this.signers[1]).faucetToken(getBigNumber("500000000"), { from: this.signers[1].address })
     await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber("500000"), { from: this.signers[1].address })
     await this.mockUNO.connect(this.signers[2]).faucetToken(getBigNumber("500000000"), { from: this.signers[2].address })
-    await this.mockUSDT.connect(this.signers[2]).faucetToken(getBigNumber("500000"), { from: this.signers[2].address })
+    await this.mockUSDT.connect(this.signers[2]).faucetToken(getBigNumber("500000"), { from: this.signers[2].address });
+
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
     this.riskPoolFactory = await this.RiskPoolFactory.deploy()
@@ -94,20 +95,31 @@ describe("SingleSidedInsurance claim policy", function () {
         )
     ).wait()
 
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+    });
+
+    await network.provider.send("hardhat_setBalance", [
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x1000000000000000000000000000000000",
+    ]);
+
+    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
       WETH_ADDRESS.rinkeby,
       TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.signers[0].address,
+      this.multisig.address,
     )
-
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
         this.exchangeAgent.target, 
         this.mockUSDT.target,
-        this.signers[0].address,
+        this.multisig.address,
         this.signers[0].address]
     );
 
@@ -115,8 +127,8 @@ describe("SingleSidedInsurance claim policy", function () {
       this.exchangeAgent.target,
       this.mockUNO.target,
       this.mockUSDT.target,
-      this.signers[0].address,
-      this.signers[0].address,
+      this.multisig.address,
+      this.signers[0].address
     )
 
     this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB");
@@ -132,19 +144,8 @@ describe("SingleSidedInsurance claim policy", function () {
       ]
     );
 
-    await (await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool.target)).wait()
+    await (await this.capitalAgent.connect(this.multisig).addPoolWhiteList(this.singleSidedInsurancePool.target)).wait()
     let adminRole = await this.singleSidedInsurancePool.ADMIN_ROLE();
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
-    });
-
-    await network.provider.send("hardhat_setBalance", [
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-      "0x1000000000000000000000000000000000",
-    ]);
-
-    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
 
     await this.singleSidedInsurancePool.connect(this.multisig).createRewarder(
       this.signers[0].address,
@@ -199,7 +200,7 @@ describe("SingleSidedInsurance claim policy", function () {
         await this.capitalAgent.setMLR(getBigNumber("10"));
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
         const riskPool = this.RiskPool.attach(this.poolAddress)
-        await this.capitalAgent.setSalesPolicyFactory(this.salesPolicyFactory.target);
+        await this.capitalAgent.connect(this.multisig).setSalesPolicyFactory(this.salesPolicyFactory.target);
         let salesPolicy = await this.salesPolicyFactory.newSalesPolicy(this.exchangeAgent.target, this.mockUNO.target, this.capitalAgent.target);
         let a = await this.capitalAgent.getPolicyInfo();
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("1000"))
@@ -219,7 +220,7 @@ describe("SingleSidedInsurance claim policy", function () {
         await this.capitalAgent.setMLR(getBigNumber("10"));
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
         const riskPool = this.RiskPool.attach(this.poolAddress)
-        await this.capitalAgent.setSalesPolicyFactory(this.salesPolicyFactory.target);
+        await this.capitalAgent.connect(this.multisig).setSalesPolicyFactory(this.salesPolicyFactory.target);
         let salesPolicy = await this.salesPolicyFactory.newSalesPolicy(this.exchangeAgent.target, this.mockUNO.target, this.capitalAgent.target);
         let a = await this.capitalAgent.getPolicyInfo();
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("1000"))
