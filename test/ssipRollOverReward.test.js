@@ -102,7 +102,8 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
       this.mockOraclePriceFeed.target,
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.multisig.address
+      this.multisig.address,
+      getBigNumber("60")
     )
 
     this.capitalAgent = await upgrades.deployProxy(

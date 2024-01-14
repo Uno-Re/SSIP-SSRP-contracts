@@ -1,5 +1,6 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
 const hre = require("hardhat");
+const { getBigNumber } = require("../scripts/shared/utilities");
 
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments
@@ -16,7 +17,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const exchangeAgent = await deploy("ExchangeAgent", {
     from: deployer,
-    args: [mockUSDT.address, WETH, PRICE_FEED.address, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet],
+    args: [mockUSDT.address, WETH, PRICE_FEED.address, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet, getBigNumber(60)],
     log: true,
     deterministicDeployment: false,
   })

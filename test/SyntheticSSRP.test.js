@@ -114,7 +114,8 @@ describe("Synthetic SSRP", function () {
       this.mockOraclePriceFeed.target,
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.multisig.address
+      this.multisig.address,
+      getBigNumber("60")
     )
 
     this.premiumPool = await this.PremiumPool.deploy(this.exchangeAgent.target, this.mockUNO.target, this.mockUSDT.target, this.multisig.address, this.signers[0].address)

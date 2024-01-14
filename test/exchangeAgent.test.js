@@ -132,6 +132,7 @@ describe("ExchangeAgent", function () {
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
       this.multiSigWallet.target,
+      getBigNumber("60")
     )
 
     await hre.network.provider.request({

@@ -54,7 +54,8 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
         address _oraclePriceFeed,
         address _uniswapRouter,
         address _uniswapFactory,
-        address _multiSigWallet
+        address _multiSigWallet,
+        uint256 _swapDeadline
     ) Ownable(_multiSigWallet) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_uniswapRouter != address(0), "UnoRe: zero uniswapRouter address");
@@ -70,7 +71,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
         oraclePriceFeed = _oraclePriceFeed;
         whiteList[msg.sender] = true;
         slippage = 5 * SLIPPAGE_PRECISION;
-        swapDeadline = 60;
+        swapDeadline = _swapDeadline;
     }
 
     modifier onlyWhiteList() {

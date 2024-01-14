@@ -189,7 +189,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override nonReentrant {
         // Withdraw desired amount from pool
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
