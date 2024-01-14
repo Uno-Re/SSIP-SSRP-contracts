@@ -52,7 +52,7 @@ describe("SalesPolicy", function () {
       ethers.provider,
     )
     this.devWallet = this.signers[0]
-
+    this.chainId = (await ethers.provider.getNetwork()).chainId
     this.domainType = [
       { name: "name", type: "string" },
       { name: "version", type: "string" },
@@ -465,6 +465,7 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
 
       hexData =
         "0x" +
@@ -475,7 +476,9 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.mockUSDT.target.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.salesPolicy.target.slice(2)
+        this.salesPolicy.target.slice(2) +
+        paddedChainId.slice(2)
+
 
       const flatSig = await this.signers[0].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
@@ -623,7 +626,7 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
-
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
 
       hexData =
         "0x" +
@@ -634,7 +637,8 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.mockUSDT.target.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2)
+        this.signers[0].address.slice(2) +
+        paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
@@ -755,6 +759,7 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
@@ -764,7 +769,8 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.mockUSDT.target.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.signers[1].address.slice(2)
+        this.signers[1].address.slice(2) +
+        paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig);
@@ -865,6 +871,8 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
+      
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
@@ -874,7 +882,8 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.mockUSDT.target.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.salesPolicy.target.slice(2)
+        this.salesPolicy.target.slice(2) +
+        paddedChainId.slice(2)
 
       const flatSig = await this.signers[0].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
@@ -1017,6 +1026,8 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
+      
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
@@ -1026,7 +1037,8 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.zeroAddress.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2)
+        this.signers[0].address.slice(2) +
+        paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
@@ -1147,6 +1159,7 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
@@ -1156,7 +1169,8 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.zeroAddress.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2)
+        this.signers[0].address.slice(2) +
+        paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
@@ -1297,6 +1311,7 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
@@ -1306,7 +1321,8 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.zeroAddress.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2)
+        this.signers[0].address.slice(2) +
+        paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
@@ -1410,6 +1426,7 @@ describe("SalesPolicy", function () {
       const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
@@ -1419,7 +1436,8 @@ describe("SalesPolicy", function () {
         paddedDeadlineHexStr.slice(2) +
         this.zeroAddress.slice(2) +
         paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2)
+        this.signers[0].address.slice(2) +
+        paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
