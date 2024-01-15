@@ -373,7 +373,7 @@ contract SingleSidedInsurancePool is
         uint256 _pendingUno = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingUno != 0) {
-            IRewarder(rewarder).onReward(_to, _pendingUno);
+            IRewarder(rewarder).onReward(_to, _pendingUno, 0);
         }
 
         emit Harvest(msg.sender, _to, _pendingUno);
@@ -397,8 +397,8 @@ contract SingleSidedInsurancePool is
             _enterInPool(_pendingUno, _to[i]);
         }
 
-        if (rewarder != address(0) && _totalPendingUno != 0) {
-            IRewarder(rewarder).onRewardForRollOver(riskPool, _totalPendingUno, _accumulatedAmount);
+        if (rewarder != address(0) && _totalPendingUno != 0 && _accumulatedAmount > 0) {
+            IRewarder(rewarder).onReward(riskPool, _totalPendingUno, _accumulatedAmount);
         }
         emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
