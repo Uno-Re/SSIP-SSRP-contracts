@@ -17,7 +17,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const exchangeAgent = await deploy("ExchangeAgent", {
     from: deployer,
-    args: [mockUSDT.address, WETH, PRICE_FEED.address, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet, getBigNumber(60)],
+    args: [mockUSDT.address, WETH, PRICE_FEED.address, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, multiSigWallet, getBigNumber("60")],
     log: true,
     deterministicDeployment: false,
   })
