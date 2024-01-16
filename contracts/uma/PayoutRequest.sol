@@ -40,6 +40,7 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetEscalationManager(address indexed payout, address indexed escalatingManager);
     event LogSetAssertionAliveTime(address indexed payout, uint256 assertionAliveTime);
     event LogSetClaimProccessor(address indexed payout, address indexed claimProccessor);
+    event LogSetCapitalAgent(address indexed payout, address indexed capitalAgent);
     event PoolFailed(address indexed owner, bool fail);
 
     function initialize(
@@ -141,6 +142,12 @@ contract PayoutRequest is PausableUpgradeable {
         _requireGuardianCouncil();
         claimProcessor = _claimProcessor;
         emit LogSetClaimProccessor(address(this), address(_claimProcessor));
+    }
+
+    function setCapitalAgent(ICapitalAgent _capitalAgent) external {
+        _requireGuardianCouncil();
+        capitalAgent = _capitalAgent;
+        emit LogSetCapitalAgent(address(this), address(_capitalAgent));
     }
 
     function togglePause() external {
