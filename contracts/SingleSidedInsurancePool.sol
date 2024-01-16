@@ -105,7 +105,6 @@ contract SingleSidedInsurancePool is
         address _capitalAgent,
         address _multiSigWallet,
         address _governance,
-        address _payoutRequest,
         address _claimProcessor
     ) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
@@ -118,7 +117,6 @@ contract SingleSidedInsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
-        _grantRole(CLAIM_PROCESSOR_ROLE, _payoutRequest);
         _grantRole(CLAIM_PROCESSOR_ROLE, _claimProcessor);
         _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
