@@ -1,5 +1,6 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
 const hre = require("hardhat");
+require("dotenv").config()
 
 module.exports = async function ({getNamedAccounts, deployments}) {
   const { deploy } = deployments;
@@ -7,14 +8,14 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const owner = deployer
 
 
-  const ssip = await hre.deployments.get("SingleSidedInsurancePool")
+  const ssip = await hre.deployments.get("SingleSidedInsurancePoolUSDT")
   const claimProcessor = await hre.deployments.get("ClaimProcessor")
   const escalationManager = await hre.deployments.get("EscalationManager")
-  const defaultCurrency = "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
-  const optimisticOracleV3 = "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB"
-  const guardianCouncil = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
+  const guardianCouncil = process.env.GAURDIAN_COUNCIL;
+  const defaultCurrency = process.env.DEAFAULT_CURRENCY;
+  const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
   
-  const a = await deploy("PayoutRequest", {
+  const a = await deploy("PayoutRequestUSDT", {
     from: deployer,
     contract: "PayoutRequest",
     log: true,
@@ -33,4 +34,4 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   console.log(`payoutRequest deployed at ${a.address}`);
 };
 
-module.exports.tags = ["PayoutRequestUNO", "UnoRe"]
+module.exports.tags = ["PayoutRequestUSDT", "UnoRe"]
