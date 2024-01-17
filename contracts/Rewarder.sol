@@ -66,7 +66,7 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
     ) external payable override onlyPOOL whenNotPaused returns (uint256) {
         ISSIP ssip = ISSIP(pool);
         ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
-        uint256 accumulatedUno = ((_accumulatedAmount > 0 ? _accumulatedAmount : ssip.userInfo(_to).amount) *
+        uint256 accumulatedUno = (_accumulatedAmount *
             uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
 
         require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
