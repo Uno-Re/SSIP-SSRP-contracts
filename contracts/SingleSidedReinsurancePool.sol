@@ -38,6 +38,7 @@ contract SingleSidedReinsurancePool is
     address public rewarder;
     address public override riskPool;
     bool public killed;
+    bool public emergencyWithdrawAllowed;
 
     struct PoolInfo {
         uint256 lastRewardBlock;
@@ -79,6 +80,7 @@ contract SingleSidedReinsurancePool is
     event KillPool(address indexed _owner, bool _killed);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
+    event EmergencyWithdrawToggled(address indexed user, bool EmergencyWithdraw);
 
     function initialize(address _multiSigWallet, address _claimAccessor) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -164,6 +166,11 @@ contract SingleSidedReinsurancePool is
         require(_startTime > 0, "UnoRe: not allow zero start time");
         stakingStartTime = _startTime;
         emit LogSetStakingStartTime(address(this), _startTime);
+    }
+
+    function toggleEmergencyWithdraw() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        emergencyWithdrawAllowed = !emergencyWithdrawAllowed;
+        emit EmergencyWithdrawToggled(address(this), emergencyWithdrawAllowed);
     }
 
     /**
@@ -353,6 +360,7 @@ contract SingleSidedReinsurancePool is
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw() public nonReentrant {
+        require(emergencyWithdrawAllowed, "Unore: emergencyWithdraw is not allowed");
         UserInfo memory user = userInfo[msg.sender];
         uint256 amount = user.amount;
         require(amount > 0, "Unore: Zero user amount");
