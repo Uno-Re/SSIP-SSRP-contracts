@@ -10,7 +10,6 @@ import "../libraries/TransferHelper.sol";
 import "../interfaces/OptimisticOracleV3Interface.sol";
 import "../interfaces/ICapitalAgent.sol";
 import "../interfaces/ISalesPolicy.sol";
-import "../interfaces/IClaimProcessor.sol";
 import "../interfaces/ISingleSidedInsurancePool.sol";
 
 contract PayoutRequest is PausableUpgradeable {
@@ -25,11 +24,11 @@ contract PayoutRequest is PausableUpgradeable {
     OptimisticOracleV3Interface public optimisticOracle;
     ISingleSidedInsurancePool public ssip;
     ICapitalAgent public capitalAgent;
-    IClaimProcessor public claimProcessor;
     IERC20 public defaultCurrency;
     bytes32 public defaultIdentifier;
     uint256 public assertionliveTime;
     address public escalationManager;
+    address public claimsDao;
     mapping(uint256 => Policy) public policies;
     mapping(bytes32 => uint256) public assertedPolicies;
     mapping(uint256 => bytes32) public policiesAssertionId;
@@ -47,15 +46,15 @@ contract PayoutRequest is PausableUpgradeable {
         ISingleSidedInsurancePool _ssip,
         OptimisticOracleV3Interface _optimisticOracleV3,
         IERC20 _defaultCurrency,
-        IClaimProcessor _claimProcessor,
         address _escalationManager,
-        address __guardianCouncil
+        address __guardianCouncil,
+        address _claimsDao
     ) external initializer {
         ssip = _ssip;
         optimisticOracle = _optimisticOracleV3;
         defaultCurrency = _defaultCurrency;
-        claimProcessor = _claimProcessor;
         escalationManager = _escalationManager;
+        claimsDao = _claimsDao;
         _guardianCouncil = __guardianCouncil;
         defaultIdentifier = optimisticOracle.defaultIdentifier();
         assertionliveTime = 10 days;
@@ -95,7 +94,9 @@ contract PayoutRequest is PausableUpgradeable {
             policiesAssertionId[_policyId] = assertionId;
             emit InsurancePayoutRequested(_policyId, assertionId);
         } else {
-            IClaimProcessor(claimProcessor).requestPolicyId(_policyId, address(ssip), _to, _amount);
+            require(msg.sender == claimsDao, "RPayout: can only called by claimsDao");
+            policies[_policyId].settled = true;
+            ssip.settlePayout(_policyId, _to, _amount);
         }
         isRequestInit[_policyId] = true;
     }
@@ -136,12 +137,6 @@ contract PayoutRequest is PausableUpgradeable {
         require(_assertionliveTime > 0, "RPayout: zero assertion live time");
         assertionliveTime = _assertionliveTime;
         emit LogSetAssertionAliveTime(address(this), _assertionliveTime);
-    }
-
-    function setClaimProcessor(IClaimProcessor _claimProcessor) external {
-        _requireGuardianCouncil();
-        claimProcessor = _claimProcessor;
-        emit LogSetClaimProccessor(address(this), address(_claimProcessor));
     }
 
     function setCapitalAgent(ICapitalAgent _capitalAgent) external {
