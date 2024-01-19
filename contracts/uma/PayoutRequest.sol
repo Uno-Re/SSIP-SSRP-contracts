@@ -58,6 +58,7 @@ contract PayoutRequest is PausableUpgradeable {
         _guardianCouncil = __guardianCouncil;
         defaultIdentifier = optimisticOracle.defaultIdentifier();
         assertionliveTime = 10 days;
+        isUMAFailed = true;
     }
 
     function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
