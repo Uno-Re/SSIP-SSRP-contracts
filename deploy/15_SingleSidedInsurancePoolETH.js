@@ -46,7 +46,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
       execute: {
         init: {
           methodName: "initialize",
-          args: [ssip.address, optimisticOracleV3, defaultCurrency, claimProcessor.address, escalationManager.address, guardianCouncil],
+          args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, guardianCouncil],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
