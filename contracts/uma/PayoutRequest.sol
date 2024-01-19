@@ -63,7 +63,6 @@ contract PayoutRequest is PausableUpgradeable {
 
     function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
-        require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
         (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
         require(_amount <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
@@ -72,6 +71,7 @@ contract PayoutRequest is PausableUpgradeable {
         _policyData.payoutAddress = _to;
         policies[_policyId] = _policyData;
         if (!isUMAFailed) {
+            require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
             uint256 bond = optimisticOracle.getMinimumBond(address(defaultCurrency));
             TransferHelper.safeTransferFrom(address(defaultCurrency), msg.sender, address(this), bond);
             defaultCurrency.approve(address(optimisticOracle), bond);
