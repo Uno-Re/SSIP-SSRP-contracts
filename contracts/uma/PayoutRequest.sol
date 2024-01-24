@@ -40,6 +40,7 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetAssertionAliveTime(address indexed payout, uint256 assertionAliveTime);
     event LogSetClaimProccessor(address indexed payout, address indexed claimProccessor);
     event LogSetCapitalAgent(address indexed payout, address indexed capitalAgent);
+    event LogSetClaimsDao(address indexed payout, address indexed capitalAgent);
     event PoolFailed(address indexed owner, bool fail);
 
     function initialize(
@@ -63,6 +64,7 @@ contract PayoutRequest is PausableUpgradeable {
 
     function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
+        ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
         (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
         require(_amount <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
@@ -144,6 +146,12 @@ contract PayoutRequest is PausableUpgradeable {
         _requireGuardianCouncil();
         capitalAgent = _capitalAgent;
         emit LogSetCapitalAgent(address(this), address(_capitalAgent));
+    }
+
+    function setClaimsDao(address _claimsDao) external {
+        _requireGuardianCouncil();
+        claimsDao = _claimsDao;
+        emit LogSetClaimsDao(address(this), address(_claimsDao));
     }
 
     function togglePause() external {
