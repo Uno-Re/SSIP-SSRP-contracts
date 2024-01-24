@@ -8,7 +8,6 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const owner = deployer
 
   const capitalAgent = await hre.deployments.get("CapitalAgent")
-  const claimProcessor = await hre.deployments.get("ClaimProcessor")
   const escalationManager = await hre.deployments.get("EscalationManager")
   const governance = process.env.GOVERNANCE;
   const multiSigWallet = process.env.MULTISIGWALLET;
@@ -26,7 +25,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
         execute: {
           init: {
             methodName: "initialize",
-            args: [capitalAgent.address, multiSigWallet, governance, claimProcessor.address],
+            args: [capitalAgent.address, multiSigWallet, governance],
           },
         },
         proxyContract: "OpenZeppelinTransparentProxy",
