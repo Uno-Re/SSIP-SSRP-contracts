@@ -250,11 +250,8 @@ contract SingleSidedInsurancePool is
     function migrate() external nonReentrant isAlive {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
-        uint256 lpPrice = IRiskPool(riskPool).lpPriceUno();
-        uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
-        IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
-        uint256 migratedAmount = (amount * lpPrice) / 1e18;
+        uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(migratedAmount, 0, false);
         IMigration(migrateTo).onMigration(msg.sender, migratedAmount, "");
         userInfo[msg.sender].amount = 0;
