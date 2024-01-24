@@ -82,6 +82,17 @@ describe("ExchangeAgent", function () {
 
     const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
     const timestamp = new Date().getTime()
+    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+    });
+
+    await network.provider.send("hardhat_setBalance", [
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x1000000000000000000000000000000000",
+    ]);
+
 
     await (
       await this.mockUNO
@@ -121,6 +132,7 @@ describe("ExchangeAgent", function () {
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
       this.multiSigWallet.target,
+      getBigNumber("60")
     )
 
     await hre.network.provider.request({

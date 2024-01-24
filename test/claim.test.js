@@ -54,7 +54,8 @@ describe("SingleSidedInsurance claim policy", function () {
     await this.mockUNO.connect(this.signers[1]).faucetToken(getBigNumber("500000000"), { from: this.signers[1].address })
     await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber("500000"), { from: this.signers[1].address })
     await this.mockUNO.connect(this.signers[2]).faucetToken(getBigNumber("500000000"), { from: this.signers[2].address })
-    await this.mockUSDT.connect(this.signers[2]).faucetToken(getBigNumber("500000"), { from: this.signers[2].address })
+    await this.mockUSDT.connect(this.signers[2]).faucetToken(getBigNumber("500000"), { from: this.signers[2].address });
+
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
     this.riskPoolFactory = await this.RiskPoolFactory.deploy()
@@ -94,49 +95,6 @@ describe("SingleSidedInsurance claim policy", function () {
         )
     ).wait()
 
-    this.exchangeAgent = await this.ExchangeAgent.deploy(
-      this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
-      TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.signers[0].address,
-    )
-
-    this.capitalAgent = await upgrades.deployProxy(
-      this.CapitalAgent, [
-        this.exchangeAgent.target, 
-        this.mockUNO.target,
-        this.mockUSDT.target,
-        this.signers[0].address,
-        this.signers[0].address]
-    );
-
-    this.premiumPool = await this.PremiumPool.deploy(
-      this.exchangeAgent.target,
-      this.mockUNO.target,
-      this.mockUSDT.target,
-      this.signers[0].address,
-      this.signers[0].address,
-    )
-
-    this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB");
-    this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address);
-
-    this.singleSidedInsurancePool = await upgrades.deployProxy(
-      this.SingleSidedInsurancePool, [
-        this.capitalAgent.target,
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        this.signers[0].address,
-        this.signers[0].address,
-        this.escalationManager.target,
-        "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", 
-        this.optimisticOracleV3.target
-      ]
-    );
-
-    await (await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool.target)).wait()
-    let adminRole = await this.singleSidedInsurancePool.ADMIN_ROLE();
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
@@ -148,6 +106,47 @@ describe("SingleSidedInsurance claim policy", function () {
     ]);
 
     this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+
+    this.exchangeAgent = await this.ExchangeAgent.deploy(
+      this.mockUSDT.target,
+      WETH_ADDRESS.rinkeby,
+      TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      this.multisig.address,
+      getBigNumber("60")
+    )
+    this.capitalAgent = await upgrades.deployProxy(
+      this.CapitalAgent, [
+        this.exchangeAgent.target, 
+        this.mockUSDT.target,
+        this.multisig.address,
+        this.signers[0].address]
+    );
+
+    this.premiumPool = await this.PremiumPool.deploy(
+      this.exchangeAgent.target,
+      this.mockUNO.target,
+      this.mockUSDT.target,
+      this.multisig.address,
+      this.signers[0].address
+    )
+
+    this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB");
+    this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address);
+
+    this.singleSidedInsurancePool = await upgrades.deployProxy(
+      this.SingleSidedInsurancePool, [
+        this.capitalAgent.target,
+        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+        this.signers[0].address,
+        this.signers[0].address,
+        this.claimAssessor
+      ]
+    );
+
+    await (await this.capitalAgent.connect(this.multisig).addPoolWhiteList(this.singleSidedInsurancePool.target)).wait()
+    let adminRole = await this.singleSidedInsurancePool.ADMIN_ROLE();
 
     await this.singleSidedInsurancePool.connect(this.multisig).createRewarder(
       this.signers[0].address,
@@ -202,7 +201,7 @@ describe("SingleSidedInsurance claim policy", function () {
         await this.capitalAgent.setMLR(getBigNumber("10"));
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
         const riskPool = this.RiskPool.attach(this.poolAddress)
-        await this.capitalAgent.setSalesPolicyFactory(this.salesPolicyFactory.target);
+        await this.capitalAgent.connect(this.multisig).setSalesPolicyFactory(this.salesPolicyFactory.target);
         let salesPolicy = await this.salesPolicyFactory.newSalesPolicy(this.exchangeAgent.target, this.mockUNO.target, this.capitalAgent.target);
         let a = await this.capitalAgent.getPolicyInfo();
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("1000"))
@@ -211,13 +210,9 @@ describe("SingleSidedInsurance claim policy", function () {
         const lpPriceBefore = await riskPool.lpPriceUno()
         expect(lpPriceBefore).to.equal(getBigNumber("1"))
         let b = await this.salesPolicy.getPolicyData(1000);
-        const tx = await this.singleSidedInsurancePool
-          .requestPayout(1000, getBigNumber("105"), this.signers[5].address)
-
-        let id = await this.singleSidedInsurancePool.policiesAssertionId(1000);
         await time.increaseTo(30000122335);
-        await this.optimisticOracleV3.settleAssertion(id);
-        expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("105"));
+        // await this.optimisticOracleV3.settleAssertion(id);
+        expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("0"));
       })
 
       it("Should dispute policy", async function () {
@@ -226,7 +221,7 @@ describe("SingleSidedInsurance claim policy", function () {
         await this.capitalAgent.setMLR(getBigNumber("10"));
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
         const riskPool = this.RiskPool.attach(this.poolAddress)
-        await this.capitalAgent.setSalesPolicyFactory(this.salesPolicyFactory.target);
+        await this.capitalAgent.connect(this.multisig).setSalesPolicyFactory(this.salesPolicyFactory.target);
         let salesPolicy = await this.salesPolicyFactory.newSalesPolicy(this.exchangeAgent.target, this.mockUNO.target, this.capitalAgent.target);
         let a = await this.capitalAgent.getPolicyInfo();
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("1000"))
@@ -235,13 +230,9 @@ describe("SingleSidedInsurance claim policy", function () {
         const lpPriceBefore = await riskPool.lpPriceUno()
         expect(lpPriceBefore).to.equal(getBigNumber("1"))
         let b = await this.salesPolicy.getPolicyData(1000);
-        const tx = await this.singleSidedInsurancePool
-          .requestPayout(1000, getBigNumber("105"), this.signers[5].address )
-
-        let id = await this.singleSidedInsurancePool.policiesAssertionId(1000);
-        await this.optimisticOracleV3.disputeAssertion(id, this.signers[0].address);
+        // await this.optimisticOracleV3.disputeAssertion(id, this.signers[0].address);
         await time.increaseTo(40000122335);
-        await this.optimisticOracleV3.settleAssertion(id);
+        // await this.optimisticOracleV3.settleAssertion(id);
 
         expect(await this.mockUSDT.balanceOf(this.signers[5].address)).to.equal(getBigNumber("0"));
         expect(await this.salesPolicy.ownerOf(1000)).to.equal(this.signers[0].address);

@@ -84,15 +84,6 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
 
     this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
 
-    this.exchangeAgent = await this.ExchangeAgent.deploy(
-      this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
-      this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.signers[0].address
-    )
-
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
@@ -104,6 +95,16 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
     ]);
 
     this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+
+    this.exchangeAgent = await this.ExchangeAgent.deploy(
+      this.mockUSDT.target,
+      WETH_ADDRESS.rinkeby,
+      this.mockOraclePriceFeed.target,
+      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      this.multisig.address,
+      getBigNumber("60")
+    )
 
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
@@ -124,9 +125,7 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
       "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
       this.signers[0].address,
       this.signers[0].address,
-      this.escalationManager.target,
-      "0x07865c6E87B9F70255377e024ace6630C1Eaa37F",
-      this.optimisticOracleV3.target
+      this.signers[0].address,
     ]
     );
 

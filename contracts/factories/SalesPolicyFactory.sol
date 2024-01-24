@@ -7,6 +7,7 @@ import "../libraries/Counters.sol";
 import "../SalesPolicy.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISalesPolicyFactory.sol";
+import "../interfaces/IGnosisSafe.sol";
 
 contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     using Counters for Counters.Counter;
@@ -28,7 +29,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     mapping(address => uint16) public override getProtocolId;
     Counters.Counter private protocolIds;
 
-    address public USDC_TOKEN;
+    address public usdcToken;
 
     event ProtocolCreated(uint16 _protocolIdx, address _protocol);
     event LogSetPremiumPool(address indexed _premiumPool);
@@ -54,7 +55,9 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        USDC_TOKEN = _usdcToken;
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
+        usdcToken = _usdcToken;
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
@@ -78,7 +81,7 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
         address _premiumPool,
         address _capitalAgent
     ) external onlyOwner nonReentrant returns (address) {
-        SalesPolicy _salesPolicy = new SalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, USDC_TOKEN);
+        SalesPolicy _salesPolicy = new SalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, usdcToken);
         salesPolicy = address(_salesPolicy);
         ICapitalAgent(capitalAgent).setPolicy(address(_salesPolicy));
 
@@ -113,7 +116,6 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     }
 
     function setExchangeAgentInPolicy(address _exchangeAgent) external onlyOwner {
-        require(_exchangeAgent != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setExchangeAgent(_exchangeAgent);
         emit LogSetExchangeAgentInPolicy(_exchangeAgent);
     }
@@ -125,19 +127,16 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
     }
 
     function setPremiumPoolInPolicy(address _premiumPool) external onlyOwner {
-        require(_premiumPool != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setPremiumPool(_premiumPool);
         emit LogSetPremiumPoolInPolicy(_premiumPool);
     }
 
     function setSignerInPolicy(address _signer) external onlyOwner {
-        require(_signer != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setSigner(_signer);
         emit LogSetSignerInPolicy(_signer);
     }
 
     function setCapitalAgentInPolicy(address _capitalAgent) external onlyOwner {
-        require(_capitalAgent != address(0), "UnoRe: zero address");
         ISalesPolicy(salesPolicy).setCapitalAgent(_capitalAgent);
         emit LogSetCapitalAgentInPolicy(_capitalAgent);
     }
@@ -154,5 +153,13 @@ contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
 
     function getProtocolData(uint16 _protocolIdx) external view override returns (address protocolAddress, bool isBlackList) {
         return (getProtocol[_protocolIdx].protocolAddress, getProtocol[_protocolIdx].isBlackList);
+    }
+
+    function killSalesPolicyPool() external onlyOwner {
+        ISalesPolicy(salesPolicy).killPool();
+    }
+
+    function reviveSalesPolicyPool() external onlyOwner {
+        ISalesPolicy(salesPolicy).revivePool();
     }
 }

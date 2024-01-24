@@ -8,7 +8,7 @@ import "../interfaces/OptimisticOracleV3Interface.sol";
 contract EscalationManager is EscalationManagerInterface, AccessControl{
 
     bytes32 public constant OPTMISTIC_ORACLE_V3_ROLE = keccak256("OPTMISTIC_ORACLE_V3_ROLE");
-    bytes32 public constant CLAIM_ACCESSOR_ROLE = keccak256("CLAIM_ACCESSOR_ROLE");
+    bytes32 public constant CLAIM_ASSESSOR_ROLE = keccak256("CLAIM_ASSESSOR_ROLE");
 
     OptimisticOracleV3Interface public immutable optimisticOracleV3;
 
@@ -28,10 +28,10 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
      */
     constructor(address _optimisticOracleV3, address _governance) {
         optimisticOracleV3 = OptimisticOracleV3Interface(_optimisticOracleV3);
-        _grantRole(CLAIM_ACCESSOR_ROLE, _governance);
-        _setRoleAdmin(CLAIM_ACCESSOR_ROLE, CLAIM_ACCESSOR_ROLE);
+        _grantRole(CLAIM_ASSESSOR_ROLE, _governance);
+        _setRoleAdmin(CLAIM_ASSESSOR_ROLE, CLAIM_ASSESSOR_ROLE);
         _grantRole(OPTMISTIC_ORACLE_V3_ROLE, _optimisticOracleV3);
-        _setRoleAdmin(OPTMISTIC_ORACLE_V3_ROLE, CLAIM_ACCESSOR_ROLE);
+        _setRoleAdmin(OPTMISTIC_ORACLE_V3_ROLE, CLAIM_ASSESSOR_ROLE);
     }
     
     function getAssertionPolicy(bytes32) external override pure returns (AssertionPolicy memory) {
@@ -47,11 +47,11 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         return checkDisputers[disputeCaller];
     }
 
-    function toggleDisputer(address _disputer) external onlyRole(CLAIM_ACCESSOR_ROLE) {
+    function toggleDisputer(address _disputer) external onlyRole(CLAIM_ASSESSOR_ROLE) {
         checkDisputers[_disputer] = !checkDisputers[_disputer];
     }
 
-    function toggleAssertionCaller(address _caller) external onlyRole(CLAIM_ACCESSOR_ROLE) {
+    function toggleAssertionCaller(address _caller) external onlyRole(CLAIM_ASSESSOR_ROLE) {
         checkAssertingCaller[_caller] = !checkAssertingCaller[_caller];
     }
 

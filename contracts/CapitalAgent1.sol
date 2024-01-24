@@ -9,7 +9,7 @@ import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ICapitalAgent.sol";
 import "./interfaces/IGnosisSafe.sol";
 
-contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
+contract CapitalAgent1 is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address public exchangeAgent;

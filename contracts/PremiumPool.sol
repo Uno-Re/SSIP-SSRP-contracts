@@ -9,29 +9,29 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
+import "./interfaces/IGnosisSafe.sol";
 
 contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
-
     bytes32 public constant GOVERNANCE_ROLE = keccak256("GOVERNANCE_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     // using Address for address;
     address public exchangeAgent;
-    address public UNO_TOKEN;
-    address public USDC_TOKEN;
+    address public unoToken;
+    address public usdcToken;
     mapping(address => bool) public availableCurrencies;
     address[] public availableCurrencyList;
     mapping(address => bool) public whiteList;
 
     bool public killed;
-    address public constant burnAddress = 0x000000000000000000000000000000000000dEaD;
-    mapping(address => uint256) public SSRP_PREMIUM;
-    mapping(address => uint256) public SSIP_PREMIUM;
-    mapping(address => uint256) public BACK_BURN_UNO_PREMIUM;
-    uint256 public SSRP_PREMIUM_ETH;
-    uint256 public SSIP_PREMIUM_ETH;
-    uint256 public BACK_BURN_PREMIUM_ETH;
+    address public constant BURNADDRESS = 0x000000000000000000000000000000000000dEaD;
+    mapping(address => uint256) public ssrpPremium;
+    mapping(address => uint256) public ssipPremium;
+    mapping(address => uint256) public backBurnUnoPremium;
+    uint256 public ssrpPremiumEth;
+    uint256 public ssipPremiumEth;
+    uint256 public backBurnPremiumEth;
 
-    uint256 private MAX_INTEGER = type(uint256).max;
+    uint256 private maxInteger = type(uint256).max;
 
     event PremiumWithdraw(address indexed _currency, address indexed _to, uint256 _amount);
     event LogBuyBackAndBurn(address indexed _operator, address indexed _premiumPool, uint256 _unoAmount);
@@ -45,21 +45,24 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
     event LogAddWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event LogRemoveWhiteList(address indexed _premiumPool, address indexed _whiteListAddress);
     event PoolAlived(address indexed _owner, bool _alive);
+    event KillPool(address indexed _owner, bool _killed);
 
     constructor(address _exchangeAgent, address _unoToken, address _usdcToken, address _multiSigWallet, address _governance) {
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
+        require(_governance != address(0), "UnoRe: zero governance address");
         exchangeAgent = _exchangeAgent;
-        UNO_TOKEN = _unoToken;
-        USDC_TOKEN = _usdcToken;
+        unoToken = _unoToken;
+        usdcToken = _usdcToken;
         whiteList[msg.sender] = true;
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _grantRole(GOVERNANCE_ROLE, _governance);
         _setRoleAdmin(GOVERNANCE_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-
     }
 
     modifier onlyAvailableCurrency(address _currency) {
@@ -83,13 +86,13 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         _pause();
     }
 
-    function UnpausePool() external onlyRole(ADMIN_ROLE) {
+    function unpausePool() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
 
     function killPool() external onlyRole(ADMIN_ROLE) {
         killed = true;
-        emit PoolAlived(msg.sender, true);
+        emit KillPool(msg.sender, true);
     }
 
     function revivePool() external onlyRole(ADMIN_ROLE) {
@@ -101,9 +104,9 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         uint256 _premiumAmount = msg.value;
         uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
         uint256 _premium_SSIP = (_premiumAmount * 7000) / 10000;
-        SSRP_PREMIUM_ETH = SSRP_PREMIUM_ETH + _premium_SSRP;
-        SSIP_PREMIUM_ETH = SSIP_PREMIUM_ETH + _premium_SSIP;
-        BACK_BURN_PREMIUM_ETH = BACK_BURN_PREMIUM_ETH + (_premiumAmount - _premium_SSRP - _premium_SSIP);
+        ssrpPremiumEth = ssrpPremiumEth + _premium_SSRP;
+        ssipPremiumEth = ssipPremiumEth + _premium_SSIP;
+        backBurnPremiumEth = backBurnPremiumEth + (_premiumAmount - _premium_SSRP - _premium_SSIP);
         emit LogCollectPremium(msg.sender, address(0), _premiumAmount);
     }
 
@@ -115,10 +118,10 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         TransferHelper.safeTransferFrom(_premiumCurrency, msg.sender, address(this), _premiumAmount);
         uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
         uint256 _premium_SSIP = (_premiumAmount * 7000) / 10000;
-        SSRP_PREMIUM[_premiumCurrency] = SSRP_PREMIUM[_premiumCurrency] + _premium_SSRP;
-        SSIP_PREMIUM[_premiumCurrency] = SSIP_PREMIUM[_premiumCurrency] + _premium_SSIP;
-        BACK_BURN_UNO_PREMIUM[_premiumCurrency] =
-            BACK_BURN_UNO_PREMIUM[_premiumCurrency] +
+        ssrpPremium[_premiumCurrency] = ssrpPremium[_premiumCurrency] + _premium_SSRP;
+        ssipPremium[_premiumCurrency] = ssipPremium[_premiumCurrency] + _premium_SSIP;
+        backBurnUnoPremium[_premiumCurrency] =
+            backBurnUnoPremium[_premiumCurrency] +
             (_premiumAmount - _premium_SSRP - _premium_SSIP);
         emit LogCollectPremium(msg.sender, _premiumCurrency, _premiumAmount);
     }
@@ -127,29 +130,29 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         uint256 usdcAmountToDeposit = 0;
-        if (SSRP_PREMIUM_ETH > 0) {
-            TransferHelper.safeTransferETH(exchangeAgent, SSRP_PREMIUM_ETH);
-            uint256 convertedAmount = IExchangeAgent(exchangeAgent).convertForToken(address(0), USDC_TOKEN, SSRP_PREMIUM_ETH);
+        if (ssrpPremiumEth > 0) {
+            TransferHelper.safeTransferETH(exchangeAgent, ssrpPremiumEth);
+            uint256 convertedAmount = IExchangeAgent(exchangeAgent).convertForToken(address(0), usdcToken, ssrpPremiumEth);
             usdcAmountToDeposit += convertedAmount;
-            SSRP_PREMIUM_ETH = 0;
+            ssrpPremiumEth = 0;
         }
         for (uint256 ii = 0; ii < availableCurrencyList.length; ii++) {
-            if (SSRP_PREMIUM[availableCurrencyList[ii]] > 0) {
-                if (availableCurrencyList[ii] == USDC_TOKEN) {
-                    usdcAmountToDeposit += SSRP_PREMIUM[availableCurrencyList[ii]];
+            if (ssrpPremium[availableCurrencyList[ii]] > 0) {
+                if (availableCurrencyList[ii] == usdcToken) {
+                    usdcAmountToDeposit += ssrpPremium[availableCurrencyList[ii]];
                 } else {
                     uint256 convertedUSDCAmount = IExchangeAgent(exchangeAgent).convertForToken(
                         availableCurrencyList[ii],
-                        USDC_TOKEN,
-                        SSRP_PREMIUM[availableCurrencyList[ii]]
+                        usdcToken,
+                        ssrpPremium[availableCurrencyList[ii]]
                     );
                     usdcAmountToDeposit += convertedUSDCAmount;
                 }
-                SSRP_PREMIUM[availableCurrencyList[ii]] = 0;
+                ssrpPremium[availableCurrencyList[ii]] = 0;
             }
         }
         if (usdcAmountToDeposit > 0) {
-            TransferHelper.safeTransfer(USDC_TOKEN, _rewarder, usdcAmountToDeposit);
+            TransferHelper.safeTransfer(usdcToken, _rewarder, usdcAmountToDeposit);
             emit LogDepositToSyntheticSSRPRewarder(_rewarder, usdcAmountToDeposit);
         }
     }
@@ -161,16 +164,16 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
     ) external onlyRole(ADMIN_ROLE) isAlive nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
-        if (_currency == address(0) && SSIP_PREMIUM_ETH > 0) {
-            require(_amount <= SSIP_PREMIUM_ETH, "UnoRe: premium balance overflow");
+        if (_currency == address(0) && ssipPremiumEth > 0) {
+            require(_amount <= ssipPremiumEth, "UnoRe: premium balance overflow");
             TransferHelper.safeTransferETH(_rewarder, _amount);
-            SSIP_PREMIUM_ETH -= _amount;
+            ssipPremiumEth -= _amount;
             emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);
         } else {
-            if (availableCurrencies[_currency] && SSIP_PREMIUM[_currency] > 0) {
-                require(_amount <= SSIP_PREMIUM[_currency], "UnoRe: premium balance overflow");
+            if (availableCurrencies[_currency] && ssipPremium[_currency] > 0) {
+                require(_amount <= ssipPremium[_currency], "UnoRe: premium balance overflow");
                 TransferHelper.safeTransfer(_currency, _rewarder, _amount);
-                SSIP_PREMIUM[_currency] -= _amount;
+                ssipPremium[_currency] -= _amount;
                 emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);
             }
         }
@@ -178,29 +181,33 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
 
     function buyBackAndBurn() external onlyRole(ADMIN_ROLE) isAlive {
         uint256 unoAmount = 0;
-        if (BACK_BURN_PREMIUM_ETH > 0) {
-            TransferHelper.safeTransferETH(exchangeAgent, BACK_BURN_PREMIUM_ETH);
-            unoAmount += IExchangeAgent(exchangeAgent).convertForToken(address(0), UNO_TOKEN, BACK_BURN_PREMIUM_ETH);
-            BACK_BURN_PREMIUM_ETH = 0;
+        if (backBurnPremiumEth > 0) {
+            TransferHelper.safeTransferETH(exchangeAgent, backBurnPremiumEth);
+            unoAmount += IExchangeAgent(exchangeAgent).convertForToken(address(0), unoToken, backBurnPremiumEth);
+            backBurnPremiumEth = 0;
         }
         for (uint256 ii = 0; ii < availableCurrencyList.length; ii++) {
-            if (BACK_BURN_UNO_PREMIUM[availableCurrencyList[ii]] > 0) {
+            if (backBurnUnoPremium[availableCurrencyList[ii]] > 0) {
                 uint256 convertedAmount = IExchangeAgent(exchangeAgent).convertForToken(
                     availableCurrencyList[ii],
-                    UNO_TOKEN,
-                    BACK_BURN_UNO_PREMIUM[availableCurrencyList[ii]]
+                    unoToken,
+                    backBurnUnoPremium[availableCurrencyList[ii]]
                 );
                 unoAmount += convertedAmount;
-                BACK_BURN_UNO_PREMIUM[availableCurrencyList[ii]] = 0;
+                backBurnUnoPremium[availableCurrencyList[ii]] = 0;
             }
         }
         if (unoAmount > 0) {
-            TransferHelper.safeTransfer(UNO_TOKEN, burnAddress, unoAmount);
+            TransferHelper.safeTransfer(unoToken, BURNADDRESS, unoAmount);
         }
         emit LogBuyBackAndBurn(msg.sender, address(this), unoAmount);
     }
 
-    function withdrawPremium(address _currency, address _to, uint256 _amount) external override onlyRole(GOVERNANCE_ROLE) whenNotPaused {
+    function withdrawPremium(
+        address _currency,
+        address _to,
+        uint256 _amount
+    ) external override onlyRole(GOVERNANCE_ROLE) whenNotPaused {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {
@@ -231,15 +238,15 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
                 availableCurrencyList[ii] = lastCurrency;
                 availableCurrencyList.pop();
                 destroyCurrencyAllowance(_currency, exchangeAgent);
+                emit LogRemoveCurrency(address(this), _currency);
                 return;
             }
         }
-        emit LogRemoveCurrency(address(this), _currency);
     }
 
     function maxApproveCurrency(address _currency, address _to) public onlyRole(ADMIN_ROLE) nonReentrant {
-        if (IERC20(_currency).allowance(address(this), _to) < MAX_INTEGER) {
-            TransferHelper.safeApprove(_currency, _to, MAX_INTEGER);
+        if (IERC20(_currency).allowance(address(this), _to) < maxInteger) {
+            TransferHelper.safeApprove(_currency, _to, maxInteger);
             emit LogMaxApproveCurrency(address(this), _currency, _to);
         }
     }

@@ -53,6 +53,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
     event PoolAlived(address indexed _owner, bool _alive);
+    event KillPool(address indexed _owner, bool _killed);
     event RollOverReward(address indexed _pool, address[] _staker, uint256 _amount);
 
     constructor(address _lpToken, address _multiSigWallet) {
@@ -74,13 +75,13 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         _pause();
     }
 
-    function UnpausePool() external onlyRole(ADMIN_ROLE) {
+    function unpausePool() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
 
     function killPool() external onlyRole(ADMIN_ROLE) {
         killed = true;
-        emit PoolAlived(msg.sender, true);
+        emit KillPool(msg.sender, true);
     }
 
     function revivePool() external onlyRole(ADMIN_ROLE) {
@@ -89,7 +90,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     }
 
     function setRewardPerBlock(uint256 _rewardPerBlock) external onlyRole(ADMIN_ROLE) {
-        require(_rewardPerBlock > 0, "UnoRe: zero value");
+        require(_rewardPerBlock > 0 && _rewardPerBlock <= 1000 * 1e18, "UnoRe: invalid value, should be between 0 and 1000 * 1e18");
         rewardPerBlock = _rewardPerBlock;
         emit LogSetRewardPerBlock(address(this), _rewardPerBlock);
     }
@@ -188,7 +189,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override nonReentrant {
         // Withdraw desired amount from pool
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
