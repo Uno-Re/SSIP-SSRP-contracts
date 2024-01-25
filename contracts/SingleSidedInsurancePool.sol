@@ -370,10 +370,10 @@ contract SingleSidedInsurancePool is
     function _harvest(address _to) private {
         updatePool();
 
-        uint256 _pendingUno = _updateReward(_to);
+        (uint256 _pendingUno, uint256 _amount) = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingUno != 0) {
-            IRewarder(rewarder).onReward(_to, _pendingUno);
+            IRewarder(rewarder).onReward(_to, _pendingUno, _amount);
         }
 
         emit Harvest(msg.sender, _to, _pendingUno);
@@ -391,14 +391,14 @@ contract SingleSidedInsurancePool is
         for (uint256 i; i < _to.length; i++) {
             require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
-            uint256 _pendingUno = _updateReward(_to[i]);
+            (uint256 _pendingUno, uint256 _amount) = _updateReward(_to[i]);
             _totalPendingUno += _pendingUno;
-            _accumulatedAmount += userInfo[_to[i]].amount;
+            _accumulatedAmount += _amount;
             _enterInPool(_pendingUno, _to[i]);
         }
 
-        if (rewarder != address(0) && _totalPendingUno != 0) {
-            IRewarder(rewarder).onRewardForRollOver(riskPool, _totalPendingUno, _accumulatedAmount);
+        if (rewarder != address(0) && _totalPendingUno != 0 && _accumulatedAmount > 0) {
+            IRewarder(rewarder).onReward(riskPool, _totalPendingUno, _accumulatedAmount);
         }
         emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
@@ -458,11 +458,11 @@ contract SingleSidedInsurancePool is
         ICapitalAgent(capitalAgent).SSIPStaking(_amount);
     }
 
-    function _updateReward(address _to) internal returns (uint256) {
+    function _updateReward(address _to) internal returns (uint256, uint256) {
         uint256 requestTime;
         (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
         if (requestTime > 0) {
-            return 0;
+            return (0,0);
         }
 
         uint256 amount = userInfo[_to].amount;
@@ -471,7 +471,7 @@ contract SingleSidedInsurancePool is
 
         // Effects
         userInfo[_to].rewardDebt = accumulatedUno;
-        return _pendingUno;
+        return (_pendingUno, amount);
     }
 
     function _depositIn(uint256 _amount) internal {
