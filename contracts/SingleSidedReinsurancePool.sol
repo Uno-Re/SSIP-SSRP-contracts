@@ -209,7 +209,7 @@ contract SingleSidedReinsurancePool is
         emit LogCreateSyntheticSSRP(address(this), syntheticSSRP, riskPool);
     }
 
-    function migrate() external isAlive nonReentrant {
+    function migrate() external nonReentrant whenNotPaused {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
@@ -245,7 +245,7 @@ contract SingleSidedReinsurancePool is
         }
     }
 
-    function enterInPool(uint256 _amount) external override isStartTime isAlive nonReentrant {
+    function enterInPool(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
         _depositIn(_amount);
         _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
@@ -254,7 +254,7 @@ contract SingleSidedReinsurancePool is
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override isStartTime nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override isAlive isStartTime whenNotPaused nonReentrant {
         _harvest(msg.sender);
         // Withdraw desired amount from pool
         uint256 amount = userInfo[msg.sender].amount;
@@ -270,7 +270,7 @@ contract SingleSidedReinsurancePool is
     /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
+    function leaveFromPending(uint256 _amount) external override isStartTime isAlive whenNotPaused nonReentrant {
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
@@ -306,7 +306,7 @@ contract SingleSidedReinsurancePool is
         }
     }
 
-    function harvest(address _to) external override isStartTime whenNotPaused isAlive nonReentrant {
+    function harvest(address _to) external override isStartTime whenNotPaused nonReentrant {
         _harvest(_to);
     }
 
@@ -326,7 +326,7 @@ contract SingleSidedReinsurancePool is
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address[] memory _to) external isStartTime isAlive onlyRole(BOT_ROLE) nonReentrant {
+    function rollOverReward(address[] memory _to) external isStartTime whenNotPaused onlyRole(BOT_ROLE) nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
@@ -346,13 +346,13 @@ contract SingleSidedReinsurancePool is
         emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
 
-    function cancelWithdrawRequest() external nonReentrant {
+    function cancelWithdrawRequest() external nonReentrant whenNotPaused {
         (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw() public nonReentrant {
+    function emergencyWithdraw() public nonReentrant isAlive whenNotPaused {
         UserInfo memory user = userInfo[msg.sender];
         uint256 amount = user.amount;
         require(amount > 0, "Unore: Zero user amount");
@@ -364,11 +364,15 @@ contract SingleSidedReinsurancePool is
     function policyClaim(
         address _to,
         uint256 _amount
-    ) external onlyRole(CLAIM_ASSESSOR_ROLE) roleLockTimePassed(CLAIM_ASSESSOR_ROLE) isStartTime isAlive nonReentrant {
+    ) external onlyRole(CLAIM_ASSESSOR_ROLE) roleLockTimePassed(CLAIM_ASSESSOR_ROLE) isStartTime whenNotPaused nonReentrant {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_to, _amount);
         emit PolicyClaim(_to, realClaimAmount);
+    }
+
+    function grantRole(bytes32 role, address account) public override whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
+        _grantRole(role, account);
     }
 
     function getStakedAmountPerUser(address _to) external view returns (uint256 unoAmount, uint256 lpAmount) {
@@ -428,5 +432,9 @@ contract SingleSidedReinsurancePool is
     function _depositIn(uint256 _amount) internal {
         address token = IRiskPool(riskPool).currency();
         TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
+    }
+
+    function _revokeRole(bytes32 role, address account) internal override whenNotPaused returns (bool) {
+        return super._revokeRole(role, account);
     }
 }
