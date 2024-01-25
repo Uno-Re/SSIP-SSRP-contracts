@@ -40,6 +40,7 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetAssertionAliveTime(address indexed payout, uint256 assertionAliveTime);
     event LogSetClaimProccessor(address indexed payout, address indexed claimProccessor);
     event LogSetCapitalAgent(address indexed payout, address indexed capitalAgent);
+    event LogSetClaimsDao(address indexed payout, address indexed capitalAgent);
     event PoolFailed(address indexed owner, bool fail);
 
     function initialize(
@@ -144,6 +145,12 @@ contract PayoutRequest is PausableUpgradeable {
         _requireGuardianCouncil();
         capitalAgent = _capitalAgent;
         emit LogSetCapitalAgent(address(this), address(_capitalAgent));
+    }
+
+    function setClaimsDao(address _claimsDao) external {
+        _requireGuardianCouncil();
+        claimsDao = _claimsDao;
+        emit LogSetClaimsDao(address(this), address(_claimsDao));
     }
 
     function togglePause() external {

@@ -15,7 +15,6 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const defaultCurrency = process.env.DEAFAULT_CURRENCY;
   const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
   const claimsDao = process.env.CLAIMS_DAO;
-
   
   const a = await deploy("PayoutRequestUSDT", {
     from: deployer,

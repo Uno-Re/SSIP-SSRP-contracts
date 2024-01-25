@@ -106,8 +106,7 @@ contract SingleSidedInsurancePool is
     function initialize(
         address _capitalAgent,
         address _multiSigWallet,
-        address _governance,
-        address _claimProcessor
+        address _governance
     ) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
@@ -119,7 +118,6 @@ contract SingleSidedInsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
-        _grantRole(CLAIM_PROCESSOR_ROLE, _claimProcessor);
         _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_PROCESSOR_ROLE, ADMIN_ROLE); // TODO
