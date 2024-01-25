@@ -1,10 +1,11 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
+require("dotenv").config()
 
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const governance = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
+  const governance = process.env.GOVERNANCE;
 
   const claimProcessor = await deploy("ClaimProcessor", {
     from: deployer,

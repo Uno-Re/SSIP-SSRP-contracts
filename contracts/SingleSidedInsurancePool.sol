@@ -36,6 +36,7 @@ contract SingleSidedInsurancePool is
     address public syntheticSSIP;
 
     bool public killed;
+    bool public emergencyWithdrawAllowed;
     address public rewarder;
 
     address public override riskPool;
@@ -100,13 +101,12 @@ contract SingleSidedInsurancePool is
     event InsurancePayoutSettled(uint256 indexed policyId, address indexed payout, uint256 amount);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
+    event EmergencyWithdrawToggled(address indexed user, bool EmergencyWithdraw);
 
     function initialize(
         address _capitalAgent,
         address _multiSigWallet,
-        address _governance,
-        address _payoutRequest,
-        address _claimProcessor
+        address _governance
     ) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
@@ -118,8 +118,6 @@ contract SingleSidedInsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
-        _grantRole(CLAIM_PROCESSOR_ROLE, _payoutRequest);
-        _grantRole(CLAIM_PROCESSOR_ROLE, _claimProcessor);
         _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_PROCESSOR_ROLE, ADMIN_ROLE); // TODO
@@ -203,6 +201,11 @@ contract SingleSidedInsurancePool is
         stakingStartTime = _startTime + block.timestamp;
         emit LogSetStakingStartTime(address(this), stakingStartTime);
     }
+
+    function toggleEmergencyWithdraw() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        emergencyWithdrawAllowed = !emergencyWithdrawAllowed;
+        emit EmergencyWithdrawToggled(address(this), emergencyWithdrawAllowed);
+    }  
 
     /**
      * @dev create Risk pool with UNO from SSIP owner
@@ -335,6 +338,7 @@ contract SingleSidedInsurancePool is
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw() public nonReentrant {
+        require(emergencyWithdrawAllowed, "Unore: emergencyWithdraw is not allowed");
         UserInfo memory user = userInfo[msg.sender];
         uint256 amount = user.amount;
         require(amount > 0, "Unore: Zero user amount");

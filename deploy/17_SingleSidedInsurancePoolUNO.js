@@ -17,7 +17,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
   const claimsDao = process.env.CLAIMS_DAO;
 
-  const ssip = await deploy("SingleSidedInsurancePoolETH", {
+  const ssip = await deploy("SingleSidedInsurancePoolUNO", {
     from: deployer,
     contract: "SingleSidedInsurancePool",
     log: true,
@@ -33,11 +33,10 @@ module.exports = async function ({getNamedAccounts, deployments}) {
     },
   });
 
-  console.log(`ssip ETH deploted at ${ssip.address}`);
+  console.log(`ssip uno deployed at ${ssip.address}`);
+
   
-  
-  
-  const payoutRequest = await deploy("PayoutRequestETH", {
+  const payoutRequest = await deploy("PayoutRequestUNO", {
     from: deployer,
     contract: "PayoutRequest",
     log: true,
@@ -52,8 +51,9 @@ module.exports = async function ({getNamedAccounts, deployments}) {
       proxyContract: "OpenZeppelinTransparentProxy",
     },
   });
-  
+
   console.log(`payoutRequest deployed at ${payoutRequest.address}`);
+
 };
 
-module.exports.tags = ["SingleSidedInsurancePoolETH", "PayoutRequestETH", "UnoRe"]
+module.exports.tags = ["SingleSidedInsurancePoolUNO", "PayoutRequestUNO", "UnoRe"]
