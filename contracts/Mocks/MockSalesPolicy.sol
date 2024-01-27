@@ -280,7 +280,6 @@ contract MockSalesPolicy is
     }
 
     function setBuyPolicyMaxDeadline(uint256 _maxDeadline) external override onlyFactory {
-        require(_maxDeadline > 0, "UnoRe: zero max signedTime");
         maxDeadline = _maxDeadline;
         emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline, address(this));
     }
