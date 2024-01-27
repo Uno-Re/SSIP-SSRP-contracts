@@ -160,7 +160,7 @@ contract SingleSidedInsurancePool is
     function setRole(
         bytes32 _role,
         address _account
-    ) external onlyRole(GUARDIAN_COUNCIL_ROLE) roleLockTimePassed(GUARDIAN_COUNCIL_ROLE) {
+    ) external onlyRole(GUARDIAN_COUNCIL_ROLE) roleLockTimePassed(GUARDIAN_COUNCIL_ROLE) whenNotPaused {
         require(_account != address(0), "UnoRe: zero address");
         roleLockTime[_role][_account] = block.timestamp + lockTime;
         _grantRole(_role, _account);
@@ -250,7 +250,7 @@ contract SingleSidedInsurancePool is
         emit LogCreateSyntheticSSIP(address(this), syntheticSSIP, riskPool);
     }
 
-    function migrate() external nonReentrant isAlive {
+    function migrate() external nonReentrant whenNotPaused {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
@@ -287,7 +287,7 @@ contract SingleSidedInsurancePool is
         }
     }
 
-    function enterInPool(uint256 _amount) external payable override isStartTime isAlive nonReentrant {
+    function enterInPool(uint256 _amount) external payable override whenNotPaused isStartTime nonReentrant {
         _depositIn(_amount);
         _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
@@ -296,7 +296,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override isStartTime nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused isAlive isStartTime nonReentrant {
         _harvest(msg.sender);
         require(ICapitalAgent(capitalAgent).checkCapitalByMCR(address(this), _amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
@@ -313,7 +313,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
+    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused isAlive nonReentrant {
         require(_amount > 0, "Withdraw amount should be greator than zero");
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
@@ -364,7 +364,7 @@ contract SingleSidedInsurancePool is
         }
     }
 
-    function harvest(address _to) external override whenNotPaused isAlive isStartTime nonReentrant {
+    function harvest(address _to) external override whenNotPaused isStartTime nonReentrant {
         _harvest(_to);
     }
 
@@ -384,7 +384,7 @@ contract SingleSidedInsurancePool is
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address[] memory _to) external isStartTime isAlive onlyRole(BOT_ROLE) nonReentrant {
+    function rollOverReward(address[] memory _to) external isStartTime whenNotPaused onlyRole(BOT_ROLE) nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
@@ -404,7 +404,7 @@ contract SingleSidedInsurancePool is
         emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
 
-    function cancelWithdrawRequest() external nonReentrant {
+    function cancelWithdrawRequest() external nonReentrant whenNotPaused {
         (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
@@ -437,11 +437,19 @@ contract SingleSidedInsurancePool is
         uint256 _policyId,
         address _payout,
         uint256 _amount
-    ) public isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
+    ) public whenNotPaused onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_payout, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
 
         emit InsurancePayoutSettled(_policyId, _payout, _amount);
+    }
+
+    function grantRole(bytes32 role, address account) public override whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
+        _grantRole(role, account);
+    }
+
+    function _revokeRole(bytes32 role, address account) internal override whenNotPaused returns (bool) {
+        return super._revokeRole(role, account);
     }
 
     function _enterInPool(uint256 _amount, address _to) internal {

@@ -100,7 +100,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         emit PoolAlived(msg.sender, false);
     }
 
-    function collectPremiumInETH() external payable override isAlive nonReentrant onlyWhiteList {
+    function collectPremiumInETH() external payable override whenNotPaused nonReentrant onlyWhiteList {
         uint256 _premiumAmount = msg.value;
         uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
         uint256 _premium_SSIP = (_premiumAmount * 7000) / 10000;
@@ -113,7 +113,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
     function collectPremium(
         address _premiumCurrency,
         uint256 _premiumAmount
-    ) external override isAlive nonReentrant onlyAvailableCurrency(_premiumCurrency) onlyWhiteList {
+    ) external override whenNotPaused nonReentrant onlyAvailableCurrency(_premiumCurrency) onlyWhiteList {
         require(IERC20(_premiumCurrency).balanceOf(msg.sender) >= _premiumAmount, "UnoRe: premium balance overflow");
         TransferHelper.safeTransferFrom(_premiumCurrency, msg.sender, address(this), _premiumAmount);
         uint256 _premium_SSRP = (_premiumAmount * 1000) / 10000;
@@ -126,7 +126,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         emit LogCollectPremium(msg.sender, _premiumCurrency, _premiumAmount);
     }
 
-    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyRole(ADMIN_ROLE) isAlive nonReentrant {
+    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyRole(ADMIN_ROLE) whenNotPaused nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         uint256 usdcAmountToDeposit = 0;
@@ -161,7 +161,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         address _currency,
         address _rewarder,
         uint256 _amount
-    ) external onlyRole(ADMIN_ROLE) isAlive nonReentrant {
+    ) external onlyRole(ADMIN_ROLE) whenNotPaused nonReentrant {
         require(_rewarder != address(0), "UnoRe: zero address");
         enforceHasContractCode(_rewarder, "UnoRe: no contract address");
         if (_currency == address(0) && ssipPremiumEth > 0) {
@@ -179,7 +179,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         }
     }
 
-    function buyBackAndBurn() external onlyRole(ADMIN_ROLE) isAlive {
+    function buyBackAndBurn() external onlyRole(ADMIN_ROLE) isAlive whenNotPaused {
         uint256 unoAmount = 0;
         if (backBurnPremiumEth > 0) {
             TransferHelper.safeTransferETH(exchangeAgent, backBurnPremiumEth);
@@ -207,7 +207,7 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         address _currency,
         address _to,
         uint256 _amount
-    ) external override onlyRole(GOVERNANCE_ROLE) whenNotPaused {
+    ) external override onlyRole(GOVERNANCE_ROLE) isAlive whenNotPaused {
         require(_to != address(0), "UnoRe: zero address");
         require(_amount > 0, "UnoRe: zero amount");
         if (_currency == address(0)) {
@@ -270,6 +270,14 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         require(whiteList[_whiteListAddress], "UnoRe: white list removed or unadded already");
         whiteList[_whiteListAddress] = false;
         emit LogRemoveWhiteList(address(this), _whiteListAddress);
+    }
+
+    function grantRole(bytes32 role, address account) public override whenNotPaused onlyRole(getRoleAdmin(role)) {
+        _grantRole(role, account);
+    }
+
+    function _revokeRole(bytes32 role, address account) internal override whenNotPaused returns (bool) {
+        return super._revokeRole(role, account);
     }
 
     /**

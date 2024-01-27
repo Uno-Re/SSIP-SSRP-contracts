@@ -109,7 +109,7 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
         }
     }
 
-    function transferOwnership(address _to) external onlyOperator {
+    function transferOwnership(address _to) external onlyOperator whenNotPaused {
         require(_to != address(0), "UnoRe: zero address reward");
         address oldOperator = operator;
         operator = _to;
