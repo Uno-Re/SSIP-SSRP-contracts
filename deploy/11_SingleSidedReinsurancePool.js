@@ -1,12 +1,13 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
+require("dotenv").config()
 
 module.exports = async function ({getNamedAccounts, deployments}) {
     const { deploy } = deployments;
     const { deployer, proxyAdminOwner } = await getNamedAccounts();
     const owner = deployer
   
-    const multiSigWallet = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
-    const claimAccessor = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
+    const multiSigWallet = process.env.MULTISIGWALLET;
+    const claimAccessor = process.env.CLAIM_ACCESSOR;
     
    const a =  await deploy("SingleSidedReinsurancePool", {
       from: deployer,

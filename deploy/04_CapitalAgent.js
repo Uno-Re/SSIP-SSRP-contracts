@@ -1,14 +1,16 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
 
 const hre = require("hardhat")
+require("dotenv").config()
+
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
   const mockUSDT = await hre.deployments.get("MockUSDT")
   const exchangeAgent = await hre.deployments.get("ExchangeAgent")
-  const multiSigWallet = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
-  const operator = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
+  const multiSigWallet = process.env.MULTISIGWALLET;
+  const operator = process.env.OPERATOR;
 
   const capitalAgent = await deploy("CapitalAgent", {
     from: deployer,
