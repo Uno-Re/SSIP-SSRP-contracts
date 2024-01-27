@@ -59,33 +59,15 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    function onReward(address _to, uint256 _amount) external payable override onlyPOOL whenNotPaused returns (uint256) {
-        ISSIP ssip = ISSIP(pool);
-        ISSIP.UserInfo memory userInfos = ssip.userInfo(_to);
-        ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
-        uint256 accumulatedUno = (userInfos.amount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
-
-        require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
-
-        if (currency == address(0)) {
-            require(address(this).balance >= _amount, "UnoRe: insufficient reward balance");
-            TransferHelper.safeTransferETH(_to, _amount);
-            return _amount;
-        } else {
-            require(IERC20(currency).balanceOf(address(this)) >= _amount, "UnoRe: insufficient reward balance");
-            TransferHelper.safeTransfer(currency, _to, _amount);
-            return _amount;
-        }
-    }
-
-    function onRewardForRollOver(
+    function onReward(
         address _to,
         uint256 _amount,
         uint256 _accumulatedAmount
-    ) external payable onlyPOOL whenNotPaused returns (uint256) {
+    ) external payable override onlyPOOL whenNotPaused returns (uint256) {
         ISSIP ssip = ISSIP(pool);
         ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
-        uint256 accumulatedUno = (_accumulatedAmount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
+        uint256 accumulatedUno = (_accumulatedAmount *
+            uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
 
         require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
 
@@ -127,7 +109,7 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
         }
     }
 
-    function transferOwnership(address _to) external onlyOperator {
+    function transferOwnership(address _to) external onlyOperator whenNotPaused {
         require(_to != address(0), "UnoRe: zero address reward");
         address oldOperator = operator;
         operator = _to;

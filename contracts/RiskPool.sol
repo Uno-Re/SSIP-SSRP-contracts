@@ -131,10 +131,11 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         require(cryptoBalance > 0, "UnoRe: zero uno balance");
         _emergencyWithdraw(_to);
+        uint256 amount = (_amount * lpPriceUno) / 1e18;
         if (currency != address(0)) {
-            TransferHelper.safeTransfer(currency, _to, _amount);
+            TransferHelper.safeTransfer(currency, _to, amount);
         } else {
-            TransferHelper.safeTransferETH(_to, _amount);
+            TransferHelper.safeTransferETH(_to, amount);
         }
         return true;
     }

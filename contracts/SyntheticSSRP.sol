@@ -180,8 +180,8 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
             _enterInPool(_pendingReward, _to[i]);
         }
 
-        if (rewarder != address(0) && _totalPendingReward > 0) {
-            IRewarder(rewarder).onRewardForRollOver(address(this), _totalPendingReward, _accumulatedAmount);
+        if (rewarder != address(0) && _totalPendingReward > 0 && _accumulatedAmount > 0) {
+            IRewarder(rewarder).onReward(address(this), _totalPendingReward, _accumulatedAmount);
         }
 
         emit RollOverReward(address(this), _to, _totalPendingReward);
@@ -238,7 +238,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
         uint256 _pendingReward = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingReward > 0) {
-            IRewarder(rewarder).onReward(_to, _pendingReward);
+            IRewarder(rewarder).onReward(_to, _pendingReward, 0);
         }
 
         emit LogHarvest(msg.sender, _to, _pendingReward);

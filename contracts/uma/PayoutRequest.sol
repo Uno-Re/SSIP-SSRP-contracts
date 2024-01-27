@@ -10,7 +10,6 @@ import "../libraries/TransferHelper.sol";
 import "../interfaces/OptimisticOracleV3Interface.sol";
 import "../interfaces/ICapitalAgent.sol";
 import "../interfaces/ISalesPolicy.sol";
-import "../interfaces/IClaimProcessor.sol";
 import "../interfaces/ISingleSidedInsurancePool.sol";
 
 contract PayoutRequest is PausableUpgradeable {
@@ -25,11 +24,11 @@ contract PayoutRequest is PausableUpgradeable {
     OptimisticOracleV3Interface public optimisticOracle;
     ISingleSidedInsurancePool public ssip;
     ICapitalAgent public capitalAgent;
-    IClaimProcessor public claimProcessor;
     IERC20 public defaultCurrency;
     bytes32 public defaultIdentifier;
     uint256 public assertionliveTime;
     address public escalationManager;
+    address public claimsDao;
     mapping(uint256 => Policy) public policies;
     mapping(bytes32 => uint256) public assertedPolicies;
     mapping(uint256 => bytes32) public policiesAssertionId;
@@ -40,29 +39,32 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetEscalationManager(address indexed payout, address indexed escalatingManager);
     event LogSetAssertionAliveTime(address indexed payout, uint256 assertionAliveTime);
     event LogSetClaimProccessor(address indexed payout, address indexed claimProccessor);
+    event LogSetCapitalAgent(address indexed payout, address indexed capitalAgent);
+    event LogSetClaimsDao(address indexed payout, address indexed capitalAgent);
     event PoolFailed(address indexed owner, bool fail);
 
     function initialize(
         ISingleSidedInsurancePool _ssip,
         OptimisticOracleV3Interface _optimisticOracleV3,
         IERC20 _defaultCurrency,
-        IClaimProcessor _claimProcessor,
         address _escalationManager,
-        address __guardianCouncil
+        address __guardianCouncil,
+        address _claimsDao
     ) external initializer {
         ssip = _ssip;
         optimisticOracle = _optimisticOracleV3;
         defaultCurrency = _defaultCurrency;
-        claimProcessor = _claimProcessor;
         escalationManager = _escalationManager;
+        claimsDao = _claimsDao;
         _guardianCouncil = __guardianCouncil;
         defaultIdentifier = optimisticOracle.defaultIdentifier();
         assertionliveTime = 10 days;
+        isUMAFailed = true;
     }
 
     function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
-        require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
+        ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
         (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
         require(_amount <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
@@ -71,6 +73,7 @@ contract PayoutRequest is PausableUpgradeable {
         _policyData.payoutAddress = _to;
         policies[_policyId] = _policyData;
         if (!isUMAFailed) {
+            require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
             uint256 bond = optimisticOracle.getMinimumBond(address(defaultCurrency));
             TransferHelper.safeTransferFrom(address(defaultCurrency), msg.sender, address(this), bond);
             defaultCurrency.approve(address(optimisticOracle), bond);
@@ -94,7 +97,9 @@ contract PayoutRequest is PausableUpgradeable {
             policiesAssertionId[_policyId] = assertionId;
             emit InsurancePayoutRequested(_policyId, assertionId);
         } else {
-            IClaimProcessor(claimProcessor).requestPolicyId(_policyId, address(ssip), _to, _amount);
+            require(msg.sender == claimsDao, "RPayout: can only called by claimsDao");
+            policies[_policyId].settled = true;
+            ssip.settlePayout(_policyId, _to, _amount);
         }
         isRequestInit[_policyId] = true;
     }
@@ -137,10 +142,16 @@ contract PayoutRequest is PausableUpgradeable {
         emit LogSetAssertionAliveTime(address(this), _assertionliveTime);
     }
 
-    function setClaimProcessor(IClaimProcessor _claimProcessor) external {
+    function setCapitalAgent(ICapitalAgent _capitalAgent) external {
         _requireGuardianCouncil();
-        claimProcessor = _claimProcessor;
-        emit LogSetClaimProccessor(address(this), address(_claimProcessor));
+        capitalAgent = _capitalAgent;
+        emit LogSetCapitalAgent(address(this), address(_capitalAgent));
+    }
+
+    function setClaimsDao(address _claimsDao) external {
+        _requireGuardianCouncil();
+        claimsDao = _claimsDao;
+        emit LogSetClaimsDao(address(this), address(_claimsDao));
     }
 
     function togglePause() external {
