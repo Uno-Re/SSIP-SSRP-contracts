@@ -14,6 +14,8 @@ contract EIP712Base {
 
     bytes32 internal domainSeparator;
 
+    uint256[30] __gap;
+
     constructor(string memory name, string memory version) {
         domainSeparator = keccak256(
             abi.encode(

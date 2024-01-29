@@ -44,6 +44,8 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
 
     uint256 private _totalSupply;
 
+    uint256[30] __gap;
+
     /**
      * @dev Returns the number of decimals used to get its user representation.
      * For example, if `decimals` equals `2`, a balance of `505` tokens should

@@ -71,6 +71,8 @@ contract SingleSidedInsurancePool is
 
     PoolInfo public poolInfo;
 
+    uint256[30] __gap;
+
     event RiskPoolCreated(address indexed _SSIP, address indexed _pool);
     event StakedInPool(address indexed _staker, address indexed _pool, uint256 _amount);
     event LeftPool(address indexed _staker, address indexed _pool, uint256 _requestAmount);
