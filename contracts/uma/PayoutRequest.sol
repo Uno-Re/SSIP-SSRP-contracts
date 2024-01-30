@@ -35,8 +35,6 @@ contract PayoutRequest is PausableUpgradeable {
     mapping(uint256 => bool) public isRequestInit;
     bool public isUMAFailed;
 
-    uint256[30] __gap;
-
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
     event LogSetEscalationManager(address indexed payout, address indexed escalatingManager);
     event LogSetAssertionAliveTime(address indexed payout, uint256 assertionAliveTime);
