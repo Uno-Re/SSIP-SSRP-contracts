@@ -68,6 +68,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     event LogAddPoolWhiteList(address indexed _pool);
     event LogRemovePoolWhiteList(address indexed _pool);
     event LogSetOperator(address indexed _operator);
+    event LogSetUSDC(address indexed _usdcToken);
 
     function initialize(
         address _exchangeAgent,
@@ -114,6 +115,12 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(_operator != address(0), "UnoRe: zero operator address");
         operator = _operator;
         emit LogSetOperator(_operator);
+    }
+
+    function setUSDCToken(address _usdcToken) external onlyRole(ADMIN_ROLE) nonReentrant {
+        require(_usdcToken != address(0), "UnoRe: zero usdc address");
+        usdcToken = _usdcToken;
+        emit LogSetUSDC(_usdcToken);
     }
 
     function addPoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {
