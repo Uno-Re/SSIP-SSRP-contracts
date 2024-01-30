@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "./interfaces/IUniswapFactory.sol";
 import "./interfaces/IUniswapRouter02.sol";
 import "./interfaces/IOraclePriceFeed.sol";
@@ -14,7 +14,7 @@ import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IGnosisSafe.sol";
 
-contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable, Pausable {
+contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausable {
     address public immutable override usdcToken;
     address public immutable UNISWAP_FACTORY;
     address public immutable UNISWAP_ROUTER;

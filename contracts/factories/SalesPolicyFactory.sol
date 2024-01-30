@@ -2,14 +2,14 @@
 pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "../libraries/Counters.sol";
 import "../SalesPolicy.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISalesPolicyFactory.sol";
 import "../interfaces/IGnosisSafe.sol";
 
-contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable {
+contract SalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable2Step {
     using Counters for Counters.Counter;
     // It should be okay if Protocol is struct
     struct Protocol {
