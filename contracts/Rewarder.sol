@@ -59,6 +59,11 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
         _unpause();
     }
 
+    /**
+     * @dev distribute reward to `_to` address, can only be call by pool,
+     * @param _to address of user
+     * @param _amount amount of reward to distribute
+     */
     function onReward(
         address _to,
         uint256 _amount,
@@ -82,6 +87,11 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
         }
     }
 
+    /**
+     * @dev withdraw currency from Rewarder contract, can only be call by operator,
+     * @param _to address where amount will be transferred
+     * @param _amount amount to transfer
+     */
     function withdraw(address _to, uint256 _amount) external onlyOperator whenNotPaused {
         require(_to != address(0), "UnoRe: zero address reward");
         if (currency == address(0)) {
