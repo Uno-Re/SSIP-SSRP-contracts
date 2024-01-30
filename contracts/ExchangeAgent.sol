@@ -93,6 +93,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         swapDeadline = _swapDeadline;
     }
 
+    /**
+     * @dev add address to whiteListed Address, can only be called by owner
+     * @param _whiteListAddress address to white list
+     */
     function addWhiteList(address _whiteListAddress) external onlyOwner {
         require(_whiteListAddress != address(0), "UnoRe: zero address");
         require(!whiteList[_whiteListAddress], "UnoRe: white list already");
@@ -100,6 +104,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         emit LogAddWhiteList(address(this), _whiteListAddress);
     }
 
+    /**
+     * @dev remove address from whiteListed Address, can only be called by owner
+     * @param _whiteListAddress address to remove from white list
+     */
     function removeWhiteList(address _whiteListAddress) external onlyOwner {
         require(_whiteListAddress != address(0), "UnoRe: zero address");
         require(whiteList[_whiteListAddress], "UnoRe: white list removed or unadded already");
@@ -107,6 +115,9 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         emit LogRemoveWhiteList(address(this), _whiteListAddress);
     }
 
+    /**
+     * @dev set slippage, can only be called by owner
+     */
     function setSlippage(uint256 _slippage) external onlyOwner {
         require(_slippage > 0, "UnoRe: zero slippage");
         require(_slippage < 100, "UnoRe: 100% slippage overflow");
@@ -114,6 +125,9 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         emit LogSetSlippage(address(this), _slippage);
     }
 
+    /**
+     * @dev set oracle price feed, can only be called by owner
+     */
     function setOraclePriceFeed(address _oraclePriceFeed) external onlyOwner {
         require(_oraclePriceFeed != address(0), "UnoRe: zero address");
         oraclePriceFeed = _oraclePriceFeed;
@@ -132,18 +146,24 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         return (_usdtAmount * ethPrice) / (10 ** tokenDecimal);
     }
 
+    // estimate ETH amount for amount in _token
     function getETHAmountForToken(address _token, uint256 _tokenAmount) public view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
         uint256 tokenDecimal = IERC20Metadata(_token).decimals();
         return (_tokenAmount * ethPrice) / (10 ** tokenDecimal);
     }
 
+    // estimate token amount for amount in _token
     function getTokenAmountForETH(address _token, uint256 _ethAmount) public view override returns (uint256) {
         uint256 ethPrice = IOraclePriceFeed(oraclePriceFeed).getAssetEthPrice(_token);
         uint256 tokenDecimal = IERC20Metadata(_token).decimals();
         return (_ethAmount * (10 ** tokenDecimal)) / ethPrice;
     }
 
+    /**
+     * @dev Get expected _token1 amount for _inputAmount of _token0
+     * _desiredAmount should consider decimals based on _token1,
+     */
     function getNeededTokenAmount(
         address _token0,
         address _token1,
@@ -152,6 +172,11 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         return _getNeededTokenAmount(_token0, _token1, _token0Amount);
     }
 
+    /**
+     * @dev convert expected _token1 amount for _inputAmount of _token0
+     * _desiredAmount should consider decimals based on _token1,
+     * only whitlisted address can call this function
+     */
     function convertForToken(
         address _token0,
         address _token1,
@@ -172,6 +197,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         return convertedAmount;
     }
 
+    /**
+     * @dev convert expected eth amount for _inputAmount of _token
+     * only whitlisted address can call this function
+     */
     function convertForETH(
         address _token,
         uint256 _convertAmount
