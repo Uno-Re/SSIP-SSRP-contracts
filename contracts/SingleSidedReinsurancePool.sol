@@ -137,7 +137,7 @@ contract SingleSidedReinsurancePool is
         emit LogSetRewardMultiplier(address(this), _rewardMultiplier);
     }
 
-    function setRole(bytes32 _role, address _account) external onlyRole(ADMIN_ROLE) {
+    function setRole(bytes32 _role, address _account) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_account != address(0), "UnoRe: zero address");
         _grantRole(_role, _account);
         roleLockTime[_role][_account] = block.timestamp + lockTime;

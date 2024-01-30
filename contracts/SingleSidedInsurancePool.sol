@@ -160,7 +160,7 @@ contract SingleSidedInsurancePool is
     function setRole(
         bytes32 _role,
         address _account
-    ) external onlyRole(GUARDIAN_COUNCIL_ROLE) roleLockTimePassed(GUARDIAN_COUNCIL_ROLE) whenNotPaused {
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) whenNotPaused {
         require(_account != address(0), "UnoRe: zero address");
         roleLockTime[_role][_account] = block.timestamp + lockTime;
         _grantRole(_role, _account);
