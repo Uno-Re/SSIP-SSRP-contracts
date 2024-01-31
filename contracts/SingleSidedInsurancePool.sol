@@ -172,7 +172,7 @@ contract SingleSidedInsurancePool is
     function setRole(
         bytes32 _role,
         address _account
-    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) whenNotPaused {
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) whenNotPaused isAlive {
         require(_account != address(0), "UnoRe: zero address");
         roleLockTime[_role][_account] = block.timestamp + lockTime;
         _grantRole(_role, _account);
@@ -293,7 +293,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev migrate user to new version 
      */
-    function migrate() external nonReentrant whenNotPaused {
+    function migrate() external nonReentrant whenNotPaused isAlive {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
@@ -341,7 +341,7 @@ contract SingleSidedInsurancePool is
      * @dev stake user collateral, update user reward per block
      * @param _amount amount to deposit to pool
      */
-    function enterInPool(uint256 _amount) external payable override whenNotPaused isStartTime nonReentrant {
+    function enterInPool(uint256 _amount) external payable override whenNotPaused isAlive isStartTime nonReentrant {
         _depositIn(_amount);
         _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
@@ -350,7 +350,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused isAlive isStartTime nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused isStartTime nonReentrant {
         _harvest(msg.sender);
         require(ICapitalAgent(capitalAgent).checkCapitalByMCR(address(this), _amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
@@ -367,7 +367,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused isAlive nonReentrant {
+    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
         require(_amount > 0, "Withdraw amount should be greator than zero");
         require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
         _harvest(msg.sender);
@@ -388,7 +388,7 @@ contract SingleSidedInsurancePool is
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw() public nonReentrant {
+    function emergencyWithdraw() public nonReentrant whenNotPaused {
         require(emergencyWithdrawAllowed, "Unore: emergencyWithdraw is not allowed");
         UserInfo memory user = userInfo[msg.sender];
         uint256 amount = user.amount;
@@ -398,7 +398,7 @@ contract SingleSidedInsurancePool is
         emit EmergencyWithdraw(msg.sender, amount);
     }
 
-    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused {
+    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused isAlive {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         if (_from != syntheticSSIP && _to != syntheticSSIP) {
             _harvest(_from);
@@ -422,7 +422,7 @@ contract SingleSidedInsurancePool is
      * @dev withdraw user pending uno
      * @param _to user address
      */
-    function harvest(address _to) external override whenNotPaused isStartTime nonReentrant {
+    function harvest(address _to) external override whenNotPaused isAlive isStartTime nonReentrant {
         _harvest(_to);
     }
 
@@ -448,7 +448,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev user roll over its pending uno to stake
      */
-    function rollOverReward(address[] memory _to) external isStartTime whenNotPaused onlyRole(BOT_ROLE) nonReentrant {
+    function rollOverReward(address[] memory _to) external isStartTime whenNotPaused isAlive onlyRole(BOT_ROLE) nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
@@ -471,7 +471,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev user can cancel its pending withdraw request
      */
-    function cancelWithdrawRequest() external nonReentrant whenNotPaused {
+    function cancelWithdrawRequest() external nonReentrant whenNotPaused isAlive {
         (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
@@ -510,18 +510,18 @@ contract SingleSidedInsurancePool is
         uint256 _policyId,
         address _payout,
         uint256 _amount
-    ) public whenNotPaused onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
+    ) public whenNotPaused isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_payout, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
 
         emit InsurancePayoutSettled(_policyId, _payout, _amount);
     }
 
-    function grantRole(bytes32 role, address account) public override whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
+    function grantRole(bytes32 role, address account) public override isAlive whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
         _grantRole(role, account);
     }
 
-    function _revokeRole(bytes32 role, address account) internal override whenNotPaused returns (bool) {
+    function _revokeRole(bytes32 role, address account) internal override isAlive whenNotPaused roleLockTimePassed(getRoleAdmin(role)) returns (bool) {
         return super._revokeRole(role, account);
     }
 
