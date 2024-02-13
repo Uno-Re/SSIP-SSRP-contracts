@@ -172,6 +172,14 @@ contract PayoutRequest is PausableUpgradeable {
         emit LogSetLockTime(address(this), _lockTime);
     }
 
+    function setGuardianCouncil(address guardianCouncil) external {
+        _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
+        roleLockTime[guardianCouncil] = block.timestamp + lockTime;
+        _guardianCouncil = guardianCouncil;
+        emit LogSetGuardianCouncil(address(this), guardianCouncil);
+    }
+
     function togglePause() external {
         _requireGuardianCouncil();
         require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
