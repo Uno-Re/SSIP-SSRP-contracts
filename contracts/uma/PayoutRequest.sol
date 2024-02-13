@@ -35,6 +35,9 @@ contract PayoutRequest is PausableUpgradeable {
     mapping(uint256 => bool) public isRequestInit;
     bool public isUMAFailed;
 
+    uint256 public lockTime;
+    mapping(address => uint256) public roleLockTime;
+
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
     event LogSetEscalationManager(address indexed payout, address indexed escalatingManager);
     event LogSetAssertionAliveTime(address indexed payout, uint256 assertionAliveTime);
@@ -42,6 +45,8 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetCapitalAgent(address indexed payout, address indexed capitalAgent);
     event LogSetClaimsDao(address indexed payout, address indexed capitalAgent);
     event PoolFailed(address indexed owner, bool fail);
+    event LogSetLockTime(address indexed payout, uint256 newLockTime);
+    event LogSetGuardianCouncil(address indexed payout, address indexed guardianCouncil);
 
     function initialize(
         ISingleSidedInsurancePool _ssip,
@@ -125,18 +130,21 @@ contract PayoutRequest is PausableUpgradeable {
 
     function setEscalatingManager(address _escalatingManager) external {
         _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
         escalationManager = _escalatingManager;
         emit LogSetEscalationManager(address(this), _escalatingManager);
     }
 
     function setFailed(bool _failed) external {
         _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
         isUMAFailed = _failed;
         emit PoolFailed(msg.sender, _failed);
     }
 
     function setAliveness(uint256 _assertionliveTime) external {
         _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
         require(_assertionliveTime > 0, "RPayout: zero assertion live time");
         assertionliveTime = _assertionliveTime;
         emit LogSetAssertionAliveTime(address(this), _assertionliveTime);
@@ -144,18 +152,29 @@ contract PayoutRequest is PausableUpgradeable {
 
     function setCapitalAgent(ICapitalAgent _capitalAgent) external {
         _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
         capitalAgent = _capitalAgent;
         emit LogSetCapitalAgent(address(this), address(_capitalAgent));
     }
 
     function setClaimsDao(address _claimsDao) external {
         _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
+        roleLockTime[_claimsDao] = block.timestamp + lockTime;
         claimsDao = _claimsDao;
         emit LogSetClaimsDao(address(this), address(_claimsDao));
     }
 
+    function setLockTime(uint256 _lockTime) external {
+        _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
+        lockTime = _lockTime;
+        emit LogSetLockTime(address(this), _lockTime);
+    }
+
     function togglePause() external {
         _requireGuardianCouncil();
+        require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
         paused() ? _unpause() : _pause();
     }
 
