@@ -36,6 +36,7 @@ contract SingleSidedInsurancePool is
     address public syntheticSSIP;
 
     bool public killed;
+    bool public emergencyWithdrawAllowed;
     address public rewarder;
 
     address public override riskPool;
@@ -100,13 +101,12 @@ contract SingleSidedInsurancePool is
     event InsurancePayoutSettled(uint256 indexed policyId, address indexed payout, uint256 amount);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
+    event EmergencyWithdrawToggled(address indexed user, bool EmergencyWithdraw);
 
     function initialize(
         address _capitalAgent,
         address _multiSigWallet,
-        address _governance,
-        address _payoutRequest,
-        address _claimProcessor
+        address _governance
     ) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
@@ -118,8 +118,6 @@ contract SingleSidedInsurancePool is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
-        _grantRole(CLAIM_PROCESSOR_ROLE, _payoutRequest);
-        _grantRole(CLAIM_PROCESSOR_ROLE, _claimProcessor);
         _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_PROCESSOR_ROLE, ADMIN_ROLE); // TODO
@@ -141,19 +139,31 @@ contract SingleSidedInsurancePool is
         _;
     }
 
+    /**
+     * @dev pause pool to restrict pool functionality, can only by called by admin role
+     */
     function pausePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         _pause();
     }
 
+    /**
+     * @dev unpause pool, can only by called by admin role
+     */
     function unpausePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         _unpause();
     }
 
+    /**
+     * @dev kill pool to restrict pool functionality, can only by called by admin role
+     */
     function killPool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         killed = true;
         emit KillPool(msg.sender, true);
     }
 
+    /**
+     * @dev revive pool, can only by called by admin role
+     */
     function revivePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         killed = false;
         emit PoolAlived(msg.sender, false);
@@ -162,47 +172,77 @@ contract SingleSidedInsurancePool is
     function setRole(
         bytes32 _role,
         address _account
-    ) external onlyRole(GUARDIAN_COUNCIL_ROLE) roleLockTimePassed(GUARDIAN_COUNCIL_ROLE) {
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) whenNotPaused isAlive {
         require(_account != address(0), "UnoRe: zero address");
         roleLockTime[_role][_account] = block.timestamp + lockTime;
         _grantRole(_role, _account);
         emit LogSetRole(address(this), _role, _account);
     }
 
+    /**
+     * @dev set new capital agent, can only by called by admin role
+     * @param _capitalAgent new capital agent address
+     */
     function setCapitalAgent(address _capitalAgent) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_capitalAgent != address(0), "UnoRe: zero address");
         capitalAgent = _capitalAgent;
         emit LogSetCapitalAgent(address(this), _capitalAgent);
     }
 
+    /**
+     * @dev update reward muiltiplier, can only by called by admin role
+     * @param _rewardMultiplier value to set
+     */
     function setRewardMultiplier(uint256 _rewardMultiplier) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_rewardMultiplier > 0, "UnoRe: zero value");
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
         emit LogSetRewardMultiplier(address(this), _rewardMultiplier);
     }
 
+    /**
+     * @dev set migrate address, can only by called by admin role
+     * @param _migrateTo new migrate address
+     */
     function setMigrateTo(address _migrateTo) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_migrateTo != address(0), "UnoRe: zero address");
         migrateTo = _migrateTo;
         emit LogSetMigrateTo(address(this), _migrateTo);
     }
 
+    /**
+     * @dev update min lp capital, only admin role call this function
+     */
     function setMinLPCapital(uint256 _minLPCapital) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_minLPCapital > 0, "UnoRe: not allow zero value");
         IRiskPool(riskPool).setMinLPCapital(_minLPCapital);
         emit LogSetMinLPCapital(address(this), _minLPCapital);
     }
 
+    /**
+     * @dev lock time, only admin role call this function
+     */
     function setLockTime(uint256 _lockTime) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_lockTime > 0, "UnoRe: not allow zero lock time");
         lockTime = _lockTime;
         emit LogSetLockTime(address(this), _lockTime);
     }
 
+    /**
+     * @dev set staking start time, only admin role call this function
+     */
     function setStakingStartTime(uint256 _startTime) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         stakingStartTime = _startTime + block.timestamp;
         emit LogSetStakingStartTime(address(this), stakingStartTime);
     }
+
+    /**
+     * @dev toggle emergency withdraw bool to restrict or use this emergency withdraw,
+     * only admin role call this function
+     */
+    function toggleEmergencyWithdraw() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        emergencyWithdrawAllowed = !emergencyWithdrawAllowed;
+        emit EmergencyWithdrawToggled(address(this), emergencyWithdrawAllowed);
+    }  
 
     /**
      * @dev create Risk pool with UNO from SSIP owner
@@ -225,6 +265,9 @@ contract SingleSidedInsurancePool is
         emit RiskPoolCreated(address(this), riskPool);
     }
 
+    /**
+     * @dev create rewarder with UNO token 
+     */
     function createRewarder(
         address _operator,
         address _factory,
@@ -247,14 +290,14 @@ contract SingleSidedInsurancePool is
         emit LogCreateSyntheticSSIP(address(this), syntheticSSIP, riskPool);
     }
 
-    function migrate() external nonReentrant isAlive {
+    /**
+     * @dev migrate user to new version 
+     */
+    function migrate() external nonReentrant whenNotPaused isAlive {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
-        uint256 lpPrice = IRiskPool(riskPool).lpPriceUno();
-        uint256 amount = userInfo[msg.sender].amount;
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
-        IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
-        uint256 migratedAmount = (amount * lpPrice) / 1e18;
+        uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(migratedAmount, 0, false);
         IMigration(migrateTo).onMigration(msg.sender, migratedAmount, "");
         userInfo[msg.sender].amount = 0;
@@ -262,6 +305,9 @@ contract SingleSidedInsurancePool is
         emit LogMigrate(msg.sender, migrateTo, migratedAmount);
     }
 
+    /**
+     * @dev return pending uno to claim of `_to` address
+     */
     function pendingUno(address _to) external view returns (uint256 pending) {
         uint256 tokenSupply = IERC20(riskPool).totalSupply();
         uint256 accUnoPerShare = poolInfo.accUnoPerShare;
@@ -274,6 +320,10 @@ contract SingleSidedInsurancePool is
         pending = (userBalance * uint256(accUnoPerShare)) / ACC_UNO_PRECISION - userInfo[_to].rewardDebt;
     }
 
+    /**
+     * @dev update pool last reward and accumulated uno per share,
+     * update every time when use enter, withdraw from pool
+     */
     function updatePool() public override {
         if (block.number > poolInfo.lastRewardBlock) {
             uint256 tokenSupply = IERC20(riskPool).totalSupply();
@@ -287,7 +337,11 @@ contract SingleSidedInsurancePool is
         }
     }
 
-    function enterInPool(uint256 _amount) external payable override isStartTime isAlive nonReentrant {
+    /**
+     * @dev stake user collateral, update user reward per block
+     * @param _amount amount to deposit to pool
+     */
+    function enterInPool(uint256 _amount) external payable override whenNotPaused isAlive isStartTime nonReentrant {
         _depositIn(_amount);
         _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
@@ -296,7 +350,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override isStartTime nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused isStartTime nonReentrant {
         _harvest(msg.sender);
         require(ICapitalAgent(capitalAgent).checkCapitalByMCR(address(this), _amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
@@ -334,7 +388,8 @@ contract SingleSidedInsurancePool is
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw() public nonReentrant {
+    function emergencyWithdraw() public nonReentrant whenNotPaused {
+        require(emergencyWithdrawAllowed, "Unore: emergencyWithdraw is not allowed");
         UserInfo memory user = userInfo[msg.sender];
         uint256 amount = user.amount;
         require(amount > 0, "Unore: Zero user amount");
@@ -343,7 +398,7 @@ contract SingleSidedInsurancePool is
         emit EmergencyWithdraw(msg.sender, amount);
     }
 
-    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused {
+    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused isAlive {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         if (_from != syntheticSSIP && _to != syntheticSSIP) {
             _harvest(_from);
@@ -363,6 +418,10 @@ contract SingleSidedInsurancePool is
         }
     }
 
+    /**
+     * @dev withdraw user pending uno
+     * @param _to user address
+     */
     function harvest(address _to) external override whenNotPaused isAlive isStartTime nonReentrant {
         _harvest(_to);
     }
@@ -370,20 +429,26 @@ contract SingleSidedInsurancePool is
     function _harvest(address _to) private {
         updatePool();
 
-        uint256 _pendingUno = _updateReward(_to);
+        (uint256 _pendingUno, uint256 _amount) = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingUno != 0) {
-            IRewarder(rewarder).onReward(_to, _pendingUno);
+            IRewarder(rewarder).onReward(_to, _pendingUno, _amount);
         }
 
         emit Harvest(msg.sender, _to, _pendingUno);
     }
 
+    /**
+     * @dev user can toggle its roll over bool
+     */
     function toggleRollOver() external {
         userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
-    function rollOverReward(address[] memory _to) external isStartTime isAlive onlyRole(BOT_ROLE) nonReentrant {
+    /**
+     * @dev user roll over its pending uno to stake
+     */
+    function rollOverReward(address[] memory _to) external isStartTime whenNotPaused isAlive onlyRole(BOT_ROLE) nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
@@ -391,23 +456,29 @@ contract SingleSidedInsurancePool is
         for (uint256 i; i < _to.length; i++) {
             require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
-            uint256 _pendingUno = _updateReward(_to[i]);
+            (uint256 _pendingUno, uint256 _amount) = _updateReward(_to[i]);
             _totalPendingUno += _pendingUno;
-            _accumulatedAmount += userInfo[_to[i]].amount;
+            _accumulatedAmount += _amount;
             _enterInPool(_pendingUno, _to[i]);
         }
 
-        if (rewarder != address(0) && _totalPendingUno != 0) {
-            IRewarder(rewarder).onRewardForRollOver(riskPool, _totalPendingUno, _accumulatedAmount);
+        if (rewarder != address(0) && _totalPendingUno != 0 && _accumulatedAmount > 0) {
+            IRewarder(rewarder).onReward(riskPool, _totalPendingUno, _accumulatedAmount);
         }
         emit RollOverReward(_to, riskPool, _totalPendingUno);
     }
 
-    function cancelWithdrawRequest() external nonReentrant {
+    /**
+     * @dev user can cancel its pending withdraw request
+     */
+    function cancelWithdrawRequest() external nonReentrant whenNotPaused isAlive {
         (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
+    /**
+     * @dev return user staked currency corresponding to current lp price of uno
+     */
     function getStakedAmountPerUser(address _to) external view returns (uint256 unoAmount, uint256 lpAmount) {
         lpAmount = userInfo[_to].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
@@ -432,15 +503,26 @@ contract SingleSidedInsurancePool is
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
+    /**
+     * @dev claim policy to payout, can only be called by claim processor role
+     */
     function settlePayout(
         uint256 _policyId,
         address _payout,
         uint256 _amount
-    ) public isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
+    ) public whenNotPaused isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_payout, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
 
         emit InsurancePayoutSettled(_policyId, _payout, _amount);
+    }
+
+    function grantRole(bytes32 role, address account) public override isAlive whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
+        _grantRole(role, account);
+    }
+
+    function _revokeRole(bytes32 role, address account) internal override isAlive whenNotPaused roleLockTimePassed(getRoleAdmin(role)) returns (bool) {
+        return super._revokeRole(role, account);
     }
 
     function _enterInPool(uint256 _amount, address _to) internal {
@@ -458,11 +540,11 @@ contract SingleSidedInsurancePool is
         ICapitalAgent(capitalAgent).SSIPStaking(_amount);
     }
 
-    function _updateReward(address _to) internal returns (uint256) {
+    function _updateReward(address _to) internal returns (uint256, uint256) {
         uint256 requestTime;
         (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
         if (requestTime > 0) {
-            return 0;
+            return (0,0);
         }
 
         uint256 amount = userInfo[_to].amount;
@@ -471,7 +553,7 @@ contract SingleSidedInsurancePool is
 
         // Effects
         userInfo[_to].rewardDebt = accumulatedUno;
-        return _pendingUno;
+        return (_pendingUno, amount);
     }
 
     function _depositIn(uint256 _amount) internal {

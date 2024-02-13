@@ -1,24 +1,17 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
 const hre = require("hardhat");
+require("dotenv").config()
 
 module.exports = async function ({getNamedAccounts, deployments}) {
   const { deploy } = deployments;
   const { deployer, proxyAdminOwner } = await getNamedAccounts();
   const owner = deployer
 
-
-  // const exchangeAgent = "0x0b0D83702acbD625aDD45c79c7307C08eecEff4B"
-  // const exchangeAgent = await hre.deployments.get("ExchangeAgent")
-  // const capitalAgent = "0x0bCed28f17a0c8CB66c07dD1a4ccfb2ef3159c05"
   const capitalAgent = await hre.deployments.get("CapitalAgent")
-  const multiSigWallet = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
-  const claimProcessor = await hre.deployments.get("ClaimProcessor")
-  const escalationManager = await hre.deployments.get("EscalationManager")
-  const defaultCurrency = "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
-  const optimisticOracleV3 = "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB"
-  const governance = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
+  const multiSigWallet = process.env.MULTISIGWALLET;
+  const governance = process.env.GOVERNANCE;
   
-  const a = await deploy("SingleSidedInsurancePool", {
+  const a = await deploy("SingleSidedInsurancePoolUSDT", {
     from: deployer,
     contract: "SingleSidedInsurancePool",
     log: true,
@@ -27,15 +20,14 @@ module.exports = async function ({getNamedAccounts, deployments}) {
       execute: {
         init: {
           methodName: "initialize",
-          args: [capitalAgent.address, multiSigWallet, governance, claimProcessor.address, escalationManager.address, defaultCurrency, optimisticOracleV3],
+          args: [capitalAgent.address, multiSigWallet, governance],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
     },
   });
 
-  console.log(`deploted at ${a.address}`);
+  console.log(`ssip usdt deployed at ${a.address}`);
 };
 
-module.exports.tags = ["SingleSidedInsurancePoolUNO", "UnoRe"]
-
+module.exports.tags = ["SingleSidedInsurancePoolUSDT", "UnoRe"]
