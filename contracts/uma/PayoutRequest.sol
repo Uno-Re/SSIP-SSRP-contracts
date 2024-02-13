@@ -102,6 +102,7 @@ contract PayoutRequest is PausableUpgradeable {
             policiesAssertionId[_policyId] = assertionId;
             emit InsurancePayoutRequested(_policyId, assertionId);
         } else {
+            require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
             require(msg.sender == claimsDao, "RPayout: can only called by claimsDao");
             policies[_policyId].settled = true;
             ssip.settlePayout(_policyId, _to, _amount);
