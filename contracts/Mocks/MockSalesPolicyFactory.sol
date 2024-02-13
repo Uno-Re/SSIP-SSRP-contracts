@@ -120,7 +120,6 @@ contract MockSalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable
     }
 
     function setBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline) external onlyOwner {
-        require(_maxDeadline > 0, "UnoRe: zero max deadline");
         ISalesPolicy(salesPolicy).setBuyPolicyMaxDeadline(_maxDeadline);
         emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline);
     }

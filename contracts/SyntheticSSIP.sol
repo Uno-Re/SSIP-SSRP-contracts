@@ -180,8 +180,8 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
             _enterInPool(_pendingReward, _to[i]);
         }
 
-        if (rewarder != address(0) && _totalPendingUno > 0) {
-            IRewarder(rewarder).onRewardForRollOver(address(this), _totalPendingUno, _accumulatedAmount);
+        if (rewarder != address(0) && _totalPendingUno > 0 && _accumulatedAmount > 0) {
+            IRewarder(rewarder).onReward(address(this), _totalPendingUno, _accumulatedAmount);
         }
         emit RollOverReward(address(this), _to, _totalPendingUno);
     }
@@ -237,7 +237,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         uint256 _pendingReward = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingReward > 0) {
-            IRewarder(rewarder).onReward(_to, _pendingReward);
+            IRewarder(rewarder).onReward(_to, _pendingReward, 0);
         }
 
         emit LogHarvest(msg.sender, _to, _pendingReward);

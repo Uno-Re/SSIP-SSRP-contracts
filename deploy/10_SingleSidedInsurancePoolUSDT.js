@@ -9,7 +9,6 @@ module.exports = async function ({getNamedAccounts, deployments}) {
 
   const capitalAgent = await hre.deployments.get("CapitalAgent")
   const multiSigWallet = process.env.MULTISIGWALLET;
-  const claimProcessor = await hre.deployments.get("ClaimProcessor")
   const governance = process.env.GOVERNANCE;
   
   const a = await deploy("SingleSidedInsurancePoolUSDT", {
@@ -21,7 +20,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
       execute: {
         init: {
           methodName: "initialize",
-          args: [capitalAgent.address, multiSigWallet, governance, claimProcessor.address],
+          args: [capitalAgent.address, multiSigWallet, governance],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
