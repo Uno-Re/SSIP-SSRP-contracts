@@ -90,7 +90,7 @@ contract PayoutRequest is PausableUpgradeable {
                     "."
                 ),
                 _to,
-                address(ssip),
+                address(this),
                 escalationManager,
                 uint64(assertionliveTime),
                 defaultCurrency,
