@@ -7,6 +7,14 @@ import "../interfaces/IRiskPoolFactory.sol";
 contract RiskPoolFactory is IRiskPoolFactory {
     constructor() {}
 
+    /**
+     * @dev create new RiskPool Contract
+     * @param _name name of the risk pool
+     * @param _symbol symbol of the risk pool
+     * @param _cohort address of the ssip-ssrp pool
+     * @param _currency address of the currency to distribute as a reward to user
+     * @return new RiskPool address
+     **/
     function newRiskPool(
         string calldata _name,
         string calldata _symbol,

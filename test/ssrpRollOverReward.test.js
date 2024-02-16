@@ -83,16 +83,6 @@ describe("SingleSidedReinsurancePool RollOverReward", function () {
     ).wait()
 
     this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
-
-    this.exchangeAgent = await this.ExchangeAgent.deploy(
-      this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
-      this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.signers[0].address
-    )
-
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
@@ -104,6 +94,16 @@ describe("SingleSidedReinsurancePool RollOverReward", function () {
     ]);
 
     this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+
+    this.exchangeAgent = await this.ExchangeAgent.deploy(
+      this.mockUSDT.target,
+      WETH_ADDRESS.rinkeby,
+      this.mockOraclePriceFeed.target,
+      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      this.multisig.address,
+      getBigNumber("60")
+    )
 
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
@@ -126,7 +126,7 @@ describe("SingleSidedReinsurancePool RollOverReward", function () {
     );
 
     await this.singleSidedReinsurancePool.grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
-    await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.CLAIM_ACCESSOR_ROLE()), this.claimAssessor);
+    await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.CLAIM_ASSESSOR_ROLE()), this.claimAssessor);
     await this.singleSidedReinsurancePool.grantRole((await this.singleSidedReinsurancePool.BOT_ROLE()), this.signers[1].address);
 
     await this.singleSidedReinsurancePool.setStakingStartTime(Math.round(timestamp / 1000 - 3600 * 7))

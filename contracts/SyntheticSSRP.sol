@@ -53,6 +53,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
     event PoolAlived(address indexed _owner, bool _alive);
+    event KillPool(address indexed _owner, bool _killed);
     event RollOverReward(address indexed _pool, address[] indexed _staker, uint256 _amount);
 
     constructor(address _lpToken, address _multiSigWallet) {
@@ -80,7 +81,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
 
     function killPool() external onlyRole(ADMIN_ROLE) {
         killed = true;
-        emit PoolAlived(msg.sender, true);
+        emit KillPool(msg.sender, true);
     }
 
     function revivePool() external onlyRole(ADMIN_ROLE) {
@@ -179,8 +180,8 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
             _enterInPool(_pendingReward, _to[i]);
         }
 
-        if (rewarder != address(0) && _totalPendingReward > 0) {
-            IRewarder(rewarder).onRewardForRollOver(address(this), _totalPendingReward, _accumulatedAmount);
+        if (rewarder != address(0) && _totalPendingReward > 0 && _accumulatedAmount > 0) {
+            IRewarder(rewarder).onReward(address(this), _totalPendingReward, _accumulatedAmount);
         }
 
         emit RollOverReward(address(this), _to, _totalPendingReward);
@@ -189,7 +190,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
     /**
      * @dev WR will be in pending for 10 days at least
      */
-    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused nonReentrant {
+    function leaveFromPoolInPending(uint256 _amount) external override nonReentrant {
         // Withdraw desired amount from pool
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
@@ -237,7 +238,7 @@ contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausab
         uint256 _pendingReward = _updateReward(_to);
 
         if (rewarder != address(0) && _pendingReward > 0) {
-            IRewarder(rewarder).onReward(_to, _pendingReward);
+            IRewarder(rewarder).onReward(_to, _pendingReward, 0);
         }
 
         emit LogHarvest(msg.sender, _to, _pendingReward);

@@ -7,13 +7,19 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "./interfaces/ISalesPolicy.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ICapitalAgent.sol";
+import "./interfaces/IGnosisSafe.sol";
 
+/**
+ * @dev update and manage all pools capital and policy utlized amount,
+ * whenever user stake and withdraw from the pool and buy policy from salesPolicy
+ * notifies to capital agent to update pool capital and policy coverage
+ **/
 contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address public exchangeAgent;
     address public salesPolicyFactory;
-    address public USDC_TOKEN;
+    address public usdcToken;
     address public operator;
 
     struct PoolInfo {
@@ -31,7 +37,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     mapping(address => PoolInfo) public poolInfo;
 
-    uint256 public totalCapitalStaked;
+    address[] private currencyList;
+    mapping(address => bool) private existedCurrencies;
+    mapping(address => uint256) private totalCapitalStakedByCurrency;
 
     PolicyInfo public policyInfo;
 
@@ -65,6 +73,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     event LogAddPoolWhiteList(address indexed _pool);
     event LogRemovePoolWhiteList(address indexed _pool);
     event LogSetOperator(address indexed _operator);
+    event LogSetUSDC(address indexed _usdcToken);
 
     function initialize(
         address _exchangeAgent,
@@ -75,8 +84,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
+        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
+        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         exchangeAgent = _exchangeAgent;
-        USDC_TOKEN = _USDC_TOKEN;
+        usdcToken = _USDC_TOKEN;
         operator = _operator;
         __ReentrancyGuard_init();
         __AccessControl_init();
@@ -99,18 +110,40 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         return (_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
+    /**
+     * @dev set sales policy factory, can only be call by admin role
+     * @param _factory new sales policy factory address
+     **/
     function setSalesPolicyFactory(address _factory) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_factory != address(0), "UnoRe: zero factory address");
         salesPolicyFactory = _factory;
         emit LogSetSalesPolicyFactory(_factory);
     }
 
+    /**
+     * @dev set operator, can only be call by admin role
+     * @param _operator new operator address
+     **/
     function setOperator(address _operator) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_operator != address(0), "UnoRe: zero operator address");
         operator = _operator;
         emit LogSetOperator(_operator);
     }
 
+    /**
+     * @dev set usdc token, can only be call by admin role
+     * @param _usdcToken new usdc token address
+     **/
+    function setUSDCToken(address _usdcToken) external onlyRole(ADMIN_ROLE) nonReentrant {
+        require(_usdcToken != address(0), "UnoRe: zero usdc address");
+        usdcToken = _usdcToken;
+        emit LogSetUSDC(_usdcToken);
+    }
+
+    /**
+     * @dev whitelist pool address, can only be call by admin role
+     * @param _pool address of pool to whitelist
+     **/
     function addPoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_pool != address(0), "UnoRe: zero pool address");
         require(!poolWhiteList[_pool], "UnoRe: white list already");
@@ -118,47 +151,91 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         emit LogAddPoolWhiteList(_pool);
     }
 
+    /**
+     * @dev remove whitelisted pool, can only be call by admin role
+     * @param _pool address of pool to remove from whitelist
+     **/
     function removePoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {
-        require(_pool != address(0), "UnoRe: zero pool address");
         require(poolWhiteList[_pool], "UnoRe: no white list");
         poolWhiteList[_pool] = false;
         emit LogRemovePoolWhiteList(_pool);
     }
 
+    /**
+     * @dev return total capital in usdc staked in capital agent by pools 
+     **/
+    function totalCapitalStaked() public view returns(uint256) {
+        return _getTotalCapitalStakedInUSDC();
+    }
+
+    /**
+     * @dev add pool into capitalAgent to stake capital, can only be call by whitelisted pools
+     * @param _ssip address of pool to add
+     * @param _currency pool lp currency address
+     * @param _scr pool scr value(minimum capital should maintain in capital agent)
+     **/
     function addPool(address _ssip, address _currency, uint256 _scr) external override onlyPoolWhiteList {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
+
+        if (existedCurrencies[_currency] == false) {
+            existedCurrencies[_currency] = true;
+            currencyList.push(_currency);
+        }
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
 
         emit LogAddPool(_ssip, _currency, _scr);
     }
 
+    /**
+     * @dev add pool into capitalAgent to stake capital, can only be call by admin role
+     * @param _ssip address of pool to add
+     * @param _currency pool lp currency address
+     * @param _scr pool scr value(minimum capital should maintain in capital agent)
+     **/
     function addPoolByAdmin(address _ssip, address _currency, uint256 _scr) external onlyRole(ADMIN_ROLE) {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
+
+        if (existedCurrencies[_currency] == false) {
+            existedCurrencies[_currency] = true;
+            currencyList.push(_currency);
+        }
         poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
 
         emit LogAddPool(_ssip, _currency, _scr);
     }
 
+    /**
+     * @dev remove pool from capitalAgent, can only be call by admin role
+     * @param _ssip address of pool to remove
+     **/
     function removePool(address _ssip) external onlyRole(ADMIN_ROLE) nonReentrant {
-        require(_ssip != address(0), "UnoRe: zero address");
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
         if (poolInfo[_ssip].totalCapital > 0) {
-            totalCapitalStaked = totalCapitalStaked - poolInfo[_ssip].totalCapital;
+            address currency = poolInfo[_ssip].currency;
+            totalCapitalStakedByCurrency[currency] = totalCapitalStakedByCurrency[currency] - poolInfo[_ssip].totalCapital;
         }
         delete poolInfo[_ssip];
         emit LogRemovePool(_ssip);
     }
 
+    /**
+     * @dev set sales policy, can only be call by SalesPolicyFactory
+     * @param _policy address of new SalesPolicy
+     **/
     function setPolicy(address _policy) external override nonReentrant {
-        require(salesPolicyFactory != address(0), "UnoRe: not set factory address yet");
+        require(!policyInfo.exist, "UnoRe: Policy exists");
         require(salesPolicyFactory == msg.sender, "UnoRe: only salesPolicyFactory can call");
         policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});
 
         emit LogSetPolicy(_policy);
     }
 
+    /**
+     * @dev set sales policy, can only be call by admin role
+     * @param _policy address of new SalesPolicy
+     **/
     function setPolicyByAdmin(address _policy) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_policy != address(0), "UnoRe: zero address");
         policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});
@@ -166,6 +243,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         emit LogSetPolicy(_policy);
     }
 
+    /**
+     * @dev remove sales policy from capital agent, can only be call by admin role
+     **/
     function removePolicy() external onlyRole(ADMIN_ROLE) nonReentrant {
         require(policyInfo.exist, "UnoRe: no exit pool");
         totalUtilizedAmount = 0;
@@ -176,12 +256,23 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         emit LogRemovePolicy(_policy);
     }
 
+    /**
+     * @dev update pool(caller) capital from capital agent,
+     * decrease capital of pool by _withdrawAmount, if user withdraw from pool
+     * remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively
+     * @param _withdrawAmount amount to withdraw
+     **/
     function SSIPWithdraw(uint256 _withdrawAmount) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         require(_checkCapitalByMCRAndSCR(msg.sender, _withdrawAmount), "UnoRe: minimum capital underflow");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
     }
 
+    /**
+     * @dev update pool(caller) capital from capital agent,
+     * decrease capital of pool by _withdrawAmount, if user claim policy from pool 
+     * @param _withdrawAmount amount to withdraw
+     **/
     function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isFinished) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
@@ -190,19 +281,39 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         }
     }
 
+    /**
+     * @dev update pool(caller) capital from capital agent,
+     * increase capital of pool by _stakingAmount, if user stake in pool
+     * @param _stakingAmount amount to deposit
+     **/
     function SSIPStaking(uint256 _stakingAmount) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         _updatePoolCapital(msg.sender, _stakingAmount, true);
     }
 
+    /**
+     * @dev return if pool can withdraw this amount,
+     * remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively
+     * @param _pool address of pool
+     * @param _withdrawAmount withdraw amount
+     **/
     function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view override returns (bool) {
         return _checkCapitalByMCRAndSCR(_pool, _withdrawAmount);
     }
 
+    /**
+     * @dev return if user can buy policy from this coverage amount, 
+     * total utlized amount plus coverage should be less than MLR of total capital staked
+     * @param _coverageAmount coverage amount
+     **/
     function checkCoverageByMLR(uint256 _coverageAmount) external view override returns (bool) {
         return _checkCoverageByMLR(_coverageAmount);
     }
 
+    /**
+     * @dev update policy coverage if user buy policy from SalesPolicy, only sales policy can call this function
+     * @param _coverageAmount coverage amount
+     **/
     function policySale(uint256 _coverageAmount) external override nonReentrant {
         require(msg.sender == policyInfo.policy, "UnoRe: only salesPolicy can call");
         require(policyInfo.exist, "UnoRe: no exist policy");
@@ -210,6 +321,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         _updatePolicyCoverage(_coverageAmount, true);
     }
 
+    /**
+     * @dev update policy status, if expired update policy coverage and notify to sales policy
+     * @param _policyId policy id to update status
+     **/
     function updatePolicyStatus(uint256 _policyId) external override nonReentrant {
         require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
         (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt, , ) = ISalesPolicy(policyInfo.policy)
@@ -222,6 +337,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         }
     }
 
+    /**
+     * @dev update policy status to not exist, can only be called by admin role
+     * @param _policyId policy id to update status
+     **/
     function markToClaimPolicy(uint256 _policyId) external onlyRole(ADMIN_ROLE) nonReentrant {
         _markToClaimPolicy(_policyId);
     }
@@ -238,9 +357,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         if (!isAdd) {
             require(poolInfo[_pool].totalCapital >= _amount, "UnoRe: pool capital overflow");
         }
+        address currency = poolInfo[_pool].currency;
         poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
-        totalCapitalStaked = isAdd ? totalCapitalStaked + _amount : totalCapitalStaked - _amount;
-        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStaked);
+        totalCapitalStakedByCurrency[currency] = isAdd ? totalCapitalStakedByCurrency[currency] + _amount : totalCapitalStakedByCurrency[currency] - _amount;
+        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStakedByCurrency[currency]);
     }
 
     function _updatePolicyCoverage(uint256 _amount, bool isAdd) private {
@@ -258,10 +378,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 mcrInUSDC;
         uint256 scrInUSDC;
 
-        totalCapitalStakedInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked);
-        mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked - _withdrawAmount);
+        totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();
+        mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency] - _withdrawAmount);
         scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
-        
+
         bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDC * MCR) / CALC_PRECISION;
         bool isSCRPass = scrInUSDC >= poolInfo[_pool].SCR;
 
@@ -270,39 +390,67 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     function _convertTokenToUSDC(address _currency, uint256 _amount) private view returns (uint256) {
         uint256 tokenInUSDC;
-        if (_currency == USDC_TOKEN) {
+        if (_currency == usdcToken) {
             tokenInUSDC = _amount;
         } else {
             tokenInUSDC = _currency != address(0)
-                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(_currency, USDC_TOKEN, _amount)
-                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(USDC_TOKEN, _amount);
+                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(_currency, usdcToken, _amount)
+                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(usdcToken, _amount);
         }
 
         return tokenInUSDC;
     }
 
-    function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
-        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStaked * MLR) / CALC_PRECISION;
+    function _getTotalCapitalStakedInUSDC() private view returns (uint256) {
+        uint256 totalCapitalStakedInUSDC;
+        for (uint256 i = 0; i < currencyList.length; i++) {
+            address currency = currencyList[i];
+            totalCapitalStakedInUSDC = totalCapitalStakedInUSDC + _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
+        }
+
+        return totalCapitalStakedInUSDC;
     }
 
+    function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
+        uint256 totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();
+        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStakedInUSDC * MLR) / CALC_PRECISION;
+    }
+
+    /**
+     * @dev set new MCR, can only be called by operator
+     * @param _MCR new value to update
+     **/
     function setMCR(uint256 _MCR) external onlyOperator nonReentrant {
         require(_MCR > 0, "UnoRe: zero mcr");
         MCR = _MCR;
         emit LogSetMCR(msg.sender, address(this), _MCR);
     }
 
+    /**
+     * @dev set new MLR, can only be called by operator
+     * @param _MLR new value to update
+     **/
     function setMLR(uint256 _MLR) external onlyOperator nonReentrant {
         require(_MLR > 0, "UnoRe: zero mlr");
         MLR = _MLR;
         emit LogSetMLR(msg.sender, address(this), _MLR);
     }
 
+    /**
+     * @dev set new SCR of pool, can only be called by operator
+     * @param _SCR new value to update
+     * @param _pool address of pool
+     **/
     function setSCR(uint256 _SCR, address _pool) external onlyOperator nonReentrant {
         require(_SCR > 0, "UnoRe: zero scr");
         poolInfo[_pool].SCR = _SCR;
         emit LogSetSCR(msg.sender, address(this), _pool, _SCR);
     }
 
+    /**
+     * @dev set new exchange agent address, can only be called by admin role
+     * @param _exchangeAgent new exchange agent address
+     **/
     function setExchangeAgent(address _exchangeAgent) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_exchangeAgent != address(0), "UnoRe: zero address");
         exchangeAgent = _exchangeAgent;

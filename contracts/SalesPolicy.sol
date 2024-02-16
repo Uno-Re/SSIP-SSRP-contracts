@@ -13,9 +13,14 @@ import "./interfaces/ISalesPolicyFactory.sol";
 import "./interfaces/ISalesPolicy.sol";
 import "./libraries/TransferHelper.sol";
 import "./EIP712MetaTransaction.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+/**
+ * @dev contract to buy policy
+ **/
 contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), ERC721, ISalesPolicy, ReentrancyGuard, Pausable {
     using Counters for Counters.Counter;
+    using ECDSA for bytes32;
 
     address public immutable factory;
     struct Policy {
@@ -33,7 +38,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     address public premiumPool;
     address public capitalAgent;
     address public signer;
-    address public immutable USDC_TOKEN; //
+    address public immutable usdcToken; //
 
     string private protocolURI;
 
@@ -42,7 +47,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     mapping(uint256 => Policy) public getPolicy;
     mapping(bytes32 => address) public usedHash;
 
-    uint256 private MAX_INTEGER = type(uint256).max;
+    uint256 private maxInteger = type(uint256).max;
 
     event BuyPolicy(
         address indexed _owner,
@@ -79,7 +84,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         factory = _factory;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
-        USDC_TOKEN = _usdcToken;
+        usdcToken = _usdcToken;
         premiumPool = _premiumPool;
         maxDeadline = 7 days;
     }
@@ -104,6 +109,18 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
 
     receive() external payable {}
 
+    /**
+    * @dev user can buy policy by paying policy price
+    * new policy id will be minted at user address
+    * policy id will be claim by user at the time settlement
+    * @param _assets address of assets
+    * @param _protocols address of protocol for insurance
+    * @param _coverageAmount amount of coverage user wants to claim
+    * @param _coverageDuration duration after which can not claim policy id
+    * @param _policyPriceInUSDC price of policy user wants to pay
+    * @param _signedTime signed time
+    * @param _premiumCurrency currency to pay
+    **/
     function buyPolicy(
         address[] memory _assets,
         address[] memory _protocols,
@@ -119,8 +136,10 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     ) external payable whenNotPaused nonReentrant {
         uint256 len = _protocols.length;
         require(len > 0, "UnoRe: no policy");
+        require(len == _assets.length, "UnoRe: no match protocolIds with assets");
         require(len == _coverageAmount.length, "UnoRe: no match protocolIds with coverageAmount");
         require(len == _coverageDuration.length, "UnoRe: no match protocolIds with coverageDuration");
+
         address _signer = getSender(
             _policyPriceInUSDC,
             _protocols,
@@ -146,7 +165,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
             }
             IPremiumPool(premiumPool).collectPremiumInETH{value: premiumPaid}();
         } else {
-            premiumPaid = _premiumCurrency != USDC_TOKEN
+            premiumPaid = _premiumCurrency != usdcToken
                 ? IExchangeAgent(exchangeAgent).getTokenAmountForUSDC(_premiumCurrency, _policyPriceInUSDC)
                 : _policyPriceInUSDC;
             TransferHelper.safeTransferFrom(_premiumCurrency, msgSender(), address(this), premiumPaid);
@@ -224,48 +243,80 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         }
     }
 
+    /**
+     * @dev approve premiumPool for _premiumCurrency from salesPolicy by max value , can only be call by SalesPolicyFactory
+     * @param _premiumCurrency address of currency to approve
+     **/
     function approvePremium(address _premiumCurrency) external override onlyFactory {
         require(_premiumCurrency != address(0), "UnoRe: zero address");
         require(premiumPool != address(0), "UnoRe: not defiend premiumPool");
-        TransferHelper.safeApprove(_premiumCurrency, premiumPool, MAX_INTEGER);
+        TransferHelper.safeApprove(_premiumCurrency, premiumPool, maxInteger);
         emit LogapprovePremiumIInPolicy(address(this), _premiumCurrency, premiumPool);
     }
 
+    /**
+     * @dev set protocol uri, can only be call by SalesPolicyFactory
+     * @param newURI new uri to set
+     **/
     function setProtocolURI(string memory newURI) external override onlyFactory {
         protocolURI = newURI;
         emit LogSetProtocolURIInPolicy(address(this), newURI);
     }
 
+    /**
+     * @dev set premiumPool address, can only be call by SalesPolicyFactory
+     * @param _premiumPool address of new premiumPool to set
+     **/
     function setPremiumPool(address _premiumPool) external override onlyFactory {
         require(_premiumPool != address(0), "UnoRe: zero address");
         premiumPool = _premiumPool;
         emit LogSetPremiumPoolInPolicy(_premiumPool, address(this));
     }
 
+    /**
+     * @dev set ExchangeAgent address, can only be call by SalesPolicyFactory
+     * @param _exchangeAgent address of new exchangeAgent to set
+     **/
     function setExchangeAgent(address _exchangeAgent) external override onlyFactory {
         require(_exchangeAgent != address(0), "UnoRe: zero address");
         exchangeAgent = _exchangeAgent;
         emit LogSetExchangeAgentInPolicy(_exchangeAgent, address(this));
     }
 
+    /**
+     * @dev set signer, can only be call by SalesPolicyFactory
+     * @param _signer address of new signer to set
+     **/
     function setSigner(address _signer) external override onlyFactory {
         require(_signer != address(0), "UnoRe: zero address");
         signer = _signer;
         emit LogSetSignerInPolicy(_signer, address(this));
     }
 
+    /**
+     * @dev set capitalAgent address, can only be call by SalesPolicyFactory
+     * @param _capitalAgent address of new capitalAgent to set
+     **/
     function setCapitalAgent(address _capitalAgent) external override onlyFactory {
         require(_capitalAgent != address(0), "UnoRe: zero address");
         capitalAgent = _capitalAgent;
         emit LogSetCapitalAgentInPolicy(_capitalAgent, address(this));
     }
 
+    /**
+     * @dev set max deadline, can only be call by SalesPolicyFactory
+     * @param _maxDeadline value to set
+     **/
     function setBuyPolicyMaxDeadline(uint256 _maxDeadline) external override onlyFactory {
         require(_maxDeadline > 0, "UnoRe: zero max signedTime");
         maxDeadline = _maxDeadline;
         emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline, address(this));
     }
 
+    /**
+     * @dev update policy to claim(not exist), set policy exist to false, can only be call by CapitalAgent
+     * @param _policyId id policy to mark claim
+     **/
     function markToClaim(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
         require(getPolicy[_policyId].exist, "UnoRe: marked to claim already");
         require(!getPolicy[_policyId].expired, "UnoRe: policy expired");
@@ -274,6 +325,10 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         emit LogMarkToClaim(_policyId, getPolicy[_policyId].coverageAmount);
     }
 
+    /**
+     * @dev update policy to expired, set policy expired to true, can only be call by CapitalAgent
+     * @param _policyId id policy to mark expired
+     **/
     function updatePolicyExpired(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
         require(getPolicy[_policyId].exist, "UnoRe: marked to claim already");
         getPolicy[_policyId].expired = true;
@@ -281,6 +336,9 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         emit LogUpdatePolicyExpired(_policyId, getPolicy[_policyId].coverageAmount);
     }
 
+    /**
+     * @dev return current policy index
+     **/
     function allPoliciesLength() external view override returns (uint256) {
         return policyIdx.current;
     }
@@ -289,26 +347,21 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         return protocolURI;
     }
 
-    function getPolicyData(uint256 _policyId)
-        external
-        view
-        override
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            bool,
-            bool
-        )
-    {
-        bool exist =  getPolicy[_policyId].exist;
-        bool expired =  getPolicy[_policyId].expired;
+    /**
+     * @dev return policy data corresponds to _policyId
+     **/
+    function getPolicyData(uint256 _policyId) external view override returns (uint256, uint256, uint256, bool, bool) {
+        bool exist = getPolicy[_policyId].exist;
+        bool expired = getPolicy[_policyId].expired;
         uint256 coverageAmount = getPolicy[_policyId].coverageAmount;
         uint256 coverageDuration = getPolicy[_policyId].coverageDuration;
         uint256 coverStartAt = uint256(getPolicy[_policyId].coverStartAt);
         return (coverageAmount, coverageDuration, coverStartAt, exist, expired);
     }
 
+    /**
+     * @dev return sender address from corresponding message data
+     **/
     function getSender(
         uint256 _policyPrice,
         address[] memory _protocols,
@@ -324,7 +377,17 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     ) private returns (address) {
         // bytes32 digest = getSignedMsgHash(productName, priceInUSD, period, conciergePrice);
         bytes32 msgHash = keccak256(
-            abi.encodePacked(_policyPrice, _protocols, _coverageDuration, _coverageAmount, _signedTime, _premiumCurrency, nonce, sender)
+            abi.encodePacked(
+                _policyPrice,
+                _protocols,
+                _coverageDuration,
+                _coverageAmount,
+                _signedTime,
+                _premiumCurrency,
+                nonce,
+                sender,
+                block.chainid
+            )
         );
 
         require(usedHash[msgHash] == address(0), "Already used hash");
@@ -334,7 +397,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         // bytes32 msgHash = keccak256(abi.encodePacked(productName));
         bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
         // (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
-        address recoveredAddress = ecrecover(digest, v, r, s);
+        address recoveredAddress = digest.recover(v, r, s);
         return recoveredAddress;
     }
 }

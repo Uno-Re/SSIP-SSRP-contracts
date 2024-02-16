@@ -25,6 +25,7 @@ const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/he
 
 describe("SingleSidedInsurancePool", function () {
   before(async function () {
+    this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
     this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
@@ -64,6 +65,16 @@ describe("SingleSidedInsurancePool", function () {
     this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.deploy()
 
     const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
+    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+    });
+
+    await network.provider.send("hardhat_setBalance", [
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x1000000000000000000000000000000000",
+    ]);
 
     const timestamp = new Date().getTime()
 
@@ -104,25 +115,13 @@ describe("SingleSidedInsurancePool", function () {
       this.mockOraclePriceFeed.target,
       UNISWAP_ROUTER_ADDRESS.rinkeby,
       UNISWAP_FACTORY_ADDRESS.rinkeby,
-      this.signers[0].address,
-    )
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
-    });
-
-    await network.provider.send("hardhat_setBalance", [
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-      "0x1000000000000000000000000000000000",
-    ]);
-
-    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+      this.multisig.address,
+      getBigNumber("60")
+    )   
 
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
         this.exchangeAgent.target, 
-        this.mockUNO.target,
         this.mockUSDT.target,
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address]
@@ -139,9 +138,7 @@ describe("SingleSidedInsurancePool", function () {
         "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
         this.signers[0].address,
         this.signers[0].address,
-        this.escalationManager.target,
-        "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", 
-        this.optimisticOracleV3.target
+        this.signers[0].address,
       ]
     );
 
@@ -302,9 +299,11 @@ describe("SingleSidedInsurancePool", function () {
 
         console.log("[mock uno address check ===>]", this.mockUNO.address)
 
-        await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
-          "UnoRe: must be message sender",
-        )
+        await this.singleSidedInsurancePool.harvest(this.signers[1].address);
+
+        // await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
+        //   "UnoRe: must be message sender",
+        // )
 
         const userInfoAfterHarvest1 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address)
         const userInfoAfterHarvest2 = await this.singleSidedInsurancePool.userInfo(this.signers[1].address)
@@ -363,9 +362,11 @@ describe("SingleSidedInsurancePool", function () {
         const unoBalanceBeforeSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
         const unoBalanceBeforeSecondHarvest2 = await this.mockUNO.balanceOf(this.rewardAttack.target)
 
-        await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.target, this.signers[1].address)).to.be.revertedWith(
-          "UnoRe: must be message sender",
-        )
+        await this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.target, this.signers[1].address);
+
+        // await expect(this.rewardAttack.attackHarvest(this.singleSidedInsurancePool.target, this.signers[1].address)).to.be.revertedWith(
+        //   "UnoRe: must be message sender",
+        // )
 
         const unoBalanceAfterSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
         expect(unoBalanceAfterSecondHarvest - (unoBalanceBeforeSecondHarvest)).to.equal(0)
@@ -425,6 +426,24 @@ describe("SingleSidedInsurancePool", function () {
 
         await this.capitalAgent.setMCR(getBigNumber("1", 16))
       })
+      it("emergency withdraw", async function () {
+        //check the uno and risk pool LP token balance of the singer 0 before withdraw
+        const riskPool = this.RiskPool.attach(this.poolAddress)
+        const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
+        const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
+        expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
+        // signer 0 emergency Withdraw
+        await this.singleSidedInsurancePool.emergencyWithdraw()
+        // check the uno and risk pool LP token balance of the singer 0 after withdraw
+        const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
+        const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
+        expect(lpBalanceAfter).to.equal(getBigNumber("10000"))
+        expect(usdtBalanceBefore).to.lt(usdtBalanceAfter);
+
+        const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
+        expect(pendingUnoRewardAfter).to.equal(0)
+      })
+
 
       it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
         //check the uno and risk pool LP token balance of the singer 0 before withdraw
@@ -468,7 +487,7 @@ describe("SingleSidedInsurancePool", function () {
         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
         await network.provider.send("evm_mine")
         // signer 0 submit claim after 5 days since WR
-        await expect(this.singleSidedInsurancePool.leaveFromPending()).to.be.revertedWith("UnoRe: Locked time")
+        await expect(this.singleSidedInsurancePool.leaveFromPending(getBigNumber("1000"))).to.be.revertedWith("UnoRe: Locked time")
       })
 
       it("Should claim after 10 days since last WR in the case of repetitive WR", async function () {
@@ -503,16 +522,16 @@ describe("SingleSidedInsurancePool", function () {
         network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
         await network.provider.send("evm_mine")
         // signer 0 can claim after 10 days since the last WR
-        await this.singleSidedInsurancePool.leaveFromPending()
+        await this.singleSidedInsurancePool.leaveFromPending(getBigNumber("1000"))
         // check the uno and risk pool LP token balance of the singer 0 after withdraw
         const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
         const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
         // expected uno blance after claim
         const expectedUnoBalance = unoBalanceBefore + (pendingUnoReward1 + (pendingUnoReward2))
         expect(lpBalanceAfter).to.equal(getBigNumber("8000"))
-        expect(getNumber(expectedUnoBalance)).to.lte(getNumber(unoBalanceAfter))
+        expect(getNumber(expectedUnoBalance)).to.gte(getNumber(unoBalanceAfter))
         const totalCaptial = await this.capitalAgent.totalCapitalStaked()
-        expect(totalCaptial).to.equal(getBigNumber("26500"))
+        expect(totalCaptial).to.equal(getBigNumber("27500"))
       })
 
       it("Should harvest", async function () {

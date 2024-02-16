@@ -28,7 +28,7 @@ contract MockSalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable
     mapping(address => uint16) public override getProtocolId;
     Counters.Counter private protocolIds;
 
-    address public USDC_TOKEN;
+    address public usdcToken;
 
     event ProtocolCreated(uint16 _protocolIdx, address _protocol);
     event LogSetPremiumPool(address indexed _premiumPool);
@@ -42,20 +42,19 @@ contract MockSalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable
     event LogSetProtocolURIInPolicy(string _uri);
     event LogApprovePremiumInPolicy(address _premiumCurrency);
 
-
     constructor(
         address _usdcToken,
         address _exchangeAgent,
         address _premiumPool,
         address _capitalAgent,
         address _multiSigWallet
-    ) Ownable(_multiSigWallet) { 
+    ) Ownable(_multiSigWallet) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_premiumPool != address(0), "UnoRe: zero premiumPool address");
         require(_capitalAgent != address(0), "UnoRe: zero capitalAgent address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        USDC_TOKEN = _usdcToken;
+        usdcToken = _usdcToken;
         premiumPool = _premiumPool;
         exchangeAgent = _exchangeAgent;
         capitalAgent = _capitalAgent;
@@ -80,7 +79,7 @@ contract MockSalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable
         address _premiumPool,
         address _capitalAgent
     ) external onlyOwner nonReentrant returns (address) {
-        MockSalesPolicy _salesPolicy = new MockSalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, USDC_TOKEN);
+        MockSalesPolicy _salesPolicy = new MockSalesPolicy(address(this), _exchangeAgent, _premiumPool, _capitalAgent, usdcToken);
         salesPolicy = address(_salesPolicy);
         ICapitalAgent(capitalAgent).setPolicy(address(_salesPolicy));
 
@@ -121,7 +120,6 @@ contract MockSalesPolicyFactory is ISalesPolicyFactory, ReentrancyGuard, Ownable
     }
 
     function setBuyPolicyMaxDeadlineInPolicy(uint256 _maxDeadline) external onlyOwner {
-        require(_maxDeadline > 0, "UnoRe: zero max deadline");
         ISalesPolicy(salesPolicy).setBuyPolicyMaxDeadline(_maxDeadline);
         emit LogSetBuyPolicyMaxDeadlineInPolicy(_maxDeadline);
     }

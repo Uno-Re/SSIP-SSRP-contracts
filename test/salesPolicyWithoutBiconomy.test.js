@@ -112,6 +112,7 @@
 //       TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
 //       UNISWAP_ROUTER_ADDRESS.rinkeby,
 //       UNISWAP_FACTORY_ADDRESS.rinkeby,
+//       getBigNumber("60")
 //     )
 
 //     this.premiumPool = await this.PremiumPool.deploy(this.exchangeAgent.address, this.mockUNO.address, this.mockUSDT.address)
@@ -249,9 +250,9 @@
 //       )
 
 //       const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.address)
-//       const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM(this.mockUSDT.address)
-//       const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM(this.mockUSDT.address)
-//       const premiumForBackBurn = await this.premiumPool.BACK_BURN_UNO_PREMIUM(this.mockUSDT.address)
+//       const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.address)
+//       const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.address)
+//       const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.address)
 //       expect(premiumPoolBalanceAfter).to.equal(getBigNumber(100, 6))
 //       expect(premiumForSSRP).to.equal(getBigNumber(10, 6))
 //       expect(premiumForSSIP).to.equal(getBigNumber(70, 6))
@@ -306,9 +307,9 @@
 //     //     }
 //     //   )
 
-//     //     const premiumForSSRP = await this.premiumPool.SSRP_PREMIUM_ETH()
-//     //     const premiumForSSIP = await this.premiumPool.SSIP_PREMIUM_ETH()
-//     //     const premiumForBackBurn = await this.premiumPool.BACK_BURN_PREMIUM_ETH()
+//     //     const premiumForSSRP = await this.premiumPool.ssrpPremiumEth()
+//     //     const premiumForSSIP = await this.premiumPool.ssipPremiumEth()
+//     //     const premiumForBackBurn = await this.premiumPool.backBurnPremiumEth()
 //     //     console.log(premiumForSSRP.toString(), premiumForSSIP.toString(), premiumForBackBurn.toString())
 //     // })
 
