@@ -70,8 +70,9 @@ contract PayoutRequest is PausableUpgradeable {
     function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
+        uint256 _claimed = ICapitalAgent(capitalAgent).claimedAmount(salesPolicy, _policyId);
         (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
-        require(_amount <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
+        require(_amount + _claimed <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
         Policy memory _policyData = policies[_policyId];
         _policyData.insuranceAmount = _amount;
