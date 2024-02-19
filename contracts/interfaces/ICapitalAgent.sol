@@ -21,4 +21,6 @@ interface ICapitalAgent {
     function updatePolicyStatus(uint256 _policyId) external;
 
     function getPolicyInfo() external returns(address, uint256, bool);
+
+    function claimedAmount(address _policy, uint256 _policyId) external returns(uint256);
 }
