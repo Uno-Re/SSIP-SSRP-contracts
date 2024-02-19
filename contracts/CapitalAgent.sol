@@ -52,6 +52,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     mapping(address => bool) public poolWhiteList;
 
+    mapping(address => mapping(uint256 => uint256)) public claimedAmount;
+
     event LogAddPool(address indexed _ssip, address _currency, uint256 _scr);
     event LogRemovePool(address indexed _ssip);
     event LogSetPolicy(address indexed _salesPolicy);
@@ -276,6 +278,12 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isFinished) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
+        address _salesPolicyAddress = policyInfo.policy;
+        (uint256 _coverageAmount, , , , ) = ISalesPolicy(_salesPolicyAddress).getPolicyData(_policyId);
+        uint256 _claimed = claimedAmount[_salesPolicyAddress][_policyId];
+        require(_coverageAmount >= _withdrawAmount + _claimed, "UnoRe: coverage amount is less");
+        claimedAmount[_salesPolicyAddress][_policyId] += _withdrawAmount;
+        _isFinished = _coverageAmount > ( _withdrawAmount + _claimed) ? false : true;
         if (_isFinished) {
             _markToClaimPolicy(_policyId);
         }
