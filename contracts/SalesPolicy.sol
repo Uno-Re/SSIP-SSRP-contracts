@@ -27,6 +27,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
         uint256 coverStartAt;
         uint256 coverageDuration;
         uint256 coverageAmount;
+        uint256 claimedAmount;
         address protocolAddress;
         address premiumCurrency;
         bool exist;
@@ -68,6 +69,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     event LogapprovePremiumIInPolicy(address indexed _policyAddress, address indexed _premiumCurrency, address premiumPool);
     event LogMarkToClaim(uint256 indexed _policyId, uint256 _coverageAmount);
     event LogUpdatePolicyExpired(uint256 indexed _policyId, uint256 _coverageAmount);
+    event LogUpdatePolicy(uint256 indexed _policyId, uint256 _coverageAmount);
 
     constructor(
         address _factory,
@@ -110,17 +112,17 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     receive() external payable {}
 
     /**
-    * @dev user can buy policy by paying policy price
-    * new policy id will be minted at user address
-    * policy id will be claim by user at the time settlement
-    * @param _assets address of assets
-    * @param _protocols address of protocol for insurance
-    * @param _coverageAmount amount of coverage user wants to claim
-    * @param _coverageDuration duration after which can not claim policy id
-    * @param _policyPriceInUSDC price of policy user wants to pay
-    * @param _signedTime signed time
-    * @param _premiumCurrency currency to pay
-    **/
+     * @dev user can buy policy by paying policy price
+     * new policy id will be minted at user address
+     * policy id will be claim by user at the time settlement
+     * @param _assets address of assets
+     * @param _protocols address of protocol for insurance
+     * @param _coverageAmount amount of coverage user wants to claim
+     * @param _coverageDuration duration after which can not claim policy id
+     * @param _policyPriceInUSDC price of policy user wants to pay
+     * @param _signedTime signed time
+     * @param _premiumCurrency currency to pay
+     **/
     function buyPolicy(
         address[] memory _assets,
         address[] memory _protocols,
@@ -216,6 +218,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
                 protocolAddress: _protocol,
                 coverageAmount: coverAmount,
                 coverageDuration: coverDuration,
+                claimedAmount: 0,
                 coverStartAt: block.timestamp,
                 premiumCurrency: _premiumCurrency,
                 exist: true,
@@ -317,12 +320,19 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
      * @dev update policy to claim(not exist), set policy exist to false, can only be call by CapitalAgent
      * @param _policyId id policy to mark claim
      **/
-    function markToClaim(uint256 _policyId) external override nonReentrant onlyCapitalAgent {
-        require(getPolicy[_policyId].exist, "UnoRe: marked to claim already");
-        require(!getPolicy[_policyId].expired, "UnoRe: policy expired");
-        getPolicy[_policyId].exist = false;
-        _burn(_policyId);
-        emit LogMarkToClaim(_policyId, getPolicy[_policyId].coverageAmount);
+    function markToClaim(uint256 _policyId, uint256 _withdrawAmount) external override nonReentrant onlyCapitalAgent {
+        Policy storage policy = getPolicy[_policyId];
+        require(policy.exist, "UnoRe: marked to claim already");
+        require(!policy.expired, "UnoRe: policy expired");
+        require(policy.claimedAmount + _withdrawAmount <= policy.coverageAmount, "UnoRe:Claim Amount Exceeded");
+        policy.claimedAmount += _withdrawAmount;
+        if (policy.claimedAmount == policy.coverageAmount) {
+            getPolicy[_policyId].exist = false;
+            _burn(_policyId);
+            emit LogMarkToClaim(_policyId, getPolicy[_policyId].coverageAmount);
+        } else {
+            emit LogUpdatePolicy(_policyId, policy.claimedAmount);
+        }
     }
 
     /**
