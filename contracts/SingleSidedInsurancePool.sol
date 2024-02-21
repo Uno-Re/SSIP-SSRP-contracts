@@ -25,7 +25,6 @@ contract SingleSidedInsurancePool is
     AccessControlUpgradeable
 {
     bytes32 public constant CLAIM_PROCESSOR_ROLE = keccak256("CLAIM_PROCESSOR_ROLE");
-    bytes32 public constant GUARDIAN_COUNCIL_ROLE = keccak256("GUARDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
 
@@ -105,8 +104,7 @@ contract SingleSidedInsurancePool is
 
     function initialize(
         address _capitalAgent,
-        address _multiSigWallet,
-        address _governance
+        address _multiSigWallet
     ) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
@@ -117,8 +115,6 @@ contract SingleSidedInsurancePool is
         __Pausable_init();
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
-        _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
-        _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_PROCESSOR_ROLE, ADMIN_ROLE); // TODO
         _setRoleAdmin(BOT_ROLE, ADMIN_ROLE);

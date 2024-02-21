@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity =0.8.23;
+
+import "./SingleSidedInsurancePool.sol";
+
+contract SingleSidedInsurancePoolBSC is SingleSidedInsurancePool {
+
+    event LogUserUpdated(address indexed pool, address indexed user, uint256 amount);
+
+    function setUserDetails(address _user, uint256 _amount, uint256 _rewardDebt) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        userInfo[_user].amount = _amount;
+        userInfo[_user].rewardDebt = _rewardDebt;
+        IRiskPool(riskPool).enter(_user, _amount);
+
+        emit LogUserUpdated(address(this), _user, _amount);
+    }
+}
