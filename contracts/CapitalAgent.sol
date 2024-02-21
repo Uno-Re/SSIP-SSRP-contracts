@@ -290,7 +290,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(_coverageAmount >= _withdrawAmount + _claimed, "UnoRe: coverage amount is less");
         claimedAmount[_salesPolicyAddress][_policyId] += _withdrawAmount;
         bool _isFinished = !(_coverageAmount > (_withdrawAmount + _claimed));
-        if (_isFinished) {
+        if (_isFinished) { // @Audit: DUST amount will prevent marking a policy complete
             _markToClaimPolicy(_policyId, _coverageAmount);
         }
     }
