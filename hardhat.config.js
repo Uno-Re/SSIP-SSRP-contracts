@@ -50,12 +50,6 @@ module.exports = {
     hardhat: {
       // hardfork: "london",
       allowUnlimitedContractSize: true,
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 2000,
-        },
-      },
       evmVersion: "byzantium",
       forking: {
         url: "https://eth-goerli.g.alchemy.com/v2/HK0kZcIo_6y1ahCx3d3E_AgVWP0k9fs-",
@@ -115,7 +109,7 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 2000,
+        runs: 200,
       },
     },
   },
