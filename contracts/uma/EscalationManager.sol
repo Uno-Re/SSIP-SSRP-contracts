@@ -4,13 +4,18 @@ pragma solidity =0.8.23;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../interfaces/EscalationManagerInterface.sol";
 import "../interfaces/OptimisticOracleV3Interface.sol";
+import "../interfaces/ISingleSidedInsurancePool.sol";
+import "../interfaces/IPayoutRequest.sol";
 
 contract EscalationManager is EscalationManagerInterface, AccessControl{
 
+    struct AssertionApproval {
+        bool exist;
+        bool approved;
+    }
+
     bytes32 public constant OPTMISTIC_ORACLE_V3_ROLE = keccak256("OPTMISTIC_ORACLE_V3_ROLE");
     bytes32 public constant CLAIM_ASSESSOR_ROLE = keccak256("CLAIM_ASSESSOR_ROLE");
-
-    OptimisticOracleV3Interface public immutable optimisticOracleV3;
 
     bool public blockAssertion;
     bool public arbitrateViaEscalationManager;
@@ -19,11 +24,9 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
 
     mapping (address => bool) checkDisputers;
     mapping (address => bool) checkAssertingCaller;
+    mapping (bytes32 => AssertionApproval) isAssertionIdApproved;
 
-    modifier onlyOptimisticOracleV3() {
-        require(msg.sender == address(optimisticOracleV3), "Not the Optimistic Oracle V3");
-        _;
-    }
+    mapping (bytes32 => int256) oraclePrice;
 
     event PriceRequestAdded(bytes32 indexed identifier, uint256 time, bytes ancillaryData);
     event UpdatedBlockAssertion(address indexed owner, bool blockAssertion);
@@ -34,10 +37,8 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
 
     /**
      * @notice Constructs the escalation manager.
-     * @param _optimisticOracleV3 the Optimistic Oracle V3 to use.
      */
     constructor(address _optimisticOracleV3, address _governance) {
-        optimisticOracleV3 = OptimisticOracleV3Interface(_optimisticOracleV3);
         _grantRole(CLAIM_ASSESSOR_ROLE, _governance);
         _setRoleAdmin(CLAIM_ASSESSOR_ROLE, CLAIM_ASSESSOR_ROLE);
         _grantRole(OPTMISTIC_ORACLE_V3_ROLE, _optimisticOracleV3);
@@ -89,11 +90,28 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         checkAssertingCaller[_caller] = !checkAssertingCaller[_caller];
     }
 
+    function setAssertionIdApproval(bytes32 _assertionId, bool _isApproved, bool _exist) external onlyRole(CLAIM_ASSESSOR_ROLE) {
+        isAssertionIdApproved[_assertionId].exist = _exist;
+        isAssertionIdApproved[_assertionId].approved = _isApproved;
+    }
+
     function getPrice(
         bytes32 identifier,
         uint256 time,
         bytes memory ancillaryData
-    ) external override returns (int256) {}
+    ) external view override returns (int256) {
+        bytes32 data = keccak256(abi.encodePacked(identifier, time, ancillaryData));
+        return oraclePrice[data];
+    }
+
+    function setOraclePrice(bytes32 identifier,
+        uint256 time,
+        bytes memory ancillaryData,
+        int256 price
+    ) external onlyRole(CLAIM_ASSESSOR_ROLE) {
+        bytes32 data = keccak256(abi.encodePacked(identifier, time, ancillaryData));
+        oraclePrice[data] = price;
+    }
 
     function requestPrice(
         bytes32 identifier,
@@ -103,7 +121,21 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         emit PriceRequestAdded(identifier, time, ancillaryData);
     }
 
-    function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external override onlyRole(OPTMISTIC_ORACLE_V3_ROLE) {}
+    function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external override onlyRole(OPTMISTIC_ORACLE_V3_ROLE) {
+
+        AssertionApproval memory _assertionApproval = isAssertionIdApproved[assertionId];
+        if (_assertionApproval.exist) {
+            if (_assertionApproval.approved && !assertedTruthfully) {
+                IPayoutRequest _payoutAddress = IPayoutRequest(OptimisticOracleV3Interface(msg.sender).getAssertion(assertionId).callbackRecipient);
+                uint256 _policyId = _payoutAddress.assertedPolicies(assertionId);
+                IPayoutRequest.Policy memory policy = _payoutAddress.policies(_policyId);
+                ISingleSidedInsurancePool(_payoutAddress.ssip()).settlePayout(_policyId, policy.payoutAddress, policy.insuranceAmount);
+            } else if (assertedTruthfully && !_assertionApproval.approved) {
+                revert("AssertionId not approved");
+            }
+        }
+
+    }
 
     function assertionDisputedCallback(bytes32 assertionId) external override onlyRole(OPTMISTIC_ORACLE_V3_ROLE) {}
 

@@ -47,6 +47,8 @@ contract CapitalAgent1 is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContr
 
     mapping(address => bool) public poolWhiteList;
 
+    mapping(address => mapping(uint256 => uint256)) public claimedAmount;
+
     event LogAddPool(address indexed _ssip, address _currency, uint256 _scr);
     event LogRemovePool(address indexed _ssip);
     event LogSetPolicy(address indexed _salesPolicy);

@@ -52,6 +52,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     mapping(address => bool) public poolWhiteList;
 
+    mapping(address => mapping(uint256 => uint256)) public claimedAmount;
+
     event LogAddPool(address indexed _ssip, address _currency, uint256 _scr);
     event LogRemovePool(address indexed _ssip);
     event LogSetPolicy(address indexed _salesPolicy);
@@ -273,11 +275,23 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * decrease capital of pool by _withdrawAmount, if user claim policy from pool 
      * @param _withdrawAmount amount to withdraw
      **/
-    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isFinished) external override nonReentrant {
+    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isNotMigrate) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
-        if (_isFinished) {
-            _markToClaimPolicy(_policyId);
+        if (_isNotMigrate) {
+            _SSIPPolicyClaim(_withdrawAmount, _policyId);
+        }
+    }
+
+    function _SSIPPolicyClaim(uint256 _withdrawAmount, uint256 _policyId) internal {
+        address _salesPolicyAddress = policyInfo.policy;
+        (uint256 _coverageAmount, , , , ) = ISalesPolicy(_salesPolicyAddress).getPolicyData(_policyId);
+        uint256 _claimed = claimedAmount[_salesPolicyAddress][_policyId];
+        require(_coverageAmount >= _withdrawAmount + _claimed, "UnoRe: coverage amount is less");
+        claimedAmount[_salesPolicyAddress][_policyId] += _withdrawAmount;
+        bool _isFinished = !(_coverageAmount > (_withdrawAmount + _claimed));
+        if (_isFinished) { // @Audit: DUST amount will prevent marking a policy complete
+            _markToClaimPolicy(_policyId, _coverageAmount);
         }
     }
 
@@ -342,12 +356,12 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _policyId policy id to update status
      **/
     function markToClaimPolicy(uint256 _policyId) external onlyRole(ADMIN_ROLE) nonReentrant {
-        _markToClaimPolicy(_policyId);
+        (uint256 _coverageAmount, , , , ) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
+        _markToClaimPolicy(_policyId, _coverageAmount);
     }
 
-    function _markToClaimPolicy(uint256 _policyId) private {
+    function _markToClaimPolicy(uint256 _policyId, uint256 _coverageAmount) private {
         require(policyInfo.policy != address(0), "UnoRe: no exist salesPolicy");
-        (uint256 _coverageAmount, , , , ) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);
         _updatePolicyCoverage(_coverageAmount, false);
         ISalesPolicy(policyInfo.policy).markToClaim(_policyId);
         emit LogMarkToClaimPolicy(policyInfo.policy, _policyId);
