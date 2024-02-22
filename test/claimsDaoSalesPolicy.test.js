@@ -86,6 +86,7 @@ describe("CLaimsDao SalesPolicy", function () {
     await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber("500000"), { from: this.signers[1].address })
     await this.mockUNO.connect(this.signers[2]).faucetToken(getBigNumber("500000000"), { from: this.signers[2].address })
     await this.mockUSDT.connect(this.signers[2]).faucetToken(getBigNumber("500000"), { from: this.signers[2].address })
+    await this.mockUNO.connect(this.signers[4]).faucetToken(getBigNumber("500000"), { from: this.signers[4].address })
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
     this.assertor = this.signers[6]
@@ -250,19 +251,24 @@ describe("CLaimsDao SalesPolicy", function () {
         .transfer(this.rewarder.target, getBigNumber("100000"), { from: this.signers[0].address })
     ).wait()
     await this.singleSidedInsurancePool.enterInPool(getBigNumber("100000"))
+    let amount = await this.capitalAgent.checkCapitalByMCR(this.singleSidedInsurancePool.target, getBigNumber("100000"));
+    console.log('a', amount)
 
     // // block number when deposit in pool for the first time
     const beforeBlockNumber = await ethers.provider.getBlockNumber()
 
     await advanceBlockTo(beforeBlockNumber + 10000)
+
+    await this.capitalAgent.setMCR(getBigNumber("1", 16));
+
+    await this.capitalAgent.setMLR(getBigNumber("3"));
     // // another one will deposit in pool with the same amount
     await this.singleSidedInsurancePool
       .connect(this.signers[1])
       .enterInPool(getBigNumber("100000"), { from: this.signers[1].address })
 
-    await this.capitalAgent.setMCR(getBigNumber("1", 16));
 
-    await this.capitalAgent.setMLR(getBigNumber("3"));
+
 
     await this.salesPolicyFactory.connect(this.multisig).newSalesPolicy(this.exchangeAgent.target, this.premiumPool.target, this.capitalAgent.target);
 
@@ -410,10 +416,10 @@ describe("CLaimsDao SalesPolicy", function () {
         this.rewarderFactory.target,
         this.mockUNO.target,
       )
-      this.rewarderAddress1 = await this.singleSidedInsurancePool.rewarder()
-      this.rewarder1 = await this.Rewarder.attach(this.rewarderAddress)
-      this.rewarderAddress2 = await this.singleSidedInsurancePool.rewarder()
-      this.rewarder2 = await this.Rewarder.attach(this.rewarderAddress)
+      this.rewarderAddress1 = await this.singleSidedInsurancePool1.rewarder()
+      this.rewarder1 = await this.Rewarder.attach(this.rewarderAddress1)
+      this.rewarderAddress2 = await this.singleSidedInsurancePool2.rewarder()
+      this.rewarder2 = await this.Rewarder.attach(this.rewarderAddress2)
 
       this.payoutRequest1 = await upgrades.deployProxy(this.PayoutRequest, [
         this.singleSidedInsurancePool1.target,
@@ -424,7 +430,7 @@ describe("CLaimsDao SalesPolicy", function () {
         this.signers[0].address,
       ]);
       this.payoutRequest2 = await upgrades.deployProxy(this.PayoutRequest, [
-        this.singleSidedInsurancePool1.target,
+        this.singleSidedInsurancePool2.target,
         this.optimisticOracleV3.target,
         await (this.optimisticOracleV3.defaultCurrency()),
         this.escalationManager.target,
@@ -432,8 +438,8 @@ describe("CLaimsDao SalesPolicy", function () {
         this.signers[0].address,
       ]);
 
-      await this.singleSidedInsurancePool1.connect(this.multisig).grantRole((await this.singleSidedInsurancePool.CLAIM_PROCESSOR_ROLE()), this.payoutRequest1.target)
-      await this.singleSidedInsurancePool2.connect(this.multisig).grantRole((await this.singleSidedInsurancePool.CLAIM_PROCESSOR_ROLE()), this.payoutRequest2.target)
+      await this.singleSidedInsurancePool1.connect(this.multisig).grantRole((await this.singleSidedInsurancePool1.CLAIM_PROCESSOR_ROLE()), this.payoutRequest1.target)
+      await this.singleSidedInsurancePool2.connect(this.multisig).grantRole((await this.singleSidedInsurancePool2.CLAIM_PROCESSOR_ROLE()), this.payoutRequest2.target)
 
       await this.capitalAgent.connect(this.multisig).addPoolWhiteList(this.singleSidedInsurancePool1.target);
       await this.capitalAgent.connect(this.multisig).addPoolWhiteList(this.singleSidedInsurancePool2.target);
@@ -464,14 +470,28 @@ describe("CLaimsDao SalesPolicy", function () {
       await this.mockUNO
         .connect(this.signers[1])
         .approve(this.singleSidedInsurancePool2.target, getBigNumber("1000000"), { from: this.signers[1].address })
-
+      await this.mockUNO
+        .connect(this.signers[0])
+        .approve(this.singleSidedInsurancePool2.target, getBigNumber("1000000"), { from: this.signers[0].address })
       await (
         await this.mockUNO
           .connect(this.signers[0])
-          .transfer(this.rewarder.target, getBigNumber("200000"), { from: this.signers[0].address })
+          .transfer(this.rewarder1.target, getBigNumber("200000"), { from: this.signers[0].address })
       ).wait()
-      await this.singleSidedInsurancePool1.enterInPool(getBigNumber("100000"))
-      await this.singleSidedInsurancePool2.enterInPool(getBigNumber("100000"))
+      await (
+        await this.mockUNO
+          .connect(this.signers[0])
+          .transfer(this.rewarder2.target, getBigNumber("200000"), { from: this.signers[0].address })
+      ).wait()
+      this.riskpool1 = await this.singleSidedInsurancePool1.riskPool()
+
+      console.log('balance of riskPool before enter in Pool', await this.mockUNO.balanceOf(this.riskpool1))
+      await this.singleSidedInsurancePool1.connect(this.signers[1]).enterInPool(getBigNumber("200", 6))
+      await this.singleSidedInsurancePool1.connect(this.signers[0]).enterInPool(getBigNumber("200", 6))
+      let amount = await this.capitalAgent.checkCapitalByMCR(this.singleSidedInsurancePool1.target, 1);
+      console.log('a', amount)
+      console.log('balance of riskPool after enter in pool', await this.mockUNO.balanceOf(this.riskpool1))
+      await this.singleSidedInsurancePool2.connect(this.signers[1]).enterInPool(getBigNumber("200", 6))
 
       await this.payoutRequest1.setCapitalAgent(this.capitalAgent.target);
       await this.payoutRequest2.setCapitalAgent(this.capitalAgent.target);
@@ -628,48 +648,180 @@ describe("CLaimsDao SalesPolicy", function () {
     // })
 
 
-    it("Payout of claim from multiple pools for single policy ", async function () {
+    // it("Payout of claim from multiple pools for single policy ", async function () {
 
 
+    //   await this.payoutRequest1.setFailed(false);
+    //   await this.payoutRequest2.setFailed(false);
+    //   const currency = await (this.optimisticOracleV3.defaultCurrency())
+    //   const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
+
+
+    //   await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
+    //   await this.mockUNO.approve(this.payoutRequest2.target, bondAmount);
+    //   // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
+    //   await expect(await this.payoutRequest1.initRequest(0, getBigNumber("50", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
+    //   await expect(await this.payoutRequest2.initRequest(0, getBigNumber("50", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
+    //   const assertionId1 = await this.payoutRequest1.policiesAssertionId(0);
+    //   const assertionId2 = await this.payoutRequest2.policiesAssertionId(0);
+
+    //   const assertion1 = await this.optimisticOracleV3.assertions(assertionId1);
+    //   const assertion2 = await this.optimisticOracleV3.assertions(assertionId2);
+
+    //   const sevenDays = 24 * 7 * 60 * 60 * 7
+    //   //calling assert truth in optimistic oracle 
+    //   await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
+
+    //   const bondRecipientAmount = BigInt(assertion1.bond)
+    //   const claimamount = getBigNumber("50", 6)
+    //   console.log(assertion1.asserter, 'assertion1.asserter');
+    //   console.log(this.signers[5].address, 'this.signers[5].address');
+    //   console.log(bondRecipientAmount, 'bondRecipientAmount');
+
+    //   await expect(this.optimisticOracleV3.settleAssertion(assertionId1)).changeTokenBalances(
+    //     this.mockUNO,
+    //     [ assertion1.asserter],
+    //     [ BigInt(claimamount) + bondRecipientAmount]
+    //   );
+    //   console.log('done')
+    //   await expect(this.optimisticOracleV3.settleAssertion(assertionId2)).changeTokenBalances(
+    //     this.mockUNO,
+    //     [ assertion2.asserter],
+    //     [BigInt(claimamount) + bondRecipientAmount]
+    //   );
+    // })
+    // it("Withdrawal of position of old underwriting LPs during and after a claim payout ", async function () {
+    //   await this.payoutRequest1.setFailed(false);
+    //   const currency = await (this.optimisticOracleV3.defaultCurrency())
+    //   const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
+    //   console.log('bond', bondAmount);
+
+    //   await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
+
+    //   // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
+    //   await expect(await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
+
+    //   const assertionId = await this.payoutRequest1.policiesAssertionId(0);
+    //   let assertion = await this.optimisticOracleV3.assertions(assertionId);
+
+
+    //   const sevenDays = 24 * 7 * 60 * 60 * 7
+    //   //calling assert truth in optimistic oracle 
+    //   await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
+
+    //   const bondRecipientAmount = BigInt(assertion.bond)
+    //   const claimamount = getBigNumber("101", 6)
+
+    //   await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
+    //     this.mockUNO,
+    //     [assertion.asserter],
+    //     [BigInt(claimamount) + bondRecipientAmount]
+    //   );
+    //   console.log('balance of riskPool after policy', await this.mockUNO.balanceOf(this.riskpool1))
+    //   assertion = await this.optimisticOracleV3.assertions(assertionId);
+    //   expect(assertion.settled).to.equal(true);
+    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted
+    //   // user is putting less amount for leaving
+    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("1", 6))).to.be.reverted
+    // })
+    // it("Withdrawal of position of new underwriting LPs after a claim payout", async function () {
+    //   await this.payoutRequest1.setFailed(false);
+    //   const currency = await (this.optimisticOracleV3.defaultCurrency())
+    //   const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
+    //   console.log('bond', bondAmount);
+
+    //   await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
+
+    //   // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
+    //   await expect(await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
+
+    //   const assertionId = await this.payoutRequest1.policiesAssertionId(0);
+    //   let assertion = await this.optimisticOracleV3.assertions(assertionId);
+
+
+    //   const sevenDays = 24 * 7 * 60 * 60 * 7
+    //   //calling assert truth in optimistic oracle 
+    //   await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
+
+    //   const bondRecipientAmount = BigInt(assertion.bond)
+    //   const claimamount = getBigNumber("101", 6)
+
+    //   await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
+    //     this.mockUNO,
+    //     [assertion.asserter],
+    //     [BigInt(claimamount) + bondRecipientAmount]
+    //   );
+    //   console.log('balance of riskPool after policy', await this.mockUNO.balanceOf(this.riskpool1))
+    //   assertion = await this.optimisticOracleV3.assertions(assertionId);
+    //   expect(assertion.settled).to.equal(true);
+    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted;
+    //   //enter in pool after claim 
+
+    //   await this.mockUNO
+    //     .connect(this.signers[4])
+    //     .approve(this.singleSidedInsurancePool1.target, getBigNumber("1000000"), { from: this.signers[4].address });
+
+    //   await this.singleSidedInsurancePool1.connect(this.signers[4]).enterInPool(getBigNumber("200", 6))
+    //   console.log('balance of riskPool before enter in Pool after settlement', await this.mockUNO.balanceOf(this.riskpool1));
+    //   let amount = await this.capitalAgent.checkCapitalByMCR(this.singleSidedInsurancePool1.target, getBigNumber("200", 6));
+    //   console.log('a', amount)
+
+    //   await expect(this.singleSidedInsurancePool1.connect(this.signers[4]).leaveFromPoolInPending(getBigNumber("200", 6))).not.to.be.reverted;
+    //   const currentDate = new Date();
+    //   const afterTenDays = new Date(currentDate.setDate(currentDate.getDate() + 11))
+    //   const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
+
+    //   await hre.ethers.provider.send('evm_increaseTime', [Number(afterTenDaysTimeStampUTC)]);
+
+    //   await expect(this.singleSidedInsurancePool1.connect(this.signers[4]).leaveFromPending(getBigNumber("200", 6))).changeTokenBalances(
+    //     this.mockUNO,
+    //     [this.signers[4].address],
+    //     [getBigNumber("200", 6)]
+    //   );
+    // })
+    it("Withdrawal of old position of old underwriting LPs after a claim payout and new user enter in pool", async function () {
       await this.payoutRequest1.setFailed(false);
-      await this.payoutRequest2.setFailed(false);
       const currency = await (this.optimisticOracleV3.defaultCurrency())
       const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
-
+      console.log('bond', bondAmount);
 
       await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
-      await this.mockUNO.approve(this.payoutRequest2.target, bondAmount);
+
       // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      await expect(await this.payoutRequest1.initRequest(0, getBigNumber("50", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
-      await expect(await this.payoutRequest2.initRequest(0, getBigNumber("50", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
-      const assertionId1 = await this.payoutRequest1.policiesAssertionId(0);
-      const assertionId2 = await this.payoutRequest1.policiesAssertionId(0);
-      
-      const assertion1 = await this.optimisticOracleV3.assertions(assertionId1);
-      const assertion2 = await this.optimisticOracleV3.assertions(assertionId2);
+      await expect(await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
+
+      const assertionId = await this.payoutRequest1.policiesAssertionId(0);
+      let assertion = await this.optimisticOracleV3.assertions(assertionId);
+
 
       const sevenDays = 24 * 7 * 60 * 60 * 7
       //calling assert truth in optimistic oracle 
       await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
 
-      const burnedBondPercentage = await this.optimisticOracleV3.burnedBondPercentage();
-      const oracleFee = (BigInt(burnedBondPercentage) * BigInt(assertion1.bond)) / BigInt(10 ** 18);
-      const bondRecipientAmount = BigInt(BigInt(assertion1.bond) * BigInt(2)) - oracleFee;
-      const claimamount = getBigNumber("50", 6)
-      console.log(assertion1.asserter, 'assertion1.asserter');
-      console.log(this.signers[5].address, 'this.signers[5].address');
-      console.log(bondRecipientAmount, 'bondRecipientAmount');
+      const bondRecipientAmount = BigInt(assertion.bond)
+      const claimamount = getBigNumber("101", 6)
 
-      await expect(this.optimisticOracleV3.settleAssertion(assertionId1)).changeTokenBalances(
+      await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
         this.mockUNO,
-        ["0x07417cA264170Fc5bD3568f93cFb956729752B61", assertion1.asserter,this.signers[5].address],
-        [oracleFee, BigInt(claimamount) + bondRecipientAmount,0]
+        [assertion.asserter],
+        [BigInt(claimamount) + bondRecipientAmount]
       );
-      await expect(this.optimisticOracleV3.settleAssertion(assertionId2)).changeTokenBalances(
-        this.mockUNO,
-        ["0x07417cA264170Fc5bD3568f93cFb956729752B61", assertion2.asserter],
-        [oracleFee, BigInt(claimamount) + bondRecipientAmount]
-      );
+      console.log('balance of riskPool after policy', await this.mockUNO.balanceOf(this.riskpool1))
+      assertion = await this.optimisticOracleV3.assertions(assertionId);
+      expect(assertion.settled).to.equal(true);
+      await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted;
+      //enter in pool after claim 
+
+      await this.mockUNO
+        .connect(this.signers[4])
+        .approve(this.singleSidedInsurancePool1.target, getBigNumber("1000000"), { from: this.signers[4].address });
+
+      await this.singleSidedInsurancePool1.connect(this.signers[4]).enterInPool(getBigNumber("20000", 18))
+      console.log('balance of riskPool before enter in Pool after settlement', await this.mockUNO.balanceOf(this.riskpool1));
+      // signer0 tries again leaving from pool
+
+      await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted;
+
     })
 
 
