@@ -28,7 +28,7 @@ async function main() {
   if (!isExpired && isExist) {
     if ((await this.SalesPolicy.ownerOf(policyId)) == userAddress) {
         console.log(policyId);
-      let claimedAmount = await this.CapitalAgent.claimedAmount(this.SalesPolicy.target, 12)
+      let claimedAmount = await this.CapitalAgent.claimedAmount(this.SalesPolicy.target, policyId)
       isAmountClaimable = userAmount + claimedAmount <= coverageAmount
       console.log("Amount is claimable", isAmountClaimable)
     } else {
