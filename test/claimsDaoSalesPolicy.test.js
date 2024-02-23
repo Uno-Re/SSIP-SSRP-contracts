@@ -720,9 +720,9 @@ describe("CLaimsDao SalesPolicy", function () {
     //   console.log('balance of riskPool after policy', await this.mockUNO.balanceOf(this.riskpool1))
     //   assertion = await this.optimisticOracleV3.assertions(assertionId);
     //   expect(assertion.settled).to.equal(true);
-    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted
+    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).not.to.be.reverted
     //   // user is putting less amount for leaving
-    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("1", 6))).to.be.reverted
+    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("1", 6))).not.to.be.reverted
     // })
     // it("Withdrawal of position of new underwriting LPs after a claim payout", async function () {
     //   await this.payoutRequest1.setFailed(false);
@@ -772,11 +772,15 @@ describe("CLaimsDao SalesPolicy", function () {
     //   const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
 
     //   await hre.ethers.provider.send('evm_increaseTime', [Number(afterTenDaysTimeStampUTC)]);
+    //   console.log(this.riskpool1, 'this.riskPool1');
+    //   const risk = this.RiskPool.attach(this.riskpool1);
+    //   const lpprice = (await risk.lpPriceUno()).toString();
+    //   const LPPrice = await ethers.formatEther(lpprice)
 
     //   await expect(this.singleSidedInsurancePool1.connect(this.signers[4]).leaveFromPending(getBigNumber("200", 6))).changeTokenBalances(
     //     this.mockUNO,
     //     [this.signers[4].address],
-    //     [getBigNumber("200", 6)]
+    //     [Number(getBigNumber("200", 6)) * (LPPrice)]
     //   );
     // })
     it("Withdrawal of old position of old underwriting LPs after a claim payout and new user enter in pool", async function () {
