@@ -793,7 +793,7 @@ describe("CLaimsDao SalesPolicy", function () {
     //     this.mockUNO,
     //     [this.signers[4].address],
     //     [Number(getBigNumber("200", 6)) * (LPPrice)]
-    //   );
+    //   ); 
     // })
     // it("Withdrawal of old position of old underwriting LPs after a claim payout and new user enter in pool", async function () {
     //   await this.payoutRequest1.setFailed(false);
@@ -816,13 +816,19 @@ describe("CLaimsDao SalesPolicy", function () {
 
     //   const bondRecipientAmount = BigInt(assertion.bond)
     //   const claimamount = getBigNumber("101", 6)
-
+    //   this.riskpool1 = this.RiskPool.attach(this.riskpool1)
+    //   const riskPoolBalance = await this.mockUNO.balanceOf(this.riskpool1.target);
     //   await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
     //     this.mockUNO,
     //     [assertion.asserter],
     //     [BigInt(claimamount) + bondRecipientAmount]
     //   );
-    //   console.log('balance of riskPool after policy', await this.mockUNO.balanceOf(this.riskpool1))
+    //   const total = (await this.riskpool1.totalSupply());
+    //   const expectedLpTokenPrice = (BigInt(riskPoolBalance - claimamount) * BigInt(1 * 10 ** 18)) / total;
+    //   const lpTokenPrice = await this.riskpool1.lpPriceUno();
+    //   expect(expectedLpTokenPrice).to.equal(lpTokenPrice);
+
+    //   console.log('balance of riskPool after policy', await this.mockUNO.balanceOf(this.riskpool1.target))
     //   assertion = await this.optimisticOracleV3.assertions(assertionId);
     //   expect(assertion.settled).to.equal(true);
     //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted;
@@ -837,9 +843,98 @@ describe("CLaimsDao SalesPolicy", function () {
     //   // signer0 tries again leaving from pool
 
     //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted;
-    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("150", 6))).not.to.be.reverted;
+    //   const currentDate = new Date();
+    //   const afterTenDays = new Date(currentDate.setDate(currentDate.getDate() + 11))
+    //   const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
+
+    //   await hre.ethers.provider.send('evm_increaseTime', [Number(afterTenDaysTimeStampUTC)]);
+    //   console.log(this.riskpool1.target, 'this.riskPool1');
+    //   const lpprice = (await this.riskpool1.lpPriceUno()).toString();
+    //   const LPPrice = await ethers.formatEther(lpprice)
+
+    //   await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted;
 
     // })
+    it("pool withdraw amount calculation", async function () {
+      await this.payoutRequest1.setFailed(false);
+      const currency = await (this.optimisticOracleV3.defaultCurrency())
+      const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
+      console.log('bond', bondAmount);
+
+      const withdrawamount = getBigNumber("200", 6);
+      await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
+
+      //user exiting from pool before claim
+      await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(withdrawamount)).not.to.be.reverted;
+
+      //enter in pool before claim 
+
+      await this.mockUNO
+        .connect(this.signers[4])
+        .approve(this.singleSidedInsurancePool1.target, getBigNumber("200", 6), { from: this.signers[4].address });
+
+      await this.singleSidedInsurancePool1.connect(this.signers[4]).enterInPool(getBigNumber("200", 6))
+      console.log('balance of riskPool before enter in Pool after settlement', await this.mockUNO.balanceOf(this.riskpool1));
+
+
+      // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
+      await expect(await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[0].address, -bondAmount);
+
+      const assertionId = await this.payoutRequest1.policiesAssertionId(0);
+      let assertion = await this.optimisticOracleV3.assertions(assertionId);
+
+
+      const sevenDays = 24 * 7 * 60 * 60 * 7
+      //calling assert truth in optimistic oracle 
+      await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
+
+      const bondRecipientAmount = BigInt(assertion.bond)
+      const claimamount = getBigNumber("101", 6)
+      this.riskpool1 = this.RiskPool.attach(this.riskpool1)
+      const riskPoolBalance = await this.mockUNO.balanceOf(this.riskpool1.target);
+      await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
+        this.mockUNO,
+        [assertion.asserter],
+        [BigInt(claimamount) + bondRecipientAmount]
+      );
+      const total = (await this.riskpool1.totalSupply());
+      const expectedLpTokenPrice = (BigInt(riskPoolBalance - claimamount) * BigInt(1 * 10 ** 18)) / total;
+      const lpTokenPrice = await this.riskpool1.lpPriceUno();
+      expect(expectedLpTokenPrice).to.equal(lpTokenPrice);
+
+      const lpprice = (await this.riskpool1.lpPriceUno()).toString();
+      const LPPrice = ethers.formatEther(lpprice);
+      const withdrawableAmount = Math.trunc(Number(withdrawamount) * LPPrice);
+
+      //user exiting from pool
+      await expect(this.singleSidedInsurancePool1.connect(this.signers[4]).leaveFromPoolInPending(withdrawamount)).to.be.reverted;
+      //user needs to put amount*lpToken uno 
+      await expect(this.singleSidedInsurancePool1.connect(this.signers[4]).leaveFromPoolInPending(withdrawableAmount + 1)).not.to.be.reverted;
+
+      console.log('balance of riskPool after policy', await this.mockUNO.balanceOf(this.riskpool1.target))
+      assertion = await this.optimisticOracleV3.assertions(assertionId);
+      expect(assertion.settled).to.equal(true);
+
+      await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(getBigNumber("200", 6))).to.be.reverted;
+      const currentDate = new Date();
+      const afterTenDays = new Date(currentDate.setDate(currentDate.getDate() + 11))
+      const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
+
+      await hre.ethers.provider.send('evm_increaseTime', [Number(afterTenDaysTimeStampUTC)]);
+      console.log(this.riskpool1.target, 'this.riskPool1');
+
+      await expect(this.singleSidedInsurancePool1.connect(this.signers[0]).leaveFromPending(getBigNumber("200", 6))).changeTokenBalances(
+        this.mockUNO,
+        [this.signers[0].address],
+        [withdrawableAmount]
+      );
+      await expect(this.singleSidedInsurancePool1.connect(this.signers[4]).leaveFromPending(withdrawableAmount)).changeTokenBalances(
+        this.mockUNO,
+        [this.signers[4].address],
+        [Math.trunc(withdrawableAmount * (LPPrice))]
+      );
+
+    })
 
 
 
