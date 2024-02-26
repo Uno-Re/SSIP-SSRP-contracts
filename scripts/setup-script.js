@@ -34,6 +34,7 @@ async function main() {
 	this.PayoutUSDC = (await hre.deployments.get("PayoutRequestUSDC")).address; 
     this.PayoutUSDT = (await hre.deployments.get("PayoutRequestUSDT")).address; 
     this.SSRP = (await hre.deployments.get("SingleSidedReinsurancePool")).address;
+    this.EscalationManager = (await hre.deployments.get("EscalationManager")).address;
 
     this.SSIPETH = await ethers.getContractAt(ssipAbi, this.SSIPETH);
     this.SSIPUNO = await ethers.getContractAt(ssipAbi, this.SSIPUNO);
@@ -76,6 +77,11 @@ async function main() {
     await this.SSIPUNO.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUNO);
     await this.SSIPUSDC.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDC);
     await this.SSIPUSDT.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDT);
+
+    await this.SSIPETH.grantRole(CLAIM_PROCESSOR_ROLE, this.EscalationManager);
+    await this.SSIPUNO.grantRole(CLAIM_PROCESSOR_ROLE, this.EscalationManager);
+    await this.SSIPUSDC.grantRole(CLAIM_PROCESSOR_ROLE, this.EscalationManager);
+    await this.SSIPUSDT.grantRole(CLAIM_PROCESSOR_ROLE, this.EscalationManager);
 
     await this.SSRP.createRiskPool("Synthetic SSRP", "SSRP", this.RiskPoolFactory.address, UNOToken, rewardMultiplier);
     await this.SSRP.createRewarder(operator, this.RewarderFactory.address, UNOToken);
