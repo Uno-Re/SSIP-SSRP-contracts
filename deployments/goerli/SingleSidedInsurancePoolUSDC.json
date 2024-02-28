@@ -1,5 +1,5 @@
 {
-  "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+  "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
   "abi": [
     {
       "anonymous": false,
@@ -371,31 +371,6 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "_SSIP",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "_syntheticSSIP",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "_lpToken",
-          "type": "address"
-        }
-      ],
-      "name": "LogCreateSyntheticSSIP",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
           "name": "_user",
           "type": "address"
         },
@@ -633,6 +608,31 @@
         }
       ],
       "name": "LogUpdatePool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "pool",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogUserUpdated",
       "type": "event"
     },
     {
@@ -1004,24 +1004,6 @@
         }
       ],
       "name": "createRiskPool",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_multiSigWallet",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_factory",
-          "type": "address"
-        }
-      ],
-      "name": "createSyntheticSSIP",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1524,6 +1506,24 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "_accUnoPerShare",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_lastRewardBlock",
+          "type": "uint256"
+        }
+      ],
+      "name": "setAccUnoPerShare",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "_capitalAgent",
           "type": "address"
@@ -1543,6 +1543,19 @@
         }
       ],
       "name": "setLockTime",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_lpPriceUno",
+          "type": "uint256"
+        }
+      ],
+      "name": "setLpPriceInRiskPool",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1620,6 +1633,29 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rewardDebt",
+          "type": "uint256"
+        }
+      ],
+      "name": "setUserDetails",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "uint256",
           "name": "_policyId",
           "type": "uint256"
@@ -1667,19 +1703,6 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "syntheticSSIP",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -1769,35 +1792,35 @@
       "type": "constructor"
     }
   ],
-  "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
+  "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
   "receipt": {
     "to": null,
     "from": "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5",
-    "contractAddress": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
-    "transactionIndex": 29,
-    "gasUsed": "914681",
-    "logsBloom": "0x00000004000100000800000000000000480000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000002000000000020000000000000000001000000000000020006400000020000000800010000800000000800000000000000000000000000000000000a00000000004000000000000080040000000000800000000000000000000000000000000000000000000080100000001000000000000000000020000000000008000000000000000000000404000100000400000020000000000000000000000000000000000000000000000001000000000000000000",
-    "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536",
-    "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
+    "contractAddress": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
+    "transactionIndex": 30,
+    "gasUsed": "914702",
+    "logsBloom": "0x00000004000100000800000000000000480000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000080000000000000000002000000000020000000000000000001000000000000020000400000020000000800010000800000000800000000000000002000000000000000000a00000000004000000000000080040000000000800000100000000000810000000000000000000000000000120000001000000000000000000020000000000000000000000000000000000404000100000400000020000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9",
+    "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
     "logs": [
       {
-        "transactionIndex": 29,
-        "blockNumber": 10577628,
-        "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
-        "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+        "transactionIndex": 30,
+        "blockNumber": 10608785,
+        "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
+        "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
         "topics": [
           "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b",
-          "0x00000000000000000000000084e8c11e23b1546a8bf06b23358c3cfb396af482"
+          "0x0000000000000000000000004d35f3700563f3e4e9fa10bd6507c08f741a9949"
         ],
         "data": "0x",
-        "logIndex": 75,
-        "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536"
+        "logIndex": 43,
+        "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9"
       },
       {
-        "transactionIndex": 29,
-        "blockNumber": 10577628,
-        "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
-        "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+        "transactionIndex": 30,
+        "blockNumber": 10608785,
+        "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
+        "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
         "topics": [
           "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d",
           "0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775",
@@ -1805,14 +1828,14 @@
           "0x000000000000000000000000edffe0a06914c9d6083b4b099e5b935e9e84c9a5"
         ],
         "data": "0x",
-        "logIndex": 76,
-        "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536"
+        "logIndex": 44,
+        "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9"
       },
       {
-        "transactionIndex": 29,
-        "blockNumber": 10577628,
-        "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
-        "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+        "transactionIndex": 30,
+        "blockNumber": 10608785,
+        "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
+        "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
         "topics": [
           "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff",
           "0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775",
@@ -1820,14 +1843,14 @@
           "0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775"
         ],
         "data": "0x",
-        "logIndex": 77,
-        "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536"
+        "logIndex": 45,
+        "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9"
       },
       {
-        "transactionIndex": 29,
-        "blockNumber": 10577628,
-        "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
-        "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+        "transactionIndex": 30,
+        "blockNumber": 10608785,
+        "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
+        "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
         "topics": [
           "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff",
           "0x3b745c09aefb8f732a168ec71c3c87b50c0a4cfd1d104649ae3c04a4623b26bf",
@@ -1835,14 +1858,14 @@
           "0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775"
         ],
         "data": "0x",
-        "logIndex": 78,
-        "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536"
+        "logIndex": 46,
+        "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9"
       },
       {
-        "transactionIndex": 29,
-        "blockNumber": 10577628,
-        "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
-        "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+        "transactionIndex": 30,
+        "blockNumber": 10608785,
+        "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
+        "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
         "topics": [
           "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff",
           "0x6d5c9827c1f410bbb61d3b2a0a34b6b30492d9a1fd38588edca7ec4562ab9c9b",
@@ -1850,43 +1873,43 @@
           "0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775"
         ],
         "data": "0x",
-        "logIndex": 79,
-        "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536"
+        "logIndex": 47,
+        "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9"
       },
       {
-        "transactionIndex": 29,
-        "blockNumber": 10577628,
-        "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
-        "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+        "transactionIndex": 30,
+        "blockNumber": 10608785,
+        "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
+        "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
         "topics": [
           "0xc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d2"
         ],
         "data": "0x0000000000000000000000000000000000000000000000000000000000000001",
-        "logIndex": 80,
-        "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536"
+        "logIndex": 48,
+        "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9"
       },
       {
-        "transactionIndex": 29,
-        "blockNumber": 10577628,
-        "transactionHash": "0x9ff70b3c90c842b5b8f9eb30fe8a8f3f1e9d83d6c6d7f6a49615fb7a09edaa67",
-        "address": "0x4AfF5aCF83BA943459C870595B920a5f464bdF73",
+        "transactionIndex": 30,
+        "blockNumber": 10608785,
+        "transactionHash": "0x95d3fd143d3605adb03b86e3501543c2e8f1e42c88f681fffc01e6c3e4bc54f2",
+        "address": "0xEF820B5D396A505a8557eF58C9367834E27c7425",
         "topics": [
           "0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f"
         ],
-        "data": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f88affdee950d450fe95207b8fadf1cae8b1f72d",
-        "logIndex": 81,
-        "blockHash": "0xbd08dc8842b4a459e114657e344309952634ff2a6fcd7ebf552fcc0a9ca59536"
+        "data": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044ec4dc772a3a60bb47fb334f741a6a5287b8678",
+        "logIndex": 49,
+        "blockHash": "0x9bf1dc2f4f07da7851c15747d029e444c9e3f1569cd4d7172df1f686ac8bd8b9"
       }
     ],
-    "blockNumber": 10577628,
-    "cumulativeGasUsed": "5657413",
+    "blockNumber": 10608785,
+    "cumulativeGasUsed": "3510133",
     "status": 1,
     "byzantium": true
   },
   "args": [
-    "0x84E8C11E23b1546A8bF06B23358c3cfb396aF482",
-    "0xF88AffDeE950d450fE95207B8FadF1cAE8b1F72D",
-    "0x485cc955000000000000000000000000841ae84c84a0cb434276f1da777e92ff6a6b49d6000000000000000000000000edffe0a06914c9d6083b4b099e5b935e9e84c9a5"
+    "0x4d35f3700563f3E4E9fA10Bd6507C08F741A9949",
+    "0x44Ec4DC772a3A60bb47fb334F741A6a5287B8678",
+    "0x485cc955000000000000000000000000115edf96a86b378047058969bcadf904149752e2000000000000000000000000edffe0a06914c9d6083b4b099e5b935e9e84c9a5"
   ],
   "numDeployments": 1,
   "solcInputHash": "0e89febeebc7444140de8e67c9067d2c",
@@ -1896,11 +1919,11 @@
   "execute": {
     "methodName": "initialize",
     "args": [
-      "0x841ae84c84A0cb434276f1da777E92FF6a6B49D6",
+      "0x115Edf96a86b378047058969bcAdf904149752e2",
       "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5"
     ]
   },
-  "implementation": "0x84E8C11E23b1546A8bF06B23358c3cfb396aF482",
+  "implementation": "0x4d35f3700563f3E4E9fA10Bd6507C08F741A9949",
   "devdoc": {
     "details": "This contract implements a proxy that is upgradeable by an admin. To avoid https://medium.com/nomic-labs-blog/malicious-backdoors-in-ethereum-proxies-62629adf3357[proxy selector clashing], which can potentially be used in an attack, this contract uses the https://blog.openzeppelin.com/the-transparent-proxy-pattern/[transparent proxy pattern]. This pattern implies two things that go hand in hand: 1. If any account other than the admin calls the proxy, the call will be forwarded to the implementation, even if that call matches one of the admin functions exposed by the proxy itself. 2. If the admin calls the proxy, it can access the admin functions, but its calls will never be forwarded to the implementation. If the admin tries to call a function on the implementation it will fail with an error that says \"admin cannot fallback to proxy target\". These properties mean that the admin account can only be used for admin actions like upgrading the proxy or changing the admin, so it's best if it's a dedicated account that is not used for anything else. This will avoid headaches due to sudden errors when trying to call a function from the proxy implementation. Our recommendation is for the dedicated account to be an instance of the {ProxyAdmin} contract. If set up this way, you should think of the `ProxyAdmin` instance as the real administrative interface of your proxy.",
     "kind": "dev",
