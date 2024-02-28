@@ -505,6 +505,13 @@ contract SingleSidedInsurancePool is
         emit LogUserUpdated(address(this), _user, _amount);
     }
 
+    function setLpPriceInRiskPool(
+        uint256 _lpPriceUno
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+
+        IRiskPool(riskPool).setLpPriceUno(_lpPriceUno);
+    }
+
     function setAccUnoPerShare(
         uint256 _accUnoPerShare,
         uint256 _lastRewardBlock

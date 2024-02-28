@@ -249,4 +249,8 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         ISingleSidedReinsurancePool(SSRP).lpTransfer(sender, recipient, amount);
         return true;
     }
+
+    function setLpPriceUno(uint256 _lpPriceUno) external onlySSRP {
+        lpPriceUno = _lpPriceUno;
+    }
 }
