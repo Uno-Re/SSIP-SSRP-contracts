@@ -222,6 +222,13 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         emit LogRemovePool(_ssip);
     }
 
+    function setPoolCapital(address _ssip, uint256 _capital) external onlyRole(ADMIN_ROLE) nonReentrant {
+        require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
+        address currency = poolInfo[_ssip].currency;
+        totalCapitalStakedByCurrency[currency] += _capital;
+        poolInfo[_ssip].totalCapital = _capital;
+    }
+
     /**
      * @dev set sales policy, can only be call by SalesPolicyFactory
      * @param _policy address of new SalesPolicy
