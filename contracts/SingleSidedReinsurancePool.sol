@@ -81,6 +81,7 @@ contract SingleSidedReinsurancePool is
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
     event EmergencyWithdrawToggled(address indexed user, bool EmergencyWithdraw);
+    event LogUserUpdated(address indexed pool, address indexed user, uint256 amount);
 
     function initialize(address _multiSigWallet, address _claimAccessor) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -474,6 +475,33 @@ contract SingleSidedReinsurancePool is
      */
     function getTotalWithdrawPendingAmount() external view returns (uint256) {
         return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
+    }
+
+    function setUserDetails(
+        address _user,
+        uint256 _amount,
+        uint256 _rewardDebt
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        userInfo[_user].amount = _amount;
+        userInfo[_user].rewardDebt = _rewardDebt;
+        IRiskPool(riskPool).enter(_user, _amount);
+
+        emit LogUserUpdated(address(this), _user, _amount);
+    }
+
+    function setLpPriceInRiskPool(
+        uint256 _lpPriceUno
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+
+        IRiskPool(riskPool).setLpPriceUno(_lpPriceUno);
+    }
+
+    function setAccUnoPerShare(
+        uint256 _accUnoPerShare,
+        uint256 _lastRewardBlock
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        poolInfo.accUnoPerShare = _accUnoPerShare;
+        poolInfo.lastRewardBlock = _lastRewardBlock;
     }
 
     function _enterInPool(uint256 _amount, address _to) internal {
