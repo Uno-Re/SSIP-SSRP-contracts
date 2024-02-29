@@ -10,7 +10,7 @@ interface ICapitalAgent {
 
     function SSIPStaking(uint256 _stakingAmount) external;
 
-    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isFinished) external;
+    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isMigrate) external;
 
     function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view returns (bool);
 
@@ -21,4 +21,6 @@ interface ICapitalAgent {
     function updatePolicyStatus(uint256 _policyId) external;
 
     function getPolicyInfo() external returns(address, uint256, bool);
+
+    function claimedAmount(address _policy, uint256 _policyId) external returns(uint256);
 }

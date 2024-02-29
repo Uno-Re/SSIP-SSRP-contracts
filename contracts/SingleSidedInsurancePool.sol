@@ -14,7 +14,6 @@ import "./interfaces/IRiskPoolFactory.sol";
 import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
-import "./interfaces/ISyntheticSSIPFactory.sol";
 import "./interfaces/IGnosisSafe.sol";
 import "./libraries/TransferHelper.sol";
 
@@ -25,7 +24,6 @@ contract SingleSidedInsurancePool is
     AccessControlUpgradeable
 {
     bytes32 public constant CLAIM_PROCESSOR_ROLE = keccak256("CLAIM_PROCESSOR_ROLE");
-    bytes32 public constant GUARDIAN_COUNCIL_ROLE = keccak256("GUARDIAN_COUNCIL_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
 
@@ -33,7 +31,6 @@ contract SingleSidedInsurancePool is
 
     address public migrateTo;
     address public capitalAgent;
-    address public syntheticSSIP;
 
     bool public killed;
     bool public emergencyWithdrawAllowed;
@@ -65,7 +62,7 @@ contract SingleSidedInsurancePool is
 
     mapping(bytes32 => mapping(address => uint256)) public roleLockTime;
 
-    mapping(uint256 => Policy) public policies; // TODO
+    mapping(uint256 => Policy) public policies;
 
     mapping(address => UserInfo) public userInfo;
 
@@ -85,7 +82,6 @@ contract SingleSidedInsurancePool is
     event PolicyClaim(address indexed _user, uint256 _claimAmount);
     event LogLpTransferInSSIP(address indexed _from, address indexed _to, uint256 _amount);
     event LogCreateRewarder(address indexed _SSIP, address indexed _rewarder, address _currency);
-    event LogCreateSyntheticSSIP(address indexed _SSIP, address indexed _syntheticSSIP, address indexed _lpToken);
     event LogCancelWithdrawRequest(address indexed _user, uint256 _cancelAmount, uint256 _cancelAmountInUno);
     event LogMigrate(address indexed _user, address indexed _migrateTo, uint256 _migratedAmount);
     event LogSetCapitalAgent(address indexed _SSIP, address indexed _capitalAgent);
@@ -102,12 +98,9 @@ contract SingleSidedInsurancePool is
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
     event EmergencyWithdrawToggled(address indexed user, bool EmergencyWithdraw);
+    event LogUserUpdated(address indexed pool, address indexed user, uint256 amount);
 
-    function initialize(
-        address _capitalAgent,
-        address _multiSigWallet,
-        address _governance
-    ) external initializer {
+    function initialize(address _capitalAgent, address _multiSigWallet) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
         require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners required to verify");
@@ -117,8 +110,6 @@ contract SingleSidedInsurancePool is
         __Pausable_init();
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
-        _grantRole(GUARDIAN_COUNCIL_ROLE, _governance);
-        _setRoleAdmin(GUARDIAN_COUNCIL_ROLE, ADMIN_ROLE);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(CLAIM_PROCESSOR_ROLE, ADMIN_ROLE); // TODO
         _setRoleAdmin(BOT_ROLE, ADMIN_ROLE);
@@ -242,7 +233,7 @@ contract SingleSidedInsurancePool is
     function toggleEmergencyWithdraw() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         emergencyWithdrawAllowed = !emergencyWithdrawAllowed;
         emit EmergencyWithdrawToggled(address(this), emergencyWithdrawAllowed);
-    }  
+    }
 
     /**
      * @dev create Risk pool with UNO from SSIP owner
@@ -266,7 +257,7 @@ contract SingleSidedInsurancePool is
     }
 
     /**
-     * @dev create rewarder with UNO token 
+     * @dev create rewarder with UNO token
      */
     function createRewarder(
         address _operator,
@@ -279,19 +270,8 @@ contract SingleSidedInsurancePool is
         emit LogCreateRewarder(address(this), rewarder, _currency);
     }
 
-    function createSyntheticSSIP(
-        address _multiSigWallet,
-        address _factory
-    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
-        require(_multiSigWallet != address(0), "UnoRe: zero owner address");
-        require(_factory != address(0), "UnoRe:zero factory address");
-        require(riskPool != address(0), "UnoRe:zero LP token address");
-        syntheticSSIP = ISyntheticSSIPFactory(_factory).newSyntheticSSIP(_multiSigWallet, riskPool);
-        emit LogCreateSyntheticSSIP(address(this), syntheticSSIP, riskPool);
-    }
-
     /**
-     * @dev migrate user to new version 
+     * @dev migrate user to new version
      */
     function migrate() external nonReentrant whenNotPaused isAlive {
         require(migrateTo != address(0), "UnoRe: zero address");
@@ -400,22 +380,18 @@ contract SingleSidedInsurancePool is
 
     function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused isAlive {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
-        if (_from != syntheticSSIP && _to != syntheticSSIP) {
-            _harvest(_from);
-            uint256 amount = userInfo[_from].amount;
-            (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(_from);
-            require(amount - pendingAmount >= _amount, "UnoRe: balance overflow");
-            uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
-            userInfo[_from].rewardDebt = accumulatedUno - ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-            userInfo[_from].amount = amount - _amount;
+        _harvest(_from);
+        uint256 amount = userInfo[_from].amount;
+        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(_from);
+        require(amount - pendingAmount >= _amount, "UnoRe: balance overflow");
+        uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+        userInfo[_from].rewardDebt = accumulatedUno - ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
+        userInfo[_from].amount = amount - _amount;
 
-            userInfo[_to].rewardDebt =
-                userInfo[_to].rewardDebt +
-                ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
-            userInfo[_to].amount = userInfo[_to].amount + _amount;
+        userInfo[_to].rewardDebt = userInfo[_to].rewardDebt + ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
+        userInfo[_to].amount = userInfo[_to].amount + _amount;
 
-            emit LogLpTransferInSSIP(_from, _to, _amount);
-        }
+        emit LogLpTransferInSSIP(_from, _to, _amount);
     }
 
     /**
@@ -517,11 +493,44 @@ contract SingleSidedInsurancePool is
         emit InsurancePayoutSettled(_policyId, _payout, _amount);
     }
 
-    function grantRole(bytes32 role, address account) public override isAlive whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
+    function setUserDetails(
+        address _user,
+        uint256 _amount,
+        uint256 _rewardDebt
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        userInfo[_user].amount = _amount;
+        userInfo[_user].rewardDebt = _rewardDebt;
+        IRiskPool(riskPool).enter(_user, _amount);
+
+        emit LogUserUpdated(address(this), _user, _amount);
+    }
+
+    function setLpPriceInRiskPool(
+        uint256 _lpPriceUno
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+
+        IRiskPool(riskPool).setLpPriceUno(_lpPriceUno);
+    }
+
+    function setAccUnoPerShare(
+        uint256 _accUnoPerShare,
+        uint256 _lastRewardBlock
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        poolInfo.accUnoPerShare = _accUnoPerShare;
+        poolInfo.lastRewardBlock = _lastRewardBlock;
+    }
+
+    function grantRole(
+        bytes32 role,
+        address account
+    ) public override isAlive whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
         _grantRole(role, account);
     }
 
-    function _revokeRole(bytes32 role, address account) internal override isAlive whenNotPaused roleLockTimePassed(getRoleAdmin(role)) returns (bool) {
+    function _revokeRole(
+        bytes32 role,
+        address account
+    ) internal override isAlive whenNotPaused roleLockTimePassed(getRoleAdmin(role)) returns (bool) {
         return super._revokeRole(role, account);
     }
 
@@ -544,7 +553,7 @@ contract SingleSidedInsurancePool is
         uint256 requestTime;
         (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
         if (requestTime > 0) {
-            return (0,0);
+            return (0, 0);
         }
 
         uint256 amount = userInfo[_to].amount;

@@ -26,7 +26,7 @@ const {
 } = require("../scripts/shared/constants")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 
-describe.only("SalesPolicy", function () {
+describe("CLaimsDao SalesPolicy", function () {
   before(async function () {
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
@@ -190,9 +190,7 @@ describe.only("SalesPolicy", function () {
 
     this.singleSidedInsurancePool = await upgrades.deployProxy(this.SingleSidedInsurancePool, [
       this.capitalAgent.target,
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-      this.signers[0].address,
-      this.signers[0].address,
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
     ]);
 
     await this.singleSidedInsurancePool.connect(this.multisig).createRewarder(
@@ -289,7 +287,7 @@ describe.only("SalesPolicy", function () {
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
-      const coverageAmount = [getBigNumber("101", 6), getBigNumber("100", 6)]
+      const coverageAmount = [getBigNumber("201", 6), getBigNumber("100", 6)]
       const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
       const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
 
@@ -384,9 +382,33 @@ describe.only("SalesPolicy", function () {
     it("Should buy policy in USDT", async function () {
         expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
         await this.payoutRequest.setFailed(true);
-        await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+        await this.payoutRequest.initRequest(0, getBigNumber("201", 6), this.signers[5].address)
         expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
-        expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("101", 6));
+        expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("201", 6));
+    })
+
+    it("Should not burn policy if coverage amount not fully filled", async function () {
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      await this.payoutRequest.setFailed(true);
+      await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("101", 6));
+      expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
+      expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
+    })
+
+    it("Should burn policy when again clain for policy to full fill coverage", async function () {
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      await this.payoutRequest.setFailed(true);
+      await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("101", 6));
+      expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
+      expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
+
+      await this.payoutRequest.initRequest(0, getBigNumber("100", 6), this.signers[5].address)
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("201", 6));
     })
   })
 })
