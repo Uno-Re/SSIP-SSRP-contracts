@@ -117,14 +117,14 @@ describe("SingleSidedInsurancePool", function () {
       UNISWAP_FACTORY_ADDRESS.rinkeby,
       this.multisig.address,
       getBigNumber("60")
-    )   
+    )
 
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
-        this.exchangeAgent.target, 
-        this.mockUSDT.target,
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        this.signers[0].address]
+      this.exchangeAgent.target,
+      this.mockUSDT.target,
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      this.signers[0].address]
     );
 
     await this.capitalAgent.connect(this.multisig).grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
@@ -134,11 +134,9 @@ describe("SingleSidedInsurancePool", function () {
 
     this.singleSidedInsurancePool = await upgrades.deployProxy(
       this.SingleSidedInsurancePool, [
-        this.capitalAgent.target,
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        this.signers[0].address,
-
-      ]
+      this.capitalAgent.target,
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
+    ]
     );
 
     await this.singleSidedInsurancePool.connect(this.multisig).grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
@@ -219,11 +217,11 @@ describe("SingleSidedInsurancePool", function () {
       await this.mockUSDT
         .connect(this.signers[2])
         .approve(this.singleSidedInsurancePool.target, getBigNumber("1000000"), { from: this.signers[2].address })
-  
+
       const poolInfo = await this.singleSidedInsurancePool.poolInfo()
       expect(poolInfo.unoMultiplierPerBlock).equal(getBigNumber("1"))
       this.poolAddress = await this.singleSidedInsurancePool.riskPool()
-      await this.singleSidedInsurancePool.connect(this.signers[2]).enterInPool(getBigNumber("8500"), {from: this.signers[2].address})
+      await this.singleSidedInsurancePool.connect(this.signers[2]).enterInPool(getBigNumber("8500"), { from: this.signers[2].address })
     })
 
     describe("SingleSidedInsurancePool Staking", function () {
@@ -245,7 +243,7 @@ describe("SingleSidedInsurancePool", function () {
         const pendingUnoRewardBefore1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardBefore2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
-        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), {from: this.signers[1].address})
+        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
         const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
         expect(poolBalance1).to.equal(getBigNumber("8500"))
@@ -279,7 +277,7 @@ describe("SingleSidedInsurancePool", function () {
         const pendingUnoRewardBefore1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardBefore2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
-        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), {from: this.signers[1].address})
+        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
         const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
         expect(poolBalance1).to.equal(getBigNumber("8500"))
@@ -432,6 +430,7 @@ describe("SingleSidedInsurancePool", function () {
         const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
         expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
         // signer 0 emergency Withdraw
+          await this.singleSidedInsurancePool.connect(this.multisig).toggleEmergencyWithdraw();
         await this.singleSidedInsurancePool.emergencyWithdraw()
         // check the uno and risk pool LP token balance of the singer 0 after withdraw
         const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
@@ -736,7 +735,7 @@ describe("SingleSidedInsurancePool", function () {
         const pendingRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[3].address);
         console.log(pendingRewardBefore.toString())
 
-        await(await riskPool.transfer(this.signers[3].address, getBigNumber("1000"))).wait();
+        await (await riskPool.transfer(this.signers[3].address, getBigNumber("1000"))).wait();
 
         const lpBalanceAfterForSigner1 = await riskPool.balanceOf(this.signers[0].address);
         expect(lpBalanceAfterForSigner1).to.equal(lpBalanceBeforeForSigner1 - (getBigNumber("1000")));
@@ -754,52 +753,52 @@ describe("SingleSidedInsurancePool", function () {
         expect(stakingStatusAfter["lpAmount"]).to.equal(getBigNumber("9000"))
       })
 
-        it("Should not allow transfer risk pool LP token when greater than the blance - WR", async function () {
-          const riskPool = this.RiskPool.attach(this.poolAddress);
+      it("Should not allow transfer risk pool LP token when greater than the blance - WR", async function () {
+        const riskPool = this.RiskPool.attach(this.poolAddress);
 
-          const pendingRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[3].address);
+        const pendingRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[3].address);
 
-          await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("8000"))
+        await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("8000"))
 
-          await expect(riskPool.transfer(this.signers[3].address, getBigNumber("5000"))).to.be.revertedWith("ERC20: transfer amount exceeds balance or pending WR");
-        })
+        await expect(riskPool.transfer(this.signers[3].address, getBigNumber("5000"))).to.be.revertedWith("ERC20: transfer amount exceeds balance or pending WR");
+      })
     })
     describe("SingleSidedInsurancePool migrate", function () {
-        beforeEach(async function () {
-          this.Migrate = await ethers.getContractFactory("MigrationMock")
-          this.migrate = await this.Migrate.deploy();
+      beforeEach(async function () {
+        this.Migrate = await ethers.getContractFactory("MigrationMock")
+        this.migrate = await this.Migrate.deploy();
 
-          await this.singleSidedInsurancePool.setMigrateTo(this.migrate.target);
+        await this.singleSidedInsurancePool.setMigrateTo(this.migrate.target);
 
-          await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
+        await this.singleSidedInsurancePool.enterInPool(getBigNumber("10000"))
 
-          await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"));
-
-        })
-
-        it("Should check staking and wr amount after migrate", async function () {
-          const stakedAmountBefore = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-          const wrAmountBefore = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-
-          expect(stakedAmountBefore['lpAmount']).to.equal(getBigNumber("10000"))
-          expect(wrAmountBefore['pendingAmount']).to.equal(getBigNumber("1000"))
-          expect(stakedAmountBefore['unoAmount']).to.equal(getBigNumber("10000"))
-          expect(wrAmountBefore['pendingAmountInUno']).to.equal(getBigNumber("1000"))
-
-          await this.singleSidedInsurancePool.migrate();
-
-          const stakedAmountAfter = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-          const wrAmountAfter = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-
-          expect(stakedAmountAfter['lpAmount']).to.equal(getBigNumber("0"))
-          expect(wrAmountAfter['pendingAmount']).to.equal(getBigNumber("0"))
-          expect(stakedAmountAfter['unoAmount']).to.equal(getBigNumber("0"))
-          expect(wrAmountAfter['pendingAmountInUno']).to.equal(getBigNumber("0"))
-
-          const unobalanceInMigrate = await this.mockUSDT.balanceOf(this.migrate.target)
-          expect(unobalanceInMigrate).to.equal(getBigNumber("10000"))
-        })
+        await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"));
 
       })
+
+      it("Should check staking and wr amount after migrate", async function () {
+        const stakedAmountBefore = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
+        const wrAmountBefore = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
+
+        expect(stakedAmountBefore['lpAmount']).to.equal(getBigNumber("10000"))
+        expect(wrAmountBefore['pendingAmount']).to.equal(getBigNumber("1000"))
+        expect(stakedAmountBefore['unoAmount']).to.equal(getBigNumber("10000"))
+        expect(wrAmountBefore['pendingAmountInUno']).to.equal(getBigNumber("1000"))
+
+        await this.singleSidedInsurancePool.migrate();
+
+        const stakedAmountAfter = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
+        const wrAmountAfter = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
+
+        expect(stakedAmountAfter['lpAmount']).to.equal(getBigNumber("0"))
+        expect(wrAmountAfter['pendingAmount']).to.equal(getBigNumber("0"))
+        expect(stakedAmountAfter['unoAmount']).to.equal(getBigNumber("0"))
+        expect(wrAmountAfter['pendingAmountInUno']).to.equal(getBigNumber("0"))
+
+        const unobalanceInMigrate = await this.mockUSDT.balanceOf(this.migrate.target)
+        expect(unobalanceInMigrate).to.equal(getBigNumber("10000"))
+      })
+
+    })
   })
 })

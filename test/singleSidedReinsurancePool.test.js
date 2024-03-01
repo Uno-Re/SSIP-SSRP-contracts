@@ -284,6 +284,7 @@ describe("SingleSidedReinsurancePool", function () {
 
         expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
         // signer 0 emergency Withdraw
+        await this.singleSidedReinsurancePool.connect(this.multisig).toggleEmergencyWithdraw();
         await this.singleSidedReinsurancePool.emergencyWithdraw()
         const userinfo = await this.singleSidedReinsurancePool.userInfo(this.signers[0].address);
         expect(userinfo.amount).to.equal(0);

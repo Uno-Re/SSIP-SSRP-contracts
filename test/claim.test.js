@@ -138,10 +138,7 @@ describe("SingleSidedInsurance claim policy", function () {
     this.singleSidedInsurancePool = await upgrades.deployProxy(
       this.SingleSidedInsurancePool, [
         this.capitalAgent.target,
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        this.signers[0].address,
-        this.signers[0].address,
-        this.claimAssessor
+        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
       ]
     );
 

@@ -182,7 +182,7 @@ describe("SalesPolicy", function () {
 
     expect(await this.salesPolicyFactory.allProtocolsLength()).equal(3)
 
-    encodedCallData = this.premiumPool.interface.encodeFunctionData("addCurrency", [this.mockUSDT.target])
+    encodedCallData =await this.premiumPool.interface.encodeFunctionData("addCurrency", [this.mockUSDT.target])
 
     await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
       .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -204,11 +204,10 @@ describe("SalesPolicy", function () {
 
     this.singleSidedInsurancePool = await upgrades.deployProxy(this.SingleSidedInsurancePool, [
       this.capitalAgent.target,
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-      this.signers[0].address,
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
     ]);
 
-    encodedCallData = this.capitalAgent.interface.encodeFunctionData("addPoolWhiteList", [this.singleSidedInsurancePool.target])
+    encodedCallData =await this.capitalAgent.interface.encodeFunctionData("addPoolWhiteList", [this.singleSidedInsurancePool.target])
     console.log('[addPoolWhiteList]', encodedCallData)
 
     await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
@@ -229,7 +228,7 @@ describe("SalesPolicy", function () {
 
     this.txIdx++
 
-    encodedCallData = this.capitalAgent.interface.encodeFunctionData("setSalesPolicyFactory", [this.salesPolicyFactory.target])
+    encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setSalesPolicyFactory", [this.salesPolicyFactory.target])
     console.log('[setSalesPolicyFactory]', encodedCallData)
 
     await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
@@ -310,7 +309,7 @@ describe("SalesPolicy", function () {
       .connect(this.signers[1])
       .enterInPool(getBigNumber("100000"), { from: this.signers[1].address })
 
-    encodedCallData = this.capitalAgent.interface.encodeFunctionData("setMCR", [getBigNumber("1", 16)])
+    encodedCallData = await this.capitalAgent.interface.encodeFunctionData("setMCR", [getBigNumber("1", 16)])
 
     await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
       .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -325,7 +324,7 @@ describe("SalesPolicy", function () {
       .withArgs(this.signers[1].address, this.txIdx)
     this.txIdx++
 
-    encodedCallData = this.capitalAgent.interface.encodeFunctionData("setMLR", [getBigNumber("3")])
+    encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setMLR", [getBigNumber("3")])
 
     await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
       .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -340,7 +339,7 @@ describe("SalesPolicy", function () {
       .withArgs(this.signers[1].address, this.txIdx)
     this.txIdx++
 
-    encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("newSalesPolicy", [
+    encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData("newSalesPolicy", [
       this.exchangeAgent.target,
       this.premiumPool.target,
       this.capitalAgent.target,
@@ -363,7 +362,7 @@ describe("SalesPolicy", function () {
     this.salesPolicy = await this.SalesPolicy.attach(await this.salesPolicyFactory.salesPolicy())
 
     {
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[0].address
       ]);
       const index = await this.multiSigWallet.getTransactionCount();
@@ -409,7 +408,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setSignerInPolicy", [this.signers[0].address])
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("setSignerInPolicy", [this.signers[0].address])
 
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -425,7 +424,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.target])
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.target])
 
       await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -483,7 +482,7 @@ describe("SalesPolicy", function () {
       const splitSig = ethers.Signature.from(flatSig)
 
       const chainId = await getChainId()
-      const functionSignature = this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
+      const functionSignature = await this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
         assets,
         protocols,
         coverageAmount,
@@ -544,7 +543,6 @@ describe("SalesPolicy", function () {
 
       console.log('this.txIdx', this.txIdx);
     })
-
     it("Should buy policy in USDT directly", async function () {
       this.txIdx = this.txIdx1;
       let hexData
@@ -552,7 +550,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -570,7 +568,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
       console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -588,7 +586,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -686,7 +684,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -704,7 +702,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -722,7 +720,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -799,7 +797,7 @@ describe("SalesPolicy", function () {
       const privateKey = process.env.PRIVATE_KEY
 
       const protocol = await this.salesPolicyFactory.getProtocol(1)
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
         this.mockUSDT.target,
       ])
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -816,7 +814,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("setSignerInPolicy", [this.signers[0].address])
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("setSignerInPolicy", [this.signers[0].address])
 
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -832,7 +830,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.target])
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData("addWhiteList", [this.salesPolicy.target])
 
       await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -889,7 +887,7 @@ describe("SalesPolicy", function () {
 
       const chainId = await getChainId()
 
-      const functionSignature = this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
+      const functionSignature = await this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
         assets,
         protocols,
         coverageAmount,
@@ -955,7 +953,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -973,7 +971,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -991,7 +989,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1088,7 +1086,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1106,7 +1104,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1124,7 +1122,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1203,7 +1201,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1221,7 +1219,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1239,7 +1237,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('updateCheckIfProtocolInWhitelistArray', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('updateCheckIfProtocolInWhitelistArray', [
         true
       ]);
 
@@ -1258,7 +1256,7 @@ describe("SalesPolicy", function () {
       this.txIdx++;
 
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setBlackListProtocolByAddress', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setBlackListProtocolByAddress', [
         this.signers[1].address
       ]);
 
@@ -1276,7 +1274,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1355,7 +1353,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1373,7 +1371,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1391,7 +1389,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1473,7 +1471,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0);
 
       //setting MLR to 1
-      let encodedCallData = this.capitalAgent.interface.encodeFunctionData("setMLR", [1])
+      let encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setMLR", [1])
 
       await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -1488,7 +1486,7 @@ describe("SalesPolicy", function () {
         .withArgs(this.signers[1].address, this.txIdx)
       this.txIdx++
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -1504,7 +1502,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
       console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1522,7 +1520,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1573,7 +1571,7 @@ describe("SalesPolicy", function () {
         paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
-      const splitSig = ethers.Signature.from(flatSig)
+      const splitSig =await ethers.Signature.from(flatSig)
       await expect(this.salesPolicy.buyPolicy(
         assets,
         protocols,
@@ -1597,7 +1595,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1615,7 +1613,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
       console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1633,7 +1631,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1721,7 +1719,7 @@ describe("SalesPolicy", function () {
       const timestamp = Math.floor(currentDate.getTime() / 1000)
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1739,7 +1737,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
       console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1757,7 +1755,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1845,7 +1843,7 @@ describe("SalesPolicy", function () {
 
       await hre.ethers.provider.send('evm_increaseTime', [Number(_coverStartAt) + Number(_coverageDuration) + 100]);
 
-      encodedCallData = this.capitalAgent.interface.encodeFunctionData('updatePolicyStatus', [
+      encodedCallData = await this.capitalAgent.interface.encodeFunctionData('updatePolicyStatus', [
         1
       ]);
 
@@ -1862,14 +1860,13 @@ describe("SalesPolicy", function () {
         .withArgs(this.signers[1].address, this.txIdx);
 
       this.txIdx++;
-
       let totalUtilizedAmountAfter = await this.capitalAgent.totalUtilizedAmount();
       //console.log('totalUtilizedAmountAfter', totalUtilizedAmountAfter);
       expect(totalUtilizedAmountBefore - totalUtilizedAmountAfter).to.equal(coveregeAmountBefore);
       expect(totalUtilizedAmountAfter).to.equal(getBigNumber("100", 6));
 
     })
-    it('Increase in capacity after users stakes more capital in new pools.', async function (){
+    it('Increase in capacity after users stakes more capital in new pools.', async function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
@@ -1877,7 +1874,7 @@ describe("SalesPolicy", function () {
       //const protocol = await this.salesPolicyFactory.getProtocol(0);
 
       //setting MLR to 1
-      let encodedCallData = this.capitalAgent.interface.encodeFunctionData("setMLR", [100])
+      let encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setMLR", [100])
 
       await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -1892,7 +1889,7 @@ describe("SalesPolicy", function () {
         .withArgs(this.signers[1].address, this.txIdx)
       this.txIdx++
 
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -1908,7 +1905,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
       console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1926,7 +1923,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData = this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
