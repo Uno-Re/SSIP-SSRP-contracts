@@ -106,6 +106,11 @@ contract CapitalAgent1 is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContr
         return (_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
+    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool) {
+        PoolInfo memory _poolInfo = poolInfo[_pool];
+        return (_poolInfo.totalCapital, _poolInfo.SCR, _poolInfo.currency, _poolInfo.exist);
+    }
+
     function setSalesPolicyFactory(address _factory) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(_factory != address(0), "UnoRe: zero factory address");
         salesPolicyFactory = _factory;
