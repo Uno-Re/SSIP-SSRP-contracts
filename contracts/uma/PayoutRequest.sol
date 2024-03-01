@@ -12,6 +12,7 @@ import "../interfaces/ICapitalAgent.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISingleSidedInsurancePool.sol";
 import "../interfaces/IExchangeAgent.sol";
+import "../interfaces/IEscalationManager.sol";
 
 contract PayoutRequest is PausableUpgradeable {
     struct Policy {
@@ -115,6 +116,10 @@ contract PayoutRequest is PausableUpgradeable {
         // If the assertion was true, then the policy is settled.
         Policy memory _policyData = assertedPolicies[_assertionId];
         if (_assertedTruthfully) {
+            IEscalationManager.AssertionApproval memory _assertionApproved = IEscalationManager(escalationManager).isAssertionIdApproved(_assertionId);
+            if (_assertionApproved.exist && !_assertionApproved.approved) {
+                return;
+            }
             // If already settled, do nothing. We don't revert because this function is called by the
             // OptimisticOracleV3, which may block the assertion resolution.
             if (_policyData.settled) return;
