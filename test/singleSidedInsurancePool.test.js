@@ -430,7 +430,7 @@ describe("SingleSidedInsurancePool", function () {
         const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
         expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
         // signer 0 emergency Withdraw
-          await this.singleSidedInsurancePool.connect(this.multisig).toggleEmergencyWithdraw();
+          await this.singleSidedInsurancePool.toggleEmergencyWithdraw();
         await this.singleSidedInsurancePool.emergencyWithdraw()
         // check the uno and risk pool LP token balance of the singer 0 after withdraw
         const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
