@@ -132,8 +132,6 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
                 IPayoutRequest.Policy memory policy = _payoutAddress.policies(_policyId);
                 ISingleSidedInsurancePool(_payoutAddress.ssip()).settlePayout(_policyId, policy.payoutAddress, policy.insuranceAmount);
                 isAssertionIdApproved[assertionId].settled = true;
-            } else if (assertedTruthfully && !_assertionApproval.approved) {
-                revert("AssertionId not approved");
             }
         }
 
