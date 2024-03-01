@@ -23,4 +23,8 @@ interface ICapitalAgent {
     function getPolicyInfo() external returns(address, uint256, bool);
 
     function claimedAmount(address _policy, uint256 _policyId) external returns(uint256);
+
+    function exchangeAgent() external view returns(address);
+
+    function getPoolInfo(address _pool) external view returns(uint256, uint256, address, bool);
 }

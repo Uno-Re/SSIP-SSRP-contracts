@@ -11,6 +11,7 @@ import "../interfaces/OptimisticOracleV3Interface.sol";
 import "../interfaces/ICapitalAgent.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISingleSidedInsurancePool.sol";
+import "../interfaces/IExchangeAgent.sol";
 
 contract PayoutRequest is PausableUpgradeable {
     struct Policy {
@@ -70,10 +71,7 @@ contract PayoutRequest is PausableUpgradeable {
     function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
-        uint256 _claimed = ICapitalAgent(capitalAgent).claimedAmount(salesPolicy, _policyId);
-        (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
-        require(_amount + _claimed <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
-        require(_exist && !_expired, "UnoRe: policy expired or not exist");
+        _checkForCoverage(salesPolicy, _policyId, _amount);
         Policy memory _policyData = policies[_policyId];
         _policyData.insuranceAmount = _amount;
         _policyData.payoutAddress = _to;
@@ -190,5 +188,16 @@ contract PayoutRequest is PausableUpgradeable {
 
     function _requireGuardianCouncil() internal view {
         require(msg.sender == _guardianCouncil, "RPayout: unauthorised");
+    }
+
+    function _checkForCoverage(address salesPolicy, uint256 _policyId, uint256 _amount) internal {
+        uint256 _claimed = ICapitalAgent(capitalAgent).claimedAmount(salesPolicy, _policyId);
+        (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
+        address _exchangeAgent = ICapitalAgent(capitalAgent).exchangeAgent();
+        (, ,address _currency,) = ICapitalAgent(capitalAgent).getPoolInfo(address(ssip));
+        address _usdcToken = IExchangeAgent(_exchangeAgent).usdcToken();
+        uint256 usdcTokenAmount = IExchangeAgent(_exchangeAgent).getNeededTokenAmount(_currency, _usdcToken, _amount);
+        require(usdcTokenAmount + _claimed <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
+        require(_exist && !_expired, "UnoRe: policy expired or not exist");
     }
 }

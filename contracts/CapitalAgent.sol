@@ -112,6 +112,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         return (_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
+    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool) {
+        PoolInfo memory _poolInfo = poolInfo[_pool];
+        return (_poolInfo.totalCapital, _poolInfo.SCR, _poolInfo.currency, _poolInfo.exist);
+    }
+
     /**
      * @dev set sales policy factory, can only be call by admin role
      * @param _factory new sales policy factory address
@@ -294,9 +299,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         address _salesPolicyAddress = policyInfo.policy;
         (uint256 _coverageAmount, , , , ) = ISalesPolicy(_salesPolicyAddress).getPolicyData(_policyId);
         uint256 _claimed = claimedAmount[_salesPolicyAddress][_policyId];
-        require(_coverageAmount >= _withdrawAmount + _claimed, "UnoRe: coverage amount is less");
-        claimedAmount[_salesPolicyAddress][_policyId] += _withdrawAmount;
-        bool _isFinished = !(_coverageAmount > (_withdrawAmount + _claimed));
+        address _poolCurrency = poolInfo[msg.sender].currency;
+        uint256 usdcTokenAmount = IExchangeAgent(exchangeAgent).getNeededTokenAmount(_poolCurrency, usdcToken, _withdrawAmount);
+        require(_coverageAmount >= usdcTokenAmount + _claimed, "UnoRe: coverage amount is less");
+        claimedAmount[_salesPolicyAddress][_policyId] += usdcTokenAmount;
+        bool _isFinished = !(_coverageAmount > (usdcTokenAmount + _claimed));
         if (_isFinished) { // @Audit: DUST amount will prevent marking a policy complete
             _markToClaimPolicy(_policyId, _coverageAmount);
         }
