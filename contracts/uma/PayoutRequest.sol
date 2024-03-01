@@ -16,6 +16,7 @@ import "../interfaces/IExchangeAgent.sol";
 contract PayoutRequest is PausableUpgradeable {
     struct Policy {
         uint256 insuranceAmount;
+        uint256 policyId;
         address payoutAddress;
         bool settled;
     }
@@ -30,8 +31,7 @@ contract PayoutRequest is PausableUpgradeable {
     uint256 public assertionliveTime;
     address public escalationManager;
     address public claimsDao;
-    mapping(uint256 => Policy) public policies;
-    mapping(bytes32 => uint256) public assertedPolicies;
+    mapping(bytes32 => Policy) public assertedPolicies;
     mapping(uint256 => bytes32) public policiesAssertionId;
     mapping(uint256 => bool) public isRequestInit;
     bool public isUMAFailed;
@@ -72,10 +72,6 @@ contract PayoutRequest is PausableUpgradeable {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
         _checkForCoverage(salesPolicy, _policyId, _amount);
-        Policy memory _policyData = policies[_policyId];
-        _policyData.insuranceAmount = _amount;
-        _policyData.payoutAddress = _to;
-        policies[_policyId] = _policyData;
         if (!isUMAFailed) {
             require(IERC721(salesPolicy).ownerOf(_policyId) == msg.sender, "UnoRe: not owner of policy id");
             uint256 bond = optimisticOracle.getMinimumBond(address(defaultCurrency));
@@ -97,13 +93,17 @@ contract PayoutRequest is PausableUpgradeable {
                 defaultIdentifier,
                 bytes32(0) // No domain.
             );
-            assertedPolicies[assertionId] = _policyId;
+
+            Policy memory _policyData = assertedPolicies[assertionId];
+            _policyData.insuranceAmount = _amount;
+            _policyData.payoutAddress = _to;
+            _policyData.policyId = _policyId;
+            assertedPolicies[assertionId] = _policyData;
             policiesAssertionId[_policyId] = assertionId;
             emit InsurancePayoutRequested(_policyId, assertionId);
         } else {
             require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
             require(msg.sender == claimsDao, "RPayout: can only called by claimsDao");
-            policies[_policyId].settled = true;
             ssip.settlePayout(_policyId, _to, _amount);
         }
         isRequestInit[_policyId] = true;
@@ -113,16 +113,15 @@ contract PayoutRequest is PausableUpgradeable {
         require(!isUMAFailed, "RPayout: pool failed");
         require(msg.sender == address(optimisticOracle), "RPayout: !optimistic oracle");
         // If the assertion was true, then the policy is settled.
-        uint256 _policyId = assertedPolicies[_assertionId];
+        Policy memory _policyData = assertedPolicies[_assertionId];
         if (_assertedTruthfully) {
             // If already settled, do nothing. We don't revert because this function is called by the
             // OptimisticOracleV3, which may block the assertion resolution.
-            Policy storage policy = policies[_policyId];
-            if (policy.settled) return;
-            policy.settled = true;
-            ssip.settlePayout(_policyId, policy.payoutAddress, policy.insuranceAmount);
+            if (_policyData.settled) return;
+            assertedPolicies[_assertionId].settled = true;
+            ssip.settlePayout(_policyData.policyId, _policyData.payoutAddress, _policyData.insuranceAmount);
         } else {
-            isRequestInit[_policyId] = false;
+            isRequestInit[_policyData.policyId] = false;
         }
     }
 

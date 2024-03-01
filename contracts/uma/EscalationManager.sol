@@ -12,6 +12,7 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
     struct AssertionApproval {
         bool exist;
         bool approved;
+        bool settled;
     }
 
     bytes32 public constant OPTMISTIC_ORACLE_V3_ROLE = keccak256("OPTMISTIC_ORACLE_V3_ROLE");
@@ -22,11 +23,11 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
     bool public discardOracle;
     bool public validateDisputers;
 
-    mapping (address => bool) checkDisputers;
-    mapping (address => bool) checkAssertingCaller;
-    mapping (bytes32 => AssertionApproval) isAssertionIdApproved;
+    mapping (address => bool) public checkDisputers;
+    mapping (address => bool) public checkAssertingCaller;
+    mapping (bytes32 => AssertionApproval) public isAssertionIdApproved;
 
-    mapping (bytes32 => int256) oraclePrice;
+    mapping (bytes32 => int256) public oraclePrice;
 
     event PriceRequestAdded(bytes32 indexed identifier, uint256 time, bytes ancillaryData);
     event UpdatedBlockAssertion(address indexed owner, bool blockAssertion);
@@ -124,12 +125,13 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
     function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external override onlyRole(OPTMISTIC_ORACLE_V3_ROLE) {
 
         AssertionApproval memory _assertionApproval = isAssertionIdApproved[assertionId];
-        if (_assertionApproval.exist) {
+        if (_assertionApproval.exist && !_assertionApproval.settled) {
             if (_assertionApproval.approved && !assertedTruthfully) {
                 IPayoutRequest _payoutAddress = IPayoutRequest(OptimisticOracleV3Interface(msg.sender).getAssertion(assertionId).callbackRecipient);
                 uint256 _policyId = _payoutAddress.assertedPolicies(assertionId);
                 IPayoutRequest.Policy memory policy = _payoutAddress.policies(_policyId);
                 ISingleSidedInsurancePool(_payoutAddress.ssip()).settlePayout(_policyId, policy.payoutAddress, policy.insuranceAmount);
+                isAssertionIdApproved[assertionId].settled = true;
             } else if (assertedTruthfully && !_assertionApproval.approved) {
                 revert("AssertionId not approved");
             }
