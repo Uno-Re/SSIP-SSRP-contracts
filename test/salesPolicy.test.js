@@ -182,7 +182,7 @@ describe("SalesPolicy", function () {
 
     expect(await this.salesPolicyFactory.allProtocolsLength()).equal(3)
 
-    encodedCallData =await this.premiumPool.interface.encodeFunctionData("addCurrency", [this.mockUSDT.target])
+    encodedCallData = await this.premiumPool.interface.encodeFunctionData("addCurrency", [this.mockUSDT.target])
 
     await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
       .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -207,7 +207,7 @@ describe("SalesPolicy", function () {
       "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
     ]);
 
-    encodedCallData =await this.capitalAgent.interface.encodeFunctionData("addPoolWhiteList", [this.singleSidedInsurancePool.target])
+    encodedCallData = await this.capitalAgent.interface.encodeFunctionData("addPoolWhiteList", [this.singleSidedInsurancePool.target])
     console.log('[addPoolWhiteList]', encodedCallData)
 
     await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
@@ -228,7 +228,7 @@ describe("SalesPolicy", function () {
 
     this.txIdx++
 
-    encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setSalesPolicyFactory", [this.salesPolicyFactory.target])
+    encodedCallData = await this.capitalAgent.interface.encodeFunctionData("setSalesPolicyFactory", [this.salesPolicyFactory.target])
     console.log('[setSalesPolicyFactory]', encodedCallData)
 
     await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
@@ -324,7 +324,7 @@ describe("SalesPolicy", function () {
       .withArgs(this.signers[1].address, this.txIdx)
     this.txIdx++
 
-    encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setMLR", [getBigNumber("3")])
+    encodedCallData = await this.capitalAgent.interface.encodeFunctionData("setMLR", [getBigNumber("3")])
 
     await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
       .to.emit(this.multiSigWallet, "SubmitTransaction")
@@ -339,7 +339,7 @@ describe("SalesPolicy", function () {
       .withArgs(this.signers[1].address, this.txIdx)
     this.txIdx++
 
-    encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData("newSalesPolicy", [
+    encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("newSalesPolicy", [
       this.exchangeAgent.target,
       this.premiumPool.target,
       this.capitalAgent.target,
@@ -362,7 +362,7 @@ describe("SalesPolicy", function () {
     this.salesPolicy = await this.SalesPolicy.attach(await this.salesPolicyFactory.salesPolicy())
 
     {
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[0].address
       ]);
       const index = await this.multiSigWallet.getTransactionCount();
@@ -386,7 +386,7 @@ describe("SalesPolicy", function () {
     it("Should buy policy in USDT", async function () {
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const privateKey = process.env.PRIVATE_KEY
 
       const protocol = await this.salesPolicyFactory.getProtocol(1)
@@ -547,10 +547,10 @@ describe("SalesPolicy", function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -681,10 +681,10 @@ describe("SalesPolicy", function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -702,7 +702,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -720,7 +720,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -793,7 +793,7 @@ describe("SalesPolicy", function () {
       this.capitalAgent = await upgrades.upgradeProxy(this.capitalAgent.target, this.CapitalAgent1)
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const privateKey = process.env.PRIVATE_KEY
 
       const protocol = await this.salesPolicyFactory.getProtocol(1)
@@ -950,7 +950,7 @@ describe("SalesPolicy", function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
@@ -1083,10 +1083,10 @@ describe("SalesPolicy", function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1198,10 +1198,10 @@ describe("SalesPolicy", function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1219,7 +1219,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
 
@@ -1256,7 +1256,7 @@ describe("SalesPolicy", function () {
       this.txIdx++;
 
 
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setBlackListProtocolByAddress', [
+      encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setBlackListProtocolByAddress', [
         this.signers[1].address
       ]);
 
@@ -1346,14 +1346,417 @@ describe("SalesPolicy", function () {
         })
       ).to.be.revertedWith("UnoRe: unavailable policy")
     })
-    it("Should revert when signature time expired", async function () {
+
+    // it("Should revert on Policy purchase cancelled when no remaining insurance capacity available", async function () {
+    //   this.txIdx = this.txIdx1;
+    //   let hexData
+    //   const currentDate = new Date()
+    //   let timestamp = (await ethers.provider.getBlock('latest')).timestamp
+    //   const protocol = await this.salesPolicyFactory.getProtocol(0);
+
+    //   //setting MLR to 1
+    //   let encodedCallData = await this.capitalAgent.interface.encodeFunctionData("setMLR", [1])
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx, this.capitalAgent.target, 0, encodedCallData)
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx)
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[1].address, this.txIdx)
+    //   this.txIdx++
+
+    //   encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+    //     this.mockUSDT.target
+    //   ]);
+    //   await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+    //   console.log('this.signers[5].address', this.signers[5].address);
+    //   encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+    //     this.signers[5].address
+    //   ]);
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+
+    //   encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+    //     this.salesPolicy.target
+    //   ]);
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData);
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+
+    //   const amount = await this.capitalAgent.totalCapitalStaked();
+    //   await (await this.mockUSDT.approve(this.salesPolicyAddress, amount)).wait()
+
+    //   //   prepare sign data
+    //   const assets = [this.mockUSDT.target, this.mockUSDT.target]
+    //   const policyPrice = getBigNumber("300", 6)
+    //   const protocols = [this.signers[0].address, this.signers[1].address]
+    //   const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
+    //   const coverageAmount = [amount, amount]
+    //   const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
+    //   const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
+
+    //   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
+    //   const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
+    //   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
+    //   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
+    //   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+    //   const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+    //   const paddedChainId = getPaddedHexStrFromBN(this.chainId)
+
+    //   hexData =
+    //     "0x" +
+    //     paddedPolicyPriceHexStr.slice(2) +
+    //     paddedProtocolsHexStr +
+    //     paddedCoverageDurationHexStr.slice(2) +
+    //     paddedCoverageAmountHexStr.slice(2) +
+    //     paddedDeadlineHexStr.slice(2) +
+    //     this.mockUSDT.target.slice(2) +
+    //     paddedNonceHexStr.slice(2) +
+    //     this.signers[0].address.slice(2) +
+    //     paddedChainId.slice(2)
+
+    //   const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
+    //   const splitSig = await ethers.Signature.from(flatSig)
+    //   await expect(this.salesPolicy.buyPolicy(
+    //     assets,
+    //     protocols,
+    //     coverageAmount,
+    //     coverageDuration,
+    //     policyPrice,
+    //     deadline,
+    //     this.mockUSDT.target,
+    //     splitSig.r,
+    //     splitSig.s,
+    //     splitSig.v,
+    //     nonce,
+    //     {
+    //       gasLimit: 1000000,
+    //     })).to.be.revertedWith('UnoRe: maximum leverage overflow')
+    // })
+    // it("Decrease in capacity after buying policy", async function () {
+    //   this.txIdx = this.txIdx1;
+    //   let hexData
+    //   const currentDate = new Date()
+    //   let timestamp = (await ethers.provider.getBlock('latest')).timestamp
+    //   const protocol = await this.salesPolicyFactory.getProtocol(0)
+
+    //   let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+    //     this.mockUSDT.target
+    //   ]);
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+    //   console.log('this.signers[5].address', this.signers[5].address);
+    //   encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+    //     this.signers[5].address
+    //   ]);
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+
+    //   encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+    //     this.salesPolicy.target
+    //   ]);
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData);
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+
+    //   await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
+
+
+    //   //   prepare sign data
+    //   const assets = [this.mockUSDT.target, this.mockUSDT.target]
+    //   const policyPrice = getBigNumber("300", 6)
+    //   const protocols = [this.signers[0].address, this.signers[1].address]
+    //   const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
+    //   const coverageAmount = [getBigNumber("100", 6), getBigNumber("100", 6)]
+    //   const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
+    //   const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
+    //   const totalCoverageAmount = coverageAmount.reduce((acc, currentValue) => acc + currentValue, getBigNumber('0'))
+    //   console.log(totalCoverageAmount);
+    //   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
+    //   const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
+    //   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
+    //   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
+    //   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+    //   const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+    //   const paddedChainId = getPaddedHexStrFromBN(this.chainId)
+
+    //   hexData =
+    //     "0x" +
+    //     paddedPolicyPriceHexStr.slice(2) +
+    //     paddedProtocolsHexStr +
+    //     paddedCoverageDurationHexStr.slice(2) +
+    //     paddedCoverageAmountHexStr.slice(2) +
+    //     paddedDeadlineHexStr.slice(2) +
+    //     this.mockUSDT.target.slice(2) +
+    //     paddedNonceHexStr.slice(2) +
+    //     this.signers[0].address.slice(2) +
+    //     paddedChainId.slice(2)
+
+    //   const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
+    //   const splitSig = ethers.Signature.from(flatSig);
+    //   const totalUtilizedAmountBefore = await this.capitalAgent.totalUtilizedAmount();
+
+    //   try {
+    //     let tx = await this.salesPolicy.buyPolicy(
+    //       assets,
+    //       protocols,
+    //       coverageAmount,
+    //       coverageDuration,
+    //       policyPrice,
+    //       deadline,
+    //       this.mockUSDT.target,
+    //       splitSig.r,
+    //       splitSig.s,
+    //       splitSig.v,
+    //       nonce,
+    //       {
+    //         gasLimit: 1000000,
+    //       })
+    //     const receipt = await tx.wait()
+    //     console.log("metatransaction receipt", receipt.status)
+    //   } catch (error) {
+    //     console.log("[error]", error)
+    //   }
+    //   const totalUtilizedAmountAfter = await this.capitalAgent.totalUtilizedAmount();
+    //   console.log(totalUtilizedAmountAfter, totalUtilizedAmountBefore);
+    //   expect(totalUtilizedAmountAfter - totalUtilizedAmountBefore).to.equal(totalCoverageAmount)
+
+    // })
+    // it('Increase in capacity after users stakes more capital in new pools.', async function () {
+    //   this.txIdx = this.txIdx1;
+    //   let hexData
+    //   const currentDate = new Date()
+    //   let timestamp = (await ethers.provider.getBlock('latest')).timestamp
+    //   //const protocol = await this.salesPolicyFactory.getProtocol(0);
+
+    //   //setting MLR to 1
+    //   let encodedCallData = await this.capitalAgent.interface.encodeFunctionData("setMLR", [100])
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, "SubmitTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx, this.capitalAgent.target, 0, encodedCallData)
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[0].address, this.txIdx)
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, "ConfirmTransaction")
+    //     .withArgs(this.signers[1].address, this.txIdx)
+    //   this.txIdx++
+
+    //   encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+    //     this.mockUSDT.target
+    //   ]);
+    //   await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+    //   console.log('this.signers[5].address', this.signers[5].address);
+    //   encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
+    //     this.signers[5].address
+    //   ]);
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+
+    //   encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+    //     this.salesPolicy.target
+    //   ]);
+
+    //   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
+    //     .to.emit(this.multiSigWallet, 'SubmitTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData);
+
+    //   await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[0].address, this.txIdx);
+
+    //   await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
+    //     .to.emit(this.multiSigWallet, 'ConfirmTransaction')
+    //     .withArgs(this.signers[1].address, this.txIdx);
+
+    //   this.txIdx++;
+
+    //   const amount = await this.capitalAgent.totalCapitalStaked();
+    //   await (await this.mockUSDT.approve(this.salesPolicyAddress, amount)).wait()
+
+    //   //   prepare sign data
+    //   const assets = [this.mockUSDT.target, this.mockUSDT.target]
+    //   const policyPrice = getBigNumber("300", 6)
+    //   const protocols = [this.signers[0].address, this.signers[1].address]
+    //   const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
+    //   const coverageAmount = [getBigNumber("100", 4), getBigNumber("100", 4)]
+    //   const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
+    //   const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
+
+    //   const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
+    //   const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
+    //   const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
+    //   const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
+    //   const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+    //   const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+    //   const paddedChainId = getPaddedHexStrFromBN(this.chainId)
+
+    //   hexData =
+    //     "0x" +
+    //     paddedPolicyPriceHexStr.slice(2) +
+    //     paddedProtocolsHexStr +
+    //     paddedCoverageDurationHexStr.slice(2) +
+    //     paddedCoverageAmountHexStr.slice(2) +
+    //     paddedDeadlineHexStr.slice(2) +
+    //     this.mockUSDT.target.slice(2) +
+    //     paddedNonceHexStr.slice(2) +
+    //     this.signers[0].address.slice(2) +
+    //     paddedChainId.slice(2)
+
+    //   const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
+    //   const splitSig = ethers.Signature.from(flatSig)
+    //   await expect(this.salesPolicy.buyPolicy(
+    //     assets,
+    //     protocols,
+    //     coverageAmount,
+    //     coverageDuration,
+    //     policyPrice,
+    //     deadline,
+    //     this.mockUSDT.target,
+    //     splitSig.r,
+    //     splitSig.s,
+    //     splitSig.v,
+    //     nonce,
+    //     {
+    //       gasLimit: 1000000,
+    //     })).to.be.revertedWith('UnoRe: maximum leverage overflow')
+
+    //   //enter in pools 
+    //   await this.mockUNO.approve(this.singleSidedInsurancePool.target, getBigNumber("2000000"))
+    //   await this.mockUNO
+    //     .connect(this.signers[1])
+    //     .approve(this.singleSidedInsurancePool.target, getBigNumber("2000000"), { from: this.signers[1].address })
+    //   await this.singleSidedInsurancePool.enterInPool(getBigNumber("200000"))
+
+    //   // another one will deposit in pool with the same amount
+    //   await this.singleSidedInsurancePool
+    //     .connect(this.signers[1])
+    //     .enterInPool(getBigNumber("200000"), { from: this.signers[1].address })
+
+    //   await expect(this.salesPolicy.buyPolicy(
+    //     assets,
+    //     protocols,
+    //     coverageAmount,
+    //     coverageDuration,
+    //     policyPrice,
+    //     deadline,
+    //     this.mockUSDT.target,
+    //     splitSig.r,
+    //     splitSig.s,
+    //     splitSig.v,
+    //     nonce,
+    //     {
+    //       gasLimit: 1000000,
+    //     })).not.to.be.reverted
+    // })
+    it("Increase in capacity after policy expiration", async function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
 
@@ -1370,7 +1773,7 @@ describe("SalesPolicy", function () {
         .withArgs(this.signers[1].address, this.txIdx);
 
       this.txIdx++;
-
+      console.log('this.signers[5].address', this.signers[5].address);
       encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
@@ -1389,373 +1792,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
-        this.salesPolicy.target
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-
-      //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
-      const policyPrice = getBigNumber("300", 6)
-
-
-      const protocols = [this.signers[0].address, this.signers[1].address]
-      const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
-      const coverageAmount = [getBigNumber("100", 6), getBigNumber("100", 6)]
-      const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
-      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
-      const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-      const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
-      const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
-      const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
-      const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
-      const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
-      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
-      hexData =
-        "0x" +
-        paddedPolicyPriceHexStr.slice(2) +
-        paddedProtocolsHexStr +
-        paddedCoverageDurationHexStr.slice(2) +
-        paddedCoverageAmountHexStr.slice(2) +
-        paddedDeadlineHexStr.slice(2) +
-        this.zeroAddress.slice(2) +
-        paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2) +
-        paddedChainId.slice(2)
-
-      const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
-      const splitSig = ethers.Signature.from(flatSig)
-
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
-      expect(premiumPoolBalanceBefore).to.equal(0)
-      const value = await this.exchangeAgent.getETHAmountForUSDC(policyPrice)
-
-      await hre.ethers.provider.send('evm_increaseTime', [Number(deadline)]);
-
-      await expect(this.salesPolicy.buyPolicy(
-        assets,
-        protocols,
-        coverageAmount,
-        coverageDuration,
-        policyPrice,
-        deadline,
-        this.zeroAddress,
-        splitSig.r,
-        splitSig.s,
-        splitSig.v,
-        nonce,
-        {
-          gasLimit: 1000000,
-          value: value
-        })
-      ).to.be.revertedWith("UnoRe: signature expired")
-    })
-    it("Should revert on Policy purchase cancelled when no remaining insurance capacity available", async function () {
-      this.txIdx = this.txIdx1;
-      let hexData
-      const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
-      const protocol = await this.salesPolicyFactory.getProtocol(0);
-
-      //setting MLR to 1
-      let encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setMLR", [1])
-
-      await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.capitalAgent.target, 0, encodedCallData)
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[0].address, this.txIdx)
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[1].address, this.txIdx)
-      this.txIdx++
-
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
-        this.mockUSDT.target
-      ]);
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-      console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
-        this.signers[5].address
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-
-      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
-        this.salesPolicy.target
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-
-      const amount = await this.capitalAgent.totalCapitalStaked();
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, amount)).wait()
-
-      //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
-      const policyPrice = getBigNumber("300", 6)
-      const protocols = [this.signers[0].address, this.signers[1].address]
-      const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
-      const coverageAmount = [amount, amount]
-      const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
-      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
-
-      const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-      const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
-      const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
-      const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
-      const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
-      const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
-      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
-
-      hexData =
-        "0x" +
-        paddedPolicyPriceHexStr.slice(2) +
-        paddedProtocolsHexStr +
-        paddedCoverageDurationHexStr.slice(2) +
-        paddedCoverageAmountHexStr.slice(2) +
-        paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
-        paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2) +
-        paddedChainId.slice(2)
-
-      const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
-      const splitSig =await ethers.Signature.from(flatSig)
-      await expect(this.salesPolicy.buyPolicy(
-        assets,
-        protocols,
-        coverageAmount,
-        coverageDuration,
-        policyPrice,
-        deadline,
-        this.mockUSDT.target,
-        splitSig.r,
-        splitSig.s,
-        splitSig.v,
-        nonce,
-        {
-          gasLimit: 1000000,
-        })).to.be.revertedWith('UnoRe: maximum leverage overflow')
-    })
-    it("Decrease in capacity after buying policy", async function () {
-      this.txIdx = this.txIdx1;
-      let hexData
-      const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
-      const protocol = await this.salesPolicyFactory.getProtocol(0)
-
-      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
-        this.mockUSDT.target
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-      console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
-        this.signers[5].address
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-
       encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
-        this.salesPolicy.target
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.premiumPool.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.premiumPool.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
-
-
-      //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
-      const policyPrice = getBigNumber("300", 6)
-      const protocols = [this.signers[0].address, this.signers[1].address]
-      const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
-      const coverageAmount = [getBigNumber("100", 6), getBigNumber("100", 6)]
-      const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
-      const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
-      const totalCoverageAmount = coverageAmount.reduce((acc, currentValue) => acc + currentValue, getBigNumber('0'))
-      console.log(totalCoverageAmount);
-      const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-      const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
-      const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
-      const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
-      const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
-      const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
-      const paddedChainId = getPaddedHexStrFromBN(this.chainId)
-
-      hexData =
-        "0x" +
-        paddedPolicyPriceHexStr.slice(2) +
-        paddedProtocolsHexStr +
-        paddedCoverageDurationHexStr.slice(2) +
-        paddedCoverageAmountHexStr.slice(2) +
-        paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
-        paddedNonceHexStr.slice(2) +
-        this.signers[0].address.slice(2) +
-        paddedChainId.slice(2)
-
-      const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
-      const splitSig = ethers.Signature.from(flatSig);
-      const totalUtilizedAmountBefore = await this.capitalAgent.totalUtilizedAmount();
-
-      try {
-        let tx = await this.salesPolicy.buyPolicy(
-          assets,
-          protocols,
-          coverageAmount,
-          coverageDuration,
-          policyPrice,
-          deadline,
-          this.mockUSDT.target,
-          splitSig.r,
-          splitSig.s,
-          splitSig.v,
-          nonce,
-          {
-            gasLimit: 1000000,
-          })
-        const receipt = await tx.wait()
-        console.log("metatransaction receipt", receipt.status)
-      } catch (error) {
-        console.log("[error]", error)
-      }
-      const totalUtilizedAmountAfter = await this.capitalAgent.totalUtilizedAmount();
-      console.log(totalUtilizedAmountAfter, totalUtilizedAmountBefore);
-      expect(totalUtilizedAmountAfter - totalUtilizedAmountBefore).to.equal(totalCoverageAmount)
-
-    })
-    it("Increase in capacity after policy expiration", async function () {
-      this.txIdx = this.txIdx1;
-      let hexData
-      const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
-      const protocol = await this.salesPolicyFactory.getProtocol(0)
-
-      let encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
-        this.mockUSDT.target
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-      console.log('this.signers[5].address', this.signers[5].address);
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
-        this.signers[5].address
-      ]);
-
-      await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, 'SubmitTransaction')
-        .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[0].address, this.txIdx);
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, 'ConfirmTransaction')
-        .withArgs(this.signers[1].address, this.txIdx);
-
-      this.txIdx++;
-
-      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1866,35 +1903,21 @@ describe("SalesPolicy", function () {
       expect(totalUtilizedAmountAfter).to.equal(getBigNumber("100", 6));
 
     })
-    it('Increase in capacity after users stakes more capital in new pools.', async function () {
+    it("Should revert when signature time expired", async function () {
       this.txIdx = this.txIdx1;
       let hexData
       const currentDate = new Date()
-      const timestamp = Math.floor(currentDate.getTime() / 1000)
-      //const protocol = await this.salesPolicyFactory.getProtocol(0);
+      let timestamp = (await ethers.provider.getBlock('latest')).timestamp
+      const protocol = await this.salesPolicyFactory.getProtocol(0)
 
-      //setting MLR to 1
-      let encodedCallData =await this.capitalAgent.interface.encodeFunctionData("setMLR", [100])
-
-      await expect(this.multiSigWallet.submitTransaction(this.capitalAgent.target, 0, encodedCallData))
-        .to.emit(this.multiSigWallet, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.capitalAgent.target, 0, encodedCallData)
-
-      await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[0].address, this.txIdx)
-
-      await expect(this.multiSigWallet.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multiSigWallet, "ConfirmTransaction")
-        .withArgs(this.signers[1].address, this.txIdx)
-      this.txIdx++
-
-      encodedCallData =await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
+      let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('approvePremiumInPolicy', [
         this.mockUSDT.target
       ]);
+
       await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multiSigWallet, 'SubmitTransaction')
         .withArgs(this.signers[0].address, this.txIdx, this.salesPolicyFactory.target, 0, encodedCallData);
+
       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
         .to.emit(this.multiSigWallet, 'ConfirmTransaction')
         .withArgs(this.signers[0].address, this.txIdx);
@@ -1904,7 +1927,7 @@ describe("SalesPolicy", function () {
         .withArgs(this.signers[1].address, this.txIdx);
 
       this.txIdx++;
-      console.log('this.signers[5].address', this.signers[5].address);
+
       encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData('setSignerInPolicy', [
         this.signers[5].address
       ]);
@@ -1923,7 +1946,7 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      encodedCallData =await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
+      encodedCallData = await this.premiumPool.interface.encodeFunctionData('addWhiteList', [
         this.salesPolicy.target
       ]);
 
@@ -1941,18 +1964,16 @@ describe("SalesPolicy", function () {
 
       this.txIdx++;
 
-      const amount = await this.capitalAgent.totalCapitalStaked();
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, amount)).wait()
-
       //   prepare sign data
       const assets = [this.mockUSDT.target, this.mockUSDT.target]
       const policyPrice = getBigNumber("300", 6)
+
+
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
-      const coverageAmount = [getBigNumber("100", 4), getBigNumber("100", 4)]
+      const coverageAmount = [getBigNumber("100", 6), getBigNumber("100", 6)]
       const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0)
       const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
-
       const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
       const paddedProtocolsHexStr = '000000000000000000000000' + protocols[0].slice(2) + '000000000000000000000000' + protocols[1].slice(2)
       const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
@@ -1960,7 +1981,6 @@ describe("SalesPolicy", function () {
       const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
       const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
       const paddedChainId = getPaddedHexStrFromBN(this.chainId)
-
       hexData =
         "0x" +
         paddedPolicyPriceHexStr.slice(2) +
@@ -1968,40 +1988,19 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.zeroAddress.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.signers[0].address.slice(2) +
         paddedChainId.slice(2)
 
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
-      await expect(this.salesPolicy.buyPolicy(
-        assets,
-        protocols,
-        coverageAmount,
-        coverageDuration,
-        policyPrice,
-        deadline,
-        this.mockUSDT.target,
-        splitSig.r,
-        splitSig.s,
-        splitSig.v,
-        nonce,
-        {
-          gasLimit: 1000000,
-        })).to.be.revertedWith('UnoRe: maximum leverage overflow')
 
-      //enter in pools 
-      await this.mockUNO.approve(this.singleSidedInsurancePool.target, getBigNumber("2000000"))
-      await this.mockUNO
-        .connect(this.signers[1])
-        .approve(this.singleSidedInsurancePool.target, getBigNumber("2000000"), { from: this.signers[1].address })
-      await this.singleSidedInsurancePool.enterInPool(getBigNumber("200000"))
+      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      expect(premiumPoolBalanceBefore).to.equal(0)
+      const value = await this.exchangeAgent.getETHAmountForUSDC(policyPrice)
 
-      // another one will deposit in pool with the same amount
-      await this.singleSidedInsurancePool
-        .connect(this.signers[1])
-        .enterInPool(getBigNumber("200000"), { from: this.signers[1].address })
+      await hre.ethers.provider.send('evm_increaseTime', [Number(deadline)]);
 
       await expect(this.salesPolicy.buyPolicy(
         assets,
@@ -2010,14 +2009,16 @@ describe("SalesPolicy", function () {
         coverageDuration,
         policyPrice,
         deadline,
-        this.mockUSDT.target,
+        this.zeroAddress,
         splitSig.r,
         splitSig.s,
         splitSig.v,
         nonce,
         {
           gasLimit: 1000000,
-        })).not.to.be.reverted
+          value: value
+        })
+      ).to.be.revertedWith("UnoRe: signature expired")
     })
   })
 })

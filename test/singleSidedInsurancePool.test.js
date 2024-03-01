@@ -503,7 +503,7 @@ describe("SingleSidedInsurancePool", function () {
         // console.log("[pendingUnoReward1]", pendingUnoReward1.toString(), getNumber(pendingUnoReward1));
         // signer 0 submit WR for the 1000 UNO
         await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
-        const currentDate = new Date()
+        const currentDate =  new Date(((await ethers.provider.getBlock('latest')).timestamp)*1000)
         const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
         const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
