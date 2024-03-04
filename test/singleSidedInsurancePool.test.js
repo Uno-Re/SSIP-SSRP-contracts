@@ -800,5 +800,25 @@ describe("SingleSidedInsurancePool", function () {
       })
 
     })
+    describe("SingleSidedInsurancePool Staking and Migrate", function () {
+      it("should Override the v2 position", async function () {
+        const riskPool = this.RiskPool.attach(this.poolAddress)
+        await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
+        const poolBalance = await riskPool.balanceOf(this.signers[0].address)
+        expect(poolBalance).to.equal(getBigNumber("8500"));
+        const userInfoV2 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address);
+        console.log('userInfov2', userInfoV2);
+        let totalUtilizedAmountBefore = await this.capitalAgent.totalUtilizedAmount();
+
+        //migrating user position 
+        await this.singleSidedInsurancePool.setUserDetails(this.signers[0].address, 100, 10);
+        const userInfoV3 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address);
+        let totalUtilizedAmountAfter = await this.capitalAgent.totalUtilizedAmount();
+
+        expect(userInfoV3.amount).to.equal(100);
+        expect(userInfoV3.rewardDebt).to.equal(10);
+        expect(totalUtilizedAmountBefore).to.equal(totalUtilizedAmountAfter)
+      })
+    })
   })
 })
