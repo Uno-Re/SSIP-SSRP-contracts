@@ -26,7 +26,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
       execute: {
         init: {
           methodName: "initialize",
-          args: [capitalAgent.address, multiSigWallet, governance],
+          args: [capitalAgent.address, multiSigWallet],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",

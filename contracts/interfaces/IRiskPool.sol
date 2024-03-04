@@ -25,4 +25,6 @@ interface IRiskPool {
     function lpPriceUno() external view returns (uint256);
 
     function emergencyWithdraw(address _to, uint256 _amount) external returns (bool);
+
+    function setLpPriceUno(uint256 _lpPriceUno) external;
 }
