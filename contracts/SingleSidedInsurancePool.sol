@@ -495,11 +495,9 @@ contract SingleSidedInsurancePool is
 
     function setUserDetails(
         address _user,
-        uint256 _amount,
-        uint256 _rewardDebt
+        uint256 _amount
     ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         userInfo[_user].amount = _amount;
-        userInfo[_user].rewardDebt = _rewardDebt;
         IRiskPool(riskPool).enter(_user, _amount);
 
         emit LogUserUpdated(address(this), _user, _amount);
