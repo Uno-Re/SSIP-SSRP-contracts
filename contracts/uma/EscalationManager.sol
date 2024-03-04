@@ -24,7 +24,6 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
     bool public validateDisputers;
 
     mapping (address => bool) public checkDisputers;
-    mapping (address => bool) public checkAssertingCaller;
     mapping (bytes32 => AssertionApproval) public isAssertionIdApproved;
 
     mapping (bytes32 => int256) public oraclePrice;
@@ -85,10 +84,6 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
 
     function toggleDisputer(address _disputer) external onlyRole(CLAIM_ASSESSOR_ROLE) {
         checkDisputers[_disputer] = !checkDisputers[_disputer];
-    }
-
-    function toggleAssertionCaller(address _caller) external onlyRole(CLAIM_ASSESSOR_ROLE) {
-        checkAssertingCaller[_caller] = !checkAssertingCaller[_caller];
     }
 
     function setAssertionIdApproval(bytes32 _assertionId, bool _isApproved, bool _exist) external onlyRole(CLAIM_ASSESSOR_ROLE) {
