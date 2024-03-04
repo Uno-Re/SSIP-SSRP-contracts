@@ -33,8 +33,6 @@ contract PayoutRequest is PausableUpgradeable {
     address public escalationManager;
     address public claimsDao;
     mapping(bytes32 => Policy) public assertedPolicies;
-    mapping(uint256 => bytes32) public policiesAssertionId;
-    mapping(uint256 => bool) public isRequestInit;
     bool public isUMAFailed;
 
     uint256 public lockTime;
@@ -100,14 +98,12 @@ contract PayoutRequest is PausableUpgradeable {
             _policyData.payoutAddress = _to;
             _policyData.policyId = _policyId;
             assertedPolicies[assertionId] = _policyData;
-            policiesAssertionId[_policyId] = assertionId;
             emit InsurancePayoutRequested(_policyId, assertionId);
         } else {
             require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
             require(msg.sender == claimsDao, "RPayout: can only called by claimsDao");
             ssip.settlePayout(_policyId, _to, _amount);
         }
-        isRequestInit[_policyId] = true;
     }
 
     function assertionResolvedCallback(bytes32 _assertionId, bool _assertedTruthfully) external whenNotPaused {
@@ -125,8 +121,6 @@ contract PayoutRequest is PausableUpgradeable {
             if (_policyData.settled) return;
             assertedPolicies[_assertionId].settled = true;
             ssip.settlePayout(_policyData.policyId, _policyData.payoutAddress, _policyData.insuranceAmount);
-        } else {
-            isRequestInit[_policyData.policyId] = false;
         }
     }
 
