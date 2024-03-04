@@ -83,6 +83,10 @@ contract PayoutRequest is PausableUpgradeable {
                     "Insurance contract is claiming that insurance event ",
                     " had occurred as of ",
                     ClaimData.toUtf8BytesUint(block.timestamp),
+                    _policyId,
+                    msg.sender,
+                    _amount,
+                    _to,
                     "."
                 ),
                 _to,
