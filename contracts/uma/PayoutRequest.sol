@@ -12,7 +12,6 @@ import "../interfaces/ICapitalAgent.sol";
 import "../interfaces/ISalesPolicy.sol";
 import "../interfaces/ISingleSidedInsurancePool.sol";
 import "../interfaces/IExchangeAgent.sol";
-import "../interfaces/IEscalationManager.sol";
 
 contract PayoutRequest is PausableUpgradeable {
     struct Policy {
@@ -33,12 +32,11 @@ contract PayoutRequest is PausableUpgradeable {
     address public escalationManager;
     address public claimsDao;
     mapping(bytes32 => Policy) public assertedPolicies;
-    mapping(uint256 => bytes32) public policiesAssertionId;
-    mapping(uint256 => bool) public isRequestInit;
     bool public isUMAFailed;
 
     uint256 public lockTime;
     mapping(address => uint256) public roleLockTime;
+    mapping(bytes32 => bool) settleAssertionUmaFailed;
 
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
     event LogSetEscalationManager(address indexed payout, address indexed escalatingManager);
@@ -49,6 +47,7 @@ contract PayoutRequest is PausableUpgradeable {
     event PoolFailed(address indexed owner, bool fail);
     event LogSetLockTime(address indexed payout, uint256 newLockTime);
     event LogSetGuardianCouncil(address indexed payout, address indexed guardianCouncil);
+    event SettledUMAFailedAssertion(bytes32 indexed assertionId, uint256 indexed policyId, uint256 insuranceAmount);
 
     function initialize(
         ISingleSidedInsurancePool _ssip,
@@ -83,6 +82,10 @@ contract PayoutRequest is PausableUpgradeable {
                     "Insurance contract is claiming that insurance event ",
                     " had occurred as of ",
                     ClaimData.toUtf8BytesUint(block.timestamp),
+                    _policyId,
+                    msg.sender,
+                    _amount,
+                    _to,
                     "."
                 ),
                 _to,
@@ -100,34 +103,38 @@ contract PayoutRequest is PausableUpgradeable {
             _policyData.payoutAddress = _to;
             _policyData.policyId = _policyId;
             assertedPolicies[assertionId] = _policyData;
-            policiesAssertionId[_policyId] = assertionId;
             emit InsurancePayoutRequested(_policyId, assertionId);
         } else {
             require(roleLockTime[msg.sender] <= block.timestamp, "RPayout: role lock time not passed");
             require(msg.sender == claimsDao, "RPayout: can only called by claimsDao");
             ssip.settlePayout(_policyId, _to, _amount);
         }
-        isRequestInit[_policyId] = true;
     }
 
-    function assertionResolvedCallback(bytes32 _assertionId, bool _assertedTruthfully) external whenNotPaused {
-        require(!isUMAFailed, "RPayout: pool failed");
+    function assertionResolvedCallback(bytes32 _assertionId, bool _assertedTruthfully) external {
         require(msg.sender == address(optimisticOracle), "RPayout: !optimistic oracle");
         // If the assertion was true, then the policy is settled.
         Policy memory _policyData = assertedPolicies[_assertionId];
         if (_assertedTruthfully) {
-            IEscalationManager.AssertionApproval memory _assertionApproved = IEscalationManager(escalationManager).isAssertionIdApproved(_assertionId);
-            if (_assertionApproved.exist && !_assertionApproved.approved) {
-                return;
-            }
             // If already settled, do nothing. We don't revert because this function is called by the
             // OptimisticOracleV3, which may block the assertion resolution.
             if (_policyData.settled) return;
+            if (isUMAFailed) {
+                settleAssertionUmaFailed[_assertionId] = true;
+                return;
+            }
             assertedPolicies[_assertionId].settled = true;
             ssip.settlePayout(_policyData.policyId, _policyData.payoutAddress, _policyData.insuranceAmount);
-        } else {
-            isRequestInit[_policyData.policyId] = false;
         }
+    }
+
+    function settleAssertionForUmaFailed(bytes32 _assertionId) external {
+        require(msg.sender == claimsDao, "RPayout: can only called by claimsDao");
+        require(settleAssertionUmaFailed[_assertionId], "RPayout: Id not approved to setlle");
+        Policy memory _policyData = assertedPolicies[_assertionId];
+        ssip.settlePayout(_policyData.policyId, _policyData.payoutAddress, _policyData.insuranceAmount);
+
+        emit SettledUMAFailedAssertion(_assertionId, _policyData.policyId, _policyData.insuranceAmount);
     }
 
     function assertionDisputedCallback(bytes32 assertionId) external {}
