@@ -120,6 +120,10 @@ contract PayoutRequest is PausableUpgradeable {
             // If already settled, do nothing. We don't revert because this function is called by the
             // OptimisticOracleV3, which may block the assertion resolution.
             if (_policyData.settled) return;
+            if (isUMAFailed) {
+                settleAssertionUmaFailed[_assertionId] = true;
+                return;
+            }
             assertedPolicies[_assertionId].settled = true;
             ssip.settlePayout(_policyData.policyId, _policyData.payoutAddress, _policyData.insuranceAmount);
         }
