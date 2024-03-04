@@ -18,6 +18,8 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
     bytes32 public constant OPTMISTIC_ORACLE_V3_ROLE = keccak256("OPTMISTIC_ORACLE_V3_ROLE");
     bytes32 public constant CLAIM_ASSESSOR_ROLE = keccak256("CLAIM_ASSESSOR_ROLE");
 
+    int256 public constant NUMERICAL_VALUE = 1e18;
+
     bool public blockAssertion;
     bool public arbitrateViaEscalationManager;
     bool public discardOracle;
@@ -105,6 +107,7 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         bytes memory ancillaryData,
         int256 price
     ) external onlyRole(CLAIM_ASSESSOR_ROLE) {
+        require(price == 0 || price == NUMERICAL_VALUE, "EManger: invalid price");
         bytes32 data = keccak256(abi.encodePacked(identifier, time, ancillaryData));
         oraclePrice[data] = price;
     }
