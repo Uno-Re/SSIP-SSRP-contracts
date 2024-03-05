@@ -861,6 +861,9 @@ describe("SingleSidedInsurancePool", function () {
       it("rewards amount calculation should differ", async function () {
         const userInfoV2 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address);
         console.log('userInfov2', userInfoV2)
+        const poolInfov2=await this.singleSidedInsurancePool.poolInfo();
+        await this.singleSidedInsurancePool1.setAccUnoPerShare(poolInfov2.accUnoPerShare,poolInfov2.lastRewardBlock)
+
 
         //migrating user position 
         await this.singleSidedInsurancePool1.setUserDetails(this.signers[0].address, userInfoV2.amount, userInfoV2.rewardDebt);
@@ -868,6 +871,8 @@ describe("SingleSidedInsurancePool", function () {
 
         expect(userInfoV3.amount).to.equal(userInfoV2.amount);
         expect(userInfoV3.rewardDebt).to.equal(userInfoV2.rewardDebt);
+
+        
         // //user leave from pool 
         // await expect(this.singleSidedInsurancePool.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted;
         // await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted;
@@ -876,9 +881,10 @@ describe("SingleSidedInsurancePool", function () {
         // const afterTenDaysTimeStampUTC = Number((await ethers.provider.getBlock('latest')).timestamp) + Number(11 * 86400)
 
         // await hre.ethers.provider.send('evm_increaseTime', [Number(afterTenDaysTimeStampUTC)]);
-        const pendingUnoReward1= await this.singleSidedInsurancePool.pendingUno(this.signers[0].address);
+        const pendingUnoReward1= await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoReward2 = await this.singleSidedInsurancePool1.pendingUno(this.signers[0].address)
-
+        console.log('pendingUnoReward1',pendingUnoReward1)
+        console.log('pendingUnoReward2',pendingUnoReward2)
         expect(pendingUnoReward1).not.equal(pendingUnoReward2)
 
         
