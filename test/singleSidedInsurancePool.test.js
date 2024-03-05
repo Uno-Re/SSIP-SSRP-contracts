@@ -430,7 +430,7 @@ describe("SingleSidedInsurancePool", function () {
         const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
         expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
         // signer 0 emergency Withdraw
-          await this.singleSidedInsurancePool.toggleEmergencyWithdraw();
+        await this.singleSidedInsurancePool.toggleEmergencyWithdraw();
         await this.singleSidedInsurancePool.emergencyWithdraw()
         // check the uno and risk pool LP token balance of the singer 0 after withdraw
         const lpBalanceAfter = await riskPool.balanceOf(this.signers[0].address)
@@ -503,7 +503,7 @@ describe("SingleSidedInsurancePool", function () {
         // console.log("[pendingUnoReward1]", pendingUnoReward1.toString(), getNumber(pendingUnoReward1));
         // signer 0 submit WR for the 1000 UNO
         await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
-        const currentDate =  new Date(((await ethers.provider.getBlock('latest')).timestamp)*1000)
+        const currentDate = new Date(((await ethers.provider.getBlock('latest')).timestamp) * 1000)
         const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
         const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
@@ -801,11 +801,50 @@ describe("SingleSidedInsurancePool", function () {
 
     })
     describe("SingleSidedInsurancePool Staking and Migrate", function () {
+      beforeEach(async function () {
+        this.singleSidedInsurancePool1 = await upgrades.deployProxy(
+          this.SingleSidedInsurancePool, [
+          this.capitalAgent.target,
+          "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
+        ]
+        );
+
+        await this.singleSidedInsurancePool1.connect(this.multisig).grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
+
+        await (await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool1.target)).wait()
+        await this.singleSidedInsurancePool1.createRewarder(
+          this.signers[0].address,
+          this.rewarderFactory.target,
+          this.mockUNO.target,
+        )
+        this.rewarderAddress1 = await this.singleSidedInsurancePool1.rewarder()
+        this.rewarder1 = await this.Rewarder.attach(this.rewarderAddress1);
+
+        await this.singleSidedInsurancePool1.createRiskPool(
+          "UNO-LP",
+          "UNO-LP",
+          this.riskPoolFactory.target,
+          this.mockUNO.target,
+          getBigNumber("1"),
+          getBigNumber("10", 6),
+        )
+        this.riskPool1 = this.RiskPool.attach(await this.singleSidedInsurancePool1.riskPool())
+        this.riskPool = this.RiskPool.attach(await this.singleSidedInsurancePool.riskPool())
+
+        expect(this.rewarder1.target).equal(await this.singleSidedInsurancePool1.rewarder())
+
+        await (await this.mockUNO.transfer(this.rewarder1.target, getBigNumber("100000"))).wait();
+        await (await this.mockUNO.approve(this.singleSidedInsurancePool1.target, getBigNumber("100000"))).wait();
+        await (await this.mockUNO.connect(this.signers[2]).approve(this.singleSidedInsurancePool1.target, getBigNumber("200000"))).wait();
+        await this.singleSidedInsurancePool.enterInPool(getBigNumber("100"))
+        console.log('hii',this.singleSidedInsurancePool1.target);
+        await this.singleSidedInsurancePool1.connect(this.signers[2]).enterInPool(getBigNumber("200000"))
+        const poolBalance = await this.riskPool.balanceOf(this.signers[0].address)
+        expect(poolBalance).to.equal(getBigNumber("100"));
+      })
+
       it("should Override the v2 position", async function () {
-        const riskPool = this.RiskPool.attach(this.poolAddress)
-        await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
-        const poolBalance = await riskPool.balanceOf(this.signers[0].address)
-        expect(poolBalance).to.equal(getBigNumber("8500"));
+        
         const userInfoV2 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address);
         console.log('userInfov2', userInfoV2);
         let totalUtilizedAmountBefore = await this.capitalAgent.totalUtilizedAmount();
@@ -818,6 +857,33 @@ describe("SingleSidedInsurancePool", function () {
         expect(userInfoV3.amount).to.equal(100);
         expect(userInfoV3.rewardDebt).to.equal(10);
         expect(totalUtilizedAmountBefore).to.equal(totalUtilizedAmountAfter)
+      })
+      it("rewards amount calculation should differ", async function () {
+        const userInfoV2 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address);
+        console.log('userInfov2', userInfoV2)
+
+        //migrating user position 
+        await this.singleSidedInsurancePool1.setUserDetails(this.signers[0].address, userInfoV2.amount, userInfoV2.rewardDebt);
+        const userInfoV3 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address);
+
+        expect(userInfoV3.amount).to.equal(userInfoV2.amount);
+        expect(userInfoV3.rewardDebt).to.equal(userInfoV2.rewardDebt);
+        // //user leave from pool 
+        // await expect(this.singleSidedInsurancePool.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted;
+        // await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted;
+
+
+        // const afterTenDaysTimeStampUTC = Number((await ethers.provider.getBlock('latest')).timestamp) + Number(11 * 86400)
+
+        // await hre.ethers.provider.send('evm_increaseTime', [Number(afterTenDaysTimeStampUTC)]);
+        const pendingUnoReward1= await this.singleSidedInsurancePool.pendingUno(this.signers[0].address);
+        const pendingUnoReward2 = await this.singleSidedInsurancePool1.pendingUno(this.signers[0].address)
+
+        expect(pendingUnoReward1).not.equal(pendingUnoReward2)
+
+        
+
+
       })
     })
   })

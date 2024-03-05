@@ -500,138 +500,138 @@ describe("CLaimsDao SalesPolicy", async function () {
   describe("Sales policy Action", async function () {
 
 
-    // it("Should buy policy in USDT", async function () {
-    //   expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-    //   await this.payoutRequest.setFailed(true);
-    //   await this.payoutRequest.initRequest(0, getBigNumber("201", 6), this.signers[5].address)
-    //   //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
-    //   expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("201", 6));
-    // })
+    it("Should buy policy in USDT", async function () {
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      await this.payoutRequest.setFailed(true);
+      await this.payoutRequest.initRequest(0, getBigNumber("201", 6), this.signers[5].address)
+      //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("201", 6));
+    })
 
-    // it("Should not burn policy if coverage amount not fully filled", async function () {
-    //   expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-    //   await this.payoutRequest.setFailed(true);
-    //   await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
-    //   //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-    //   expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("101", 6));
-    //   expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
-    //   expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
-    // })
+    it("Should not burn policy if coverage amount not fully filled", async function () {
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      await this.payoutRequest.setFailed(true);
+      await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("101", 6));
+      expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
+      expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
+    })
 
-    // it("Should burn policy when again clain for policy to full fill coverage", async function () {
-    //   expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-    //   await this.payoutRequest.setFailed(true);
-    //   await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
-    //   //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-    //   expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("101", 6));
-    //   expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
-    //   expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
+    it("Should burn policy when again clain for policy to full fill coverage", async function () {
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      await this.payoutRequest.setFailed(true);
+      await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("101", 6));
+      expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
+      expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
 
-    //   await this.payoutRequest.initRequest(0, getBigNumber("100", 6), this.signers[5].address)
-    //   //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
-    //   expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("201", 6));
-    // })
-    // it("DVM rejects the dispute and accepts the claim -> bond gets deducted and sent somewhere -> insurance claim payout.", async function () {
+      await this.payoutRequest.initRequest(0, getBigNumber("100", 6), this.signers[5].address)
+      //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("201", 6));
+    })
+    it("DVM rejects the dispute and accepts the claim -> bond gets deducted and sent somewhere -> insurance claim payout.", async function () {
 
-    //   expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-    //   await this.payoutRequest.setFailed(false);
-    //   const currency = await (this.optimisticOracleV3.defaultCurrency())
-    //   const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
-    //   console.log('bondAmount', bondAmount)
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      await this.payoutRequest.setFailed(false);
+      const currency = await (this.optimisticOracleV3.defaultCurrency())
+      const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
+      console.log('bondAmount', bondAmount)
 
-    //   await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
-    //   // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-    //      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
+      // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
+         const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
 
-    //   await tx.wait();
+      await tx.wait();
 
-    //   const events = await this.payoutRequest.queryFilter("InsurancePayoutRequested");
-    //   const eventData = events[0].args;
-    //   const assertionId = eventData.assertionId
+      const events = await this.payoutRequest.queryFilter("InsurancePayoutRequested");
+      const eventData = events[0].args;
+      const assertionId = eventData.assertionId
 
-    //   //disputor raised a dispute
-    //   const assertion = await this.optimisticOracleV3.assertions(assertionId);
-    //   await this.mockUNO.connect(this.disputor).approve(this.optimisticOracleV3.target, assertion.bond);
-    //   await this.optimisticOracleV3.connect(this.disputor).disputeAssertion(assertionId, this.disputor.address);
+      //disputor raised a dispute
+      const assertion = await this.optimisticOracleV3.assertions(assertionId);
+      await this.mockUNO.connect(this.disputor).approve(this.optimisticOracleV3.target, assertion.bond);
+      await this.optimisticOracleV3.connect(this.disputor).disputeAssertion(assertionId, this.disputor.address);
 
-    //   //users voting for the dispute .
-    //   const auxillaryData = await this.optimisticOracleV3.stampAssertion(assertionId);
-    //   const identifier = await this.payoutRequest.defaultIdentifier();
-    //   //const assertion = await this.optimisticOracleV3.assertions(assertionId);
-    //   const time = assertion.assertionTime
-    //   //dvm reject the dispute 
+      //users voting for the dispute .
+      const auxillaryData = await this.optimisticOracleV3.stampAssertion(assertionId);
+      const identifier = await this.payoutRequest.defaultIdentifier();
+      //const assertion = await this.optimisticOracleV3.assertions(assertionId);
+      const time = assertion.assertionTime
+      //dvm reject the dispute 
 
-    //   await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('1'))
-    //   await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('1'))
+      await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('1'))
+      await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('1'))
 
-    //   const sevenDays = 24 * 7 * 60 * 60 * 7
-    //   //calling assert truth in optimistic oracle 
-    //   await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
+      const sevenDays = 24 * 7 * 60 * 60 * 7
+      //calling assert truth in optimistic oracle 
+      await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
 
-    //   const burnedBondPercentage = await this.optimisticOracleV3.burnedBondPercentage();
-    //   const oracleFee = (BigInt(burnedBondPercentage) * BigInt(assertion.bond)) / BigInt(10 ** 18);
-    //   const bondRecipientAmount = BigInt(BigInt(assertion.bond) * BigInt(2)) - oracleFee;
-    //   const claimamount = getBigNumber("101", 6)
-    //   console.log(burnedBondPercentage, 'burnedBondPercentage');
-    //   console.log(oracleFee, 'oracleFee');
-    //   console.log(bondRecipientAmount, 'bondRecipientAmount');
+      const burnedBondPercentage = await this.optimisticOracleV3.burnedBondPercentage();
+      const oracleFee = (BigInt(burnedBondPercentage) * BigInt(assertion.bond)) / BigInt(10 ** 18);
+      const bondRecipientAmount = BigInt(BigInt(assertion.bond) * BigInt(2)) - oracleFee;
+      const claimamount = getBigNumber("101", 6)
+      console.log(burnedBondPercentage, 'burnedBondPercentage');
+      console.log(oracleFee, 'oracleFee');
+      console.log(bondRecipientAmount, 'bondRecipientAmount');
 
-    //   await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
-    //     this.mockUNO,
-    //     ["0x07417cA264170Fc5bD3568f93cFb956729752B61", assertion.asserter],
-    //     [oracleFee, BigInt(claimamount) + bondRecipientAmount]
-    //   );
-    // })
+      await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
+        this.mockUNO,
+        ["0x07417cA264170Fc5bD3568f93cFb956729752B61", assertion.asserter],
+        [oracleFee, BigInt(claimamount) + bondRecipientAmount]
+      );
+    })
 
-    // it("DVM accepts the dispute and rejects the claim -> bond is returned back to user who raised dispute -> no insurance claim payout", async function () {
-    //   this.txIdx = this.tx1
-    //   expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-    //   await this.payoutRequest.setFailed(false);
-    //   const currency = await (this.optimisticOracleV3.defaultCurrency())
-    //   const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
+    it("DVM accepts the dispute and rejects the claim -> bond is returned back to user who raised dispute -> no insurance claim payout", async function () {
+      this.txIdx = this.tx1
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      await this.payoutRequest.setFailed(false);
+      const currency = await (this.optimisticOracleV3.defaultCurrency())
+      const bondAmount = await this.optimisticOracleV3.getMinimumBond(currency);
 
-    //   await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
+      await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
 
-    //   const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
 
-    //   await tx.wait();
+      await tx.wait();
 
-    //   const events = await this.payoutRequest.queryFilter("InsurancePayoutRequested");
-
-
-    //   const eventData = events[0].args;
-    //   const assertionId = eventData.assertionId
-
-    //   //disputor raised a dispute
-    //   const assertion = await this.optimisticOracleV3.assertions(assertionId);
-    //   await this.mockUNO.connect(this.disputor).approve(this.optimisticOracleV3.target, assertion.bond);
-    //   await this.optimisticOracleV3.connect(this.disputor).disputeAssertion(assertionId, this.disputor.address);
+      const events = await this.payoutRequest.queryFilter("InsurancePayoutRequested");
 
 
-    //   //users voting for the dispute
-    //   const auxillaryData = await this.optimisticOracleV3.stampAssertion(assertionId);
-    //   const identifier = await this.payoutRequest.defaultIdentifier();
-    //   //const assertion = await this.optimisticOracleV3.assertions(assertionId);
-    //   const time = assertion.assertionTime
-    //   //dvm accepts the dispute 
+      const eventData = events[0].args;
+      const assertionId = eventData.assertionId
 
-    //   await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('1'))
-    //   await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('5'))
+      //disputor raised a dispute
+      const assertion = await this.optimisticOracleV3.assertions(assertionId);
+      await this.mockUNO.connect(this.disputor).approve(this.optimisticOracleV3.target, assertion.bond);
+      await this.optimisticOracleV3.connect(this.disputor).disputeAssertion(assertionId, this.disputor.address);
 
-    //   const sevenDays = 24 * 7 * 60 * 60 * 7
-    //   //calling assert truth in optimistic oracle 
-    //   await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
 
-    //   const burnedBondPercentage = await this.optimisticOracleV3.burnedBondPercentage();
-    //   const oracleFee = (BigInt(burnedBondPercentage) * BigInt(assertion.bond)) / BigInt(10 ** 18);
-    //   const bondRecipientAmount = BigInt(BigInt(assertion.bond) * BigInt(2)) - oracleFee;
+      //users voting for the dispute
+      const auxillaryData = await this.optimisticOracleV3.stampAssertion(assertionId);
+      const identifier = await this.payoutRequest.defaultIdentifier();
+      //const assertion = await this.optimisticOracleV3.assertions(assertionId);
+      const time = assertion.assertionTime
+      //dvm accepts the dispute 
 
-    //   await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
-    //     this.mockUNO,
-    //     ["0x07417cA264170Fc5bD3568f93cFb956729752B61", this.disputor.address],
-    //     [oracleFee, bondRecipientAmount]
-    //   );
-    // })
+      await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('1'))
+      await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('5'))
+
+      const sevenDays = 24 * 7 * 60 * 60 * 7
+      //calling assert truth in optimistic oracle 
+      await hre.ethers.provider.send('evm_increaseTime', [Number(sevenDays)]);
+
+      const burnedBondPercentage = await this.optimisticOracleV3.burnedBondPercentage();
+      const oracleFee = (BigInt(burnedBondPercentage) * BigInt(assertion.bond)) / BigInt(10 ** 18);
+      const bondRecipientAmount = BigInt(BigInt(assertion.bond) * BigInt(2)) - oracleFee;
+
+      await expect(this.optimisticOracleV3.settleAssertion(assertionId)).changeTokenBalances(
+        this.mockUNO,
+        ["0x07417cA264170Fc5bD3568f93cFb956729752B61", this.disputor.address],
+        [oracleFee, bondRecipientAmount]
+      );
+    })
     // it("DVM accepts the dispute and rejects the claim -> bond is returned back to user who raised dispute -> override function called and escalated to claims DAO -> reject claim -> no insurance claim payout", async function () {
 
     //   expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
@@ -817,7 +817,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
       await this.mockUNO.approve(this.payoutRequest2.target, bondAmount);
       await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("50", 6), this.signers[5].address)
 
       await tx.wait();
 
@@ -826,7 +826,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       const assertionId1 = eventData.assertionId
 
 
-      const tx1 = await this.payoutRequest2.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx1 = await this.payoutRequest2.initRequest(0, getBigNumber("50", 6), this.signers[5].address)
 
       await tx1.wait();
 
