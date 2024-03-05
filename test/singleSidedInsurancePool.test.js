@@ -957,6 +957,7 @@ describe("SingleSidedInsurancePool", function () {
         //   [this.signers[0].address],
         //   [1]
         // );
+        await expect(this.singleSidedInsurancePool.connect(this.signers[0]).leaveFromPending(200)).not.to.be.reverted
         const signer0Amount = (await this.singleSidedInsurancePool1.getWithdrawRequestPerUser(this.signers[0].address)).pendingAmount;
         await expect(this.singleSidedInsurancePool1.connect(this.signers[0]).leaveFromPending(signer0Amount)).changeTokenBalances(
           this.mockUNO,
