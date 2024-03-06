@@ -1,27 +1,16 @@
 const { expect } = require("chai")
-// const chai = require('chai');
-//  const eventemitter2 = require('chai-eventemitter2');
-//  chai.use(eventemitter2());
-// const { expect, emit, withArgs } = require("@nomicfoundation/hardhat-chai-matchers");
 
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
-const { BigNumber } = require("ethers")
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
+const { getBigNumber, getNumber, advanceBlockTo } = require("../scripts/shared/utilities")
+
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
-const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
-const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
+
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
-  UNISWAP_ROUTER_ADDRESS,
-  TWAP_ORACLE_PRICE_FEED_FACTORY,
-  UNO,
-  USDT,
-  UNO_USDT_PRICE_FEED,
+  UNISWAP_ROUTER_ADDRESS
 } = require("../scripts/shared/constants")
-const { clearConfigCache } = require("prettier")
-const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
+
 
 describe("SingleSidedReinsurancePool", function () {
   before(async function () {
@@ -284,6 +273,7 @@ describe("SingleSidedReinsurancePool", function () {
 
         expect(lpBalanceBefore).to.equal(getBigNumber("10000"))
         // signer 0 emergency Withdraw
+        await this.singleSidedReinsurancePool.toggleEmergencyWithdraw();
         await this.singleSidedReinsurancePool.emergencyWithdraw()
         const userinfo = await this.singleSidedReinsurancePool.userInfo(this.signers[0].address);
         expect(userinfo.amount).to.equal(0);
@@ -346,7 +336,7 @@ describe("SingleSidedReinsurancePool", function () {
         // console.log("[pendingUnoReward1]", pendingUnoReward1.toString(), getNumber(pendingUnoReward1));
         // signer 0 submit WR for the 1000 UNO
         await this.singleSidedReinsurancePool.connect(this.signers[1]).leaveFromPoolInPending(getBigNumber("1000"))
-        const currentDate = new Date()
+        const currentDate =  new Date(((await ethers.provider.getBlock('latest')).timestamp)*1000)
         const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
         const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])

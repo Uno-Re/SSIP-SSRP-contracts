@@ -1,22 +1,16 @@
 const { expect } = require("chai")
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
-const { BigNumber } = require("ethers")
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
+const { getBigNumber, getNumber, advanceBlockTo } = require("../scripts/shared/utilities")
+
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
-const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
+
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
-  UNISWAP_ROUTER_ADDRESS,
-  TWAP_ORACLE_PRICE_FEED_FACTORY,
-  UNO,
-  USDT,
-  UNO_USDT_PRICE_FEED,
+  UNISWAP_ROUTER_ADDRESS
 } = require("../scripts/shared/constants")
-const { clearConfigCache } = require("prettier")
-const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
+
 
 describe("SSIP Reward attack", function () {
   before(async function () {
@@ -129,10 +123,7 @@ describe("SSIP Reward attack", function () {
     this.singleSidedInsurancePool = await upgrades.deployProxy(
       this.SingleSidedInsurancePool, [
         this.capitalAgent.target,
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        this.signers[0].address,
-        this.signers[0].address,
-        this.signers[0].address,
+        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
       ]
     );
 

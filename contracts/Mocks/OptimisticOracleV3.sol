@@ -32,4 +32,10 @@ contract OptimisticOracleV3 {
     function settle(bytes32 id, address d) external {
         Check(d).assertionResolvedCallback(id, true);
     }
+     function disputeAssertion(bytes32 assertionId, address disputer) external pure returns(uint){
+        return 4;
+     }
+     function assertions(bytes32) external pure returns(uint){
+        return 10;
+     }
 }
