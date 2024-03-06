@@ -67,7 +67,9 @@ describe("SingleSidedInsurancePool", function () {
       "0x1000000000000000000000000000000000",
     ]);
 
-    const timestamp = new Date().getTime()
+   // const timestamp = new Date().getTime()
+    
+    const timestamp = (await ethers.provider.getBlock('latest')).timestamp + 100;
 
     await (
       await this.mockUNO
