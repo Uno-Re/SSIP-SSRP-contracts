@@ -272,7 +272,7 @@ describe("Synthetic SSRP", function () {
         await advanceBlockTo(afterBlockNumber1 + 10000)
       })
 
-      it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
+      it("Should withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
         //check the uno and risk pool LP token balance of the singer 0 before withdraw
         const usdcBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
         let userInfo = await this.syntheticSSRP.userInfo(this.signers[0].address)
@@ -289,7 +289,7 @@ describe("Synthetic SSRP", function () {
         //   expect(usdcBalanceBefore).to.lt(usdcBalanceAfter)
       })
 
-      //       //   it("Sould check withdraw pending status", async function () {
+      //       //   it("Should check withdraw pending status", async function () {
       //       //     // signer 0 submit WR for the 1000 UNO
       //       //     await this.syntheticSSRP.leaveFromPoolInPending(getBigNumber(1000))
       //       //     // signer 1 submit WR for the 1000 UNO
@@ -304,7 +304,7 @@ describe("Synthetic SSRP", function () {
       //       //     expect(totalPendingWithdrawAmount).to.equal(getBigNumber(2000))
       //       //   })
 
-      //       //   it("Sould not claim within 10 days since WR", async function () {
+      //       //   it("Should not claim within 10 days since WR", async function () {
       //       //     await this.syntheticSSRP.setLockTime(3600 * 24 * 10)
       //       //     // signer 0 submit WR for the 1000 UNO
       //       //     await this.syntheticSSRP.leaveFromPoolInPending(getBigNumber(1000))
