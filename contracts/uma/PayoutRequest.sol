@@ -67,13 +67,10 @@ contract PayoutRequest is PausableUpgradeable {
         isUMAFailed = true;
     }
 
-    function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
+    function initRequest(uint256 _policyId, uint256 _amount, address _to, string memory _ipfs) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
-        uint256 _claimed = ICapitalAgent(capitalAgent).claimedAmount(salesPolicy, _policyId);
-        (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
-        require(_amount + _claimed <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
-        require(_exist && !_expired, "UnoRe: policy expired or not exist");
+        _checkForCoverage(salesPolicy, _policyId, _amount);
         Policy memory _policyData = policies[_policyId];
         _policyData.insuranceAmount = _amount;
         _policyData.payoutAddress = _to;
@@ -87,7 +84,12 @@ contract PayoutRequest is PausableUpgradeable {
                 abi.encodePacked(
                     "Insurance contract is claiming that insurance event ",
                     " had occurred as of ",
+                    _ipfs,
                     ClaimData.toUtf8BytesUint(block.timestamp),
+                    _policyId,
+                    msg.sender,
+                    _amount,
+                    _to,
                     "."
                 ),
                 _to,
@@ -190,5 +192,12 @@ contract PayoutRequest is PausableUpgradeable {
 
     function _requireGuardianCouncil() internal view {
         require(msg.sender == _guardianCouncil, "RPayout: unauthorised");
+    }
+
+    function _checkForCoverage(address salesPolicy, uint256 _policyId, uint256 _amount) internal {
+        uint256 _claimed = ICapitalAgent(capitalAgent).claimedAmount(salesPolicy, _policyId);
+        (uint256 _coverageAmount, , , bool _exist, bool _expired) = ISalesPolicy(salesPolicy).getPolicyData(_policyId);
+        require(_amount + _claimed <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
+        require(_exist && !_expired, "UnoRe: policy expired or not exist");
     }
 }
