@@ -1,27 +1,18 @@
 const { expect } = require("chai")
-// const chai = require('chai');
-//  const eventemitter2 = require('chai-eventemitter2');
-//  chai.use(eventemitter2());
-// const { expect, emit, withArgs } = require("@nomicfoundation/hardhat-chai-matchers");
 
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
-const { BigNumber } = require("ethers")
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
+const { getBigNumber, getNumber, advanceBlockTo } = require("../scripts/shared/utilities")
+
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
-const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
+
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
-  UNISWAP_ROUTER_ADDRESS,
-  TWAP_ORACLE_PRICE_FEED_FACTORY,
-  UNO,
-  USDT,
-  UNO_USDT_PRICE_FEED,
+  UNISWAP_ROUTER_ADDRESS
 } = require("../scripts/shared/constants")
-const { clearConfigCache } = require("prettier")
-const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
+
+
 
 describe("SingleSidedInsurancePool", function () {
   before(async function () {
@@ -802,6 +793,7 @@ describe("SingleSidedInsurancePool", function () {
     })
     describe("SingleSidedInsurancePool Staking and Migrate", function () {
       beforeEach(async function () {
+        //user 1 and 2 entering the pool
 
         await this.singleSidedInsurancePool.connect(this.signers[0]).enterInPool(getBigNumber("100"));
         await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("100"));
@@ -812,7 +804,11 @@ describe("SingleSidedInsurancePool", function () {
 
         //killing pool
         await this.singleSidedInsurancePool.killPool();
+
+        // user will not be able to enter in pool 
         await expect(this.singleSidedInsurancePool.connect(this.signers[0]).enterInPool(getBigNumber("100"))).to.be.reverted;
+
+        //user will only able to withdraw in kill mode 
         await expect(this.singleSidedInsurancePool.connect(this.signers[1]).leaveFromPoolInPending(getBigNumber("100"))).not.to.be.reverted;
 
         await hre.ethers.provider.send('evm_increaseTime', [Number(afterTenDaysTimeStampUTC)]);
@@ -859,19 +855,14 @@ describe("SingleSidedInsurancePool", function () {
 
         // await this.singleSidedInsurancePool1.enterInPool(getBigNumber("100000");
 
-        this.mockUSDT1 = this.mockUSDT;
-        this.singleSidedInsurancePool1_1 = this.singleSidedInsurancePool1
-        this.singleSidedInsurancePool_1 = this.singleSidedInsurancePool
-
-
+        
         this.poolInfov2 = await this.capitalAgent.poolInfo(this.singleSidedInsurancePool.target);
         this.scrv2 = this.poolInfov2.SCR
-        console.log('this.poolInfov2 capital', this.poolInfov2.totalCapital);
-
-        //setting pool capital
+       
+        //setting pool capital to v2 pool capital
         await this.capitalAgent.setPoolCapital(this.singleSidedInsurancePool1.target, this.poolInfov2.totalCapital);
         await this.capitalAgent.setSCR(this.poolInfov2.SCR, this.singleSidedInsurancePool1.target);
-        //transfer lp to riskpool
+        //transfer capital lp to riskpool
         await (await this.mockUSDT.transfer(this.riskPool1.target, this.poolInfov2.totalCapital)).wait();
 
         this.poolInfov3 = await this.capitalAgent.poolInfo(this.singleSidedInsurancePool1.target);
