@@ -1,8 +1,7 @@
 const { expect } = require("chai")
 const { ethers, network, upgrades } = require("hardhat")
 const { getBigNumber, getNumber, advanceBlockTo } = require("../scripts/shared/utilities")
-const { BigNumber } = require("ethers")
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
+
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 const {
@@ -10,8 +9,7 @@ const {
   UNISWAP_FACTORY_ADDRESS,
   UNISWAP_ROUTER_ADDRESS,
 } = require("../scripts/shared/constants")
-const { clearConfigCache } = require("prettier")
-const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
+
 
 describe("SingleSidedInsurancePool RollOverReward", function () {
   before(async function () {

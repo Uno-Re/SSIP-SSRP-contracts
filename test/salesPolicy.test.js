@@ -1,28 +1,21 @@
 const { expect } = require("chai")
 const { ethers, network, upgrades } = require("hardhat")
-const sigUtil = require("eth-sig-util")
-// const { Biconomy } = require('@biconomy/mexa');
+
 const {
   getBigNumber,
-  getNumber,
-  getHexStrFromStr,
   getPaddedHexStrFromBN,
   getPaddedHexStrFromBNArray,
   getChainId,
   getSignatureParameters,
   advanceBlockTo,
 } = require("../scripts/shared/utilities")
-const { BigNumber } = ethers
+
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
-const ERC20 = require("../scripts/abis/ERC20.json")
+
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
   UNISWAP_ROUTER_ADDRESS,
-  TWAP_ORACLE_PRICE_FEED_FACTORY,
-  UNO,
-  USDT,
-  UNO_USDT_PRICE_FEED,
 } = require("../scripts/shared/constants")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 

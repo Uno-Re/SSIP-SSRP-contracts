@@ -1,22 +1,16 @@
 const { expect } = require("chai")
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber, getNumber, advanceBlock, advanceBlockTo } = require("../scripts/shared/utilities")
-const { BigNumber } = ethers
+const { getBigNumber } = require("../scripts/shared/utilities")
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
-const SalesPolicy = require("../scripts/abis/SalesPolicy.json")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json");
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
   UNISWAP_ROUTER_ADDRESS,
   TWAP_ORACLE_PRICE_FEED_FACTORY,
-  UNO,
-  USDT,
-  UNO_USDT_PRICE_FEED,
 } = require("../scripts/shared/constants")
-const { clearConfigCache } = require("prettier")
-const { latest } = require("@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time")
+
 
 describe("SingleSidedInsurance claim policy", function () {
   before(async function () {
