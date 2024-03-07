@@ -112,6 +112,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         return (_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
+    function getTotalCapitalStakedByCurrency(address _pool) external view returns(uint256) {
+        return totalCapitalStakedByCurrency[_pool];
+    }
+
     /**
      * @dev set sales policy factory, can only be call by admin role
      * @param _factory new sales policy factory address
