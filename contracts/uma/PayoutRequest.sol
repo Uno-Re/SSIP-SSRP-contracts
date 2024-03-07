@@ -208,7 +208,7 @@ contract PayoutRequest is PausableUpgradeable {
         address _exchangeAgent = ICapitalAgent(capitalAgent).exchangeAgent();
         (, , address _currency, ) = ICapitalAgent(capitalAgent).getPoolInfo(address(ssip));
         address _usdcToken = IExchangeAgent(_exchangeAgent).usdcToken();
-        uint256 usdcTokenAmount = IExchangeAgent(_exchangeAgent).getNeededTokenAmount(_currency, _usdcToken, _amount);
+        uint256 usdcTokenAmount = IExchangeAgent(_exchangeAgent).getNeededTokenAmount(_currency, _usdcToken, _amount);  // @Audit: there might be a chance of amount loss due to precision loss
         require(usdcTokenAmount + _claimed <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
     }
