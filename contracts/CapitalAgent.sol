@@ -38,8 +38,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     mapping(address => PoolInfo) public poolInfo;
 
     address[] private currencyList;
-    mapping(address => bool) private existedCurrencies;
-    mapping(address => uint256) private totalCapitalStakedByCurrency;
+    mapping(address => bool) public existedCurrencies;
+    mapping(address => uint256) public totalCapitalStakedByCurrency;
 
     PolicyInfo public policyInfo;
 
