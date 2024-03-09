@@ -37,7 +37,7 @@ contract PayoutRequest is PausableUpgradeable {
     uint256 public lockTime;
     mapping(address => uint256) public roleLockTime;
     mapping(bytes32 => bool) settleAssertionUmaFailed;
-    string public ipfsUrl;
+    bytes32 public ipfsUrl;
 
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
     event LogSetEscalationManager(address indexed payout, address indexed escalatingManager);
@@ -49,7 +49,7 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetLockTime(address indexed payout, uint256 newLockTime);
     event LogSetGuardianCouncil(address indexed payout, address indexed guardianCouncil);
     event SettledUMAFailedAssertion(bytes32 indexed assertionId, uint256 indexed policyId, uint256 insuranceAmount);
-    event IpfsUrlSet(string ipfsLink);
+    event IpfsUrlSet(bytes32 ipfsLink);
 
     function initialize(
         ISingleSidedInsurancePool _ssip,
@@ -70,7 +70,10 @@ contract PayoutRequest is PausableUpgradeable {
         isUMAFailed = true;
     }
 
-    function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
+    /**
+     * @param _hyperlaneMessage Starting string texts for claim data prefix, eg. "Request for claim is for"
+     */
+    function initRequest(uint256 _policyId, uint256 _amount, address _to, bytes32 _hyperlaneMessage) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
         _checkForCoverage(salesPolicy, _policyId, _amount);
@@ -81,14 +84,21 @@ contract PayoutRequest is PausableUpgradeable {
             defaultCurrency.approve(address(optimisticOracle), bond);
             assertionId = optimisticOracle.assertTruth(
                 abi.encodePacked(
-                    "Insurance contract is claiming that insurance event ",
-                    " had occurred as of ",
+                    "Request asserted: 0x",
+                    ClaimData.toUtf8Bytes(_hyperlaneMessage),
+                    " for policyId: ",
+                    ClaimData.toUtf8BytesUint(_policyId),
+                    ", asserter: 0x",
+                    ClaimData.toUtf8BytesAddress(_to),
+                    " and amount: ",
+                    ClaimData.toUtf8BytesUint(_amount),
+                    " with assessment: 0x",
+                    ClaimData.toUtf8Bytes(ipfsUrl),
+                    " at timestamp: ",
                     ClaimData.toUtf8BytesUint(block.timestamp),
-                    _policyId,
-                    msg.sender,
-                    _amount,
-                    _to,
-                    "."
+                    " and RequestAsserter contract: 0x",
+                    ClaimData.toUtf8BytesAddress(address(this)),
+                    " is valid."
                 ),
                 _to,
                 address(this),
@@ -193,7 +203,7 @@ contract PayoutRequest is PausableUpgradeable {
         emit LogSetGuardianCouncil(address(this), guardianCouncil);
     }
 
-    function setIpfsUrl(string memory _ipfsLink) external {
+    function setIpfsUrl(bytes32 _ipfsLink) external {
         _requireGuardianCouncil();
         ipfsUrl = _ipfsLink;
         emit IpfsUrlSet(_ipfsLink);
