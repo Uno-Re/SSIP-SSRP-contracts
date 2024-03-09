@@ -52,7 +52,8 @@ describe("SSIP Reward attack", function () {
 
     const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
 
-    const timestamp = new Date().getTime()
+    // const timestamp = new Date().getTime()
+    const timestamp = (await ethers.provider.getBlock('latest')).timestamp + 100;
 
     await (
       await this.mockUNO

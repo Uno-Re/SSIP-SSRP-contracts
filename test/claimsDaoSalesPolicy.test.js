@@ -514,15 +514,17 @@ describe("CLaimsDao SalesPolicy", async function () {
     it("Should burn policy when again clain for policy to full fill coverage", async function () {
       expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
       await this.payoutRequest.setFailed(true);
-      await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
-      //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("101", 6));
+      let unoAmount = await this.exchangeAgent.getNeededTokenAmount(this.mockUSDT.target, this.mockUNO.target, getBigNumber("101", 6));
+      await this.payoutRequest.initRequest(0, unoAmount + BigInt(1), this.signers[5].address)
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + unoAmount + BigInt(1));
       expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
       expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
 
-      await this.payoutRequest.initRequest(0, getBigNumber("100", 6), this.signers[5].address)
-      //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
-      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("201", 6));
+      let unoAmount1 = await this.exchangeAgent.getNeededTokenAmount(this.mockUSDT.target, this.mockUNO.target, getBigNumber("100", 6));
+      await this.payoutRequest.initRequest(0, unoAmount1 + BigInt(1), this.signers[5].address)
+      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
+      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + unoAmount + BigInt(1) + unoAmount1 + BigInt(1));
     })
     it("DVM rejects the dispute and accepts the claim -> bond gets deducted and sent somewhere -> insurance claim payout.", async function () {
 

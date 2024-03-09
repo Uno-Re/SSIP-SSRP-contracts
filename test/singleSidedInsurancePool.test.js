@@ -67,7 +67,9 @@ describe("SingleSidedInsurancePool", function () {
       "0x1000000000000000000000000000000000",
     ]);
 
-    const timestamp = new Date().getTime()
+   // const timestamp = new Date().getTime()
+    
+    const timestamp = (await ethers.provider.getBlock('latest')).timestamp + 100;
 
     await (
       await this.mockUNO
@@ -434,7 +436,7 @@ describe("SingleSidedInsurancePool", function () {
       })
 
 
-      it("Sould withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
+      it("Should withdraw 1000 UNO and then will be this WR in pending but block reward will be transferred at once", async function () {
         //check the uno and risk pool LP token balance of the singer 0 before withdraw
         const riskPool = this.RiskPool.attach(this.poolAddress)
         const lpBalanceBefore = await riskPool.balanceOf(this.signers[0].address)
@@ -466,7 +468,7 @@ describe("SingleSidedInsurancePool", function () {
         expect(totalPendingWithdrawAmount).to.equal(getBigNumber("2000"))
       })
 
-      it("Sould not claim within 10 days since WR", async function () {
+      it("Should not claim within 10 days since WR", async function () {
         await this.singleSidedInsurancePool.setLockTime(3600 * 24 * 10)
         // signer 0 submit WR for the 1000 UNO
         await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
@@ -495,8 +497,8 @@ describe("SingleSidedInsurancePool", function () {
         // signer 0 submit WR for the 1000 UNO
         await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
         const currentDate = new Date(((await ethers.provider.getBlock('latest')).timestamp) * 1000)
-        const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
-        const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
+        //const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
+        const afterFiveDaysTimeStampUTC = (await ethers.provider.getBlock('latest')).timestamp +6*86400;
         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
         await network.provider.send("evm_mine")
         // after 10000 blocks
@@ -506,8 +508,8 @@ describe("SingleSidedInsurancePool", function () {
         // console.log("[pendingUnoReward2]", pendingUnoReward2.toString(), getNumber(pendingUnoReward2))
         // signer 0 submit WR for the 1000 UNO again
         await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
-        const afterTenDays = new Date(afterFiveDays.setDate(currentDate.getDate() + 11))
-        const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
+        //const afterTenDays = new Date(afterFiveDays.setDate(currentDate.getDate() + 11))
+        const afterTenDaysTimeStampUTC = (await ethers.provider.getBlock('latest')).timestamp +11*86400;
         network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
         await network.provider.send("evm_mine")
         // signer 0 can claim after 10 days since the last WR

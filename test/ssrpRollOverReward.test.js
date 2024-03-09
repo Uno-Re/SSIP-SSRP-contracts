@@ -49,7 +49,8 @@ describe("SingleSidedReinsurancePool RollOverReward", function () {
     this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.deploy()
 
 
-    const timestamp = new Date().getTime()
+    // const timestamp = new Date().getTime()
+    const timestamp = (await ethers.provider.getBlock('latest')).timestamp + 100;
 
     await (
       await this.mockUNO
