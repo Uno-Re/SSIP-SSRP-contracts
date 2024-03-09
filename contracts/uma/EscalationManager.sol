@@ -23,6 +23,7 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
 
     mapping (address => bool) public checkDisputers;
     mapping (bytes32 => int256) public oraclePrice;
+    mapping (bytes32 => bool) public isOraclePriceCalled;
 
     event PriceRequestAdded(bytes32 indexed identifier, uint256 time, bytes ancillaryData);
     event UpdatedArbitrateViaEscalationManager(address indexed owner, bool arbitrateViaEscalationManager);
@@ -81,7 +82,7 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         bytes memory ancillaryData
     ) external view override returns (int256) {
         bytes32 data = keccak256(abi.encodePacked(identifier, time, ancillaryData));
-        return oraclePrice[data];
+        return isOraclePriceCalled[data] ? oraclePrice[data] : int256(0);
     }
 
     function setOraclePrice(bytes32 identifier,
@@ -92,6 +93,7 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         require(price == 0 || price == NUMERICAL_VALUE, "EManger: invalid price");
         bytes32 data = keccak256(abi.encodePacked(identifier, time, ancillaryData));
         oraclePrice[data] = price;
+        isOraclePriceCalled[data] = true;
     }
 
     function requestPrice(
