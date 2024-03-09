@@ -37,6 +37,7 @@ contract PayoutRequest is PausableUpgradeable {
     uint256 public lockTime;
     mapping(address => uint256) public roleLockTime;
     mapping(bytes32 => bool) settleAssertionUmaFailed;
+    string public ipfsUrl;
 
     event InsurancePayoutRequested(uint256 indexed policyId, bytes32 indexed assertionId);
     event LogSetEscalationManager(address indexed payout, address indexed escalatingManager);
@@ -48,6 +49,7 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetLockTime(address indexed payout, uint256 newLockTime);
     event LogSetGuardianCouncil(address indexed payout, address indexed guardianCouncil);
     event SettledUMAFailedAssertion(bytes32 indexed assertionId, uint256 indexed policyId, uint256 insuranceAmount);
+    event IpfsUrlSet(string ipfsLink);
 
     function initialize(
         ISingleSidedInsurancePool _ssip,
@@ -189,6 +191,12 @@ contract PayoutRequest is PausableUpgradeable {
         roleLockTime[guardianCouncil] = block.timestamp + lockTime;
         _guardianCouncil = guardianCouncil;
         emit LogSetGuardianCouncil(address(this), guardianCouncil);
+    }
+
+    function setIpfsUrl(string memory _ipfsLink) external {
+        _requireGuardianCouncil();
+        ipfsUrl = _ipfsLink;
+        emit IpfsUrlSet(_ipfsLink);
     }
 
     function togglePause() external {
