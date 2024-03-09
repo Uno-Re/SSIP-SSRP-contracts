@@ -68,7 +68,7 @@ contract PayoutRequest is PausableUpgradeable {
         isUMAFailed = true;
     }
 
-    function initRequest(uint256 _policyId, uint256 _amount, address _to, string memory _ipfsLink) public whenNotPaused returns (bytes32 assertionId) {
+    function initRequest(uint256 _policyId, uint256 _amount, address _to) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
         _checkForCoverage(salesPolicy, _policyId, _amount);
@@ -81,7 +81,6 @@ contract PayoutRequest is PausableUpgradeable {
                 abi.encodePacked(
                     "Insurance contract is claiming that insurance event ",
                     " had occurred as of ",
-                    _ipfsLink,
                     ClaimData.toUtf8BytesUint(block.timestamp),
                     _policyId,
                     msg.sender,
