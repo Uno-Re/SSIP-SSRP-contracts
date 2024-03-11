@@ -12,7 +12,6 @@ import "./interfaces/IUniswapRouter02.sol";
 import "./interfaces/IOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
-import "./interfaces/IGnosisSafe.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausable {
     address public immutable override usdcToken;
@@ -62,8 +61,6 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
         require(_WETH != address(0), "UnoRe: zero WETH address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        // require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
-        // require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         usdcToken = _usdcToken;
         UNISWAP_FACTORY = _uniswapFactory;
         UNISWAP_ROUTER = _uniswapRouter;
