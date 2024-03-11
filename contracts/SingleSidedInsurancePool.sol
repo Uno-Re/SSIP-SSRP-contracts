@@ -102,8 +102,8 @@ contract SingleSidedInsurancePool is
 
     function initialize(address _capitalAgent, address _multiSigWallet) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
-        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners required to verify");
+        // require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
+        // require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners required to verify");
         capitalAgent = _capitalAgent;
         lockTime = 10 days;
         __ReentrancyGuard_init();

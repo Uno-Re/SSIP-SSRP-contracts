@@ -7,15 +7,15 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const mockUSDT = await hre.deployments.get("MockUSDT")
-  const mockUNO = await hre.deployments.get("MockUNO")
+  const mockUSDT = process.env.USDC;
+  const mockUNO = process.env.UNO;
   const exchangeAgent = await hre.deployments.get("ExchangeAgent")
   const multiSigWallet = process.env.MULTISIGWALLET;
   const governance = process.env.GOVERNANCE;
 
   const premiumPool = await deploy("PremiumPool", {
     from: deployer,
-    args: [exchangeAgent.address, mockUNO.address, mockUSDT.address, multiSigWallet, governance],
+    args: [exchangeAgent.address, mockUNO, mockUSDT, multiSigWallet, governance],
     log: true,
     deterministicDeployment: false,
   })

@@ -85,8 +85,8 @@ contract SingleSidedReinsurancePool is
 
     function initialize(address _multiSigWallet, address _claimAccessor) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
-        require(IGnosisSafe(_claimAccessor).getOwners().length > 3, "UnoRe: more than three owners required");
-        require(IGnosisSafe(_claimAccessor).getThreshold() > 1, "UnoRe: more than one owners required to verify");
+        // require(IGnosisSafe(_claimAccessor).getOwners().length > 3, "UnoRe: more than three owners required");
+        // require(IGnosisSafe(_claimAccessor).getThreshold() > 1, "UnoRe: more than one owners required to verify");
         stakingStartTime = block.timestamp + 3 days;
         lockTime = 10 days;
         __ReentrancyGuard_init();

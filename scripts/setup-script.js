@@ -8,9 +8,9 @@ const {getBigNumber} = require("./shared/utilities")
 async function main() {
 
     let rewardMultiplier = 1;
-    let UNOToken = (await hre.deployments.get("MockUNO")).address;
-    let USDCToken = (await hre.deployments.get("MockUSDC")).address;
-    let USDTToken = (await hre.deployments.get("MockUSDT")).address;
+    let UNOToken = process.env.UNO;
+    let USDCToken = process.env.USDC;
+    let USDTToken = process.env.USDT;
     let operator = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5";
     let poolSCR = getBigNumber("1", 6);
     let MCR = getBigNumber("10", 6);
@@ -94,13 +94,13 @@ async function main() {
 
     await this.SalesPolicyFactory.newSalesPolicy(this.ExchangeAgent.address, this.PremiumPool.target, this.CapitalAgent.target);
     await this.SalesPolicyFactory.setSignerInPolicy(signerInSalesPolicy);
-    await this.SalesPolicyFactory.approvePremiumInPolicy(UNOToken);
+    // await this.SalesPolicyFactory.approvePremiumInPolicy(UNOToken);
     await this.SalesPolicyFactory.approvePremiumInPolicy(USDCToken);
-    await this.SalesPolicyFactory.approvePremiumInPolicy(USDTToken);
+    // await this.SalesPolicyFactory.approvePremiumInPolicy(USDTToken);
     let salesPolicy = (await this.CapitalAgent.getPolicyInfo())[0];
-    await this.PremiumPool.addCurrency(UNOToken);
+    // await this.PremiumPool.addCurrency(UNOToken);
     await this.PremiumPool.addCurrency(USDCToken);
-    await this.PremiumPool.addCurrency(USDTToken);
+    // await this.PremiumPool.addCurrency(USDTToken);
     await this.PremiumPool.addWhiteList(salesPolicy);
 }
 
