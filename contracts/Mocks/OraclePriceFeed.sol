@@ -1,49 +1,92 @@
-// SPDX-License-Identifier: GPL-3.0
-
+// SPDX-License-Identifier: MIT
 pragma solidity =0.8.23;
 
-import "../interfaces/IOraclePriceFeed.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {AggregatorV3Interface} from "../interfaces/IAggregatorV3.sol";
 
-/**
- * This smart contract
- */
+interface IERC20Metadata {
+    /**
+     * @dev Returns the decimals places of the token.
+     */
+    function decimals() external view returns (uint8);
+}
 
-contract MockOraclePriceFeed is IOraclePriceFeed, Ownable {
+contract PriceOracle is Ownable {
+    using EnumerableSet for EnumerableSet.AddressSet;
 
-    uint256 public ethUsdtPrice;
-    address public usdt;
+    EnumerableSet.AddressSet private _stableCoins;
+    /**
+     * @dev please take care token decimal
+     * e.x ethPrice[uno_address] = 123456 means 1 UNO = 123456 / (10 ** 18 eth)
+     */
+    mapping(address => uint256) ethPrices;
+    address private ethUSDAggregator = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
 
-    mapping (address => uint256) public assetEthPrice;
+    event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);
+    event SetETHUSDAggregator(address _oldAggregator, address _newAggregator);
 
-    constructor(address uno, address _usdt) Ownable(msg.sender) {
-        usdt = _usdt;
-        ethUsdtPrice = 459347726228755;
-        assetEthPrice[uno] = 18934772622875;
-        assetEthPrice[usdt] = 459347726228755;
+    constructor(address _admin) Ownable(_admin) {
+
+    }
+
+    function stableCoins() external view returns (address[] memory) {
+        return _stableCoins.values();
+    }
+
+    function addStableCoin(address _token) external onlyOwner {
+        _stableCoins.add(_token);
+    }
+
+    function removeStableCoin(address _token) external onlyOwner {
+        _stableCoins.remove(_token);
     }
 
     function getEthUsdPrice() external view returns (uint256) {
-        return ethUsdtPrice;
+        return _fetchEthUsdPrice();
     }
 
-    function getAssetEthPrice(address _currency) external view returns (uint256) {
-        return assetEthPrice[_currency];
+    function _fetchEthUsdPrice() private view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(ethUSDAggregator);
+        (, int256 price, , , ) = priceFeed.latestRoundData();
+        return uint256(price) / 1e8;
     }
 
-    function consult(address token0, address token1, uint256 amount1) external view returns (uint256) {
-        uint256 ethprice1 = assetEthPrice[token0];
-        uint256 ethprice2 = assetEthPrice[token1];
-
-        return (ethprice1 * amount1) / (ethprice2);
-        // return 
+    function getAssetEthPrice(address _asset) external view returns (uint256) {
+        return _stableCoins.contains(_asset) ? (10 ** 18) / _fetchEthUsdPrice() : ethPrices[_asset];
     }
 
-    function setEthUsdPrice(uint256 _amount) external onlyOwner {
-        ethUsdtPrice = _amount;
+    function setAssetEthPrice(address _asset, uint256 _price) external onlyOwner {
+        ethPrices[_asset] = _price;
+        emit AssetPriceUpdated(_asset, _price, block.timestamp);
     }
 
-    function setAssetEthPrice(address _asset, uint256 _amount) external onlyOwner {
-        assetEthPrice[_asset] = _amount;
+    function setETHUSDAggregator(address _aggregator) external onlyOwner {
+        address oldAggregator = ethUSDAggregator;
+        ethUSDAggregator = _aggregator;
+        emit SetETHUSDAggregator(oldAggregator, _aggregator);
+    }
+
+    /**
+     * returns the tokenB amount for tokenA
+     */
+    function consult(
+        address tokenA,
+        address tokenB,
+        uint256 amountA
+    ) external view returns (uint256) {
+        if (_stableCoins.contains(tokenA) && _stableCoins.contains(tokenB)) {
+            return amountA;
+        }
+
+        uint256 ethPriceA = _stableCoins.contains(tokenA) ? 1e18 / _fetchEthUsdPrice() : ethPrices[tokenA];
+
+        uint256 ethPriceB = _stableCoins.contains(tokenB) ? 1e18 / _fetchEthUsdPrice() : ethPrices[tokenB];
+
+        require(ethPriceA != 0 && ethPriceB != 0, "PO: Prices of both tokens should be set");
+
+        return
+            (amountA * ethPriceA * (10**IERC20Metadata(tokenB).decimals())) /
+            (10**IERC20Metadata(tokenA).decimals() * ethPriceB);
     }
 }
