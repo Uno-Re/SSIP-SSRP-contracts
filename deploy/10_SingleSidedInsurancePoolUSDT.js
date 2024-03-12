@@ -7,27 +7,27 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const { deployer, proxyAdminOwner } = await getNamedAccounts();
   const owner = deployer
 
-  const capitalAgent = await hre.deployments.get("CapitalAgent")
-  const multiSigWallet = process.env.MULTISIGWALLET;
-  const governance = process.env.GOVERNANCE;
+  // const capitalAgent = await hre.deployments.get("CapitalAgent")
+  // const multiSigWallet = process.env.MULTISIGWALLET;
+  // const governance = process.env.GOVERNANCE;
   
-  const a = await deploy("SingleSidedInsurancePoolUSDT", {
-    from: deployer,
-    contract: "SingleSidedInsurancePool",
-    log: true,
-    deterministicDeployment: false,
-    proxy: {
-      execute: {
-        init: {
-          methodName: "initialize",
-          args: [capitalAgent.address, multiSigWallet],
-        },
-      },
-      proxyContract: "OpenZeppelinTransparentProxy",
-    },
-  });
+  // const a = await deploy("SingleSidedInsurancePoolUSDT", {
+  //   from: deployer,
+  //   contract: "SingleSidedInsurancePool",
+  //   log: true,
+  //   deterministicDeployment: false,
+  //   proxy: {
+  //     execute: {
+  //       init: {
+  //         methodName: "initialize",
+  //         args: [capitalAgent.address, multiSigWallet],
+  //       },
+  //     },
+  //     proxyContract: "OpenZeppelinTransparentProxy",
+  //   },
+  // });
 
-  console.log(`ssip usdt deployed at ${a.address}`);
+  // console.log(`ssip usdt deployed at ${a.address}`);
 };
 
 module.exports.tags = ["SingleSidedInsurancePoolUSDT", "UnoRe"]

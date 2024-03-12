@@ -8,52 +8,52 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const owner = deployer
 
 
-  const capitalAgent = await hre.deployments.get("CapitalAgent")
-  const escalationManager = await hre.deployments.get("EscalationManager")
-  const governance = process.env.GOVERNANCE;
-  const multiSigWallet = process.env.MULTISIGWALLET;
-  const guardianCouncil = process.env.GAURDIAN_COUNCIL;
-  const defaultCurrency = process.env.DEAFAULT_CURRENCY;
-  const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
-  const claimsDao = process.env.CLAIMS_DAO;
+  // const capitalAgent = await hre.deployments.get("CapitalAgent")
+  // const escalationManager = await hre.deployments.get("EscalationManager")
+  // const governance = process.env.GOVERNANCE;
+  // const multiSigWallet = process.env.MULTISIGWALLET;
+  // const guardianCouncil = process.env.GAURDIAN_COUNCIL;
+  // const defaultCurrency = process.env.DEAFAULT_CURRENCY;
+  // const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
+  // const claimsDao = process.env.CLAIMS_DAO;
 
-  const ssip = await deploy("SingleSidedInsurancePoolETH", {
-    from: deployer,
-    contract: "SingleSidedInsurancePool",
-    log: true,
-    deterministicDeployment: false,
-    proxy: {
-      execute: {
-        init: {
-          methodName: "initialize",
-          args: [capitalAgent.address, multiSigWallet],
-        },
-      },
-      proxyContract: "OpenZeppelinTransparentProxy",
-    },
-  });
+  // const ssip = await deploy("SingleSidedInsurancePoolETH", {
+  //   from: deployer,
+  //   contract: "SingleSidedInsurancePool",
+  //   log: true,
+  //   deterministicDeployment: false,
+  //   proxy: {
+  //     execute: {
+  //       init: {
+  //         methodName: "initialize",
+  //         args: [capitalAgent.address, multiSigWallet],
+  //       },
+  //     },
+  //     proxyContract: "OpenZeppelinTransparentProxy",
+  //   },
+  // });
 
-  console.log(`ssip ETH deploted at ${ssip.address}`);
+  // console.log(`ssip ETH deploted at ${ssip.address}`);
   
   
   
-  const payoutRequest = await deploy("PayoutRequestETH", {
-    from: deployer,
-    contract: "PayoutRequest",
-    log: true,
-    deterministicDeployment: false,
-    proxy: {
-      execute: {
-        init: {
-          methodName: "initialize",
-          args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, claimsDao],
-        },
-      },
-      proxyContract: "OpenZeppelinTransparentProxy",
-    },
-  });
+  // const payoutRequest = await deploy("PayoutRequestETH", {
+  //   from: deployer,
+  //   contract: "PayoutRequest",
+  //   log: true,
+  //   deterministicDeployment: false,
+  //   proxy: {
+  //     execute: {
+  //       init: {
+  //         methodName: "initialize",
+  //         args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, claimsDao],
+  //       },
+  //     },
+  //     proxyContract: "OpenZeppelinTransparentProxy",
+  //   },
+  // });
   
-  console.log(`payoutRequest deployed at ${payoutRequest.address}`);
+  // console.log(`payoutRequest deployed at ${payoutRequest.address}`);
 };
 
 module.exports.tags = ["SingleSidedInsurancePoolETH", "PayoutRequestETH", "UnoRe"]

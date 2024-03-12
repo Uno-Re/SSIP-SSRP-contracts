@@ -8,31 +8,31 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const owner = deployer
 
 
-  const ssip = await hre.deployments.get("SingleSidedInsurancePoolUSDT")
-  // const claimProcessor = await hre.deployments.get("ClaimProce/ssor")
-  const escalationManager = await hre.deployments.get("EscalationManager")
-  const guardianCouncil = process.env.GAURDIAN_COUNCIL;
-  const defaultCurrency = process.env.DEAFAULT_CURRENCY;
-  const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
-  const claimsDao = process.env.CLAIMS_DAO;
+  // const ssip = await hre.deployments.get("SingleSidedInsurancePoolUSDT")
+  // // const claimProcessor = await hre.deployments.get("ClaimProce/ssor")
+  // const escalationManager = await hre.deployments.get("EscalationManager")
+  // const guardianCouncil = process.env.GAURDIAN_COUNCIL;
+  // const defaultCurrency = process.env.DEAFAULT_CURRENCY;
+  // const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
+  // const claimsDao = process.env.CLAIMS_DAO;
   
-  const a = await deploy("PayoutRequestUSDT", {
-    from: deployer,
-    contract: "PayoutRequest",
-    log: true,
-    deterministicDeployment: false,
-    proxy: {
-      execute: {
-        init: {
-          methodName: "initialize",
-          args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, claimsDao],
-        },
-      },
-      proxyContract: "OpenZeppelinTransparentProxy",
-    },
-  });
+  // const a = await deploy("PayoutRequestUSDT", {
+  //   from: deployer,
+  //   contract: "PayoutRequest",
+  //   log: true,
+  //   deterministicDeployment: false,
+  //   proxy: {
+  //     execute: {
+  //       init: {
+  //         methodName: "initialize",
+  //         args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, claimsDao],
+  //       },
+  //     },
+  //     proxyContract: "OpenZeppelinTransparentProxy",
+  //   },
+  // });
 
-  console.log(`payoutRequest deployed at ${a.address}`);
+  // console.log(`payoutRequest deployed at ${a.address}`);
 };
 
 module.exports.tags = ["PayoutRequestUSDT", "UnoRe"]

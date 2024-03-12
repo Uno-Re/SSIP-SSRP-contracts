@@ -9,18 +9,18 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const owner = deployer
 
-  const mockUSDT = process.env.USDC; 
-  const exchangeAgent = await hre.deployments.get("ExchangeAgent")
-  const premiumPool = await hre.deployments.get("PremiumPool")
-  const capitalAgent = await hre.deployments.get("CapitalAgent")
-  const multiSigWallet = process.env.MULTISIGWALLET;
+  // const mockUSDT = process.env.USDC; 
+  // const exchangeAgent = await hre.deployments.get("ExchangeAgent")
+  // const premiumPool = await hre.deployments.get("PremiumPool")
+  // const capitalAgent = await hre.deployments.get("CapitalAgent")
+  // const multiSigWallet = process.env.MULTISIGWALLET;
 
-  await deploy("SalesPolicyFactory", {
-    from: deployer,
-    args: [mockUSDT, exchangeAgent.address, premiumPool.address, capitalAgent.address, multiSigWallet],
-    log: true,
-    deterministicDeployment: false,
-  })
+  // await deploy("SalesPolicyFactory", {
+  //   from: deployer,
+  //   args: [mockUSDT, exchangeAgent.address, premiumPool.address, capitalAgent.address, multiSigWallet],
+  //   log: true,
+  //   deterministicDeployment: false,
+  // })
 }
 
 module.exports.tags = ["SalesPolicyFactory"]

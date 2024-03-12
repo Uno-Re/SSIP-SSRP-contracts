@@ -21,7 +21,7 @@ contract PriceOracle is Ownable {
      * e.x ethPrice[uno_address] = 123456 means 1 UNO = 123456 / (10 ** 18 eth)
      */
     mapping(address => uint256) ethPrices;
-    address private ethUSDAggregator = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    address private ethUSDAggregator = 0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e;
 
     event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);
     event SetETHUSDAggregator(address _oldAggregator, address _newAggregator);
