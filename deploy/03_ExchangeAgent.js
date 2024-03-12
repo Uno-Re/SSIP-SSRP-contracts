@@ -26,4 +26,4 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   console.log(`deploy at ${exchangeAgent.address}`)
 }
 
-module.exports.tags = ["ExchangeAgent", "MockUSDT", "OraclePriceFeed"]
+module.exports.tags = ["ExchangeAgent", "MockUSDT", "PriceOracle"]
