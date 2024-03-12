@@ -5,17 +5,16 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  // const mockUNO = await hre.deployments.get("MockUNO")
-  // const mockUSDT = await hre.deployments.get("MockUSDT")
+  const admin = process.env.MULTISIGWALLET;
 
-  // const oraclePriceFeed = await deploy("MockOraclePriceFeed", {
-  //   from: deployer,
-  //   args: [mockUNO.address, mockUSDT.address],
-  //   log: true,
-  //   deterministicDeployment: false,
-  // })
+  const oraclePriceFeed = await deploy("PriceOracle", {
+    from: deployer,
+    args: [admin],
+    log: true,
+    deterministicDeployment: false,
+  })
 
-  // console.log(`oracle price feed deploy at ${oraclePriceFeed.address}`)
+  console.log(`oracle price feed deploy at ${oraclePriceFeed.address}`)
 }
 
 module.exports.tags = ["MockOraclePriceFeed"]
