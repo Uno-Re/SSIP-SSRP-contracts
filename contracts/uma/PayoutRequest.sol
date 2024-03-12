@@ -50,6 +50,8 @@ contract PayoutRequest is PausableUpgradeable {
     event LogSetGuardianCouncil(address indexed payout, address indexed guardianCouncil);
     event SettledUMAFailedAssertion(bytes32 indexed assertionId, uint256 indexed policyId, uint256 insuranceAmount);
     event IpfsUrlSet(bytes32 ipfsLink);
+    event DefaultIdentifierSet(bytes32 defaultIdentifier);
+    event DefaultCurrencySet(address defaultCurrency);
 
     function initialize(
         ISingleSidedInsurancePool _ssip,
@@ -207,6 +209,18 @@ contract PayoutRequest is PausableUpgradeable {
         _requireGuardianCouncil();
         ipfsUrl = _ipfsLink;
         emit IpfsUrlSet(_ipfsLink);
+    }
+
+    function setDefaultIdentifier(bytes32 _defaultIdentifier) external {
+        _requireGuardianCouncil();
+        defaultIdentifier = _defaultIdentifier;
+        emit DefaultIdentifierSet(_defaultIdentifier);
+    }
+
+    function setDefaultCurrency(address _defaultCurrency) external {
+        _requireGuardianCouncil();
+        defaultCurrency = IERC20(_defaultCurrency);
+        emit DefaultCurrencySet(_defaultCurrency);
     }
 
     function togglePause() external {
