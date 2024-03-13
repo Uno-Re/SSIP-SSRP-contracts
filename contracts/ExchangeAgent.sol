@@ -14,10 +14,10 @@ import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausable {
-    address public immutable override usdcToken;
-    address public immutable UNISWAP_FACTORY;
-    address public immutable UNISWAP_ROUTER;
-    address public immutable WETH;
+    address public override usdcToken;
+    address public uniswapFactory;
+    address public uniswapRouter;
+    address public WETH;
     address public oraclePriceFeed;
     uint256 public slippage;
     uint256 private constant SLIPPAGE_PRECISION = 100;
@@ -57,13 +57,10 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         uint256 _swapDeadline
     ) Ownable(_multiSigWallet) {
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
-        require(_uniswapRouter != address(0), "UnoRe: zero uniswapRouter address");
-        require(_uniswapFactory != address(0), "UnoRe: zero uniswapFactory address");
-        require(_WETH != address(0), "UnoRe: zero WETH address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         usdcToken = _usdcToken;
-        UNISWAP_FACTORY = _uniswapFactory;
-        UNISWAP_ROUTER = _uniswapRouter;
+        uniswapFactory = _uniswapFactory;
+        uniswapRouter = _uniswapRouter;
         WETH = _WETH;
         oraclePriceFeed = _oraclePriceFeed;
         whiteList[msg.sender] = true;
@@ -88,6 +85,18 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
 
     function setSwapDeadline(uint256 _swapDeadline) external onlyOwner {
         swapDeadline = _swapDeadline;
+    }
+
+    function setWeth(
+        address _usdcToken,
+        address _WETH,
+        address _uniswapRouter,
+        address _uniswapFactory
+    ) external onlyOwner {
+        usdcToken = _usdcToken;
+        uniswapFactory = _uniswapFactory;
+        uniswapRouter = _uniswapRouter;
+        WETH = _WETH;
     }
 
     /**
@@ -190,7 +199,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         require(twapPrice > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPrice * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
 
-        uint256 convertedAmount = _convertTokenForToken(UNISWAP_ROUTER, _token0, _token1, _token0Amount, desiredAmount);
+        uint256 convertedAmount = _convertTokenForToken(uniswapRouter, _token0, _token1, _token0Amount, desiredAmount);
         return convertedAmount;
     }
 
@@ -210,7 +219,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         require(twapPriceInUSDC > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPriceInUSDC * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
 
-        uint256 convertedAmount = _convertTokenForETH(UNISWAP_ROUTER, _token, _convertAmount, desiredAmount);
+        uint256 convertedAmount = _convertTokenForETH(uniswapRouter, _token, _convertAmount, desiredAmount);
         return convertedAmount;
     }
 

@@ -9,13 +9,13 @@ module.exports = async function ({getNamedAccounts, deployments}) {
 
 
   const capitalAgent = await hre.deployments.get("CapitalAgent")
-  const escalationManager = await hre.deployments.get("EscalationManager")
-  const governance = process.env.GOVERNANCE;
+  // const escalationManager = await hre.deployments.get("EscalationManager")
+  // const governance = process.env.GOVERNANCE;
   const multiSigWallet = process.env.MULTISIGWALLET;
-  const guardianCouncil = process.env.GAURDIAN_COUNCIL;
-  const defaultCurrency = process.env.DEAFAULT_CURRENCY;
-  const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
-  const claimsDao = process.env.CLAIMS_DAO;
+  // const guardianCouncil = process.env.GAURDIAN_COUNCIL;
+  // const defaultCurrency = process.env.DEAFAULT_CURRENCY;
+  // const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
+  // const claimsDao = process.env.CLAIMS_DAO;
 
   const ssip = await deploy("SingleSidedInsurancePoolUNO", {
     from: deployer,
@@ -36,24 +36,24 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   console.log(`ssip uno deployed at ${ssip.address}`);
 
   
-  const payoutRequest = await deploy("PayoutRequestUNO", {
-    from: deployer,
-    contract: "PayoutRequest",
-    log: true,
-    deterministicDeployment: false,
-    proxy: {
-      execute: {
-        init: {
-          methodName: "initialize",
-          args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, claimsDao],
-        },
-      },
-      proxyContract: "OpenZeppelinTransparentProxy",
-    },
-  });
+  // const payoutRequest = await deploy("PayoutRequestUNO", {
+  //   from: deployer,
+  //   contract: "PayoutRequest",
+  //   log: true,
+  //   deterministicDeployment: false,
+  //   proxy: {
+  //     execute: {
+  //       init: {
+  //         methodName: "initialize",
+  //         args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, claimsDao],
+  //       },
+  //     },
+  //     proxyContract: "OpenZeppelinTransparentProxy",
+  //   },
+  // });
 
-  console.log(`payoutRequest deployed at ${payoutRequest.address}`);
+  // console.log(`payoutRequest deployed at ${payoutRequest.address}`);
 
 };
 
-module.exports.tags = ["SingleSidedInsurancePoolUNO", "PayoutRequestUNO", "UnoRe"]
+module.exports.tags = ["SingleSidedInsurancePoolUNO", "UnoRe"]

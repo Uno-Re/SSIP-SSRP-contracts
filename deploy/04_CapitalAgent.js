@@ -7,7 +7,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const mockUSDT = process.env.USDC;
+  const mockUSDT = process.env.USDC_BNB;
   const exchangeAgent = await hre.deployments.get("ExchangeAgent")
   const multiSigWallet = process.env.MULTISIGWALLET;
   const operator = process.env.OPERATOR;

@@ -9,11 +9,11 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deployer } = await getNamedAccounts()
   const owner = deployer
 
-  const mockUSDT = process.env.USDC;
+  const mockUSDT = process.env.USDC_BNB;
   const PRICE_FEED = await hre.deployments.get("PriceOracle");
-  const WETH = process.env.WETH;
-  const UNISWAPV2_FACTORY = process.env.UNISWAPV2_FACTORY;
-  const UNISWAPV2_ROUTER = process.env.UNISWAPV2_ROUTER;
+  const WETH = process.env.WETH_BNB;
+  const UNISWAPV2_FACTORY = process.env.UNISWAPV2_FACTORY_BNB;
+  const UNISWAPV2_ROUTER = process.env.UNISWAPV2_ROUTER_BNB;
   const MULTISIGWALLET = process.env.MULTISIGWALLET;
 
   const exchangeAgent = await deploy("ExchangeAgent", {

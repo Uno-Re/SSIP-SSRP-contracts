@@ -9,23 +9,23 @@ module.exports = async function ({getNamedAccounts, deployments}) {
     const multiSigWallet = process.env.MULTISIGWALLET;
     const claimAccessor = process.env.CLAIM_ACCESSOR;
     
-   const a =  await deploy("SingleSidedReinsurancePool", {
-      from: deployer,
-      contract: "SingleSidedReinsurancePool",
-      log: true,
-      deterministicDeployment: false,
-      proxy: {
-        execute: {
-          init: {
-            methodName: "initialize",
-            args: [multiSigWallet, claimAccessor],
-          },
-        },
-        proxyContract: "OpenZeppelinTransparentProxy",
-      },
-    });
+  //  const a =  await deploy("SingleSidedReinsurancePool", {
+  //     from: deployer,
+  //     contract: "SingleSidedReinsurancePool",
+  //     log: true,
+  //     deterministicDeployment: false,
+  //     proxy: {
+  //       execute: {
+  //         init: {
+  //           methodName: "initialize",
+  //           args: [multiSigWallet, claimAccessor],
+  //         },
+  //       },
+  //       proxyContract: "OpenZeppelinTransparentProxy",
+  //     },
+  //   });
 
-    console.log(`deploy at ${a.address}`)
+  //   console.log(`deploy at ${a.address}`)
   };
   
   module.exports.tags = ["SingleSidedReinsurancePool"]
