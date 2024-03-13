@@ -78,7 +78,7 @@ module.exports = {
     bscMain: {
       url: "https://bsc-dataseed.binance.org/",
       chainId: 56,
-      accounts,
+      accounts: [process.env.PRIVATE_KEY_1],
       live: true,
       saveDeployments: true,
     },
