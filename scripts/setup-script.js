@@ -60,9 +60,9 @@ async function main() {
     await this.CapitalAgent.addPoolWhiteList(this.SSIPUSDT.target);
     
     await this.CapitalAgent.setMCR(MCR);
-    await this.CapitalAgent.setMLR(MLR);
-    await this.CapitalAgent.setSalesPolicyFactory(this.SalesPolicyFactory.target);
-    let CLAIM_PROCESSOR_ROLE = await this.SSIPETH.CLAIM_PROCESSOR_ROLE();
+    // await this.CapitalAgent.setMLR(MLR);
+    // await this.CapitalAgent.setSalesPolicyFactory(this.SalesPolicyFactory.target);
+    // let CLAIM_PROCESSOR_ROLE = await this.SSIPETH.CLAIM_PROCESSOR_ROLE();
     
     // await this.SSIPETH.createRiskPool("SSIP-ETH", "SSIP-ETH", this.RiskPoolFactory.address, "0x0000000000000000000000000000000000000000", rewardMultiplier, poolSCR);
     await this.SSIPUNO.createRiskPool("SSIP-UNO", "SSIP-UNO", this.RiskPoolFactory.address, UNOToken, 443937087772704211, 10000000000000000000000);
@@ -74,34 +74,34 @@ async function main() {
     await this.SSIPUSDC.createRewarder(operator, this.RewarderFactory.address, UNOToken);
     // await this.SSIPUSDT.createRewarder(operator, this.RewarderFactory.address, UNOToken);
     
-    await this.SSIPETH.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutETH);
-    await this.SSIPUNO.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUNO);
-    await this.SSIPUSDC.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDC);
-    await this.SSIPUSDT.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDT);
+    // await this.SSIPETH.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutETH);
+    // await this.SSIPUNO.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUNO);
+    // await this.SSIPUSDC.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDC);
+    // await this.SSIPUSDT.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDT);
 
     // this.PayoutETH = await ethers.getContractAt(ssipAbi, this.PayoutETH);
     // this.PayoutUNO = await ethers.getContractAt(ssipAbi, this.PayoutUNO);
     // this.PayoutUSDC = await ethers.getContractAt(ssipAbi, this.PayoutUSDC);
     // this.PayoutUSDT = await ethers.getContractAt(ssipAbi, this.PayoutUSDT);
 
-    await this.PayoutETH.setCapitalAgent(this.CapitalAgent.target);
-    await this.PayoutUNO.setCapitalAgent(this.CapitalAgent.target);
-    await this.PayoutUSDC.setCapitalAgent(this.CapitalAgent.target);
-    await this.PayoutUSDT.setCapitalAgent(this.CapitalAgent.target); 
+    // await this.PayoutETH.setCapitalAgent(this.CapitalAgent.target);
+    // await this.PayoutUNO.setCapitalAgent(this.CapitalAgent.target);
+    // await this.PayoutUSDC.setCapitalAgent(this.CapitalAgent.target);
+    // await this.PayoutUSDT.setCapitalAgent(this.CapitalAgent.target); 
 
-    await this.SSRP.createRiskPool("Synthetic SSRP", "SSRP", this.RiskPoolFactory.address, UNOToken, rewardMultiplier);
-    await this.SSRP.createRewarder(operator, this.RewarderFactory.address, UNOToken);
+    // await this.SSRP.createRiskPool("Synthetic SSRP", "SSRP", this.RiskPoolFactory.address, UNOToken, rewardMultiplier);
+    // await this.SSRP.createRewarder(operator, this.RewarderFactory.address, UNOToken);
 
-    await this.SalesPolicyFactory.newSalesPolicy(this.ExchangeAgent.address, this.PremiumPool.target, this.CapitalAgent.target);
-    await this.SalesPolicyFactory.setSignerInPolicy(signerInSalesPolicy);
+    // await this.SalesPolicyFactory.newSalesPolicy(this.ExchangeAgent.address, this.PremiumPool.target, this.CapitalAgent.target);
+    // await this.SalesPolicyFactory.setSignerInPolicy(signerInSalesPolicy);
     // await this.SalesPolicyFactory.approvePremiumInPolicy(UNOToken);
-    await this.SalesPolicyFactory.approvePremiumInPolicy(USDCToken);
+    // await this.SalesPolicyFactory.approvePremiumInPolicy(USDCToken);
     // await this.SalesPolicyFactory.approvePremiumInPolicy(USDTToken);
-    let salesPolicy = (await this.CapitalAgent.getPolicyInfo())[0];
+    // let salesPolicy = (await this.CapitalAgent.getPolicyInfo())[0];
     // await this.PremiumPool.addCurrency(UNOToken);
-    await this.PremiumPool.addCurrency(USDCToken);
+    // await this.PremiumPool.addCurrency(USDCToken);
     // await this.PremiumPool.addCurrency(USDTToken);
-    await this.PremiumPool.addWhiteList(salesPolicy);
+    // await this.PremiumPool.addWhiteList(salesPolicy);
 }
 
 
