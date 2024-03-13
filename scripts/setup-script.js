@@ -11,11 +11,11 @@ async function main() {
     let UNOToken = process.env.UNO;
     let USDCToken = process.env.USDC;
     let USDTToken = process.env.USDT;
-    let operator = "0xedFFe0a06914c9D6083B4B099e5b935E9E84c9a5";
+    let operator = "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e";
     let poolSCR = getBigNumber("1", 6);
     let MCR = getBigNumber("10", 6);
     let MLR = getBigNumber("1", 6);
-    let signerInSalesPolicy = "0xD60e6f9b596c717C55A0C6f50E3282f06FE02739";
+    let signerInSalesPolicy = "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e";
 
     let ssipAbi = (await artifacts.readArtifact("SingleSidedInsurancePool")).abi;
     let capitalAgentAbi = (await artifacts.readArtifact("CapitalAgent")).abi;
@@ -64,10 +64,10 @@ async function main() {
     await this.CapitalAgent.setSalesPolicyFactory(this.SalesPolicyFactory.target);
     let CLAIM_PROCESSOR_ROLE = await this.SSIPETH.CLAIM_PROCESSOR_ROLE();
     
-    await this.SSIPETH.createRiskPool("SSIP-ETH", "SSIP-ETH", this.RiskPoolFactory.address, "0x0000000000000000000000000000000000000000", rewardMultiplier, poolSCR);
-    await this.SSIPUNO.createRiskPool("SSIP-UNO", "SSIP-UNO", this.RiskPoolFactory.address, UNOToken, rewardMultiplier, poolSCR);
-    await this.SSIPUSDC.createRiskPool("SSIP-USDC", "SSIP-USDC", this.RiskPoolFactory.address, USDCToken, rewardMultiplier, poolSCR);
-    await this.SSIPUSDT.createRiskPool("SSIP-USDT", "SSIP-USDT", this.RiskPoolFactory.address, USDTToken, rewardMultiplier, poolSCR);
+    await this.SSIPETH.createRiskPool("Synthetic SSIP-ETH", "SSSIP-ETH", this.RiskPoolFactory.address, "0x0000000000000000000000000000000000000000", rewardMultiplier, poolSCR);
+    await this.SSIPUNO.createRiskPool("Synthetic SSIP-UNO", "SSSIP-UNO", this.RiskPoolFactory.address, UNOToken, rewardMultiplier, poolSCR);
+    await this.SSIPUSDC.createRiskPool("Synthetic SSIP-USDC", "SSSIP-USDC", this.RiskPoolFactory.address, USDCToken, rewardMultiplier, poolSCR);
+    await this.SSIPUSDT.createRiskPool("Synthetic SSIP-USDT", "SSSIP-USDT", this.RiskPoolFactory.address, USDTToken, rewardMultiplier, poolSCR);
     
     await this.SSIPETH.createRewarder(operator, this.RewarderFactory.address, UNOToken);
     await this.SSIPUNO.createRewarder(operator, this.RewarderFactory.address, UNOToken);
@@ -79,10 +79,10 @@ async function main() {
     await this.SSIPUSDC.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDC);
     await this.SSIPUSDT.grantRole(CLAIM_PROCESSOR_ROLE, this.PayoutUSDT);
 
-    this.PayoutETH = await ethers.getContractAt(ssipAbi, this.PayoutETH);
-    this.PayoutUNO = await ethers.getContractAt(ssipAbi, this.PayoutUNO);
-    this.PayoutUSDC = await ethers.getContractAt(ssipAbi, this.PayoutUSDC);
-    this.PayoutUSDT = await ethers.getContractAt(ssipAbi, this.PayoutUSDT);
+    this.PayoutETH = await ethers.getContractAt(payoutAbi, this.PayoutETH);
+    this.PayoutUNO = await ethers.getContractAt(payoutAbi, this.PayoutUNO);
+    this.PayoutUSDC = await ethers.getContractAt(payoutAbi, this.PayoutUSDC);
+    this.PayoutUSDT = await ethers.getContractAt(payoutAbi, this.PayoutUSDT);
 
     await this.PayoutETH.setCapitalAgent(this.CapitalAgent.target);
     await this.PayoutUNO.setCapitalAgent(this.CapitalAgent.target);
