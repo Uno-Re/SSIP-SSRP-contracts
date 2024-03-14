@@ -228,7 +228,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
         address currency = poolInfo[_ssip].currency;
         totalCapitalStakedByCurrency[currency] += _capital;
-        poolInfo[_ssip].totalCapital = _capital;
+        poolInfo[_ssip].totalCapital += _capital;
     }
 
     /**
@@ -446,7 +446,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _MCR new value to update
      **/
     function setMCR(uint256 _MCR) external onlyOperator nonReentrant {
-        require(_MCR > 0, "UnoRe: zero mcr");
         MCR = _MCR;
         emit LogSetMCR(msg.sender, address(this), _MCR);
     }
@@ -456,7 +455,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _MLR new value to update
      **/
     function setMLR(uint256 _MLR) external onlyOperator nonReentrant {
-        require(_MLR > 0, "UnoRe: zero mlr");
         MLR = _MLR;
         emit LogSetMLR(msg.sender, address(this), _MLR);
     }
@@ -467,7 +465,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _pool address of pool
      **/
     function setSCR(uint256 _SCR, address _pool) external onlyOperator nonReentrant {
-        require(_SCR > 0, "UnoRe: zero scr");
         poolInfo[_pool].SCR = _SCR;
         emit LogSetSCR(msg.sender, address(this), _pool, _SCR);
     }
