@@ -81,6 +81,7 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY_1],
       live: true,
       saveDeployments: true,
+      gasMultiplier: 1
     },
     goerli: {
       url: process.env.GOERLI_URL,
@@ -88,7 +89,7 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: process.env.API_KEY, // BSC_API_KEY
+    apiKey: process.env.BSC_API_KEY, // BSC_API_KEY
   },
   paths: {
     deploy: "deploy",
