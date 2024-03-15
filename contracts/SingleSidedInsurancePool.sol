@@ -561,6 +561,10 @@ contract SingleSidedInsurancePool is
         return (_pendingUno, amount);
     }
 
+    function recoverToken(address _token, address _to, uint256 _amount) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
+        TransferHelper.safeTransfer(_token, _to, _amount);
+    }
+
     function _depositIn(uint256 _amount) internal {
         address token = IRiskPool(riskPool).currency();
         if (token == address(0)) {
