@@ -227,8 +227,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     function setPoolCapital(address _ssip, uint256 _capital) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
         address currency = poolInfo[_ssip].currency;
-        totalCapitalStakedByCurrency[currency] += _capital;
-        poolInfo[_ssip].totalCapital += _capital;
+        totalCapitalStakedByCurrency[currency] = _capital;
+        poolInfo[_ssip].totalCapital = _capital;
     }
 
     /**
