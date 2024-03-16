@@ -214,7 +214,6 @@ contract SingleSidedReinsurancePool is
         address _currency,
         uint256 _rewardMultiplier
     ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) nonReentrant {
-        require(riskPool == address(0), "UnoRe: risk pool created already");
         require(_factory != address(0), "UnoRe: zero factory address");
         require(_currency != address(0), "UnoRe: zero currency address");
         riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
