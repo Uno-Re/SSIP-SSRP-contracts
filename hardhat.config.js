@@ -51,7 +51,9 @@ module.exports = {
       allowUnlimitedContractSize: true,
       evmVersion: "byzantium",
       forking: {
-        url: "https://mainnet.infura.io/v3/f18ea15fd54544a0b9b3a06c5624e665",
+       url: "https://young-blissful-silence.bsc.quiknode.pro/c7103e2fdde47184b0a3519deec9e53150ac312e/",
+        //url: "https://mainnet.infura.io/v3/f18ea15fd54544a0b9b3a06c5624e665",
+
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
         enabled: true,
         // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355

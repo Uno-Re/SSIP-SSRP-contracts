@@ -42,7 +42,7 @@ function getPaddedHexStrFromBNArray(bnArray) {
 }
 
 function getHexStrFromStr(str) {
-  const strBytes = ethers.utils.toUtf8Bytes(str)
+  const strBytes = ethers.hexlify(ethers.toUtf8Bytes(str))
   return ethers.toBeHex(strBytes)
 }
 
