@@ -6,7 +6,6 @@ require("hardhat-contract-sizer")
 require("@nomicfoundation/hardhat-verify")
 require("hardhat-gas-reporter")
 require("@openzeppelin/hardhat-upgrades")
-require("@nomicfoundation/hardhat-foundry")
 require("@nomicfoundation/hardhat-chai-matchers")
 require("dotenv").config()
 
@@ -52,7 +51,7 @@ module.exports = {
       allowUnlimitedContractSize: true,
       evmVersion: "byzantium",
       forking: {
-        url: "https://eth-goerli.g.alchemy.com/v2/HK0kZcIo_6y1ahCx3d3E_AgVWP0k9fs-",
+        url: "https://mainnet.infura.io/v3/f18ea15fd54544a0b9b3a06c5624e665",
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
         enabled: true,
         // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355
@@ -82,10 +81,10 @@ module.exports = {
       live: true,
       saveDeployments: true,
     },
-    goerli: {
-      url: process.env.GOERLI_URL,
-      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
-    },
+    // goerli: {
+    //   url: process.env.GOERLI_URL,
+    //   accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+    // },
   },
   etherscan: {
     apiKey: process.env.API_KEY, // BSC_API_KEY

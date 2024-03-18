@@ -40,8 +40,36 @@ describe("CLaimsDao SalesPolicy", async function () {
     this.PayoutRequest = await ethers.getContractFactory("PayoutRequest")
     this.signers = await ethers.getSigners()
     this.zeroAddress = ethers.ZeroAddress;
+    this.whale = await ethers.getImpersonatedSigner('0x7d6149aD9A573A6E2Ca6eBf7D4897c1B766841B4');
+    this.usdtWhale = await ethers.getImpersonatedSigner("0xD6153F5af5679a75cC85D8974463545181f48772");
+    this.unoWhale = await ethers.getImpersonatedSigner("0x4aede441085398BD74FeB9eeFCfe08E709e69ABF");
+    this.deployer=await ethers.getImpersonatedSigner("0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e")
+    await this.whale.sendTransaction({
+      to: this.usdtWhale.address,
+      value: getBigNumber('100'),
+    });
+    await this.whale.sendTransaction({
+      to: this.deployer.address,
+      value: getBigNumber('100'),
+    });
+    await this.whale.sendTransaction({
+      to: this.unoWhale.address,
+      value: getBigNumber('100'),
+    });
+    await this.whale.sendTransaction({
+      to: this.signers[0].address,
+      value: getBigNumber('100'),
+    });
+    await this.whale.sendTransaction({
+      to: this.signers[0].address,
+      value: getBigNumber('100'),
+    });
+    await this.whale.sendTransaction({
+      to: this.signers[0].address,
+      value: getBigNumber('100'),
+    });
     this.routerContract = new ethers.Contract(
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.mainnet,
       JSON.stringify(UniswapV2Router.abi),
       ethers.provider,
     )
@@ -71,17 +99,29 @@ describe("CLaimsDao SalesPolicy", async function () {
   })
 
   beforeEach(async function () {
-    this.mockUNO = await this.MockUNO.deploy()
-    this.mockUSDT = await this.MockUSDT.deploy()
-    await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000"), { from: this.signers[0].address })
-    await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber("500000"), { from: this.signers[0].address })
-    await this.mockUNO.connect(this.signers[1]).faucetToken(getBigNumber("500000000"), { from: this.signers[1].address })
-    await this.mockUSDT.connect(this.signers[1]).faucetToken(getBigNumber("500000"), { from: this.signers[1].address })
-    await this.mockUNO.connect(this.signers[2]).faucetToken(getBigNumber("500000000"), { from: this.signers[2].address })
-    await this.mockUSDT.connect(this.signers[2]).faucetToken(getBigNumber("500000"), { from: this.signers[2].address })
-    await this.mockUNO.connect(this.signers[4]).faucetToken(getBigNumber("500000"), { from: this.signers[4].address })
-    await this.mockUNO.connect(this.signers[5]).faucetToken(getBigNumber("500000"), { from: this.signers[5].address })
-    await this.mockUNO.connect(this.signers[6]).faucetToken(getBigNumber("500000"), { from: this.signers[6].address })
+    this.mockUNO = await this.MockUNO.attach("0x474021845C4643113458ea4414bdb7fB74A01A77")
+    this.mockUSDT = await this.MockUNO.attach("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+    console.log(1);
+    await this.mockUNO.connect(this.unoWhale).transfer(this.signers[0].address, getBigNumber("100000"))
+
+    await this.mockUSDT.connect(this.usdtWhale).approve(this.signers[0].address, 1);
+
+    await this.mockUSDT.connect(this.usdtWhale).transfer(this.signers[0].address, getBigNumber("100000", 6))
+
+    await this.mockUNO.connect(this.unoWhale).transfer(this.signers[1].address, getBigNumber("100000"));
+    await this.mockUNO.connect(this.unoWhale).transfer(this.signers[2].address, getBigNumber("100000"));
+    await this.mockUNO.connect(this.unoWhale).transfer(this.signers[3].address, getBigNumber("100000"));
+    await this.mockUNO.connect(this.unoWhale).transfer(this.signers[4].address, getBigNumber("100000"));
+    await this.mockUNO.connect(this.unoWhale).transfer(this.signers[5].address, getBigNumber("100000"));await this.mockUNO.connect(this.unoWhale).transfer(this.signers[6].address, getBigNumber("100000"));
+    await this.mockUSDT.connect(this.usdtWhale).transfer(this.signers[1].address, getBigNumber("100000", 6))
+    await this.mockUNO.connect(this.unoWhale).transfer(this.signers[2].address, getBigNumber("100000"))
+    await this.mockUSDT.connect(this.usdtWhale).transfer(this.signers[2].address, getBigNumber("100000", 6))
+    await this.mockUSDT.connect(this.usdtWhale).transfer(this.signers[3].address, getBigNumber("100000", 6))
+    await this.mockUSDT.connect(this.usdtWhale).transfer(this.signers[4].address, getBigNumber("100000", 6))
+    await this.mockUSDT.connect(this.usdtWhale).transfer(this.signers[5].address, getBigNumber("100000", 6))
+    await this.mockUSDT.connect(this.usdtWhale).transfer(this.signers[6].address, getBigNumber("100000", 6))
+    console.log(1);
+    
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
     this.assertor = this.signers[6]
@@ -91,43 +131,43 @@ describe("CLaimsDao SalesPolicy", async function () {
     this.mockUNO.transfer(this.signers[2].address, getBigNumber("3000000"))
     this.mockUNO.transfer(this.disputor.address, getBigNumber("3000000"))
 
-
+    console.log(11);
     const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
     let timestamp = new Date().getTime()
 
     // multisig address
-    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+    this.multisig = await ethers.getSigner("0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e")
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
+      params: ["0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e"],
     });
 
     await network.provider.send("hardhat_setBalance", [
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e",
       "0x1000000000000000000000000000000000",
     ]);
 
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.mainnet, getBigNumber("100000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.mainnet, getBigNumber("100000",6), { from: this.signers[0].address })
     ).wait()
-
+    console.log(12);
     await (
       await this.routerContract
         .connect(this.signers[0])
         .addLiquidity(
           this.mockUNO.target,
           this.mockUSDT.target,
-          getBigNumber("3000000"),
-          getBigNumber("3000", 6),
-          getBigNumber("3000000"),
-          getBigNumber("3000", 6),
+          getBigNumber("100000"),
+          getBigNumber("1000", 6),
+          getBigNumber("100000"),
+          getBigNumber("1000", 6),
           this.signers[0].address,
           timestamp,
           { from: this.signers[0].address, gasLimit: 9999999 },
@@ -140,10 +180,10 @@ describe("CLaimsDao SalesPolicy", async function () {
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
+      WETH_ADDRESS.mainnet,
       this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.mainnet,
+      UNISWAP_FACTORY_ADDRESS.mainnet,
       this.multisig.address,
       getBigNumber("60")
     )
@@ -155,7 +195,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       this.multisig.address,
       this.signers[0].address,
     )
-
+    console.log(1);
     await this.premiumPool.connect(this.multisig).grantRole((await this.premiumPool.ADMIN_ROLE()), this.signers[0].address);
 
     this.capitalAgent = await upgrades.deployProxy(this.CapitalAgent, [
@@ -185,20 +225,20 @@ describe("CLaimsDao SalesPolicy", async function () {
     await this.premiumPool.addCurrency(this.mockUSDT.target);
 
     // await (await this.premiumPool.addCurrency(this.mockUSDT.address)).wait()
-    this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB");
-    this.AddressWhitelist = await ethers.getContractAt("IAddressWhitelist", "0x63fDfF29EBBcf1a958032d1E64F7627c3C98A059")
-    this.MockOracleAncillary = await ethers.getContractAt('MockOracleAncillaryInterface', '0x20570E9e27920aC5E2601E0bef7244DeFf7F0B28');
-    this.FeeManager = await ethers.getContractAt("IFeeManger", "0x07417cA264170Fc5bD3568f93cFb956729752B61")
-    this.admin = await ethers.getImpersonatedSigner("0x9A8f92a830A5cB89a3816e3D267CB7791c16b04D");
-    await this.AddressWhitelist.connect(this.admin).addToWhitelist(this.mockUNO.target);
-    await this.FeeManager.connect(this.admin).setFinalFee(this.mockUNO.target, [10]);
-    await this.optimisticOracleV3.connect(this.admin).setAdminProperties(this.mockUNO.target, 120, ethers.parseEther("0.1"))
+    this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0xfb55F43fB9F48F63f9269DB7Dde3BbBe1ebDC0dE");
+    this.AddressWhitelist = await ethers.getContractAt("IAddressWhitelist", "0xdBF90434dF0B98219f87d112F37d74B1D90758c7")
+    this.MockOracleAncillary = await ethers.getContractAt('MockOracleAncillaryInterface', '0x514Ae88aB0d24088C0a9d8E76E66457DF200fEe3');
+   // this.FeeManager = await ethers.getContractAt("IFeeManger", "0x07417cA264170Fc5bD3568f93cFb956729752B61")
+    // = await ethers.getImpersonatedSigner("0x9A8f92a830A5cB89a3816e3D267CB7791c16b04D");
+    //await this.AddressWhitelist.connect(this.admin).addToWhitelist(this.mockUNO.target);
+   //await this.FeeManager.connect(this.admin).setFinalFee(this.mockUNO.target, [10]);
+    //await this.optimisticOracleV3.connect(this.admin).setAdminProperties(this.mockUNO.target, 120, ethers.parseEther("0.1"))
 
     this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address);
 
     this.singleSidedInsurancePool = await upgrades.deployProxy(this.SingleSidedInsurancePool, [
       this.capitalAgent.target,
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
+      "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e"
     ]);
 
     await this.singleSidedInsurancePool.connect(this.multisig).createRewarder(
@@ -387,11 +427,11 @@ describe("CLaimsDao SalesPolicy", async function () {
 
     this.singleSidedInsurancePool1 = await upgrades.deployProxy(this.SingleSidedInsurancePool, [
       this.capitalAgent.target,
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
+      "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e"
     ]);
     this.singleSidedInsurancePool2 = await upgrades.deployProxy(this.SingleSidedInsurancePool, [
       this.capitalAgent.target,
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
+      "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e"
     ]);
 
     await this.singleSidedInsurancePool1.connect(this.multisig).createRewarder(
