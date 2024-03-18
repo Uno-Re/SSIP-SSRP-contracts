@@ -68,6 +68,7 @@ describe("CLaimsDao SalesPolicy", async function () {
     ]
 
     this.numConfirmationsRequired = 2
+    this.message = ethers.encodeBytes32String("Request is Claim for Testing");
   })
 
   beforeEach(async function () {
@@ -496,7 +497,7 @@ describe("CLaimsDao SalesPolicy", async function () {
     it("Should buy policy in USDT", async function () {
       expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
       await this.payoutRequest.setFailed(true);
-      await this.payoutRequest.initRequest(0, getBigNumber("201", 6), this.signers[5].address)
+      await this.payoutRequest.initRequest(0, getBigNumber("201", 6), this.signers[5].address, this.message)
       //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
       expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("201", 6));
     })
@@ -504,27 +505,30 @@ describe("CLaimsDao SalesPolicy", async function () {
     it("Should not burn policy if coverage amount not fully filled", async function () {
       expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
       await this.payoutRequest.setFailed(true);
-      await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+       await expect(this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address,
+        this.message)).changeTokenBalances(this.mockUNO, [this.signers[5].address], [getBigNumber("101", 6)])
       //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("101", 6));
       expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
       expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
     })
 
-    it("Should burn policy when again clain for policy to full fill coverage", async function () {
+    it("Should burn policy when again claim for policy to full fill coverage", async function () {
       expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
       await this.payoutRequest.setFailed(true);
       let unoAmount = await this.exchangeAgent.getNeededTokenAmount(this.mockUSDT.target, this.mockUNO.target, getBigNumber("101", 6));
-      await this.payoutRequest.initRequest(0, unoAmount + BigInt(1), this.signers[5].address)
+      //await this.payoutRequest.initRequest(0, unoAmount + BigInt(1), this.signers[5].address, this.message)
+      await expect(this.payoutRequest.initRequest(0, unoAmount + BigInt(1), this.signers[5].address,
+      this.message)).changeTokenBalances(this.mockUNO, [this.signers[5].address], [unoAmount + BigInt(1)]);
+
       expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + unoAmount + BigInt(1));
       expect((await this.salesPolicy.getPolicyData(0))[3]).to.equal(true);
       expect((await this.salesPolicy.getPolicyData(0))[4]).to.equal(false);
 
       let unoAmount1 = await this.exchangeAgent.getNeededTokenAmount(this.mockUSDT.target, this.mockUNO.target, getBigNumber("100", 6));
-      await this.payoutRequest.initRequest(0, unoAmount1 + BigInt(1), this.signers[5].address)
+      await expect(this.payoutRequest.initRequest(0, unoAmount1 + BigInt(1), this.signers[5].address,
+      this.message)).changeTokenBalances(this.mockUNO, [this.signers[5].address], [unoAmount1 + BigInt(1)])
       expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
-      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + unoAmount + BigInt(1) + unoAmount1 + BigInt(1));
+     
     })
     it("DVM rejects the dispute and accepts the claim -> bond gets deducted and sent somewhere -> insurance claim payout.", async function () {
 
@@ -536,7 +540,7 @@ describe("CLaimsDao SalesPolicy", async function () {
 
       await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
       // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-         const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+         const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -546,6 +550,7 @@ describe("CLaimsDao SalesPolicy", async function () {
 
       //disputor raised a dispute
       const assertion = await this.optimisticOracleV3.assertions(assertionId);
+      console.log('assertion',assertion);
       await this.mockUNO.connect(this.disputor).approve(this.optimisticOracleV3.target, assertion.bond);
       await this.optimisticOracleV3.connect(this.disputor).disputeAssertion(assertionId, this.disputor.address);
 
@@ -557,6 +562,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       //dvm reject the dispute 
 
       await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('1'))
+      //await this.MockOracleAncillary.requestPrice(identifier, time, auxillaryData)
       await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('1'))
 
       const sevenDays = 24 * 7 * 60 * 60 * 7
@@ -587,7 +593,7 @@ describe("CLaimsDao SalesPolicy", async function () {
 
       await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
 
-      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -611,6 +617,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       //dvm accepts the dispute 
 
       await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('1'))
+      //await this.MockOracleAncillary.requestPrice(identifier, time, auxillaryData)
       await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('5'))
 
       const sevenDays = 24 * 7 * 60 * 60 * 7
@@ -636,7 +643,7 @@ describe("CLaimsDao SalesPolicy", async function () {
 
     //   await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
 
-    //     const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+    //     const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
     //   await tx.wait();
 
@@ -666,6 +673,7 @@ describe("CLaimsDao SalesPolicy", async function () {
     //   //dvm accepts the dispute 
 
     //   await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('1'))
+    // await this.MockOracleAncillary.requestPrice(identifier, time, auxillaryData)
     //   await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('5'))
 
     //   const sevenDays = 24 * 7 * 60 * 60 * 7;
@@ -692,7 +700,7 @@ describe("CLaimsDao SalesPolicy", async function () {
 
     //   await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
     //   // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-    //    //   const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+    //    //   const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
     //   await tx.wait();
 
@@ -722,6 +730,7 @@ describe("CLaimsDao SalesPolicy", async function () {
     //   //dvm accepts the dispute 
 
     //   await this.mockUNO.approve(this.MockOracleAncillary, ethers.parseEther('5'))
+    // await this.MockOracleAncillary.requestPrice(identifier, time, auxillaryData)
     //   await this.MockOracleAncillary.pushPrice(identifier, time, auxillaryData, ethers.parseEther('5'))
 
     //   const sevenDays = 24 * 7 * 60 * 60 * 7
@@ -753,7 +762,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
 
 
-      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -763,7 +772,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       const eventData = events[0].args;
       const assertionId = eventData.assertionId
       await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
-      const tx1 = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx1 = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx1.wait();
 
@@ -785,7 +794,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
 
 
-      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -796,7 +805,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       const assertionId = eventData.assertionId
       await this.mockUNO.approve(this.payoutRequest.target, bondAmount);
       await this.payoutRequest.setFailed(true);
-      await expect(await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address)).to.changeTokenBalance(this.mockUNO, this.signers[5].address, getBigNumber("101", 6));
+      await expect(await this.payoutRequest.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)).to.changeTokenBalance(this.mockUNO, this.signers[5].address, getBigNumber("101", 6));
     })
 
 
@@ -812,7 +821,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
       await this.mockUNO.approve(this.payoutRequest2.target, bondAmount);
       await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("50", 6), this.signers[5].address)
+      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("50", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -821,7 +830,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       const assertionId1 = eventData.assertionId
 
 
-      const tx1 = await this.payoutRequest2.initRequest(0, getBigNumber("50", 6), this.signers[5].address)
+      const tx1 = await this.payoutRequest2.initRequest(0, getBigNumber("50", 6), this.signers[5].address, this.message)
 
       await tx1.wait();
 
@@ -864,7 +873,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
 
       // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -916,7 +925,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
 
       // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -983,7 +992,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       await this.mockUNO.approve(this.payoutRequest1.target, bondAmount);
 
       // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -1088,7 +1097,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       let afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
 
       // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
@@ -1223,7 +1232,7 @@ describe("CLaimsDao SalesPolicy", async function () {
       let afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
 
       // await this.payoutRequest.setEscalatingManager(ethers.ZeroAddress)
-      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address)
+      const tx = await this.payoutRequest1.initRequest(0, getBigNumber("101", 6), this.signers[5].address, this.message)
 
       await tx.wait();
 
