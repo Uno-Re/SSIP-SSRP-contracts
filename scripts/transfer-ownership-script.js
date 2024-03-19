@@ -7,11 +7,12 @@ const {getBigNumber} = require("./shared/utilities")
 
 async function main() {
 
-    let multisig = process.env.MULTISIGWALLET;
-    let CLAIMS_DAO = process.env.CLAIMS_DAO;
-    let OPERATOR = process.env.OPERATOR;
-    let GOVERNANCE = process.env.GOVERNANCE;
-    let GAURDIAN_COUNCIL = process.env.GAURDIAN_COUNCIL;
+    let multisig = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
+    let CLAIMS_DAO = "0xB51F1A80DB244ec8d70E4C521ff77Cd0731df241";
+    let OPERATOR = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
+    let GOVERNANCE = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
+    let GAURDIAN_COUNCIL = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
+    let EsalactionMangerMultsig = "0x21E241BA97b9a78bda0f92FF8304ba36a34c0c00";
 
     console.log(multisig, "multisig address");
     console.log(CLAIMS_DAO, "CLAIMS_DAO address");
@@ -107,7 +108,7 @@ async function main() {
     await this.PayoutUSDC.setGuardianCouncil(GAURDIAN_COUNCIL);
     await this.PayoutUSDT.setGuardianCouncil(GAURDIAN_COUNCIL);
 
-    await this.EscalationManager.grantRole(CLAIM_ASSESSOR_ROLE, GOVERNANCE);
+    await this.EscalationManager.grantRole(CLAIM_ASSESSOR_ROLE, EsalactionMangerMultsig);
 
 }
 
