@@ -13,6 +13,12 @@ async function main() {
     let GOVERNANCE = process.env.GOVERNANCE;
     let GAURDIAN_COUNCIL = process.env.GAURDIAN_COUNCIL;
 
+    console.log(multisig, "multisig address");
+    console.log(CLAIMS_DAO, "CLAIMS_DAO address");
+    console.log(OPERATOR, "OPERATOR address");
+    console.log(GOVERNANCE, "GOVERNANCE address");
+    console.log(GAURDIAN_COUNCIL, "GAURDIAN_COUNCIL address");
+
     let ssipAbi = (await artifacts.readArtifact("SingleSidedInsurancePool")).abi;
     let capitalAgentAbi = (await artifacts.readArtifact("CapitalAgent")).abi;
     let payoutAbi = (await artifacts.readArtifact("PayoutRequest")).abi;
