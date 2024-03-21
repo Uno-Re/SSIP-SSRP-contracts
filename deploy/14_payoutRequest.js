@@ -9,7 +9,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
 
 
   const ssip = await hre.deployments.get("SingleSidedInsurancePoolUSDT")
-  const claimProcessor = await hre.deployments.get("ClaimProcessor")
+  // const claimProcessor = await hre.deployments.get("ClaimProce/ssor")
   const escalationManager = await hre.deployments.get("EscalationManager")
   const guardianCouncil = process.env.GAURDIAN_COUNCIL;
   const defaultCurrency = process.env.DEAFAULT_CURRENCY;

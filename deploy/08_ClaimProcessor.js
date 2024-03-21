@@ -7,14 +7,14 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const governance = process.env.GOVERNANCE;
 
-  const claimProcessor = await deploy("ClaimProcessor", {
-    from: deployer,
-    args: [governance],
-    log: true,
-    deterministicDeployment: false,
-  })
+  // const claimProcessor = await deploy("ClaimProcessor", {
+  //   from: deployer,
+  //   args: [governance],
+  //   log: true,
+  //   deterministicDeployment: false,
+  // })
 
-  console.log(`deploy at ${claimProcessor.address}`)
+  // console.log(`deploy at ${claimProcessor.address}`)
 }
 
 module.exports.tags = ["ClaimProcessor"]

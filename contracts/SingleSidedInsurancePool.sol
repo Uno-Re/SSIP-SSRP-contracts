@@ -14,7 +14,6 @@ import "./interfaces/IRiskPoolFactory.sol";
 import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
-import "./interfaces/IGnosisSafe.sol";
 import "./libraries/TransferHelper.sol";
 
 contract SingleSidedInsurancePool is
@@ -102,8 +101,6 @@ contract SingleSidedInsurancePool is
 
     function initialize(address _capitalAgent, address _multiSigWallet) external initializer {
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners required");
-        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners required to verify");
         capitalAgent = _capitalAgent;
         lockTime = 10 days;
         __ReentrancyGuard_init();
@@ -246,7 +243,6 @@ contract SingleSidedInsurancePool is
         uint256 _rewardMultiplier,
         uint256 _SCR
     ) external nonReentrant onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
-        require(riskPool == address(0), "UnoRe: risk pool created already");
         require(_factory != address(0), "UnoRe: zero factory address");
         riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
         poolInfo.lastRewardBlock = block.number;

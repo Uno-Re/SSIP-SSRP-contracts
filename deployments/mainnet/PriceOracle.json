@@ -1,0 +1,456 @@
+{
+  "address": "0x0222380d514FA7cf987004ECcD1cD74df2C6c65f",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_admin",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_asset",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "AssetPriceUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_oldAggregator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newAggregator",
+          "type": "address"
+        }
+      ],
+      "name": "SetETHUSDAggregator",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_token",
+          "type": "address"
+        }
+      ],
+      "name": "addStableCoin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenA",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenB",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountA",
+          "type": "uint256"
+        }
+      ],
+      "name": "consult",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_asset",
+          "type": "address"
+        }
+      ],
+      "name": "getAssetEthPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEthUsdPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_token",
+          "type": "address"
+        }
+      ],
+      "name": "removeStableCoin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_asset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        }
+      ],
+      "name": "setAssetEthPrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_aggregator",
+          "type": "address"
+        }
+      ],
+      "name": "setETHUSDAggregator",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "stableCoins",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x5a03f2aab78daea006dca00a3843831207750f80245284b9f06577a2166c8bd2",
+  "receipt": {
+    "to": null,
+    "from": "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e",
+    "contractAddress": "0x0222380d514FA7cf987004ECcD1cD74df2C6c65f",
+    "transactionIndex": 57,
+    "gasUsed": "748800",
+    "logsBloom": "0x00000000000000000000000000000000000000000002000000800000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000001000000000000000000000000000000000000020000040000000000000800000000000000000000000000000000400000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000020000000000000000000000000000000100000000000000000000000000000000000",
+    "blockHash": "0xb1fcd8a9f46f0eec582e4d619fc2cd9c62955cf10d6947048b3a84bf15581e43",
+    "transactionHash": "0x5a03f2aab78daea006dca00a3843831207750f80245284b9f06577a2166c8bd2",
+    "logs": [
+      {
+        "transactionIndex": 57,
+        "blockNumber": 19418626,
+        "transactionHash": "0x5a03f2aab78daea006dca00a3843831207750f80245284b9f06577a2166c8bd2",
+        "address": "0x0222380d514FA7cf987004ECcD1cD74df2C6c65f",
+        "topics": [
+          "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000008c0f1b5c01a7146259d51f798a114f4f8dc0177e"
+        ],
+        "data": "0x",
+        "logIndex": 117,
+        "blockHash": "0xb1fcd8a9f46f0eec582e4d619fc2cd9c62955cf10d6947048b3a84bf15581e43"
+      }
+    ],
+    "blockNumber": 19418626,
+    "cumulativeGasUsed": "6199916",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "d9e4e6216a00284e576def70587e955a",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.23+commit.f704f362\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_asset\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_price\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"AssetPriceUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_oldAggregator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newAggregator\",\"type\":\"address\"}],\"name\":\"SetETHUSDAggregator\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_token\",\"type\":\"address\"}],\"name\":\"addStableCoin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tokenA\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenB\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amountA\",\"type\":\"uint256\"}],\"name\":\"consult\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_asset\",\"type\":\"address\"}],\"name\":\"getAssetEthPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getEthUsdPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_token\",\"type\":\"address\"}],\"name\":\"removeStableCoin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_price\",\"type\":\"uint256\"}],\"name\":\"setAssetEthPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_aggregator\",\"type\":\"address\"}],\"name\":\"setETHUSDAggregator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"stableCoins\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"errors\":{\"OwnableInvalidOwner(address)\":[{\"details\":\"The owner is not a valid owner account. (eg. `address(0)`)\"}],\"OwnableUnauthorizedAccount(address)\":[{\"details\":\"The caller account is not authorized to perform an operation.\"}]},\"kind\":\"dev\",\"methods\":{\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"stateVariables\":{\"ethPrices\":{\"details\":\"please take care token decimal e.x ethPrice[uno_address] = 123456 means 1 UNO = 123456 / (10 ** 18 eth)\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"consult(address,address,uint256)\":{\"notice\":\"returns the tokenB amount for tokenA\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Mocks/OraclePriceFeed.sol\":\"PriceOracle\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {Context} from \\\"../utils/Context.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * The initial owner is set to the address provided by the deployer. This can\\n * later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    /**\\n     * @dev The caller account is not authorized to perform an operation.\\n     */\\n    error OwnableUnauthorizedAccount(address account);\\n\\n    /**\\n     * @dev The owner is not a valid owner account. (eg. `address(0)`)\\n     */\\n    error OwnableInvalidOwner(address owner);\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the address provided by the deployer as the initial owner.\\n     */\\n    constructor(address initialOwner) {\\n        if (initialOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(initialOwner);\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        if (owner() != _msgSender()) {\\n            revert OwnableUnauthorizedAccount(_msgSender());\\n        }\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby disabling any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        if (newOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n}\\n\",\"keccak256\":\"0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/structs/EnumerableSet.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (utils/structs/EnumerableSet.sol)\\n// This file was procedurally generated from scripts/generate/templates/EnumerableSet.js.\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Library for managing\\n * https://en.wikipedia.org/wiki/Set_(abstract_data_type)[sets] of primitive\\n * types.\\n *\\n * Sets have the following properties:\\n *\\n * - Elements are added, removed, and checked for existence in constant time\\n * (O(1)).\\n * - Elements are enumerated in O(n). No guarantees are made on the ordering.\\n *\\n * ```solidity\\n * contract Example {\\n *     // Add the library methods\\n *     using EnumerableSet for EnumerableSet.AddressSet;\\n *\\n *     // Declare a set state variable\\n *     EnumerableSet.AddressSet private mySet;\\n * }\\n * ```\\n *\\n * As of v3.3.0, sets of type `bytes32` (`Bytes32Set`), `address` (`AddressSet`)\\n * and `uint256` (`UintSet`) are supported.\\n *\\n * [WARNING]\\n * ====\\n * Trying to delete such a structure from storage will likely result in data corruption, rendering the structure\\n * unusable.\\n * See https://github.com/ethereum/solidity/pull/11843[ethereum/solidity#11843] for more info.\\n *\\n * In order to clean an EnumerableSet, you can either remove all elements one by one or create a fresh instance using an\\n * array of EnumerableSet.\\n * ====\\n */\\nlibrary EnumerableSet {\\n    // To implement this library for multiple types with as little code\\n    // repetition as possible, we write it in terms of a generic Set type with\\n    // bytes32 values.\\n    // The Set implementation uses private functions, and user-facing\\n    // implementations (such as AddressSet) are just wrappers around the\\n    // underlying Set.\\n    // This means that we can only create new EnumerableSets for types that fit\\n    // in bytes32.\\n\\n    struct Set {\\n        // Storage of set values\\n        bytes32[] _values;\\n        // Position is the index of the value in the `values` array plus 1.\\n        // Position 0 is used to mean a value is not in the set.\\n        mapping(bytes32 value => uint256) _positions;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function _add(Set storage set, bytes32 value) private returns (bool) {\\n        if (!_contains(set, value)) {\\n            set._values.push(value);\\n            // The value is stored at length-1, but we add 1 to all indexes\\n            // and use 0 as a sentinel value\\n            set._positions[value] = set._values.length;\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function _remove(Set storage set, bytes32 value) private returns (bool) {\\n        // We cache the value's position to prevent multiple reads from the same storage slot\\n        uint256 position = set._positions[value];\\n\\n        if (position != 0) {\\n            // Equivalent to contains(set, value)\\n            // To delete an element from the _values array in O(1), we swap the element to delete with the last one in\\n            // the array, and then remove the last element (sometimes called as 'swap and pop').\\n            // This modifies the order of the array, as noted in {at}.\\n\\n            uint256 valueIndex = position - 1;\\n            uint256 lastIndex = set._values.length - 1;\\n\\n            if (valueIndex != lastIndex) {\\n                bytes32 lastValue = set._values[lastIndex];\\n\\n                // Move the lastValue to the index where the value to delete is\\n                set._values[valueIndex] = lastValue;\\n                // Update the tracked position of the lastValue (that was just moved)\\n                set._positions[lastValue] = position;\\n            }\\n\\n            // Delete the slot where the moved value was stored\\n            set._values.pop();\\n\\n            // Delete the tracked position for the deleted slot\\n            delete set._positions[value];\\n\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function _contains(Set storage set, bytes32 value) private view returns (bool) {\\n        return set._positions[value] != 0;\\n    }\\n\\n    /**\\n     * @dev Returns the number of values on the set. O(1).\\n     */\\n    function _length(Set storage set) private view returns (uint256) {\\n        return set._values.length;\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function _at(Set storage set, uint256 index) private view returns (bytes32) {\\n        return set._values[index];\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function _values(Set storage set) private view returns (bytes32[] memory) {\\n        return set._values;\\n    }\\n\\n    // Bytes32Set\\n\\n    struct Bytes32Set {\\n        Set _inner;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function add(Bytes32Set storage set, bytes32 value) internal returns (bool) {\\n        return _add(set._inner, value);\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function remove(Bytes32Set storage set, bytes32 value) internal returns (bool) {\\n        return _remove(set._inner, value);\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function contains(Bytes32Set storage set, bytes32 value) internal view returns (bool) {\\n        return _contains(set._inner, value);\\n    }\\n\\n    /**\\n     * @dev Returns the number of values in the set. O(1).\\n     */\\n    function length(Bytes32Set storage set) internal view returns (uint256) {\\n        return _length(set._inner);\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function at(Bytes32Set storage set, uint256 index) internal view returns (bytes32) {\\n        return _at(set._inner, index);\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function values(Bytes32Set storage set) internal view returns (bytes32[] memory) {\\n        bytes32[] memory store = _values(set._inner);\\n        bytes32[] memory result;\\n\\n        /// @solidity memory-safe-assembly\\n        assembly {\\n            result := store\\n        }\\n\\n        return result;\\n    }\\n\\n    // AddressSet\\n\\n    struct AddressSet {\\n        Set _inner;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function add(AddressSet storage set, address value) internal returns (bool) {\\n        return _add(set._inner, bytes32(uint256(uint160(value))));\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function remove(AddressSet storage set, address value) internal returns (bool) {\\n        return _remove(set._inner, bytes32(uint256(uint160(value))));\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function contains(AddressSet storage set, address value) internal view returns (bool) {\\n        return _contains(set._inner, bytes32(uint256(uint160(value))));\\n    }\\n\\n    /**\\n     * @dev Returns the number of values in the set. O(1).\\n     */\\n    function length(AddressSet storage set) internal view returns (uint256) {\\n        return _length(set._inner);\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function at(AddressSet storage set, uint256 index) internal view returns (address) {\\n        return address(uint160(uint256(_at(set._inner, index))));\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function values(AddressSet storage set) internal view returns (address[] memory) {\\n        bytes32[] memory store = _values(set._inner);\\n        address[] memory result;\\n\\n        /// @solidity memory-safe-assembly\\n        assembly {\\n            result := store\\n        }\\n\\n        return result;\\n    }\\n\\n    // UintSet\\n\\n    struct UintSet {\\n        Set _inner;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function add(UintSet storage set, uint256 value) internal returns (bool) {\\n        return _add(set._inner, bytes32(value));\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function remove(UintSet storage set, uint256 value) internal returns (bool) {\\n        return _remove(set._inner, bytes32(value));\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function contains(UintSet storage set, uint256 value) internal view returns (bool) {\\n        return _contains(set._inner, bytes32(value));\\n    }\\n\\n    /**\\n     * @dev Returns the number of values in the set. O(1).\\n     */\\n    function length(UintSet storage set) internal view returns (uint256) {\\n        return _length(set._inner);\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function at(UintSet storage set, uint256 index) internal view returns (uint256) {\\n        return uint256(_at(set._inner, index));\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function values(UintSet storage set) internal view returns (uint256[] memory) {\\n        bytes32[] memory store = _values(set._inner);\\n        uint256[] memory result;\\n\\n        /// @solidity memory-safe-assembly\\n        assembly {\\n            result := store\\n        }\\n\\n        return result;\\n    }\\n}\\n\",\"keccak256\":\"0x86c1470cbfd878491e5de030072b647352d36bd27122cffb928970b1945282aa\",\"license\":\"MIT\"},\"contracts/Mocks/OraclePriceFeed.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity =0.8.23;\\n\\nimport \\\"@openzeppelin/contracts/access/Ownable.sol\\\";\\nimport \\\"@openzeppelin/contracts/utils/structs/EnumerableSet.sol\\\";\\nimport {AggregatorV3Interface} from \\\"../interfaces/IAggregatorV3.sol\\\";\\n\\ninterface IERC20Metadata {\\n    /**\\n     * @dev Returns the decimals places of the token.\\n     */\\n    function decimals() external view returns (uint8);\\n}\\n\\ncontract PriceOracle is Ownable {\\n    using EnumerableSet for EnumerableSet.AddressSet;\\n\\n    EnumerableSet.AddressSet private _stableCoins;\\n    /**\\n     * @dev please take care token decimal\\n     * e.x ethPrice[uno_address] = 123456 means 1 UNO = 123456 / (10 ** 18 eth)\\n     */\\n    mapping(address => uint256) ethPrices;\\n    address private ethUSDAggregator = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;\\n\\n    event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);\\n    event SetETHUSDAggregator(address _oldAggregator, address _newAggregator);\\n\\n    constructor(address _admin) Ownable(_admin) {\\n\\n    }\\n\\n    function stableCoins() external view returns (address[] memory) {\\n        return _stableCoins.values();\\n    }\\n\\n    function addStableCoin(address _token) external onlyOwner {\\n        _stableCoins.add(_token);\\n    }\\n\\n    function removeStableCoin(address _token) external onlyOwner {\\n        _stableCoins.remove(_token);\\n    }\\n\\n    function getEthUsdPrice() external view returns (uint256) {\\n        return _fetchEthUsdPrice();\\n    }\\n\\n    function _fetchEthUsdPrice() private view returns (uint256) {\\n        AggregatorV3Interface priceFeed = AggregatorV3Interface(ethUSDAggregator);\\n        (, int256 price, , , ) = priceFeed.latestRoundData();\\n        return uint256(price) / 1e8;\\n    }\\n\\n    function getAssetEthPrice(address _asset) external view returns (uint256) {\\n        return _stableCoins.contains(_asset) ? (10 ** 18) / _fetchEthUsdPrice() : ethPrices[_asset];\\n    }\\n\\n    function setAssetEthPrice(address _asset, uint256 _price) external onlyOwner {\\n        ethPrices[_asset] = _price;\\n        emit AssetPriceUpdated(_asset, _price, block.timestamp);\\n    }\\n\\n    function setETHUSDAggregator(address _aggregator) external onlyOwner {\\n        address oldAggregator = ethUSDAggregator;\\n        ethUSDAggregator = _aggregator;\\n        emit SetETHUSDAggregator(oldAggregator, _aggregator);\\n    }\\n\\n    /**\\n     * returns the tokenB amount for tokenA\\n     */\\n    function consult(\\n        address tokenA,\\n        address tokenB,\\n        uint256 amountA\\n    ) external view returns (uint256) {\\n        if (_stableCoins.contains(tokenA) && _stableCoins.contains(tokenB)) {\\n            return amountA;\\n        }\\n\\n        uint256 ethPriceA = _stableCoins.contains(tokenA) ? 1e18 / _fetchEthUsdPrice() : ethPrices[tokenA];\\n\\n        uint256 ethPriceB = _stableCoins.contains(tokenB) ? 1e18 / _fetchEthUsdPrice() : ethPrices[tokenB];\\n\\n        require(ethPriceA != 0 && ethPriceB != 0, \\\"PO: Prices of both tokens should be set\\\");\\n\\n        return\\n            (amountA * ethPriceA * (10**IERC20Metadata(tokenB).decimals())) /\\n            (10**IERC20Metadata(tokenA).decimals() * ethPriceB);\\n    }\\n}\\n\",\"keccak256\":\"0xccf5e62be68da2387140bc9b5b7213a7b72bd78662288dbfb3381bdb9c18fa4d\",\"license\":\"MIT\"},\"contracts/interfaces/IAggregatorV3.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity =0.8.23;\\n\\ninterface AggregatorV3Interface {\\n    function decimals() external view returns (uint8);\\n\\n    function description() external view returns (string memory);\\n\\n    function version() external view returns (uint256);\\n\\n    // getRoundData and latestRoundData should both raise \\\"No data present\\\"\\n    // if they do not have data to report, instead of returning unset values\\n    // which could be misinterpreted as actual reported values.\\n    function getRoundData(uint80 _roundId)\\n        external\\n        view\\n        returns (\\n            uint80 roundId,\\n            int256 answer,\\n            uint256 startedAt,\\n            uint256 updatedAt,\\n            uint80 answeredInRound\\n        );\\n\\n    function latestRoundData()\\n        external\\n        view\\n        returns (\\n            uint80 roundId,\\n            int256 answer,\\n            uint256 startedAt,\\n            uint256 updatedAt,\\n            uint80 answeredInRound\\n        );\\n}\",\"keccak256\":\"0x62c82c2ab626c716d4edc0ce61dbf639899e4591b048ddf36de9a0dee7df75eb\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x6080604052600480546001600160a01b031916735f4ec3df9cbd43714fe2740f5e3616155c5b841917905534801561003657600080fd5b50604051610ccf380380610ccf833981016040819052610055916100e4565b806001600160a01b03811661008457604051631e4fbdf760e01b81526000600482015260240160405180910390fd5b61008d81610094565b5050610114565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000602082840312156100f657600080fd5b81516001600160a01b038116811461010d57600080fd5b9392505050565b610bac806101236000396000f3fe608060405234801561001057600080fd5b50600436106100a95760003560e01c8063715018a611610071578063715018a6146101285780638da5cb5b14610130578063a0a8045e1461014b578063b100d9af14610153578063b3c1f5d814610166578063f2fde38b1461017957600080fd5b80630994bc10146100ae5780630c4c7949146100c3578063355188ab146100e157806351bb5dff14610102578063636cfa0c14610115575b600080fd5b6100c16100bc36600461089a565b61018c565b005b6100cb6101f6565b6040516100d891906108b5565b60405180910390f35b6100f46100ef36600461089a565b610207565b6040519081526020016100d8565b6100c161011036600461089a565b610256565b6100f4610123366004610902565b61026d565b6100c16104ac565b6000546040516001600160a01b0390911681526020016100d8565b6100f46104c0565b6100c161016136600461093e565b6104ca565b6100c161017436600461089a565b61052a565b6100c161018736600461089a565b61053d565b61019461057b565b600480546001600160a01b038381166001600160a01b031983168117909355604080519190921680825260208201939093527fec4c051ed5655b13cc3b1897b18ac12c155d90cd608287ef9d9153b20771283091015b60405180910390a15050565b606061020260016105a8565b905090565b60006102146001836105b5565b610236576001600160a01b038216600090815260036020526040902054610250565b61023e6105d6565b61025090670de0b6b3a764000061097e565b92915050565b61025e61057b565b610269600182610666565b5050565b600061027a6001856105b5565b801561028c575061028c6001846105b5565b156102985750806104a5565b60006102a56001866105b5565b6102c7576001600160a01b0385166000908152600360205260409020546102e1565b6102cf6105d6565b6102e190670de0b6b3a764000061097e565b905060006102f06001866105b5565b610312576001600160a01b03851660009081526003602052604090205461032c565b61031a6105d6565b61032c90670de0b6b3a764000061097e565b9050811580159061033c57508015155b61039d5760405162461bcd60e51b815260206004820152602760248201527f504f3a20507269636573206f6620626f746820746f6b656e732073686f756c64604482015266081899481cd95d60ca1b60648201526084015b60405180910390fd5b80866001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa1580156103dc573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061040091906109a0565b61040b90600a610aa7565b6104159190610ab6565b856001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa158015610453573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061047791906109a0565b61048290600a610aa7565b61048c8487610ab6565b6104969190610ab6565b6104a0919061097e565b925050505b9392505050565b6104b461057b565b6104be600061067b565b565b60006102026105d6565b6104d261057b565b6001600160a01b0382166000818152600360209081526040918290208490558151928352820183905242908201527fce6e0b57367bae95ca7198e1172f653ea64a645c16ab586b4cefa9237bfc2d92906060016101ea565b61053261057b565b6102696001826106cb565b61054561057b565b6001600160a01b03811661056f57604051631e4fbdf760e01b815260006004820152602401610394565b6105788161067b565b50565b6000546001600160a01b031633146104be5760405163118cdaa760e01b8152336004820152602401610394565b606060006104a5836106e0565b6001600160a01b031660009081526001919091016020526040902054151590565b6004805460408051633fabe5a360e21b815290516000936001600160a01b03909316928492849263feaf968c928281019260a09291908290030181865afa158015610625573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106499190610ae7565b5050509150506305f5e1008161065f919061097e565b9250505090565b60006104a5836001600160a01b03841661073c565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b60006104a5836001600160a01b03841661082f565b60608160000180548060200260200160405190810160405280929190818152602001828054801561073057602002820191906000526020600020905b81548152602001906001019080831161071c575b50505050509050919050565b60008181526001830160205260408120548015610825576000610760600183610b37565b855490915060009061077490600190610b37565b90508082146107d957600086600001828154811061079457610794610b4a565b90600052602060002001549050808760000184815481106107b7576107b7610b4a565b6000918252602080832090910192909255918252600188019052604090208390555b85548690806107ea576107ea610b60565b600190038181906000526020600020016000905590558560010160008681526020019081526020016000206000905560019350505050610250565b6000915050610250565b600081815260018301602052604081205461087657508154600181810184556000848152602080822090930184905584548482528286019093526040902091909155610250565b506000610250565b80356001600160a01b038116811461089557600080fd5b919050565b6000602082840312156108ac57600080fd5b6104a58261087e565b6020808252825182820181905260009190848201906040850190845b818110156108f65783516001600160a01b0316835292840192918401916001016108d1565b50909695505050505050565b60008060006060848603121561091757600080fd5b6109208461087e565b925061092e6020850161087e565b9150604084013590509250925092565b6000806040838503121561095157600080fd5b61095a8361087e565b946020939093013593505050565b634e487b7160e01b600052601160045260246000fd5b60008261099b57634e487b7160e01b600052601260045260246000fd5b500490565b6000602082840312156109b257600080fd5b815160ff811681146104a557600080fd5b600181815b808511156109fe5781600019048211156109e4576109e4610968565b808516156109f157918102915b93841c93908002906109c8565b509250929050565b600082610a1557506001610250565b81610a2257506000610250565b8160018114610a385760028114610a4257610a5e565b6001915050610250565b60ff841115610a5357610a53610968565b50506001821b610250565b5060208310610133831016604e8410600b8410161715610a81575081810a610250565b610a8b83836109c3565b8060001904821115610a9f57610a9f610968565b029392505050565b60006104a560ff841683610a06565b808202811582820484141761025057610250610968565b805169ffffffffffffffffffff8116811461089557600080fd5b600080600080600060a08688031215610aff57600080fd5b610b0886610acd565b9450602086015193506040860151925060608601519150610b2b60808701610acd565b90509295509295909350565b8181038181111561025057610250610968565b634e487b7160e01b600052603260045260246000fd5b634e487b7160e01b600052603160045260246000fdfea2646970667358221220a356c39df94b5dabd1b63e40f7155c1367c1f260bcfb617bfc81bfe32b617b8d64736f6c63430008170033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100a95760003560e01c8063715018a611610071578063715018a6146101285780638da5cb5b14610130578063a0a8045e1461014b578063b100d9af14610153578063b3c1f5d814610166578063f2fde38b1461017957600080fd5b80630994bc10146100ae5780630c4c7949146100c3578063355188ab146100e157806351bb5dff14610102578063636cfa0c14610115575b600080fd5b6100c16100bc36600461089a565b61018c565b005b6100cb6101f6565b6040516100d891906108b5565b60405180910390f35b6100f46100ef36600461089a565b610207565b6040519081526020016100d8565b6100c161011036600461089a565b610256565b6100f4610123366004610902565b61026d565b6100c16104ac565b6000546040516001600160a01b0390911681526020016100d8565b6100f46104c0565b6100c161016136600461093e565b6104ca565b6100c161017436600461089a565b61052a565b6100c161018736600461089a565b61053d565b61019461057b565b600480546001600160a01b038381166001600160a01b031983168117909355604080519190921680825260208201939093527fec4c051ed5655b13cc3b1897b18ac12c155d90cd608287ef9d9153b20771283091015b60405180910390a15050565b606061020260016105a8565b905090565b60006102146001836105b5565b610236576001600160a01b038216600090815260036020526040902054610250565b61023e6105d6565b61025090670de0b6b3a764000061097e565b92915050565b61025e61057b565b610269600182610666565b5050565b600061027a6001856105b5565b801561028c575061028c6001846105b5565b156102985750806104a5565b60006102a56001866105b5565b6102c7576001600160a01b0385166000908152600360205260409020546102e1565b6102cf6105d6565b6102e190670de0b6b3a764000061097e565b905060006102f06001866105b5565b610312576001600160a01b03851660009081526003602052604090205461032c565b61031a6105d6565b61032c90670de0b6b3a764000061097e565b9050811580159061033c57508015155b61039d5760405162461bcd60e51b815260206004820152602760248201527f504f3a20507269636573206f6620626f746820746f6b656e732073686f756c64604482015266081899481cd95d60ca1b60648201526084015b60405180910390fd5b80866001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa1580156103dc573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061040091906109a0565b61040b90600a610aa7565b6104159190610ab6565b856001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa158015610453573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061047791906109a0565b61048290600a610aa7565b61048c8487610ab6565b6104969190610ab6565b6104a0919061097e565b925050505b9392505050565b6104b461057b565b6104be600061067b565b565b60006102026105d6565b6104d261057b565b6001600160a01b0382166000818152600360209081526040918290208490558151928352820183905242908201527fce6e0b57367bae95ca7198e1172f653ea64a645c16ab586b4cefa9237bfc2d92906060016101ea565b61053261057b565b6102696001826106cb565b61054561057b565b6001600160a01b03811661056f57604051631e4fbdf760e01b815260006004820152602401610394565b6105788161067b565b50565b6000546001600160a01b031633146104be5760405163118cdaa760e01b8152336004820152602401610394565b606060006104a5836106e0565b6001600160a01b031660009081526001919091016020526040902054151590565b6004805460408051633fabe5a360e21b815290516000936001600160a01b03909316928492849263feaf968c928281019260a09291908290030181865afa158015610625573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106499190610ae7565b5050509150506305f5e1008161065f919061097e565b9250505090565b60006104a5836001600160a01b03841661073c565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b60006104a5836001600160a01b03841661082f565b60608160000180548060200260200160405190810160405280929190818152602001828054801561073057602002820191906000526020600020905b81548152602001906001019080831161071c575b50505050509050919050565b60008181526001830160205260408120548015610825576000610760600183610b37565b855490915060009061077490600190610b37565b90508082146107d957600086600001828154811061079457610794610b4a565b90600052602060002001549050808760000184815481106107b7576107b7610b4a565b6000918252602080832090910192909255918252600188019052604090208390555b85548690806107ea576107ea610b60565b600190038181906000526020600020016000905590558560010160008681526020019081526020016000206000905560019350505050610250565b6000915050610250565b600081815260018301602052604081205461087657508154600181810184556000848152602080822090930184905584548482528286019093526040902091909155610250565b506000610250565b80356001600160a01b038116811461089557600080fd5b919050565b6000602082840312156108ac57600080fd5b6104a58261087e565b6020808252825182820181905260009190848201906040850190845b818110156108f65783516001600160a01b0316835292840192918401916001016108d1565b50909695505050505050565b60008060006060848603121561091757600080fd5b6109208461087e565b925061092e6020850161087e565b9150604084013590509250925092565b6000806040838503121561095157600080fd5b61095a8361087e565b946020939093013593505050565b634e487b7160e01b600052601160045260246000fd5b60008261099b57634e487b7160e01b600052601260045260246000fd5b500490565b6000602082840312156109b257600080fd5b815160ff811681146104a557600080fd5b600181815b808511156109fe5781600019048211156109e4576109e4610968565b808516156109f157918102915b93841c93908002906109c8565b509250929050565b600082610a1557506001610250565b81610a2257506000610250565b8160018114610a385760028114610a4257610a5e565b6001915050610250565b60ff841115610a5357610a53610968565b50506001821b610250565b5060208310610133831016604e8410600b8410161715610a81575081810a610250565b610a8b83836109c3565b8060001904821115610a9f57610a9f610968565b029392505050565b60006104a560ff841683610a06565b808202811582820484141761025057610250610968565b805169ffffffffffffffffffff8116811461089557600080fd5b600080600080600060a08688031215610aff57600080fd5b610b0886610acd565b9450602086015193506040860151925060608601519150610b2b60808701610acd565b90509295509295909350565b8181038181111561025057610250610968565b634e487b7160e01b600052603260045260246000fd5b634e487b7160e01b600052603160045260246000fdfea2646970667358221220a356c39df94b5dabd1b63e40f7155c1367c1f260bcfb617bfc81bfe32b617b8d64736f6c63430008170033",
+  "devdoc": {
+    "errors": {
+      "OwnableInvalidOwner(address)": [
+        {
+          "details": "The owner is not a valid owner account. (eg. `address(0)`)"
+        }
+      ],
+      "OwnableUnauthorizedAccount(address)": [
+        {
+          "details": "The caller account is not authorized to perform an operation."
+        }
+      ]
+    },
+    "kind": "dev",
+    "methods": {
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      }
+    },
+    "stateVariables": {
+      "ethPrices": {
+        "details": "please take care token decimal e.x ethPrice[uno_address] = 123456 means 1 UNO = 123456 / (10 ** 18 eth)"
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "consult(address,address,uint256)": {
+        "notice": "returns the tokenB amount for tokenA"
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 8,
+        "contract": "contracts/Mocks/OraclePriceFeed.sol:PriceOracle",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 812,
+        "contract": "contracts/Mocks/OraclePriceFeed.sol:PriceOracle",
+        "label": "_stableCoins",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_struct(AddressSet)503_storage"
+      },
+      {
+        "astId": 817,
+        "contract": "contracts/Mocks/OraclePriceFeed.sol:PriceOracle",
+        "label": "ethPrices",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 820,
+        "contract": "contracts/Mocks/OraclePriceFeed.sol:PriceOracle",
+        "label": "ethUSDAggregator",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_address"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_bytes32)dyn_storage": {
+        "base": "t_bytes32",
+        "encoding": "dynamic_array",
+        "label": "bytes32[]",
+        "numberOfBytes": "32"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_bytes32,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(AddressSet)503_storage": {
+        "encoding": "inplace",
+        "label": "struct EnumerableSet.AddressSet",
+        "members": [
+          {
+            "astId": 502,
+            "contract": "contracts/Mocks/OraclePriceFeed.sol:PriceOracle",
+            "label": "_inner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_struct(Set)188_storage"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_struct(Set)188_storage": {
+        "encoding": "inplace",
+        "label": "struct EnumerableSet.Set",
+        "members": [
+          {
+            "astId": 183,
+            "contract": "contracts/Mocks/OraclePriceFeed.sol:PriceOracle",
+            "label": "_values",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_array(t_bytes32)dyn_storage"
+          },
+          {
+            "astId": 187,
+            "contract": "contracts/Mocks/OraclePriceFeed.sol:PriceOracle",
+            "label": "_positions",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_bytes32,t_uint256)"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

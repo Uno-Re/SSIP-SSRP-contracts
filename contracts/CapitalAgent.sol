@@ -7,7 +7,6 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "./interfaces/ISalesPolicy.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./interfaces/ICapitalAgent.sol";
-import "./interfaces/IGnosisSafe.sol";
 
 /**
  * @dev update and manage all pools capital and policy utlized amount,
@@ -86,8 +85,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(_exchangeAgent != address(0), "UnoRe: zero exchangeAgent address");
         require(_USDC_TOKEN != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
-        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         exchangeAgent = _exchangeAgent;
         usdcToken = _USDC_TOKEN;
         operator = _operator;
@@ -230,7 +227,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     function setPoolCapital(address _ssip, uint256 _capital) external onlyRole(ADMIN_ROLE) nonReentrant {
         require(poolInfo[_ssip].exist, "UnoRe: no exit pool");
         address currency = poolInfo[_ssip].currency;
-        totalCapitalStakedByCurrency[currency] += _capital;
+        totalCapitalStakedByCurrency[currency] = _capital;
         poolInfo[_ssip].totalCapital = _capital;
     }
 
@@ -449,7 +446,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _MCR new value to update
      **/
     function setMCR(uint256 _MCR) external onlyOperator nonReentrant {
-        require(_MCR > 0, "UnoRe: zero mcr");
         MCR = _MCR;
         emit LogSetMCR(msg.sender, address(this), _MCR);
     }
@@ -459,7 +455,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _MLR new value to update
      **/
     function setMLR(uint256 _MLR) external onlyOperator nonReentrant {
-        require(_MLR > 0, "UnoRe: zero mlr");
         MLR = _MLR;
         emit LogSetMLR(msg.sender, address(this), _MLR);
     }
@@ -470,7 +465,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _pool address of pool
      **/
     function setSCR(uint256 _SCR, address _pool) external onlyOperator nonReentrant {
-        require(_SCR > 0, "UnoRe: zero scr");
         poolInfo[_pool].SCR = _SCR;
         emit LogSetSCR(msg.sender, address(this), _pool, _SCR);
     }

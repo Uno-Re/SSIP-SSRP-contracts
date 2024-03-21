@@ -9,8 +9,8 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deployer } = await getNamedAccounts()
   const owner = deployer
 
-  const mockUSDT = await hre.deployments.get("MockUSDT")
-  const PRICE_FEED = await hre.deployments.get("MockOraclePriceFeed")
+  const mockUSDT = process.env.USDC;
+  const PRICE_FEED = await hre.deployments.get("PriceOracle");
   const WETH = process.env.WETH;
   const UNISWAPV2_FACTORY = process.env.UNISWAPV2_FACTORY;
   const UNISWAPV2_ROUTER = process.env.UNISWAPV2_ROUTER;
@@ -18,7 +18,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const exchangeAgent = await deploy("ExchangeAgent", {
     from: deployer,
-    args: [mockUSDT.address, WETH, PRICE_FEED.address, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, MULTISIGWALLET, getBigNumber("60")],
+    args: [mockUSDT, WETH, PRICE_FEED.address, UNISWAPV2_ROUTER, UNISWAPV2_FACTORY, MULTISIGWALLET, 3600],
     log: true,
     deterministicDeployment: false,
   })
@@ -26,4 +26,4 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   console.log(`deploy at ${exchangeAgent.address}`)
 }
 
-module.exports.tags = ["ExchangeAgent", "MockUSDT", "OraclePriceFeed"]
+module.exports.tags = ["ExchangeAgent", "MockUSDT", "PriceOracle"]

@@ -33,7 +33,7 @@ async function main() {
       // Call your function with each key-value pair
         i++;
         console.log(i);
-        let tx = await(await this.SSRP.setUserDetails(key, getBigNumber(value.toString()), 0)).wait();
+        let tx = await(await this.SSRP.setUserDetails(key, getBigNumber(value.toString()), 1)).wait();
 
         console.log( "status: ", tx.status);
         const delayBetweenIterations = 5000 * 1 // 15 seconds
