@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test",
+    "test": "npx hardhat test test/claimsDaoSalesPolicy.test.js",
     "test:local": "npx hardhat test --network hardhat",
     "test:test-deploy": "npx hardhat run scripts/sample-script.js --network hardhat",
     "bscTest:test-deploy": "npx hardhat run scripts/sample-script.js --network bscTest",
