@@ -51,38 +51,38 @@ module.exports = {
       allowUnlimitedContractSize: true,
       evmVersion: "byzantium",
       forking: {
-       url: "https://young-blissful-silence.bsc.quiknode.pro/c7103e2fdde47184b0a3519deec9e53150ac312e/",
-        //url: "https://mainnet.infura.io/v3/f18ea15fd54544a0b9b3a06c5624e665",
+         //url: "https://young-blissful-silence.bsc.quiknode.pro/c7103e2fdde47184b0a3519deec9e53150ac312e/",
+      url: "https://mainnet.infura.io/v3/f18ea15fd54544a0b9b3a06c5624e665",
 
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
         enabled: true,
-        // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355
+       // blockNumber: 	34067450	//18570086// 18557051 //6430278 //7041458 //6615559 10207859 11869355
       },
       gasPrice: "auto",
       accounts,
     },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${process.env.MAINNET_INFURA_KEY}`,
-      accounts,
-      chainId: 1,
-      live: false,
-      saveDeployments: true,
-    },
-    bscTest: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
-      chainId: 97,
-      accounts,
-      live: true,
-      saveDeployments: true,
-      gasMultiplier: 2,
-    },
-    bscMain: {
-      url: "https://bsc-dataseed.binance.org/",
-      chainId: 56,
-      accounts,
-      live: true,
-      saveDeployments: true,
-    },
+    // mainnet: {
+    //   url: `https://mainnet.infura.io/v3/${process.env.MAINNET_INFURA_KEY}`,
+    //   accounts,
+    //   chainId: 1,
+    //   live: false,
+    //   saveDeployments: true,
+    // },
+    // bscTest: {
+    //   url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+    //   chainId: 97,
+    //   accounts,
+    //   live: true,
+    //   saveDeployments: true,
+    //   gasMultiplier: 2,
+    // },
+    // bscMain: {
+    //   url: "https://bsc-dataseed.binance.org/",
+    //   chainId: 56,
+    //   accounts,
+    //   live: true,
+    //   saveDeployments: true,
+    // },
     // goerli: {
     //   url: process.env.GOERLI_URL,
     //   accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
