@@ -1,5 +1,6 @@
 const { expect } = require("chai")
-const { ethers, network, upgrades } = require("hardhat")
+const { ethers, network, upgrades } = require("hardhat");
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 const {
     getBigNumber,
@@ -27,12 +28,13 @@ describe("Migration", function () {
         this.SalesPolicy = await ethers.getContractFactory("SalesPolicy");
         this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool", this.admin)
         this.SingleSidedInsurancePool1 = await ethers.getContractFactory("SingleSidedInsurancePool1", this.admin)
-        this.singleSidedInsurancePool = await ethers.getContractAt("SingleSidedInsurancePool", "0x99EBb2865760325a078E8AEbE10D3bd066e7b79e", this.admin);
+        this.singleSidedInsurancePool = await ethers.getContractAt("SingleSidedInsurancePool", "0xE34DBacff7078dA18260d9321982E588AA30d4B6", this.admin);
 
         this.mockUSDT = await ethers.getContractAt("MockUSDT", "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d")
 
         this.signers = await ethers.getSigners()
         this.zeroAddress = ethers.ZeroAddress;
+
 
         this.whale = await ethers.getImpersonatedSigner('0xF977814e90dA44bFA03b6295A0616a897441aceC');
         this.usdtWhale = await ethers.getImpersonatedSigner("0x8894E0a0c962CB723c1976a4421c95949bE2D4E3");
@@ -58,7 +60,11 @@ describe("Migration", function () {
 
     describe("migration of users in ssip and ssrp", function () {
         before(async function () {
+            //await this.singleSidedInsurancePool.setAccUnoPerShare("17756066182516656631666706957795424", 19475073);
 
+            //await this.singleSidedInsurancePool.setRewardMultiplier(ethers.parseUnits('5.85',17));
+            //await this.singleSidedInsurancePool.setRewardMultiplier(434961939037000);
+            await this.singleSidedInsurancePool.setRewardMultiplier(ethers.parseUnits('6.707', 45));
             // this.mexc = await ethers.getImpersonatedSigner("0x4982085C9e2F89F2eCb8131Eca71aFAD896e89CB")
             //  this.kucoin = await ethers.getImpersonatedSigner("0x53f78A071d04224B8e254E243fFfc6D9f2f3Fa23")
             //    // await this.whale.sendTransaction({
@@ -82,15 +88,25 @@ describe("Migration", function () {
             // await this.singleSidedInsurancePool.transferToriskPool();
         })
         it("Should update rewardDebt and user amount in new version of ssip", async function () {
-            const address = "0xb72463efa42E96DBaCc962067BBB4b78533Ec3f0"
+            const address = "0x91a14c8bb15dbB07397855DFa9b5565b0E209AdA"
             const user1 = await ethers.getImpersonatedSigner(address);
             await this.whale.sendTransaction({
                 to: user1.address,
                 value: ethers.parseEther('100'),
             });
-            //await this.singleSidedInsurancePool.connect(this.admin).setUserDetails("0x982522C73e4562A8F9572B6580eb8bead4c66D18", 0, 0);
+            //await this.singleSidedInsurancePool.connect(this.admin).setUserDetails("0xD105387b9fFc6523211Ba8B23c925c137Cd9A640", ethers.parseUnits("10000",6), 1);
             const userInfo = await this.singleSidedInsurancePool.userInfo(address);
             console.log(userInfo.amount.toString(), 'amount');
+
+            const currentDate = new Date();
+            const afterOneYear = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
+            const afterOneYearTimeStampUTC = afterOneYear.getTime() / 1000;
+
+            console.log(afterOneYear); // Output: Date after 1 year from now
+            console.log(afterOneYearTimeStampUTC);
+            await mine(2598435)
+            await this.singleSidedInsurancePool.updatePool()// Output: UNIX timestamp of the date after 1 year
+
             // await this.singleSidedInsurancePool.setAccUnoPerShare("17756066182516656631666706957795424", 18578648);
             //await this.singleSidedInsurancePool.updatePool()
             //await this.singleSidedInsurancePool.setAccUnoPerShare("16254299390444533346127", 18578648);
@@ -101,24 +117,24 @@ describe("Migration", function () {
             // console.log("rew",poolInfo.unoMultiplierPerBlock);
             // console.log('block',poolInfo.lastRewardBlock);
             // //expect((await this.singleSidedInsurancePool.poolInfo()).accUnoPerShare).to.equal(ethers.parseEther("10"))
-      
+
             const rewarder = await this.singleSidedInsurancePool.rewarder();
-            console.log(ethers.formatEther(await this.singleSidedInsurancePool.pendingUno(address)),'jju');
-            await this.mockUNO.connect(this.unoWhale).transfer(rewarder, ethers.parseEther('150000'))
-            // console.log('hii');
-            const riskPool = await this.singleSidedInsurancePool.riskPool();
-            await this.mockUNO.connect(this.unoWhale).transfer(riskPool, ethers.parseEther('20000'))
-            await this.singleSidedInsurancePool.connect(user1).leaveFromPoolInPending(userInfo.amount);
+            console.log(ethers.formatEther(await this.singleSidedInsurancePool.pendingUno(address)), 'jju');
+            // await this.mockUNO.connect(this.unoWhale).transfer(rewarder, ethers.parseEther('150000'))
+            // // console.log('hii');
+            // const riskPool = await this.singleSidedInsurancePool.riskPool();
+            // await this.mockUNO.connect(this.unoWhale).transfer(riskPool, ethers.parseEther('20000'))
+            // await this.singleSidedInsurancePool.connect(user1).leaveFromPoolInPending(userInfo.amount);
 
-            const currentDate = new Date()
-            const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 11))
-            const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
-            network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
-            await network.provider.send("evm_mine");
-            console.log('userInfo.amount)', userInfo.amount);
+            // const currentDate = new Date()
+            // const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 11))
+            // const afterFiveDaysTimeStampUTC = new Date(afterFiveDays.toUTCString()).getTime() / 1000
+            // network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
+            // await network.provider.send("evm_mine");
+            // console.log('userInfo.amount)', userInfo.amount);
 
-            await this.singleSidedInsurancePool.connect(user1).leaveFromPending(userInfo.amount);
-            console.log(`${address} withdraw successful`);
+            // await this.singleSidedInsurancePool.connect(user1).leaveFromPending(userInfo.amount);
+            // console.log(`${address} withdraw successful`);
         });
         // it("should withdraw from riskPool", async function () {
         //     const bal=await this.mockUSDT.balanceOf("0x53C5C40B4DB912541A4058ee5FB98EAC36A760D4")

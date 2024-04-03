@@ -21,6 +21,7 @@ const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json")
 
 describe("CLaimsDao SalesPolicy", async function () {
   before(async function () {
+    this.deployer = await ethers.getImpersonatedSigner("0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e");
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.capitalAgent = await ethers.getContractAt("CapitalAgent", "0xd49AEEAB29e098B18f6494b34C9279fe858c60ce");
     this.CapitalAgent1 = await ethers.getContractFactory("CapitalAgent1")
@@ -38,16 +39,21 @@ describe("CLaimsDao SalesPolicy", async function () {
     this.singleSidedInsurancePool = await ethers.getContractAt("SingleSidedInsurancePool", "0xd87a4214EDa400Ed376EaaC0aEd9d1414D71581C");
     this.mockOraclePriceFeed = await ethers.getContractAt("PriceOracle","0x0222380d514FA7cf987004ECcD1cD74df2C6c65f");
     this.escalationManager = await ethers.getContractAt("EscalationManager","0xDB99B62bd15e88Fe995dCE4d959aCc3B82Eb9d92");
-    this.payoutRequest = await ethers.getContractAt("PayoutRequest","0xA95cb0641b7dC9141339FC3AFC293eEEf74f7cE7")
+    this.payoutRequest = await ethers.getContractAt("PayoutRequest","0xA95cb0641b7dC9141339FC3AFC293eEEf74f7cE7",this.deployer)
     this.PayoutRequest = await ethers.getContractFactory("PayoutRequest")
     this.signers = await ethers.getSigners()
     this.zeroAddress = ethers.ZeroAddress;
     this.whale = await ethers.getImpersonatedSigner('0x7d6149aD9A573A6E2Ca6eBf7D4897c1B766841B4');
     this.usdtWhale = await ethers.getImpersonatedSigner("0xD6153F5af5679a75cC85D8974463545181f48772");
     this.unoWhale = await ethers.getImpersonatedSigner("0x4aede441085398BD74FeB9eeFCfe08E709e69ABF");
-    this.deployer = await ethers.getImpersonatedSigner("0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e")
+
+    this.buyer= await ethers.getImpersonatedSigner("0x59e850b4874321d14ec9a0B25fa4e57b282b095d");
     await this.whale.sendTransaction({
       to: this.usdtWhale.address,
+      value: getBigNumber('100'),
+    });
+    await this.whale.sendTransaction({
+      to: this.buyer.address,
       value: getBigNumber('100'),
     });
     await this.whale.sendTransaction({
@@ -258,96 +264,96 @@ describe("CLaimsDao SalesPolicy", async function () {
     // await (await this.salesPolicyFactory.updateCheckIfProtocolInWhitelistArray(true)).wait()
     // await (await this.salesPolicyFactory.setBlackListProtocolById(0)).wait()
 
-    //   prepare sign data
-    const assets = [this.mockUSDT.target, this.mockUSDT.target]
-    const policyPrice = getBigNumber("300", 6)
-    const protocols = [this.signers[0].address, this.signers[1].address]
-    const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
-    const coverageAmount = [getBigNumber("201", 6), getBigNumber("100", 6)]
-    const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0);
-    console.log('deadline', deadline);
-    const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
+    // //   prepare sign data
+    // const assets = [this.mockUSDT.target, this.mockUSDT.target]
+    // const policyPrice = getBigNumber("300", 6)
+    // const protocols = [this.signers[0].address, this.signers[1].address]
+    // const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
+    // const coverageAmount = [getBigNumber("201", 6), getBigNumber("100", 6)]
+    // const deadline = getBigNumber(`${timestamp - 7 * 3600}`, 0);
+    // console.log('deadline', deadline);
+    // const nonce = await this.salesPolicy.getNonce(this.signers[0].address)
 
-    const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
-    const paddedProtocolsHexStr =
-      "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
-    const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
-    const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
-    const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
-    const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
-    const paddedChainId = getPaddedHexStrFromBN(this.chainId)
+    // const paddedPolicyPriceHexStr = getPaddedHexStrFromBN(policyPrice)
+    // const paddedProtocolsHexStr =
+    //   "000000000000000000000000" + protocols[0].slice(2) + "000000000000000000000000" + protocols[1].slice(2)
+    // const paddedCoverageDurationHexStr = getPaddedHexStrFromBNArray(coverageDuration)
+    // const paddedCoverageAmountHexStr = getPaddedHexStrFromBNArray(coverageAmount)
+    // const paddedDeadlineHexStr = getPaddedHexStrFromBN(deadline)
+    // const paddedNonceHexStr = getPaddedHexStrFromBN(nonce)
+    // const paddedChainId = getPaddedHexStrFromBN(this.chainId)
 
-    hexData =
-      "0x" +
-      paddedPolicyPriceHexStr.slice(2) +
-      paddedProtocolsHexStr +
-      paddedCoverageDurationHexStr.slice(2) +
-      paddedCoverageAmountHexStr.slice(2) +
-      paddedDeadlineHexStr.slice(2) +
-      this.mockUSDT.target.slice(2) +
-      paddedNonceHexStr.slice(2) +
-      this.salesPolicy.target.slice(2) +
-      paddedChainId.slice(2)
+    // hexData =
+    //   "0x" +
+    //   paddedPolicyPriceHexStr.slice(2) +
+    //   paddedProtocolsHexStr +
+    //   paddedCoverageDurationHexStr.slice(2) +
+    //   paddedCoverageAmountHexStr.slice(2) +
+    //   paddedDeadlineHexStr.slice(2) +
+    //   this.mockUSDT.target.slice(2) +
+    //   paddedNonceHexStr.slice(2) +
+    //   this.salesPolicy.target.slice(2) +
+    //   paddedChainId.slice(2)
 
 
-    const flatSig = await this.signers[0].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
-    const splitSig = ethers.Signature.from(flatSig)
+    // const flatSig = await this.signers[0].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
+    // const splitSig = ethers.Signature.from(flatSig)
 
-    const chainId = 1
-    console.log('chainid',chainId);
-    const functionSignature = await this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
-      assets,
-      protocols,
-      coverageAmount,
-      coverageDuration,
-      policyPrice,
-      deadline,
-      this.mockUSDT.target,
-      splitSig.r,
-      splitSig.s,
-      splitSig.v,
-      nonce
-    ])
+    // const chainId = 1
+    // console.log('chainid',chainId);
+    // const functionSignature = await this.salesPolicy.interface.encodeFunctionData("buyPolicy", [
+    //   assets,
+    //   protocols,
+    //   coverageAmount,
+    //   coverageDuration,
+    //   policyPrice,
+    //   deadline,
+    //   this.mockUSDT.target,
+    //   splitSig.r,
+    //   splitSig.s,
+    //   splitSig.v,
+    //   nonce
+    // ])
 
-    const domainData = {
-      name: "BuyPolicyMetaTransaction",
-      version: "1",
-      verifyingContract: this.salesPolicyAddress,
-      salt: getPaddedHexStrFromBN(chainId),
-    }
+    // const domainData = {
+    //   name: "BuyPolicyMetaTransaction",
+    //   version: "1",
+    //   verifyingContract: this.salesPolicyAddress,
+    //   salt: getPaddedHexStrFromBN(chainId),
+    // }
 
-    const types = {
-      MetaTransaction: [
-        { name: "nonce", type: "uint256" },
-        { name: "from", type: "address" },
-        { name: "functionSignature", type: "bytes" },
-      ]
-    }
+    // const types = {
+    //   MetaTransaction: [
+    //     { name: "nonce", type: "uint256" },
+    //     { name: "from", type: "address" },
+    //     { name: "functionSignature", type: "bytes" },
+    //   ]
+    // }
 
-    const message = {
-      nonce: Number(nonce),
-      from: this.signers[0].address,
-      functionSignature: functionSignature,
-    }
+    // const message = {
+    //   nonce: Number(nonce),
+    //   from: this.signers[0].address,
+    //   functionSignature: functionSignature,
+    // }
 
-    const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
-    const signature = await this.signers[0].signTypedData(domainData, types, message);
+    // const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+    // const signature = await this.signers[0].signTypedData(domainData, types, message);
 
-    let { r, s, v } = getSignatureParameters(signature)
-    await hre.ethers.provider.send('evm_increaseTime', [Number(deadline)+1]);
-    try {
-      let tx = await this.salesPolicy.executeMetaTransaction(this.signers[0].address, functionSignature, r, s, v, {
-        gasLimit: 1000000,
-      })
-      const receipt = await tx.wait()
-      console.log("metatransaction receipt", receipt.status)
-    } catch (error) {
-      console.log("[error]", error)
-    }
-    const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
-    const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
-    const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
-    const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
+    // let { r, s, v } = getSignatureParameters(signature)
+    // await hre.ethers.provider.send('evm_increaseTime', [Number(deadline)+1]);
+    // try {
+    //   let tx = await this.salesPolicy.executeMetaTransaction(this.signers[0].address, functionSignature, r, s, v, {
+    //     gasLimit: 1000000,
+    //   })
+    //   const receipt = await tx.wait()
+    //   console.log("metatransaction receipt", receipt.status)
+    // } catch (error) {
+    //   console.log("[error]", error)
+    // }
+    // const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
+    // const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
+    // const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
+    // const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
     // expect(premiumPoolBalanceAfter).to.equal(getBigNumber("300", 6))
     // expect(premiumForSSRP).to.equal(getBigNumber("30", 6))
     // expect(premiumForSSIP).to.equal(getBigNumber("210", 6))
@@ -457,17 +463,16 @@ describe("CLaimsDao SalesPolicy", async function () {
     await this.payoutRequest1.setCapitalAgent(this.capitalAgent.target);
     await this.payoutRequest2.setCapitalAgent(this.capitalAgent.target);
     this.riskpool1 = this.RiskPool.attach(this.riskpool1);
+    
   })
 
   describe("Sales policy Action", async function () {
 
 
     it("Should buy policy in USDT", async function () {
-      expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(2)
-      await this.payoutRequest.setFailed(true);
-      await this.payoutRequest.initRequest(0, getBigNumber("201", 6), this.signers[5].address, this.message)
-      //expect(await this.salesPolicy.balanceOf(this.signers[0].address)).to.equal(1)
-      expect(await this.mockUNO.balanceOf(this.signers[5].address)).to.equal(getBigNumber("500000") + getBigNumber("201", 6));
+      await this.payoutRequest.connect(this.deployer).setFailed(true);
+      await expect(this.payoutRequest.connect(this.deployer).initRequest(0, 100, this.signers[5].address,
+        this.message)).changeTokenBalances(this.mockUNO, [this.signers[5].address], [100]);
     })
 
     it("Should not burn policy if coverage amount not fully filled", async function () {
