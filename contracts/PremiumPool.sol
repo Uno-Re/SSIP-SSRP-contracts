@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IPremiumPool.sol";
-import "./interfaces/IGnosisSafe.sol";
 
 contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
     bytes32 public constant GOVERNANCE_ROLE = keccak256("GOVERNANCE_ROLE");
@@ -52,8 +51,6 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
         require(_unoToken != address(0), "UnoRe: zero UNO address");
         require(_usdcToken != address(0), "UnoRe: zero USDC address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
-        require(IGnosisSafe(_multiSigWallet).getOwners().length > 3, "UnoRe: more than three owners requied");
-        require(IGnosisSafe(_multiSigWallet).getThreshold() > 1, "UnoRe: more than one owners requied to verify");
         require(_governance != address(0), "UnoRe: zero governance address");
         exchangeAgent = _exchangeAgent;
         unoToken = _unoToken;

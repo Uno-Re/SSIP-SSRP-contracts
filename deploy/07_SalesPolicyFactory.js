@@ -9,7 +9,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   const owner = deployer
 
-  const mockUSDT = await hre.deployments.get("MockUSDT")
+  const mockUSDT = process.env.USDC; 
   const exchangeAgent = await hre.deployments.get("ExchangeAgent")
   const premiumPool = await hre.deployments.get("PremiumPool")
   const capitalAgent = await hre.deployments.get("CapitalAgent")
@@ -17,7 +17,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
 
   await deploy("SalesPolicyFactory", {
     from: deployer,
-    args: [mockUSDT.address, exchangeAgent.address, premiumPool.address, capitalAgent.address, multiSigWallet],
+    args: [mockUSDT, exchangeAgent.address, premiumPool.address, capitalAgent.address, multiSigWallet],
     log: true,
     deterministicDeployment: false,
   })

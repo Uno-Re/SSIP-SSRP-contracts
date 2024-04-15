@@ -82,7 +82,8 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         bytes memory ancillaryData
     ) external view override returns (int256) {
         bytes32 data = keccak256(abi.encodePacked(identifier, time, ancillaryData));
-        return isOraclePriceCalled[data] ? oraclePrice[data] : int256(0);
+        require(isOraclePriceCalled[data], "EManager: no price request");
+        return oraclePrice[data];
     }
 
     function setOraclePrice(bytes32 identifier,
@@ -90,7 +91,7 @@ contract EscalationManager is EscalationManagerInterface, AccessControl{
         bytes memory ancillaryData,
         int256 price
     ) external onlyRole(CLAIM_ASSESSOR_ROLE) {
-        require(price == 0 || price == NUMERICAL_VALUE, "EManger: invalid price");
+        require(price == 0 || price == NUMERICAL_VALUE, "EManager: invalid price");
         bytes32 data = keccak256(abi.encodePacked(identifier, time, ancillaryData));
         oraclePrice[data] = price;
         isOraclePriceCalled[data] = true;

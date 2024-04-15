@@ -7,7 +7,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const mockUSDT = await hre.deployments.get("MockUSDT")
+  const mockUSDT = process.env.USDC;
   const exchangeAgent = await hre.deployments.get("ExchangeAgent")
   const multiSigWallet = process.env.MULTISIGWALLET;
   const operator = process.env.OPERATOR;
@@ -20,7 +20,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
       execute: {
         init: {
           methodName: "initialize",
-          args: [exchangeAgent.address, mockUSDT.address, multiSigWallet, operator],
+          args: [exchangeAgent.address, mockUSDT, multiSigWallet, operator],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
