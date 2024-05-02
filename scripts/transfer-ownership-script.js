@@ -11,14 +11,14 @@ async function main() {
     let CLAIMS_DAO = "0xB51F1A80DB244ec8d70E4C521ff77Cd0731df241";
     let OPERATOR = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
     let GOVERNANCE = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
-    let GAURDIAN_COUNCIL = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
+    let GUARDIAN_COUNCIL = "0xFFadCf0465744b1a722Af1435A7d070450fdA049";
     let EsalactionMangerMultsig = "0x21E241BA97b9a78bda0f92FF8304ba36a34c0c00";
 
     console.log(multisig, "multisig address");
     console.log(CLAIMS_DAO, "CLAIMS_DAO address");
     console.log(OPERATOR, "OPERATOR address");
     console.log(GOVERNANCE, "GOVERNANCE address");
-    console.log(GAURDIAN_COUNCIL, "GAURDIAN_COUNCIL address");
+    console.log(GUARDIAN_COUNCIL, "GUARDIAN_COUNCIL address");
 
     let ssipAbi = (await artifacts.readArtifact("SingleSidedInsurancePool")).abi;
     let capitalAgentAbi = (await artifacts.readArtifact("CapitalAgent")).abi;
@@ -103,10 +103,10 @@ async function main() {
     await this.PayoutUSDC.setClaimsDao(CLAIMS_DAO);
     await this.PayoutUSDT.setClaimsDao(CLAIMS_DAO);
 
-    await this.PayoutETH.setGuardianCouncil(GAURDIAN_COUNCIL);
-    await this.PayoutUNO.setGuardianCouncil(GAURDIAN_COUNCIL);
-    await this.PayoutUSDC.setGuardianCouncil(GAURDIAN_COUNCIL);
-    await this.PayoutUSDT.setGuardianCouncil(GAURDIAN_COUNCIL);
+    await this.PayoutETH.setGuardianCouncil(GUARDIAN_COUNCIL);
+    await this.PayoutUNO.setGuardianCouncil(GUARDIAN_COUNCIL);
+    await this.PayoutUSDC.setGuardianCouncil(GUARDIAN_COUNCIL);
+    await this.PayoutUSDT.setGuardianCouncil(GUARDIAN_COUNCIL);
 
     await this.EscalationManager.grantRole(CLAIM_ASSESSOR_ROLE, EsalactionMangerMultsig);
 

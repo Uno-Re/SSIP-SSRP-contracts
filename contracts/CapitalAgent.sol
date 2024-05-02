@@ -166,9 +166,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     }
 
     /**
-     * @dev return total capital in usdc staked in capital agent by pools 
+     * @dev return total capital in usdc staked in capital agent by pools
      **/
-    function totalCapitalStaked() public view returns(uint256) {
+    function totalCapitalStaked() public view returns (uint256) {
         return _getTotalCapitalStakedInUSDC();
     }
 
@@ -281,7 +281,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     /**
      * @dev update pool(caller) capital from capital agent,
-     * decrease capital of pool by _withdrawAmount, if user claim policy from pool 
+     * decrease capital of pool by _withdrawAmount, if user claim policy from pool
      * @param _withdrawAmount amount to withdraw
      **/
     function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isNotMigrate) external override nonReentrant {
@@ -301,7 +301,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(_coverageAmount >= usdcTokenAmount + _claimed, "UnoRe: coverage amount is less");
         claimedAmount[_salesPolicyAddress][_policyId] += usdcTokenAmount;
         bool _isFinished = !(_coverageAmount > (usdcTokenAmount + _claimed));
-        if (_isFinished) { // @Audit: DUST amount will prevent marking a policy complete
+        if (_isFinished) {
+            // @Audit: DUST amount will prevent marking a policy complete
             _markToClaimPolicy(_policyId, _coverageAmount);
         }
     }
@@ -327,7 +328,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     }
 
     /**
-     * @dev return if user can buy policy from this coverage amount, 
+     * @dev return if user can buy policy from this coverage amount,
      * total utlized amount plus coverage should be less than MLR of total capital staked
      * @param _coverageAmount coverage amount
      **/
@@ -384,7 +385,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         }
         address currency = poolInfo[_pool].currency;
         poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;
-        totalCapitalStakedByCurrency[currency] = isAdd ? totalCapitalStakedByCurrency[currency] + _amount : totalCapitalStakedByCurrency[currency] - _amount;
+        totalCapitalStakedByCurrency[currency] = isAdd
+            ? totalCapitalStakedByCurrency[currency] + _amount
+            : totalCapitalStakedByCurrency[currency] - _amount;
         emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStakedByCurrency[currency]);
     }
 
@@ -430,7 +433,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 totalCapitalStakedInUSDC;
         for (uint256 i = 0; i < currencyList.length; i++) {
             address currency = currencyList[i];
-            totalCapitalStakedInUSDC = totalCapitalStakedInUSDC + _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
+            totalCapitalStakedInUSDC =
+                totalCapitalStakedInUSDC +
+                _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
         }
 
         return totalCapitalStakedInUSDC;

@@ -67,7 +67,7 @@ contract PayoutRequest is PausableUpgradeable {
         escalationManager = _escalationManager;
         claimsDao = _claimsDao;
         _guardianCouncil = __guardianCouncil;
-        defaultIdentifier = optimisticOracle.defaultIdentifier();
+        //defaultIdentifier = optimisticOracle.defaultIdentifier();
         assertionliveTime = 10 days;
         isUMAFailed = true;
     }

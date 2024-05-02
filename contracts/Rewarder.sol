@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -71,8 +70,7 @@ contract Rewarder is IRewarder, ReentrancyGuard, Pausable {
     ) external payable override onlyPOOL whenNotPaused returns (uint256) {
         ISSIP ssip = ISSIP(pool);
         ISSIP.PoolInfo memory poolInfos = ssip.poolInfo();
-        uint256 accumulatedUno = (_accumulatedAmount *
-            uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
+        uint256 accumulatedUno = (_accumulatedAmount * uint256(poolInfos.accUnoPerShare)) / ACC_UNO_PRECISION;
 
         require(accumulatedUno > _amount, "UnoRe: invalid reward amount");
 

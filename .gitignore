@@ -8,3 +8,6 @@ artifacts
 .env
 lib
 out
+.env certo
+.env sepolia
+

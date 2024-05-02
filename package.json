@@ -34,7 +34,7 @@
     "dotenv": "^10.0.0",
     "ethereum-waffle": "^3.4.0",
     "ethers": "6.9.0",
-    "hardhat": "^2.19.2",
+    "hardhat": "^2.22.1",
     "hardhat-contract-sizer": "^2.10.0",
     "hardhat-deploy": "^0.11.44",
     "hardhat-deploy-ethers": "^0.4.1",
@@ -56,5 +56,6 @@
     "@uniswap/lib": "^4.0.1-alpha",
     "@uniswap/v2-core": "^1.0.1",
     "eth-sig-util": "^3.0.1"
-  }
+  },
+  "repository": "git@github.com:Uno-Re/SSIP-SSRP-contracts.git"
 }

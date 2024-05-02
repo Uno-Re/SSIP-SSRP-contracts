@@ -11,26 +11,31 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const ssip = await hre.deployments.get("SingleSidedInsurancePoolUSDT")
   // const claimProcessor = await hre.deployments.get("ClaimProce/ssor")
   const escalationManager = await hre.deployments.get("EscalationManager")
-  const guardianCouncil = process.env.GAURDIAN_COUNCIL;
-  const defaultCurrency = process.env.DEAFAULT_CURRENCY;
+  const guardianCouncil = process.env.GUARDIAN_COUNCIL;
+  const defaultCurrency = process.env.DEFAULT_CURRENCY;
   const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
   const claimsDao = process.env.CLAIMS_DAO;
   
-  const a = await deploy("PayoutRequestUSDT", {
-    from: deployer,
-    contract: "PayoutRequest",
-    log: true,
-    deterministicDeployment: false,
-    proxy: {
-      execute: {
-        init: {
-          methodName: "initialize",
-          args: [ssip.address, optimisticOracleV3, defaultCurrency, escalationManager.address, guardianCouncil, claimsDao],
-        },
+  console.log("Before deploying proxy");
+const a = await deploy("PayoutRequestUSDT", {
+  from: deployer,
+  contract: "PayoutRequest",
+  log: true,
+  deterministicDeployment: false,
+  gasLimit: 6000000,
+  proxy: {
+    execute: {
+      init: {
+        methodName: "initialize",
+        args: [ssip.address, optimisticOracleV3, defaultCurrency, 
+          escalationManager.address, guardianCouncil, claimsDao],
       },
-      proxyContract: "OpenZeppelinTransparentProxy",
     },
-  });
+    proxyContract: "OpenZeppelinTransparentProxy",
+  },
+});
+console.log("After deploying proxy");
+
 
   console.log(`payoutRequest deployed at ${a.address}`);
 };

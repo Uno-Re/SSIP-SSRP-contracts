@@ -1,0 +1,1784 @@
+{
+  "address": "0x1daE2B971f2fc52760503057eb69581fE35Cc5D0",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "AccessControlBadConfirmation",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "neededRole",
+          "type": "bytes32"
+        }
+      ],
+      "name": "AccessControlUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidInitialization",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotInitializing",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_ssip",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_currency",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_scr",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogAddPool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        }
+      ],
+      "name": "LogAddPoolWhiteList",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_policy",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_policyTokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogMarkToClaimPolicy",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_salesPolicy",
+          "type": "address"
+        }
+      ],
+      "name": "LogRemovePolicy",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_ssip",
+          "type": "address"
+        }
+      ],
+      "name": "LogRemovePool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        }
+      ],
+      "name": "LogRemovePoolWhiteList",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_capitalAgent",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_exchangeAgent",
+          "type": "address"
+        }
+      ],
+      "name": "LogSetExchangeAgent",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_capitalAgent",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_MCR",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogSetMCR",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_capitalAgent",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_MLR",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogSetMLR",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_operator",
+          "type": "address"
+        }
+      ],
+      "name": "LogSetOperator",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_salesPolicy",
+          "type": "address"
+        }
+      ],
+      "name": "LogSetPolicy",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_capitalAgent",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_SCR",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogSetSCR",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_factory",
+          "type": "address"
+        }
+      ],
+      "name": "LogSetSalesPolicyFactory",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_usdcToken",
+          "type": "address"
+        }
+      ],
+      "name": "LogSetUSDC",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_policy",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_policyUtilized",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_totalUtilizedAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogUpdatePolicyCoverage",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_policy",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_policyTokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogUpdatePolicyExpired",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_ssip",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_poolCapital",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_totalCapital",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogUpdatePoolCapital",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "previousAdminRole",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "newAdminRole",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RoleAdminChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "RoleGranted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "RoleRevoked",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "ADMIN_ROLE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "CALC_PRECISION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "DEFAULT_ADMIN_ROLE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MLR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_withdrawAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_policyId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "_isNotMigrate",
+          "type": "bool"
+        }
+      ],
+      "name": "SSIPPolicyCaim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_stakingAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "SSIPStaking",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_withdrawAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "SSIPWithdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_ssip",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_currency",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_scr",
+          "type": "uint256"
+        }
+      ],
+      "name": "addPool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_ssip",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_currency",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_scr",
+          "type": "uint256"
+        }
+      ],
+      "name": "addPoolByAdmin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        }
+      ],
+      "name": "addPoolWhiteList",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_withdrawAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "checkCapitalByMCR",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_coverageAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "checkCoverageByMLR",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "claimedAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "exchangeAgent",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "existedCurrencies",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPolicyInfo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        }
+      ],
+      "name": "getPoolInfo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getRoleAdmin",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "grantRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "hasRole",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_exchangeAgent",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_USDC_TOKEN",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_multiSigWallet",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_operator",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_policyId",
+          "type": "uint256"
+        }
+      ],
+      "name": "markToClaimPolicy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "operator",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "policyInfo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "policy",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "utilizedAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "exist",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_coverageAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "policySale",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "poolInfo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "totalCapital",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "SCR",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "currency",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "exist",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "poolWhiteList",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "removePolicy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_ssip",
+          "type": "address"
+        }
+      ],
+      "name": "removePool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        }
+      ],
+      "name": "removePoolWhiteList",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "callerConfirmation",
+          "type": "address"
+        }
+      ],
+      "name": "renounceRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "revokeRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "salesPolicyFactory",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_exchangeAgent",
+          "type": "address"
+        }
+      ],
+      "name": "setExchangeAgent",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_MCR",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMCR",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_MLR",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMLR",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_operator",
+          "type": "address"
+        }
+      ],
+      "name": "setOperator",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_policy",
+          "type": "address"
+        }
+      ],
+      "name": "setPolicy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_policy",
+          "type": "address"
+        }
+      ],
+      "name": "setPolicyByAdmin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_ssip",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_capital",
+          "type": "uint256"
+        }
+      ],
+      "name": "setPoolCapital",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_SCR",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_pool",
+          "type": "address"
+        }
+      ],
+      "name": "setSCR",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_factory",
+          "type": "address"
+        }
+      ],
+      "name": "setSalesPolicyFactory",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_usdcToken",
+          "type": "address"
+        }
+      ],
+      "name": "setUSDCToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "interfaceId",
+          "type": "bytes4"
+        }
+      ],
+      "name": "supportsInterface",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalCapitalStaked",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "totalCapitalStakedByCurrency",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalUtilizedAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_policyId",
+          "type": "uint256"
+        }
+      ],
+      "name": "updatePolicyStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "usdcToken",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x21214a260b708a08ee31c023985165ae266c7361e1204dca80c24e45cb3ed938",
+  "receipt": {
+    "to": null,
+    "from": "0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863",
+    "contractAddress": "0x1daE2B971f2fc52760503057eb69581fE35Cc5D0",
+    "transactionIndex": 29,
+    "gasUsed": "2590348",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x855742c91d8f38f35173e427e35474cbb736b40649e5a9e9eded18604a696d95",
+    "transactionHash": "0x21214a260b708a08ee31c023985165ae266c7361e1204dca80c24e45cb3ed938",
+    "logs": [],
+    "blockNumber": 5734102,
+    "cumulativeGasUsed": "5930586",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "31ed929ad90199322654dbe351562488",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.23+commit.f704f362\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ReentrancyGuardReentrantCall\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_ssip\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_currency\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_scr\",\"type\":\"uint256\"}],\"name\":\"LogAddPool\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"}],\"name\":\"LogAddPoolWhiteList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_policy\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_policyTokenId\",\"type\":\"uint256\"}],\"name\":\"LogMarkToClaimPolicy\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_salesPolicy\",\"type\":\"address\"}],\"name\":\"LogRemovePolicy\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_ssip\",\"type\":\"address\"}],\"name\":\"LogRemovePool\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"}],\"name\":\"LogRemovePoolWhiteList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_capitalAgent\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_exchangeAgent\",\"type\":\"address\"}],\"name\":\"LogSetExchangeAgent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_capitalAgent\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_MCR\",\"type\":\"uint256\"}],\"name\":\"LogSetMCR\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_capitalAgent\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_MLR\",\"type\":\"uint256\"}],\"name\":\"LogSetMLR\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_operator\",\"type\":\"address\"}],\"name\":\"LogSetOperator\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_salesPolicy\",\"type\":\"address\"}],\"name\":\"LogSetPolicy\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_capitalAgent\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_SCR\",\"type\":\"uint256\"}],\"name\":\"LogSetSCR\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_factory\",\"type\":\"address\"}],\"name\":\"LogSetSalesPolicyFactory\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_usdcToken\",\"type\":\"address\"}],\"name\":\"LogSetUSDC\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_policy\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_policyUtilized\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_totalUtilizedAmount\",\"type\":\"uint256\"}],\"name\":\"LogUpdatePolicyCoverage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_policy\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_policyTokenId\",\"type\":\"uint256\"}],\"name\":\"LogUpdatePolicyExpired\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_ssip\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_poolCapital\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_totalCapital\",\"type\":\"uint256\"}],\"name\":\"LogUpdatePoolCapital\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CALC_PRECISION\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MCR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MLR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_withdrawAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_policyId\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"_isNotMigrate\",\"type\":\"bool\"}],\"name\":\"SSIPPolicyCaim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_stakingAmount\",\"type\":\"uint256\"}],\"name\":\"SSIPStaking\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_withdrawAmount\",\"type\":\"uint256\"}],\"name\":\"SSIPWithdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_ssip\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_currency\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_scr\",\"type\":\"uint256\"}],\"name\":\"addPool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_ssip\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_currency\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_scr\",\"type\":\"uint256\"}],\"name\":\"addPoolByAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"}],\"name\":\"addPoolWhiteList\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_withdrawAmount\",\"type\":\"uint256\"}],\"name\":\"checkCapitalByMCR\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_coverageAmount\",\"type\":\"uint256\"}],\"name\":\"checkCoverageByMLR\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"claimedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"exchangeAgent\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"existedCurrencies\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getPolicyInfo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"}],\"name\":\"getPoolInfo\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_exchangeAgent\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_USDC_TOKEN\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_multiSigWallet\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_operator\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_policyId\",\"type\":\"uint256\"}],\"name\":\"markToClaimPolicy\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"operator\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"policyInfo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"policy\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"utilizedAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"exist\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_coverageAmount\",\"type\":\"uint256\"}],\"name\":\"policySale\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"poolInfo\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"totalCapital\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"SCR\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"currency\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"exist\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"poolWhiteList\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"removePolicy\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_ssip\",\"type\":\"address\"}],\"name\":\"removePool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"}],\"name\":\"removePoolWhiteList\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"salesPolicyFactory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_exchangeAgent\",\"type\":\"address\"}],\"name\":\"setExchangeAgent\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_MCR\",\"type\":\"uint256\"}],\"name\":\"setMCR\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_MLR\",\"type\":\"uint256\"}],\"name\":\"setMLR\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_operator\",\"type\":\"address\"}],\"name\":\"setOperator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_policy\",\"type\":\"address\"}],\"name\":\"setPolicy\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_policy\",\"type\":\"address\"}],\"name\":\"setPolicyByAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_ssip\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_capital\",\"type\":\"uint256\"}],\"name\":\"setPoolCapital\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_SCR\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_pool\",\"type\":\"address\"}],\"name\":\"setSCR\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_factory\",\"type\":\"address\"}],\"name\":\"setSalesPolicyFactory\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_usdcToken\",\"type\":\"address\"}],\"name\":\"setUSDCToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalCapitalStaked\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"totalCapitalStakedByCurrency\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalUtilizedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_policyId\",\"type\":\"uint256\"}],\"name\":\"updatePolicyStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"usdcToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"update and manage all pools capital and policy utlized amount, whenever user stake and withdraw from the pool and buy policy from salesPolicy notifies to capital agent to update pool capital and policy coverage*\",\"errors\":{\"AccessControlBadConfirmation()\":[{\"details\":\"The caller of a function is not the expected one. NOTE: Don't confuse with {AccessControlUnauthorizedAccount}.\"}],\"AccessControlUnauthorizedAccount(address,bytes32)\":[{\"details\":\"The `account` is missing a role.\"}],\"InvalidInitialization()\":[{\"details\":\"The contract is already initialized.\"}],\"NotInitializing()\":[{\"details\":\"The contract is not initializing.\"}],\"ReentrancyGuardReentrantCall()\":[{\"details\":\"Unauthorized reentrant call.\"}]},\"events\":{\"Initialized(uint64)\":{\"details\":\"Triggered when the contract has been initialized or reinitialized.\"},\"RoleAdminChanged(bytes32,bytes32,bytes32)\":{\"details\":\"Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted signaling this.\"},\"RoleGranted(bytes32,address,address)\":{\"details\":\"Emitted when `account` is granted `role`. `sender` is the account that originated the contract call, an admin role bearer except when using {AccessControl-_setupRole}.\"},\"RoleRevoked(bytes32,address,address)\":{\"details\":\"Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)\"}},\"kind\":\"dev\",\"methods\":{\"SSIPPolicyCaim(uint256,uint256,bool)\":{\"details\":\"update pool(caller) capital from capital agent, decrease capital of pool by _withdrawAmount, if user claim policy from pool\",\"params\":{\"_withdrawAmount\":\"amount to withdraw*\"}},\"SSIPStaking(uint256)\":{\"details\":\"update pool(caller) capital from capital agent, increase capital of pool by _stakingAmount, if user stake in pool\",\"params\":{\"_stakingAmount\":\"amount to deposit*\"}},\"SSIPWithdraw(uint256)\":{\"details\":\"update pool(caller) capital from capital agent, decrease capital of pool by _withdrawAmount, if user withdraw from pool remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively\",\"params\":{\"_withdrawAmount\":\"amount to withdraw*\"}},\"addPool(address,address,uint256)\":{\"details\":\"add pool into capitalAgent to stake capital, can only be call by whitelisted pools\",\"params\":{\"_currency\":\"pool lp currency address\",\"_scr\":\"pool scr value(minimum capital should maintain in capital agent)*\",\"_ssip\":\"address of pool to add\"}},\"addPoolByAdmin(address,address,uint256)\":{\"details\":\"add pool into capitalAgent to stake capital, can only be call by admin role\",\"params\":{\"_currency\":\"pool lp currency address\",\"_scr\":\"pool scr value(minimum capital should maintain in capital agent)*\",\"_ssip\":\"address of pool to add\"}},\"addPoolWhiteList(address)\":{\"details\":\"whitelist pool address, can only be call by admin role\",\"params\":{\"_pool\":\"address of pool to whitelist*\"}},\"checkCapitalByMCR(address,uint256)\":{\"details\":\"return if pool can withdraw this amount, remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively\",\"params\":{\"_pool\":\"address of pool\",\"_withdrawAmount\":\"withdraw amount*\"}},\"checkCoverageByMLR(uint256)\":{\"details\":\"return if user can buy policy from this coverage amount, total utlized amount plus coverage should be less than MLR of total capital staked\",\"params\":{\"_coverageAmount\":\"coverage amount*\"}},\"getRoleAdmin(bytes32)\":{\"details\":\"Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}.\"},\"grantRole(bytes32,address)\":{\"details\":\"Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event.\"},\"hasRole(bytes32,address)\":{\"details\":\"Returns `true` if `account` has been granted `role`.\"},\"markToClaimPolicy(uint256)\":{\"details\":\"update policy status to not exist, can only be called by admin role\",\"params\":{\"_policyId\":\"policy id to update status*\"}},\"policySale(uint256)\":{\"details\":\"update policy coverage if user buy policy from SalesPolicy, only sales policy can call this function\",\"params\":{\"_coverageAmount\":\"coverage amount*\"}},\"removePolicy()\":{\"details\":\"remove sales policy from capital agent, can only be call by admin role*\"},\"removePool(address)\":{\"details\":\"remove pool from capitalAgent, can only be call by admin role\",\"params\":{\"_ssip\":\"address of pool to remove*\"}},\"removePoolWhiteList(address)\":{\"details\":\"remove whitelisted pool, can only be call by admin role\",\"params\":{\"_pool\":\"address of pool to remove from whitelist*\"}},\"renounceRole(bytes32,address)\":{\"details\":\"Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event.\"},\"revokeRole(bytes32,address)\":{\"details\":\"Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event.\"},\"setExchangeAgent(address)\":{\"details\":\"set new exchange agent address, can only be called by admin role\",\"params\":{\"_exchangeAgent\":\"new exchange agent address*\"}},\"setMCR(uint256)\":{\"details\":\"set new MCR, can only be called by operator\",\"params\":{\"_MCR\":\"new value to update*\"}},\"setMLR(uint256)\":{\"details\":\"set new MLR, can only be called by operator\",\"params\":{\"_MLR\":\"new value to update*\"}},\"setOperator(address)\":{\"details\":\"set operator, can only be call by admin role\",\"params\":{\"_operator\":\"new operator address*\"}},\"setPolicy(address)\":{\"details\":\"set sales policy, can only be call by SalesPolicyFactory\",\"params\":{\"_policy\":\"address of new SalesPolicy*\"}},\"setPolicyByAdmin(address)\":{\"details\":\"set sales policy, can only be call by admin role\",\"params\":{\"_policy\":\"address of new SalesPolicy*\"}},\"setSCR(uint256,address)\":{\"details\":\"set new SCR of pool, can only be called by operator\",\"params\":{\"_SCR\":\"new value to update\",\"_pool\":\"address of pool*\"}},\"setSalesPolicyFactory(address)\":{\"details\":\"set sales policy factory, can only be call by admin role\",\"params\":{\"_factory\":\"new sales policy factory address*\"}},\"setUSDCToken(address)\":{\"details\":\"set usdc token, can only be call by admin role\",\"params\":{\"_usdcToken\":\"new usdc token address*\"}},\"supportsInterface(bytes4)\":{\"details\":\"See {IERC165-supportsInterface}.\"},\"totalCapitalStaked()\":{\"details\":\"return total capital in usdc staked in capital agent by pools*\"},\"updatePolicyStatus(uint256)\":{\"details\":\"update policy status, if expired update policy coverage and notify to sales policy\",\"params\":{\"_policyId\":\"policy id to update status*\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/CapitalAgent.sol\":\"CapitalAgent\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (access/AccessControl.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {IAccessControl} from \\\"@openzeppelin/contracts/access/IAccessControl.sol\\\";\\nimport {ContextUpgradeable} from \\\"../utils/ContextUpgradeable.sol\\\";\\nimport {ERC165Upgradeable} from \\\"../utils/introspection/ERC165Upgradeable.sol\\\";\\nimport {Initializable} from \\\"../proxy/utils/Initializable.sol\\\";\\n\\n/**\\n * @dev Contract module that allows children to implement role-based access\\n * control mechanisms. This is a lightweight version that doesn't allow enumerating role\\n * members except through off-chain means by accessing the contract event logs. Some\\n * applications may benefit from on-chain enumerability, for those cases see\\n * {AccessControlEnumerable}.\\n *\\n * Roles are referred to by their `bytes32` identifier. These should be exposed\\n * in the external API and be unique. The best way to achieve this is by\\n * using `public constant` hash digests:\\n *\\n * ```solidity\\n * bytes32 public constant MY_ROLE = keccak256(\\\"MY_ROLE\\\");\\n * ```\\n *\\n * Roles can be used to represent a set of permissions. To restrict access to a\\n * function call, use {hasRole}:\\n *\\n * ```solidity\\n * function foo() public {\\n *     require(hasRole(MY_ROLE, msg.sender));\\n *     ...\\n * }\\n * ```\\n *\\n * Roles can be granted and revoked dynamically via the {grantRole} and\\n * {revokeRole} functions. Each role has an associated admin role, and only\\n * accounts that have a role's admin role can call {grantRole} and {revokeRole}.\\n *\\n * By default, the admin role for all roles is `DEFAULT_ADMIN_ROLE`, which means\\n * that only accounts with this role will be able to grant or revoke other\\n * roles. More complex role relationships can be created by using\\n * {_setRoleAdmin}.\\n *\\n * WARNING: The `DEFAULT_ADMIN_ROLE` is also its own admin: it has permission to\\n * grant and revoke this role. Extra precautions should be taken to secure\\n * accounts that have been granted it. We recommend using {AccessControlDefaultAdminRules}\\n * to enforce additional security measures for this role.\\n */\\nabstract contract AccessControlUpgradeable is Initializable, ContextUpgradeable, IAccessControl, ERC165Upgradeable {\\n    struct RoleData {\\n        mapping(address account => bool) hasRole;\\n        bytes32 adminRole;\\n    }\\n\\n    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;\\n\\n\\n    /// @custom:storage-location erc7201:openzeppelin.storage.AccessControl\\n    struct AccessControlStorage {\\n        mapping(bytes32 role => RoleData) _roles;\\n    }\\n\\n    // keccak256(abi.encode(uint256(keccak256(\\\"openzeppelin.storage.AccessControl\\\")) - 1)) & ~bytes32(uint256(0xff))\\n    bytes32 private constant AccessControlStorageLocation = 0x02dd7bc7dec4dceedda775e58dd541e08a116c6c53815c0bd028192f7b626800;\\n\\n    function _getAccessControlStorage() private pure returns (AccessControlStorage storage $) {\\n        assembly {\\n            $.slot := AccessControlStorageLocation\\n        }\\n    }\\n\\n    /**\\n     * @dev Modifier that checks that an account has a specific role. Reverts\\n     * with an {AccessControlUnauthorizedAccount} error including the required role.\\n     */\\n    modifier onlyRole(bytes32 role) {\\n        _checkRole(role);\\n        _;\\n    }\\n\\n    function __AccessControl_init() internal onlyInitializing {\\n    }\\n\\n    function __AccessControl_init_unchained() internal onlyInitializing {\\n    }\\n    /**\\n     * @dev See {IERC165-supportsInterface}.\\n     */\\n    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {\\n        return interfaceId == type(IAccessControl).interfaceId || super.supportsInterface(interfaceId);\\n    }\\n\\n    /**\\n     * @dev Returns `true` if `account` has been granted `role`.\\n     */\\n    function hasRole(bytes32 role, address account) public view virtual returns (bool) {\\n        AccessControlStorage storage $ = _getAccessControlStorage();\\n        return $._roles[role].hasRole[account];\\n    }\\n\\n    /**\\n     * @dev Reverts with an {AccessControlUnauthorizedAccount} error if `_msgSender()`\\n     * is missing `role`. Overriding this function changes the behavior of the {onlyRole} modifier.\\n     */\\n    function _checkRole(bytes32 role) internal view virtual {\\n        _checkRole(role, _msgSender());\\n    }\\n\\n    /**\\n     * @dev Reverts with an {AccessControlUnauthorizedAccount} error if `account`\\n     * is missing `role`.\\n     */\\n    function _checkRole(bytes32 role, address account) internal view virtual {\\n        if (!hasRole(role, account)) {\\n            revert AccessControlUnauthorizedAccount(account, role);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the admin role that controls `role`. See {grantRole} and\\n     * {revokeRole}.\\n     *\\n     * To change a role's admin, use {_setRoleAdmin}.\\n     */\\n    function getRoleAdmin(bytes32 role) public view virtual returns (bytes32) {\\n        AccessControlStorage storage $ = _getAccessControlStorage();\\n        return $._roles[role].adminRole;\\n    }\\n\\n    /**\\n     * @dev Grants `role` to `account`.\\n     *\\n     * If `account` had not been already granted `role`, emits a {RoleGranted}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     *\\n     * May emit a {RoleGranted} event.\\n     */\\n    function grantRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {\\n        _grantRole(role, account);\\n    }\\n\\n    /**\\n     * @dev Revokes `role` from `account`.\\n     *\\n     * If `account` had been granted `role`, emits a {RoleRevoked} event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function revokeRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {\\n        _revokeRole(role, account);\\n    }\\n\\n    /**\\n     * @dev Revokes `role` from the calling account.\\n     *\\n     * Roles are often managed via {grantRole} and {revokeRole}: this function's\\n     * purpose is to provide a mechanism for accounts to lose their privileges\\n     * if they are compromised (such as when a trusted device is misplaced).\\n     *\\n     * If the calling account had been revoked `role`, emits a {RoleRevoked}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must be `callerConfirmation`.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function renounceRole(bytes32 role, address callerConfirmation) public virtual {\\n        if (callerConfirmation != _msgSender()) {\\n            revert AccessControlBadConfirmation();\\n        }\\n\\n        _revokeRole(role, callerConfirmation);\\n    }\\n\\n    /**\\n     * @dev Sets `adminRole` as ``role``'s admin role.\\n     *\\n     * Emits a {RoleAdminChanged} event.\\n     */\\n    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {\\n        AccessControlStorage storage $ = _getAccessControlStorage();\\n        bytes32 previousAdminRole = getRoleAdmin(role);\\n        $._roles[role].adminRole = adminRole;\\n        emit RoleAdminChanged(role, previousAdminRole, adminRole);\\n    }\\n\\n    /**\\n     * @dev Attempts to grant `role` to `account` and returns a boolean indicating if `role` was granted.\\n     *\\n     * Internal function without access restriction.\\n     *\\n     * May emit a {RoleGranted} event.\\n     */\\n    function _grantRole(bytes32 role, address account) internal virtual returns (bool) {\\n        AccessControlStorage storage $ = _getAccessControlStorage();\\n        if (!hasRole(role, account)) {\\n            $._roles[role].hasRole[account] = true;\\n            emit RoleGranted(role, account, _msgSender());\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n\\n    /**\\n     * @dev Attempts to revoke `role` to `account` and returns a boolean indicating if `role` was revoked.\\n     *\\n     * Internal function without access restriction.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function _revokeRole(bytes32 role, address account) internal virtual returns (bool) {\\n        AccessControlStorage storage $ = _getAccessControlStorage();\\n        if (hasRole(role, account)) {\\n            $._roles[role].hasRole[account] = false;\\n            emit RoleRevoked(role, account, _msgSender());\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x6662ec4e5cefca03eeadd073e9469df8d2944bb2ee8ec8f7622c2c46aab5f225\",\"license\":\"MIT\"},\"@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (proxy/utils/Initializable.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev This is a base contract to aid in writing upgradeable contracts, or any kind of contract that will be deployed\\n * behind a proxy. Since proxied contracts do not make use of a constructor, it's common to move constructor logic to an\\n * external initializer function, usually called `initialize`. It then becomes necessary to protect this initializer\\n * function so it can only be called once. The {initializer} modifier provided by this contract will have this effect.\\n *\\n * The initialization functions use a version number. Once a version number is used, it is consumed and cannot be\\n * reused. This mechanism prevents re-execution of each \\\"step\\\" but allows the creation of new initialization steps in\\n * case an upgrade adds a module that needs to be initialized.\\n *\\n * For example:\\n *\\n * [.hljs-theme-light.nopadding]\\n * ```solidity\\n * contract MyToken is ERC20Upgradeable {\\n *     function initialize() initializer public {\\n *         __ERC20_init(\\\"MyToken\\\", \\\"MTK\\\");\\n *     }\\n * }\\n *\\n * contract MyTokenV2 is MyToken, ERC20PermitUpgradeable {\\n *     function initializeV2() reinitializer(2) public {\\n *         __ERC20Permit_init(\\\"MyToken\\\");\\n *     }\\n * }\\n * ```\\n *\\n * TIP: To avoid leaving the proxy in an uninitialized state, the initializer function should be called as early as\\n * possible by providing the encoded function call as the `_data` argument to {ERC1967Proxy-constructor}.\\n *\\n * CAUTION: When used with inheritance, manual care must be taken to not invoke a parent initializer twice, or to ensure\\n * that all initializers are idempotent. This is not verified automatically as constructors are by Solidity.\\n *\\n * [CAUTION]\\n * ====\\n * Avoid leaving a contract uninitialized.\\n *\\n * An uninitialized contract can be taken over by an attacker. This applies to both a proxy and its implementation\\n * contract, which may impact the proxy. To prevent the implementation contract from being used, you should invoke\\n * the {_disableInitializers} function in the constructor to automatically lock it when it is deployed:\\n *\\n * [.hljs-theme-light.nopadding]\\n * ```\\n * /// @custom:oz-upgrades-unsafe-allow constructor\\n * constructor() {\\n *     _disableInitializers();\\n * }\\n * ```\\n * ====\\n */\\nabstract contract Initializable {\\n    /**\\n     * @dev Storage of the initializable contract.\\n     *\\n     * It's implemented on a custom ERC-7201 namespace to reduce the risk of storage collisions\\n     * when using with upgradeable contracts.\\n     *\\n     * @custom:storage-location erc7201:openzeppelin.storage.Initializable\\n     */\\n    struct InitializableStorage {\\n        /**\\n         * @dev Indicates that the contract has been initialized.\\n         */\\n        uint64 _initialized;\\n        /**\\n         * @dev Indicates that the contract is in the process of being initialized.\\n         */\\n        bool _initializing;\\n    }\\n\\n    // keccak256(abi.encode(uint256(keccak256(\\\"openzeppelin.storage.Initializable\\\")) - 1)) & ~bytes32(uint256(0xff))\\n    bytes32 private constant INITIALIZABLE_STORAGE = 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00;\\n\\n    /**\\n     * @dev The contract is already initialized.\\n     */\\n    error InvalidInitialization();\\n\\n    /**\\n     * @dev The contract is not initializing.\\n     */\\n    error NotInitializing();\\n\\n    /**\\n     * @dev Triggered when the contract has been initialized or reinitialized.\\n     */\\n    event Initialized(uint64 version);\\n\\n    /**\\n     * @dev A modifier that defines a protected initializer function that can be invoked at most once. In its scope,\\n     * `onlyInitializing` functions can be used to initialize parent contracts.\\n     *\\n     * Similar to `reinitializer(1)`, except that in the context of a constructor an `initializer` may be invoked any\\n     * number of times. This behavior in the constructor can be useful during testing and is not expected to be used in\\n     * production.\\n     *\\n     * Emits an {Initialized} event.\\n     */\\n    modifier initializer() {\\n        // solhint-disable-next-line var-name-mixedcase\\n        InitializableStorage storage $ = _getInitializableStorage();\\n\\n        // Cache values to avoid duplicated sloads\\n        bool isTopLevelCall = !$._initializing;\\n        uint64 initialized = $._initialized;\\n\\n        // Allowed calls:\\n        // - initialSetup: the contract is not in the initializing state and no previous version was\\n        //                 initialized\\n        // - construction: the contract is initialized at version 1 (no reininitialization) and the\\n        //                 current contract is just being deployed\\n        bool initialSetup = initialized == 0 && isTopLevelCall;\\n        bool construction = initialized == 1 && address(this).code.length == 0;\\n\\n        if (!initialSetup && !construction) {\\n            revert InvalidInitialization();\\n        }\\n        $._initialized = 1;\\n        if (isTopLevelCall) {\\n            $._initializing = true;\\n        }\\n        _;\\n        if (isTopLevelCall) {\\n            $._initializing = false;\\n            emit Initialized(1);\\n        }\\n    }\\n\\n    /**\\n     * @dev A modifier that defines a protected reinitializer function that can be invoked at most once, and only if the\\n     * contract hasn't been initialized to a greater version before. In its scope, `onlyInitializing` functions can be\\n     * used to initialize parent contracts.\\n     *\\n     * A reinitializer may be used after the original initialization step. This is essential to configure modules that\\n     * are added through upgrades and that require initialization.\\n     *\\n     * When `version` is 1, this modifier is similar to `initializer`, except that functions marked with `reinitializer`\\n     * cannot be nested. If one is invoked in the context of another, execution will revert.\\n     *\\n     * Note that versions can jump in increments greater than 1; this implies that if multiple reinitializers coexist in\\n     * a contract, executing them in the right order is up to the developer or operator.\\n     *\\n     * WARNING: Setting the version to 2**64 - 1 will prevent any future reinitialization.\\n     *\\n     * Emits an {Initialized} event.\\n     */\\n    modifier reinitializer(uint64 version) {\\n        // solhint-disable-next-line var-name-mixedcase\\n        InitializableStorage storage $ = _getInitializableStorage();\\n\\n        if ($._initializing || $._initialized >= version) {\\n            revert InvalidInitialization();\\n        }\\n        $._initialized = version;\\n        $._initializing = true;\\n        _;\\n        $._initializing = false;\\n        emit Initialized(version);\\n    }\\n\\n    /**\\n     * @dev Modifier to protect an initialization function so that it can only be invoked by functions with the\\n     * {initializer} and {reinitializer} modifiers, directly or indirectly.\\n     */\\n    modifier onlyInitializing() {\\n        _checkInitializing();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Reverts if the contract is not in an initializing state. See {onlyInitializing}.\\n     */\\n    function _checkInitializing() internal view virtual {\\n        if (!_isInitializing()) {\\n            revert NotInitializing();\\n        }\\n    }\\n\\n    /**\\n     * @dev Locks the contract, preventing any future reinitialization. This cannot be part of an initializer call.\\n     * Calling this in the constructor of a contract will prevent that contract from being initialized or reinitialized\\n     * to any version. It is recommended to use this to lock implementation contracts that are designed to be called\\n     * through proxies.\\n     *\\n     * Emits an {Initialized} event the first time it is successfully executed.\\n     */\\n    function _disableInitializers() internal virtual {\\n        // solhint-disable-next-line var-name-mixedcase\\n        InitializableStorage storage $ = _getInitializableStorage();\\n\\n        if ($._initializing) {\\n            revert InvalidInitialization();\\n        }\\n        if ($._initialized != type(uint64).max) {\\n            $._initialized = type(uint64).max;\\n            emit Initialized(type(uint64).max);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the highest version that has been initialized. See {reinitializer}.\\n     */\\n    function _getInitializedVersion() internal view returns (uint64) {\\n        return _getInitializableStorage()._initialized;\\n    }\\n\\n    /**\\n     * @dev Returns `true` if the contract is currently initializing. See {onlyInitializing}.\\n     */\\n    function _isInitializing() internal view returns (bool) {\\n        return _getInitializableStorage()._initializing;\\n    }\\n\\n    /**\\n     * @dev Returns a pointer to the storage namespace.\\n     */\\n    // solhint-disable-next-line var-name-mixedcase\\n    function _getInitializableStorage() private pure returns (InitializableStorage storage $) {\\n        assembly {\\n            $.slot := INITIALIZABLE_STORAGE\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x631188737069917d2f909d29ce62c4d48611d326686ba6683e26b72a23bfac0b\",\"license\":\"MIT\"},\"@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\\n\\npragma solidity ^0.8.20;\\nimport {Initializable} from \\\"../proxy/utils/Initializable.sol\\\";\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract ContextUpgradeable is Initializable {\\n    function __Context_init() internal onlyInitializing {\\n    }\\n\\n    function __Context_init_unchained() internal onlyInitializing {\\n    }\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n}\\n\",\"keccak256\":\"0xdbef5f0c787055227243a7318ef74c8a5a1108ca3a07f2b3a00ef67769e1e397\",\"license\":\"MIT\"},\"@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (utils/ReentrancyGuard.sol)\\n\\npragma solidity ^0.8.20;\\nimport {Initializable} from \\\"../proxy/utils/Initializable.sol\\\";\\n\\n/**\\n * @dev Contract module that helps prevent reentrant calls to a function.\\n *\\n * Inheriting from `ReentrancyGuard` will make the {nonReentrant} modifier\\n * available, which can be applied to functions to make sure there are no nested\\n * (reentrant) calls to them.\\n *\\n * Note that because there is a single `nonReentrant` guard, functions marked as\\n * `nonReentrant` may not call one another. This can be worked around by making\\n * those functions `private`, and then adding `external` `nonReentrant` entry\\n * points to them.\\n *\\n * TIP: If you would like to learn more about reentrancy and alternative ways\\n * to protect against it, check out our blog post\\n * https://blog.openzeppelin.com/reentrancy-after-istanbul/[Reentrancy After Istanbul].\\n */\\nabstract contract ReentrancyGuardUpgradeable is Initializable {\\n    // Booleans are more expensive than uint256 or any type that takes up a full\\n    // word because each write operation emits an extra SLOAD to first read the\\n    // slot's contents, replace the bits taken up by the boolean, and then write\\n    // back. This is the compiler's defense against contract upgrades and\\n    // pointer aliasing, and it cannot be disabled.\\n\\n    // The values being non-zero value makes deployment a bit more expensive,\\n    // but in exchange the refund on every call to nonReentrant will be lower in\\n    // amount. Since refunds are capped to a percentage of the total\\n    // transaction's gas, it is best to keep them low in cases like this one, to\\n    // increase the likelihood of the full refund coming into effect.\\n    uint256 private constant NOT_ENTERED = 1;\\n    uint256 private constant ENTERED = 2;\\n\\n    /// @custom:storage-location erc7201:openzeppelin.storage.ReentrancyGuard\\n    struct ReentrancyGuardStorage {\\n        uint256 _status;\\n    }\\n\\n    // keccak256(abi.encode(uint256(keccak256(\\\"openzeppelin.storage.ReentrancyGuard\\\")) - 1)) & ~bytes32(uint256(0xff))\\n    bytes32 private constant ReentrancyGuardStorageLocation = 0x9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f00;\\n\\n    function _getReentrancyGuardStorage() private pure returns (ReentrancyGuardStorage storage $) {\\n        assembly {\\n            $.slot := ReentrancyGuardStorageLocation\\n        }\\n    }\\n\\n    /**\\n     * @dev Unauthorized reentrant call.\\n     */\\n    error ReentrancyGuardReentrantCall();\\n\\n    function __ReentrancyGuard_init() internal onlyInitializing {\\n        __ReentrancyGuard_init_unchained();\\n    }\\n\\n    function __ReentrancyGuard_init_unchained() internal onlyInitializing {\\n        ReentrancyGuardStorage storage $ = _getReentrancyGuardStorage();\\n        $._status = NOT_ENTERED;\\n    }\\n\\n    /**\\n     * @dev Prevents a contract from calling itself, directly or indirectly.\\n     * Calling a `nonReentrant` function from another `nonReentrant`\\n     * function is not supported. It is possible to prevent this from happening\\n     * by making the `nonReentrant` function external, and making it call a\\n     * `private` function that does the actual work.\\n     */\\n    modifier nonReentrant() {\\n        _nonReentrantBefore();\\n        _;\\n        _nonReentrantAfter();\\n    }\\n\\n    function _nonReentrantBefore() private {\\n        ReentrancyGuardStorage storage $ = _getReentrancyGuardStorage();\\n        // On the first call to nonReentrant, _status will be NOT_ENTERED\\n        if ($._status == ENTERED) {\\n            revert ReentrancyGuardReentrantCall();\\n        }\\n\\n        // Any calls to nonReentrant after this point will fail\\n        $._status = ENTERED;\\n    }\\n\\n    function _nonReentrantAfter() private {\\n        ReentrancyGuardStorage storage $ = _getReentrancyGuardStorage();\\n        // By storing the original value once again, a refund is triggered (see\\n        // https://eips.ethereum.org/EIPS/eip-2200)\\n        $._status = NOT_ENTERED;\\n    }\\n\\n    /**\\n     * @dev Returns true if the reentrancy guard is currently set to \\\"entered\\\", which indicates there is a\\n     * `nonReentrant` function in the call stack.\\n     */\\n    function _reentrancyGuardEntered() internal view returns (bool) {\\n        ReentrancyGuardStorage storage $ = _getReentrancyGuardStorage();\\n        return $._status == ENTERED;\\n    }\\n}\\n\",\"keccak256\":\"0xb44e086e941292cdc7f440de51478493894ef0b1aeccb0c4047445919f667f74\",\"license\":\"MIT\"},\"@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (utils/introspection/ERC165.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {IERC165} from \\\"@openzeppelin/contracts/utils/introspection/IERC165.sol\\\";\\nimport {Initializable} from \\\"../../proxy/utils/Initializable.sol\\\";\\n\\n/**\\n * @dev Implementation of the {IERC165} interface.\\n *\\n * Contracts that want to implement ERC165 should inherit from this contract and override {supportsInterface} to check\\n * for the additional interface id that will be supported. For example:\\n *\\n * ```solidity\\n * function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {\\n *     return interfaceId == type(MyInterface).interfaceId || super.supportsInterface(interfaceId);\\n * }\\n * ```\\n */\\nabstract contract ERC165Upgradeable is Initializable, IERC165 {\\n    function __ERC165_init() internal onlyInitializing {\\n    }\\n\\n    function __ERC165_init_unchained() internal onlyInitializing {\\n    }\\n    /**\\n     * @dev See {IERC165-supportsInterface}.\\n     */\\n    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {\\n        return interfaceId == type(IERC165).interfaceId;\\n    }\\n}\\n\",\"keccak256\":\"0xdaba3f7c42c55b2896353f32bd27d4d5f8bae741b3b05d4c53f67abc4dc47ce8\",\"license\":\"MIT\"},\"@openzeppelin/contracts/access/IAccessControl.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (access/IAccessControl.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev External interface of AccessControl declared to support ERC165 detection.\\n */\\ninterface IAccessControl {\\n    /**\\n     * @dev The `account` is missing a role.\\n     */\\n    error AccessControlUnauthorizedAccount(address account, bytes32 neededRole);\\n\\n    /**\\n     * @dev The caller of a function is not the expected one.\\n     *\\n     * NOTE: Don't confuse with {AccessControlUnauthorizedAccount}.\\n     */\\n    error AccessControlBadConfirmation();\\n\\n    /**\\n     * @dev Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole`\\n     *\\n     * `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite\\n     * {RoleAdminChanged} not being emitted signaling this.\\n     */\\n    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);\\n\\n    /**\\n     * @dev Emitted when `account` is granted `role`.\\n     *\\n     * `sender` is the account that originated the contract call, an admin role\\n     * bearer except when using {AccessControl-_setupRole}.\\n     */\\n    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);\\n\\n    /**\\n     * @dev Emitted when `account` is revoked `role`.\\n     *\\n     * `sender` is the account that originated the contract call:\\n     *   - if using `revokeRole`, it is the admin role bearer\\n     *   - if using `renounceRole`, it is the role bearer (i.e. `account`)\\n     */\\n    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);\\n\\n    /**\\n     * @dev Returns `true` if `account` has been granted `role`.\\n     */\\n    function hasRole(bytes32 role, address account) external view returns (bool);\\n\\n    /**\\n     * @dev Returns the admin role that controls `role`. See {grantRole} and\\n     * {revokeRole}.\\n     *\\n     * To change a role's admin, use {AccessControl-_setRoleAdmin}.\\n     */\\n    function getRoleAdmin(bytes32 role) external view returns (bytes32);\\n\\n    /**\\n     * @dev Grants `role` to `account`.\\n     *\\n     * If `account` had not been already granted `role`, emits a {RoleGranted}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     */\\n    function grantRole(bytes32 role, address account) external;\\n\\n    /**\\n     * @dev Revokes `role` from `account`.\\n     *\\n     * If `account` had been granted `role`, emits a {RoleRevoked} event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     */\\n    function revokeRole(bytes32 role, address account) external;\\n\\n    /**\\n     * @dev Revokes `role` from the calling account.\\n     *\\n     * Roles are often managed via {grantRole} and {revokeRole}: this function's\\n     * purpose is to provide a mechanism for accounts to lose their privileges\\n     * if they are compromised (such as when a trusted device is misplaced).\\n     *\\n     * If the calling account had been granted `role`, emits a {RoleRevoked}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must be `callerConfirmation`.\\n     */\\n    function renounceRole(bytes32 role, address callerConfirmation) external;\\n}\\n\",\"keccak256\":\"0xb6b36edd6a2999fd243ff226d6cbf84bd71af2432bbd0dfe19392996a1d9cb41\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/introspection/IERC165.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (utils/introspection/IERC165.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Interface of the ERC165 standard, as defined in the\\n * https://eips.ethereum.org/EIPS/eip-165[EIP].\\n *\\n * Implementers can declare support of contract interfaces, which can then be\\n * queried by others ({ERC165Checker}).\\n *\\n * For an implementation, see {ERC165}.\\n */\\ninterface IERC165 {\\n    /**\\n     * @dev Returns true if this contract implements the interface defined by\\n     * `interfaceId`. See the corresponding\\n     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]\\n     * to learn more about how these ids are created.\\n     *\\n     * This function call must use less than 30 000 gas.\\n     */\\n    function supportsInterface(bytes4 interfaceId) external view returns (bool);\\n}\\n\",\"keccak256\":\"0x4296879f55019b23e135000eb36896057e7101fb7fb859c5ef690cf14643757b\",\"license\":\"MIT\"},\"contracts/CapitalAgent.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity =0.8.23;\\n\\nimport \\\"@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol\\\";\\nimport \\\"@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol\\\";\\nimport \\\"./interfaces/ISalesPolicy.sol\\\";\\nimport \\\"./interfaces/IExchangeAgent.sol\\\";\\nimport \\\"./interfaces/ICapitalAgent.sol\\\";\\n\\n/**\\n * @dev update and manage all pools capital and policy utlized amount,\\n * whenever user stake and withdraw from the pool and buy policy from salesPolicy\\n * notifies to capital agent to update pool capital and policy coverage\\n **/\\ncontract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {\\n    bytes32 public constant ADMIN_ROLE = keccak256(\\\"ADMIN_ROLE\\\");\\n\\n    address public exchangeAgent;\\n    address public salesPolicyFactory;\\n    address public usdcToken;\\n    address public operator;\\n\\n    struct PoolInfo {\\n        uint256 totalCapital;\\n        uint256 SCR;\\n        address currency;\\n        bool exist;\\n    }\\n\\n    struct PolicyInfo {\\n        address policy;\\n        uint256 utilizedAmount;\\n        bool exist;\\n    }\\n\\n    mapping(address => PoolInfo) public poolInfo;\\n\\n    address[] private currencyList;\\n    mapping(address => bool) public existedCurrencies;\\n    mapping(address => uint256) public totalCapitalStakedByCurrency;\\n\\n    PolicyInfo public policyInfo;\\n\\n    uint256 public totalUtilizedAmount;\\n\\n    uint256 public MCR;\\n    uint256 public MLR;\\n\\n    uint256 public constant CALC_PRECISION = 1e18;\\n\\n    mapping(address => bool) public poolWhiteList;\\n\\n    mapping(address => mapping(uint256 => uint256)) public claimedAmount;\\n\\n    event LogAddPool(address indexed _ssip, address _currency, uint256 _scr);\\n    event LogRemovePool(address indexed _ssip);\\n    event LogSetPolicy(address indexed _salesPolicy);\\n    event LogRemovePolicy(address indexed _salesPolicy);\\n    event LogUpdatePoolCapital(address indexed _ssip, uint256 _poolCapital, uint256 _totalCapital);\\n    event LogUpdatePolicyCoverage(\\n        address indexed _policy,\\n        uint256 _amount,\\n        uint256 _policyUtilized,\\n        uint256 _totalUtilizedAmount\\n    );\\n    event LogUpdatePolicyExpired(address indexed _policy, uint256 _policyTokenId);\\n    event LogMarkToClaimPolicy(address indexed _policy, uint256 _policyTokenId);\\n    event LogSetMCR(address indexed _owner, address indexed _capitalAgent, uint256 _MCR);\\n    event LogSetMLR(address indexed _owner, address indexed _capitalAgent, uint256 _MLR);\\n    event LogSetSCR(address indexed _owner, address indexed _capitalAgent, address indexed _pool, uint256 _SCR);\\n    event LogSetExchangeAgent(address indexed _owner, address indexed _capitalAgent, address _exchangeAgent);\\n    event LogSetSalesPolicyFactory(address indexed _factory);\\n    event LogAddPoolWhiteList(address indexed _pool);\\n    event LogRemovePoolWhiteList(address indexed _pool);\\n    event LogSetOperator(address indexed _operator);\\n    event LogSetUSDC(address indexed _usdcToken);\\n\\n    function initialize(\\n        address _exchangeAgent,\\n        address _USDC_TOKEN,\\n        address _multiSigWallet,\\n        address _operator\\n    ) external initializer {\\n        require(_exchangeAgent != address(0), \\\"UnoRe: zero exchangeAgent address\\\");\\n        require(_USDC_TOKEN != address(0), \\\"UnoRe: zero USDC address\\\");\\n        require(_multiSigWallet != address(0), \\\"UnoRe: zero multisigwallet address\\\");\\n        exchangeAgent = _exchangeAgent;\\n        usdcToken = _USDC_TOKEN;\\n        operator = _operator;\\n        __ReentrancyGuard_init();\\n        __AccessControl_init();\\n        _grantRole(ADMIN_ROLE, _multiSigWallet);\\n        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);\\n    }\\n\\n    modifier onlyPoolWhiteList() {\\n        require(poolWhiteList[msg.sender], \\\"UnoRe: Capital Agent Forbidden\\\");\\n        _;\\n    }\\n\\n    modifier onlyOperator() {\\n        require(operator == msg.sender, \\\"UnoRe: Capital Agent Forbidden\\\");\\n        _;\\n    }\\n\\n    function getPolicyInfo() external view returns (address, uint256, bool) {\\n        PolicyInfo memory _policy = policyInfo;\\n        return (_policy.policy, _policy.utilizedAmount, _policy.exist);\\n    }\\n\\n    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool) {\\n        PoolInfo memory _poolInfo = poolInfo[_pool];\\n        return (_poolInfo.totalCapital, _poolInfo.SCR, _poolInfo.currency, _poolInfo.exist);\\n    }\\n\\n    /**\\n     * @dev set sales policy factory, can only be call by admin role\\n     * @param _factory new sales policy factory address\\n     **/\\n    function setSalesPolicyFactory(address _factory) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(_factory != address(0), \\\"UnoRe: zero factory address\\\");\\n        salesPolicyFactory = _factory;\\n        emit LogSetSalesPolicyFactory(_factory);\\n    }\\n\\n    /**\\n     * @dev set operator, can only be call by admin role\\n     * @param _operator new operator address\\n     **/\\n    function setOperator(address _operator) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(_operator != address(0), \\\"UnoRe: zero operator address\\\");\\n        operator = _operator;\\n        emit LogSetOperator(_operator);\\n    }\\n\\n    /**\\n     * @dev set usdc token, can only be call by admin role\\n     * @param _usdcToken new usdc token address\\n     **/\\n    function setUSDCToken(address _usdcToken) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(_usdcToken != address(0), \\\"UnoRe: zero usdc address\\\");\\n        usdcToken = _usdcToken;\\n        emit LogSetUSDC(_usdcToken);\\n    }\\n\\n    /**\\n     * @dev whitelist pool address, can only be call by admin role\\n     * @param _pool address of pool to whitelist\\n     **/\\n    function addPoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(_pool != address(0), \\\"UnoRe: zero pool address\\\");\\n        require(!poolWhiteList[_pool], \\\"UnoRe: white list already\\\");\\n        poolWhiteList[_pool] = true;\\n        emit LogAddPoolWhiteList(_pool);\\n    }\\n\\n    /**\\n     * @dev remove whitelisted pool, can only be call by admin role\\n     * @param _pool address of pool to remove from whitelist\\n     **/\\n    function removePoolWhiteList(address _pool) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(poolWhiteList[_pool], \\\"UnoRe: no white list\\\");\\n        poolWhiteList[_pool] = false;\\n        emit LogRemovePoolWhiteList(_pool);\\n    }\\n\\n    /**\\n     * @dev return total capital in usdc staked in capital agent by pools\\n     **/\\n    function totalCapitalStaked() public view returns (uint256) {\\n        return _getTotalCapitalStakedInUSDC();\\n    }\\n\\n    /**\\n     * @dev add pool into capitalAgent to stake capital, can only be call by whitelisted pools\\n     * @param _ssip address of pool to add\\n     * @param _currency pool lp currency address\\n     * @param _scr pool scr value(minimum capital should maintain in capital agent)\\n     **/\\n    function addPool(address _ssip, address _currency, uint256 _scr) external override onlyPoolWhiteList {\\n        require(_ssip != address(0), \\\"UnoRe: zero address\\\");\\n        require(!poolInfo[_ssip].exist, \\\"UnoRe: already exist pool\\\");\\n\\n        if (existedCurrencies[_currency] == false) {\\n            existedCurrencies[_currency] = true;\\n            currencyList.push(_currency);\\n        }\\n        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});\\n\\n        emit LogAddPool(_ssip, _currency, _scr);\\n    }\\n\\n    /**\\n     * @dev add pool into capitalAgent to stake capital, can only be call by admin role\\n     * @param _ssip address of pool to add\\n     * @param _currency pool lp currency address\\n     * @param _scr pool scr value(minimum capital should maintain in capital agent)\\n     **/\\n    function addPoolByAdmin(address _ssip, address _currency, uint256 _scr) external onlyRole(ADMIN_ROLE) {\\n        require(_ssip != address(0), \\\"UnoRe: zero address\\\");\\n        require(!poolInfo[_ssip].exist, \\\"UnoRe: already exist pool\\\");\\n\\n        if (existedCurrencies[_currency] == false) {\\n            existedCurrencies[_currency] = true;\\n            currencyList.push(_currency);\\n        }\\n        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});\\n\\n        emit LogAddPool(_ssip, _currency, _scr);\\n    }\\n\\n    /**\\n     * @dev remove pool from capitalAgent, can only be call by admin role\\n     * @param _ssip address of pool to remove\\n     **/\\n    function removePool(address _ssip) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(poolInfo[_ssip].exist, \\\"UnoRe: no exit pool\\\");\\n        if (poolInfo[_ssip].totalCapital > 0) {\\n            address currency = poolInfo[_ssip].currency;\\n            totalCapitalStakedByCurrency[currency] = totalCapitalStakedByCurrency[currency] - poolInfo[_ssip].totalCapital;\\n        }\\n        delete poolInfo[_ssip];\\n        emit LogRemovePool(_ssip);\\n    }\\n\\n    function setPoolCapital(address _ssip, uint256 _capital) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(poolInfo[_ssip].exist, \\\"UnoRe: no exit pool\\\");\\n        address currency = poolInfo[_ssip].currency;\\n        totalCapitalStakedByCurrency[currency] = _capital;\\n        poolInfo[_ssip].totalCapital = _capital;\\n    }\\n\\n    /**\\n     * @dev set sales policy, can only be call by SalesPolicyFactory\\n     * @param _policy address of new SalesPolicy\\n     **/\\n    function setPolicy(address _policy) external override nonReentrant {\\n        require(!policyInfo.exist, \\\"UnoRe: Policy exists\\\");\\n        require(salesPolicyFactory == msg.sender, \\\"UnoRe: only salesPolicyFactory can call\\\");\\n        policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});\\n\\n        emit LogSetPolicy(_policy);\\n    }\\n\\n    /**\\n     * @dev set sales policy, can only be call by admin role\\n     * @param _policy address of new SalesPolicy\\n     **/\\n    function setPolicyByAdmin(address _policy) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(_policy != address(0), \\\"UnoRe: zero address\\\");\\n        policyInfo = PolicyInfo({policy: _policy, utilizedAmount: 0, exist: true});\\n\\n        emit LogSetPolicy(_policy);\\n    }\\n\\n    /**\\n     * @dev remove sales policy from capital agent, can only be call by admin role\\n     **/\\n    function removePolicy() external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(policyInfo.exist, \\\"UnoRe: no exit pool\\\");\\n        totalUtilizedAmount = 0;\\n        address _policy = policyInfo.policy;\\n        policyInfo.policy = address(0);\\n        policyInfo.exist = false;\\n        policyInfo.utilizedAmount = 0;\\n        emit LogRemovePolicy(_policy);\\n    }\\n\\n    /**\\n     * @dev update pool(caller) capital from capital agent,\\n     * decrease capital of pool by _withdrawAmount, if user withdraw from pool\\n     * remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively\\n     * @param _withdrawAmount amount to withdraw\\n     **/\\n    function SSIPWithdraw(uint256 _withdrawAmount) external override nonReentrant {\\n        require(poolInfo[msg.sender].exist, \\\"UnoRe: no exist ssip\\\");\\n        require(_checkCapitalByMCRAndSCR(msg.sender, _withdrawAmount), \\\"UnoRe: minimum capital underflow\\\");\\n        _updatePoolCapital(msg.sender, _withdrawAmount, false);\\n    }\\n\\n    /**\\n     * @dev update pool(caller) capital from capital agent,\\n     * decrease capital of pool by _withdrawAmount, if user claim policy from pool\\n     * @param _withdrawAmount amount to withdraw\\n     **/\\n    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isNotMigrate) external override nonReentrant {\\n        require(poolInfo[msg.sender].exist, \\\"UnoRe: no exist ssip\\\");\\n        _updatePoolCapital(msg.sender, _withdrawAmount, false);\\n        if (_isNotMigrate) {\\n            _SSIPPolicyClaim(_withdrawAmount, _policyId);\\n        }\\n    }\\n\\n    function _SSIPPolicyClaim(uint256 _withdrawAmount, uint256 _policyId) internal {\\n        address _salesPolicyAddress = policyInfo.policy;\\n        (uint256 _coverageAmount, , , , ) = ISalesPolicy(_salesPolicyAddress).getPolicyData(_policyId);\\n        uint256 _claimed = claimedAmount[_salesPolicyAddress][_policyId];\\n        address _poolCurrency = poolInfo[msg.sender].currency;\\n        uint256 usdcTokenAmount = IExchangeAgent(exchangeAgent).getNeededTokenAmount(_poolCurrency, usdcToken, _withdrawAmount);\\n        require(_coverageAmount >= usdcTokenAmount + _claimed, \\\"UnoRe: coverage amount is less\\\");\\n        claimedAmount[_salesPolicyAddress][_policyId] += usdcTokenAmount;\\n        bool _isFinished = !(_coverageAmount > (usdcTokenAmount + _claimed));\\n        if (_isFinished) {\\n            // @Audit: DUST amount will prevent marking a policy complete\\n            _markToClaimPolicy(_policyId, _coverageAmount);\\n        }\\n    }\\n\\n    /**\\n     * @dev update pool(caller) capital from capital agent,\\n     * increase capital of pool by _stakingAmount, if user stake in pool\\n     * @param _stakingAmount amount to deposit\\n     **/\\n    function SSIPStaking(uint256 _stakingAmount) external override nonReentrant {\\n        require(poolInfo[msg.sender].exist, \\\"UnoRe: no exist ssip\\\");\\n        _updatePoolCapital(msg.sender, _stakingAmount, true);\\n    }\\n\\n    /**\\n     * @dev return if pool can withdraw this amount,\\n     * remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively\\n     * @param _pool address of pool\\n     * @param _withdrawAmount withdraw amount\\n     **/\\n    function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view override returns (bool) {\\n        return _checkCapitalByMCRAndSCR(_pool, _withdrawAmount);\\n    }\\n\\n    /**\\n     * @dev return if user can buy policy from this coverage amount,\\n     * total utlized amount plus coverage should be less than MLR of total capital staked\\n     * @param _coverageAmount coverage amount\\n     **/\\n    function checkCoverageByMLR(uint256 _coverageAmount) external view override returns (bool) {\\n        return _checkCoverageByMLR(_coverageAmount);\\n    }\\n\\n    /**\\n     * @dev update policy coverage if user buy policy from SalesPolicy, only sales policy can call this function\\n     * @param _coverageAmount coverage amount\\n     **/\\n    function policySale(uint256 _coverageAmount) external override nonReentrant {\\n        require(msg.sender == policyInfo.policy, \\\"UnoRe: only salesPolicy can call\\\");\\n        require(policyInfo.exist, \\\"UnoRe: no exist policy\\\");\\n        require(_checkCoverageByMLR(_coverageAmount), \\\"UnoRe: maximum leverage overflow\\\");\\n        _updatePolicyCoverage(_coverageAmount, true);\\n    }\\n\\n    /**\\n     * @dev update policy status, if expired update policy coverage and notify to sales policy\\n     * @param _policyId policy id to update status\\n     **/\\n    function updatePolicyStatus(uint256 _policyId) external override nonReentrant {\\n        require(policyInfo.policy != address(0), \\\"UnoRe: no exist salesPolicy\\\");\\n        (uint256 _coverageAmount, uint256 _coverageDuration, uint256 _coverStartAt, , ) = ISalesPolicy(policyInfo.policy)\\n            .getPolicyData(_policyId);\\n        bool isExpired = block.timestamp >= _coverageDuration + _coverStartAt;\\n        if (isExpired) {\\n            _updatePolicyCoverage(_coverageAmount, false);\\n            ISalesPolicy(policyInfo.policy).updatePolicyExpired(_policyId);\\n            emit LogUpdatePolicyExpired(policyInfo.policy, _policyId);\\n        }\\n    }\\n\\n    /**\\n     * @dev update policy status to not exist, can only be called by admin role\\n     * @param _policyId policy id to update status\\n     **/\\n    function markToClaimPolicy(uint256 _policyId) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        (uint256 _coverageAmount, , , , ) = ISalesPolicy(policyInfo.policy).getPolicyData(_policyId);\\n        _markToClaimPolicy(_policyId, _coverageAmount);\\n    }\\n\\n    function _markToClaimPolicy(uint256 _policyId, uint256 _coverageAmount) private {\\n        require(policyInfo.policy != address(0), \\\"UnoRe: no exist salesPolicy\\\");\\n        _updatePolicyCoverage(_coverageAmount, false);\\n        ISalesPolicy(policyInfo.policy).markToClaim(_policyId);\\n        emit LogMarkToClaimPolicy(policyInfo.policy, _policyId);\\n    }\\n\\n    function _updatePoolCapital(address _pool, uint256 _amount, bool isAdd) private {\\n        if (!isAdd) {\\n            require(poolInfo[_pool].totalCapital >= _amount, \\\"UnoRe: pool capital overflow\\\");\\n        }\\n        address currency = poolInfo[_pool].currency;\\n        poolInfo[_pool].totalCapital = isAdd ? poolInfo[_pool].totalCapital + _amount : poolInfo[_pool].totalCapital - _amount;\\n        totalCapitalStakedByCurrency[currency] = isAdd\\n            ? totalCapitalStakedByCurrency[currency] + _amount\\n            : totalCapitalStakedByCurrency[currency] - _amount;\\n        emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStakedByCurrency[currency]);\\n    }\\n\\n    function _updatePolicyCoverage(uint256 _amount, bool isAdd) private {\\n        if (!isAdd) {\\n            require(policyInfo.utilizedAmount >= _amount, \\\"UnoRe: policy coverage overflow\\\");\\n        }\\n        policyInfo.utilizedAmount = isAdd ? policyInfo.utilizedAmount + _amount : policyInfo.utilizedAmount - _amount;\\n        totalUtilizedAmount = isAdd ? totalUtilizedAmount + _amount : totalUtilizedAmount - _amount;\\n        emit LogUpdatePolicyCoverage(policyInfo.policy, _amount, policyInfo.utilizedAmount, totalUtilizedAmount);\\n    }\\n\\n    function _checkCapitalByMCRAndSCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {\\n        address currency = poolInfo[_pool].currency;\\n        uint256 totalCapitalStakedInUSDC;\\n        uint256 mcrInUSDC;\\n        uint256 scrInUSDC;\\n\\n        totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();\\n        mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency] - _withdrawAmount);\\n        scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);\\n\\n        bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDC * MCR) / CALC_PRECISION;\\n        bool isSCRPass = scrInUSDC >= poolInfo[_pool].SCR;\\n\\n        return isMCRPass && isSCRPass;\\n    }\\n\\n    function _convertTokenToUSDC(address _currency, uint256 _amount) private view returns (uint256) {\\n        uint256 tokenInUSDC;\\n        if (_currency == usdcToken) {\\n            tokenInUSDC = _amount;\\n        } else {\\n            tokenInUSDC = _currency != address(0)\\n                ? IExchangeAgent(exchangeAgent).getNeededTokenAmount(_currency, usdcToken, _amount)\\n                : IExchangeAgent(exchangeAgent).getTokenAmountForETH(usdcToken, _amount);\\n        }\\n\\n        return tokenInUSDC;\\n    }\\n\\n    function _getTotalCapitalStakedInUSDC() private view returns (uint256) {\\n        uint256 totalCapitalStakedInUSDC;\\n        address currency = usdcToken;\\n        totalCapitalStakedInUSDC =\\n            totalCapitalStakedInUSDC +\\n            _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);\\n\\n        return totalCapitalStakedInUSDC;\\n    }\\n\\n    function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {\\n        uint256 totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();\\n        return totalUtilizedAmount + _newCoverageAmount <= (totalCapitalStakedInUSDC * MLR) / CALC_PRECISION;\\n    }\\n\\n    /**\\n     * @dev set new MCR, can only be called by operator\\n     * @param _MCR new value to update\\n     **/\\n    function setMCR(uint256 _MCR) external onlyOperator nonReentrant {\\n        MCR = _MCR;\\n        emit LogSetMCR(msg.sender, address(this), _MCR);\\n    }\\n\\n    /**\\n     * @dev set new MLR, can only be called by operator\\n     * @param _MLR new value to update\\n     **/\\n    function setMLR(uint256 _MLR) external onlyOperator nonReentrant {\\n        MLR = _MLR;\\n        emit LogSetMLR(msg.sender, address(this), _MLR);\\n    }\\n\\n    /**\\n     * @dev set new SCR of pool, can only be called by operator\\n     * @param _SCR new value to update\\n     * @param _pool address of pool\\n     **/\\n    function setSCR(uint256 _SCR, address _pool) external onlyOperator nonReentrant {\\n        poolInfo[_pool].SCR = _SCR;\\n        emit LogSetSCR(msg.sender, address(this), _pool, _SCR);\\n    }\\n\\n    /**\\n     * @dev set new exchange agent address, can only be called by admin role\\n     * @param _exchangeAgent new exchange agent address\\n     **/\\n    function setExchangeAgent(address _exchangeAgent) external onlyRole(ADMIN_ROLE) nonReentrant {\\n        require(_exchangeAgent != address(0), \\\"UnoRe: zero address\\\");\\n        exchangeAgent = _exchangeAgent;\\n        emit LogSetExchangeAgent(msg.sender, address(this), _exchangeAgent);\\n    }\\n}\\n\",\"keccak256\":\"0xf28aee63c42f14f8b9c2cf00ab84f52a8f754fe775400a71b624079c06dcc1bd\",\"license\":\"MIT\"},\"contracts/interfaces/ICapitalAgent.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity =0.8.23;\\n\\ninterface ICapitalAgent {\\n    function addPool(address _ssip, address _currency, uint256 _scr) external;\\n\\n    function setPolicy(address _policy) external;\\n\\n    function SSIPWithdraw(uint256 _withdrawAmount) external;\\n\\n    function SSIPStaking(uint256 _stakingAmount) external;\\n\\n    function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isMigrate) external;\\n\\n    function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view returns (bool);\\n\\n    function checkCoverageByMLR(uint256 _coverageAmount) external view returns (bool);\\n\\n    function policySale(uint256 _coverageAmount) external;\\n\\n    function updatePolicyStatus(uint256 _policyId) external;\\n\\n    function getPolicyInfo() external returns(address, uint256, bool);\\n\\n    function claimedAmount(address _policy, uint256 _policyId) external returns(uint256);\\n\\n    function exchangeAgent() external view returns(address);\\n\\n    function getPoolInfo(address _pool) external view returns(uint256, uint256, address, bool);\\n}\\n\",\"keccak256\":\"0xec078d273b686a48f5ab4ec0cc0b44ba84830305d5a893078755a260ce1aa918\",\"license\":\"MIT\"},\"contracts/interfaces/IExchangeAgent.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity =0.8.23;\\n\\ninterface IExchangeAgent {\\n    function usdcToken() external view returns (address);\\n\\n    function getTokenAmountForUSDC(address _token, uint256 _usdtAmount) external view returns (uint256);\\n\\n    function getETHAmountForUSDC(uint256 _usdtAmount) external view returns (uint256);\\n\\n    function getETHAmountForToken(address _token, uint256 _tokenAmount) external view returns (uint256);\\n\\n    function getTokenAmountForETH(address _token, uint256 _ethAmount) external view returns (uint256);\\n\\n    function getNeededTokenAmount(address _token0, address _token1, uint256 _token0Amount) external view returns (uint256);\\n\\n    function convertForToken(address _token0, address _token1, uint256 _token0Amount) external returns (uint256);\\n\\n    function convertForETH(address _token, uint256 _convertAmount) external returns (uint256);\\n}\\n\",\"keccak256\":\"0xb3a0b6e72d0cac4ea4a6044538673f2cac3568a1bd9f2b3359979065b8486472\",\"license\":\"MIT\"},\"contracts/interfaces/ISalesPolicy.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity =0.8.23;\\n\\ninterface ISalesPolicy {\\n    function setPremiumPool(address _premiumPool) external;\\n\\n    function setExchangeAgent(address _exchangeAgent) external;\\n\\n    function setCapitalAgent(address _capitalAgent) external;\\n\\n    function setBuyPolicyMaxDeadline(uint256 _maxDeadline) external;\\n\\n    function approvePremium(address _premiumCurrency) external;\\n\\n    function setProtocolURI(string memory newURI) external;\\n\\n    function setSigner(address _signer) external;\\n\\n    function updatePolicyExpired(uint256 _policyId) external;\\n\\n    function markToClaim(uint256 _policyId) external;\\n\\n    function allPoliciesLength() external view returns (uint256);\\n\\n    function killPool() external;\\n\\n    function revivePool() external;\\n\\n    function getPolicyData(uint256 _policyId)\\n        external\\n        view\\n        returns (\\n            uint256,\\n            uint256,\\n            uint256,\\n            bool,\\n            bool\\n        );\\n}\\n\",\"keccak256\":\"0x2866e770aad9425cd7fffd3da31e1225b9c391df41aabff8e84583e6df58f598\",\"license\":\"GPL-3.0\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50612de0806100206000396000f3fe608060405234801561001057600080fd5b50600436106102d65760003560e01c80637d4163d311610182578063a88d2f7a116100e9578063d4688a45116100a2578063d9203b911161007c578063d9203b9114610789578063f045089f1461079c578063f8c8765e146107bf578063fb6cb847146107d257600080fd5b8063d4688a451461075a578063d547741f14610763578063d8c5c8631461077657600080fd5b8063a88d2f7a146106db578063b3ab15fb146106ee578063be22041b14610701578063c139b04f14610714578063c3ea3a2814610727578063c9245b961461073a57600080fd5b806392ff38ec1161013b57806392ff38ec14610643578063974e4d851461064b5780639a7b5f1114610669578063a0931af2146106ad578063a217fddf146106c0578063a65888fb146106c857600080fd5b80637d4163d3146105db5780637e29d6c2146105ee578063869bd44a146106015780638bb70831146106145780638be5a39f1461061d57806391d148541461063057600080fd5b8063385a128f1161024157806355b4b1a4116101fa57806365cb3a83116101d457806365cb3a83146105a2578063706c2d1b146105aa57806375b238fc146105bd578063794e5724146105d257600080fd5b806355b4b1a414610551578063570ca7351461057c5780635b44d5761461058f57600080fd5b8063385a128f146104975780633b7d0946146104aa5780633fecfbf2146104bd5780634341e0991461051c5780634a3a3d141461052f5780634dc70bac1461054257600080fd5b80631dfa426d116102935780631dfa426d14610407578063248a9ca31461041a57806325042fe91461043b5780632f2ff15d1461045e57806336568abe1461047157806336760a1c1461048457600080fd5b806301ffc9a7146102db57806306bfa938146103035780630d757531146103a15780630f5a9d01146103b657806311eac855146103c957806318a00d8e146103f4575b600080fd5b6102ee6102e9366004612a1f565b6107e5565b60405190151581526020015b60405180910390f35b610370610311366004612a65565b6001600160a01b03908116600090815260046020908152604091829020825160808101845281548082526001830154938201849052600290920154948516938101849052600160a01b90940460ff161515606090940184905293909290565b6040516102fa949392919093845260208401929092526001600160a01b031660408301521515606082015260800190565b6103b46103af366004612a80565b61081c565b005b6103b46103c4366004612a65565b6108bf565b6002546103dc906001600160a01b031681565b6040516001600160a01b0390911681526020016102fa565b6103b4610402366004612a65565b610984565b6103b4610415366004612a65565b610a27565b61042d610428366004612aac565b610ae8565b6040519081526020016102fa565b6102ee610449366004612a65565b600e6020526000908152604090205460ff1681565b6103b461046c366004612a80565b610b0a565b6103b461047f366004612a80565b610b2c565b6001546103dc906001600160a01b031681565b6103b46104a5366004612aac565b610b64565b6103b46104b8366004612a65565b610bde565b6104f5604080516060810182526008546001600160a01b031680825260095460208301819052600a5460ff1615159290930182905292565b604080516001600160a01b03909416845260208401929092521515908201526060016102fa565b6103b461052a366004612ac5565b610d16565b6103b461053d366004612a65565b610db8565b61042d670de0b6b3a764000081565b61042d61055f366004612ac5565b600f60209081526000928352604080842090915290825290205481565b6003546103dc906001600160a01b031681565b6103b461059d366004612aac565b610e85565b6103b4610f30565b6103b46105b8366004612aef565b610fd8565b61042d600080516020612d8b83398151915281565b61042d600c5481565b6103b46105e9366004612a65565b6111c1565b6103b46105fc366004612aef565b6112f8565b6103b461060f366004612aac565b6114f6565b61042d600d5481565b6103b461062b366004612aac565b61159d565b6102ee61063e366004612a80565b6115ea565b61042d611622565b600854600954600a546104f5926001600160a01b0316919060ff1683565b610370610677366004612a65565b6004602052600090815260409020805460018201546002909201549091906001600160a01b03811690600160a01b900460ff1684565b6103b46106bb366004612aac565b611631565b61042d600081565b6103b46106d6366004612a65565b61173e565b6103b46106e9366004612a65565b61186e565b6103b46106fc366004612a65565b611933565b6103b461070f366004612aac565b6119f8565b6102ee610722366004612ac5565b611ba2565b6102ee610735366004612aac565b611bb5565b61042d610748366004612a65565b60076020526000908152604090205481565b61042d600b5481565b6103b4610771366004612a80565b611bc0565b6103b4610784366004612aac565b611bdc565b6000546103dc906001600160a01b031681565b6102ee6107aa366004612a65565b60066020526000908152604090205460ff1681565b6103b46107cd366004612b2b565b611c47565b6103b46107e0366004612b8d565b611ee6565b60006001600160e01b03198216637965db0b60e01b148061081657506301ffc9a760e01b6001600160e01b03198316145b92915050565b6003546001600160a01b0316331461084f5760405162461bcd60e51b815260040161084690612bc6565b60405180910390fd5b610857611f4b565b6001600160a01b0381166000818152600460205260409081902060010184905551309033907fade0e16d2bd0d685eef1e5355dc835692faac192ef62225adb31cd0c0b99c8a8906108ab9087815260200190565b60405180910390a46108bb611f95565b5050565b600080516020612d8b8339815191526108d781611fbb565b6108df611f4b565b6001600160a01b0382166109355760405162461bcd60e51b815260206004820152601860248201527f556e6f52653a207a65726f2075736463206164647265737300000000000000006044820152606401610846565b600280546001600160a01b0319166001600160a01b0384169081179091556040517f103c5bd4d1fbed26f9d95c639ecfb64bbece2b8f7d599a45f9aaab41c3e9ded090600090a26108bb611f95565b600080516020612d8b83398151915261099c81611fbb565b6109a4611f4b565b6001600160a01b0382166109ca5760405162461bcd60e51b815260040161084690612bfd565b600080546001600160a01b0319166001600160a01b038416908117909155604051908152309033907f28e0ff29ad991f2655c48b0b095a69abbf13aec6c8bc181dd526dbb3f8c9d0b99060200160405180910390a36108bb611f95565b600080516020612d8b833981519152610a3f81611fbb565b610a47611f4b565b6001600160a01b038216610a6d5760405162461bcd60e51b815260040161084690612bfd565b604080516060810182526001600160a01b0384168082526000602083018190526001928401839052600880546001600160a01b031916831790556009819055600a805460ff191690931790925591517f8ba1947a8c64577d7adbd8cbc248c72b68738fe23afef984d842ba5ec5af5cfe9190a26108bb611f95565b6000908152600080516020612d6b833981519152602052604090206001015490565b610b1382610ae8565b610b1c81611fbb565b610b268383611fc5565b50505050565b6001600160a01b0381163314610b555760405163334bd91960e11b815260040160405180910390fd5b610b5f828261206a565b505050565b6003546001600160a01b03163314610b8e5760405162461bcd60e51b815260040161084690612bc6565b610b96611f4b565b600c819055604051818152309033907fa55ee73f4232498ac4c250ffa77f4337343a213648a66147d8848f6660fa3fdf906020015b60405180910390a3610bdb611f95565b50565b600080516020612d8b833981519152610bf681611fbb565b610bfe611f4b565b6001600160a01b038216600090815260046020526040902060020154600160a01b900460ff16610c405760405162461bcd60e51b815260040161084690612c2a565b6001600160a01b03821660009081526004602052604090205415610cb5576001600160a01b0380831660009081526004602090815260408083206002810154905494168084526007909252909120549091610c9a91612c6d565b6001600160a01b039091166000908152600760205260409020555b6001600160a01b0382166000818152600460205260408082208281556001810183905560020180546001600160a81b0319169055517ff54e47602c09e6190ae0c9cba6074e2e211bf36944fd714fbb0bd78aba514cab9190a26108bb611f95565b600080516020612d8b833981519152610d2e81611fbb565b610d36611f4b565b6001600160a01b038316600090815260046020526040902060020154600160a01b900460ff16610d785760405162461bcd60e51b815260040161084690612c2a565b6001600160a01b03808416600081815260046020818152604080842060028101549096168452600782528320879055929091529052829055610b5f611f95565b600080516020612d8b833981519152610dd081611fbb565b610dd8611f4b565b6001600160a01b0382166000908152600e602052604090205460ff16610e375760405162461bcd60e51b8152602060048201526014602482015273155b9bd4994e881b9bc81dda1a5d19481b1a5cdd60621b6044820152606401610846565b6001600160a01b0382166000818152600e6020526040808220805460ff19169055517f4151e001c03bfed83a194d10eea2c0edf04f98e382c440c94a947a99d38d2c329190a26108bb611f95565b610e8d611f4b565b33600090815260046020526040902060020154600160a01b900460ff16610ec65760405162461bcd60e51b815260040161084690612c80565b610ed033826120e6565b610f1c5760405162461bcd60e51b815260206004820181905260248201527f556e6f52653a206d696e696d756d206361706974616c20756e646572666c6f776044820152606401610846565b610f28338260006121d3565b610bdb611f95565b600080516020612d8b833981519152610f4881611fbb565b610f50611f4b565b600a5460ff16610f725760405162461bcd60e51b815260040161084690612c2a565b6000600b819055600880546001600160a01b03198116909155600a805460ff1916905560098290556040516001600160a01b039091169182917fffb315d96bed6cc0b00a9cc39d15fcbcab7d047fca09660a2d73569cfc75817c9190a250610bdb611f95565b600080516020612d8b833981519152610ff081611fbb565b6001600160a01b0384166110165760405162461bcd60e51b815260040161084690612bfd565b6001600160a01b038416600090815260046020526040902060020154600160a01b900460ff16156110855760405162461bcd60e51b8152602060048201526019602482015278155b9bd4994e88185b1c9958591e48195e1a5cdd081c1bdbdb603a1b6044820152606401610846565b6001600160a01b03831660009081526006602052604081205460ff161515900361110f576001600160a01b0383166000818152600660205260408120805460ff191660019081179091556005805491820181559091527f036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db00180546001600160a01b03191690911790555b60408051608081018252600080825260208083018681526001600160a01b038881168587018181526001606088018181528d851680895260048852978a902098518955945190880155516002909601805493511515600160a01b026001600160a81b0319909416969092169590951791909117905583519283528201859052917f4135167fcda3c31ddaa41eecaaa00c3e3ba8aabf49d039cfad433be34bf659ab91015b60405180910390a250505050565b6111c9611f4b565b600a5460ff16156112135760405162461bcd60e51b8152602060048201526014602482015273556e6f52653a20506f6c6963792065786973747360601b6044820152606401610846565b6001546001600160a01b0316331461127d5760405162461bcd60e51b815260206004820152602760248201527f556e6f52653a206f6e6c792073616c6573506f6c696379466163746f72792063604482015266185b8818d85b1b60ca1b6064820152608401610846565b604080516060810182526001600160a01b0383168082526000602083018190526001928401839052600880546001600160a01b031916831790556009819055600a805460ff191690931790925591517f8ba1947a8c64577d7adbd8cbc248c72b68738fe23afef984d842ba5ec5af5cfe9190a2610bdb611f95565b336000908152600e602052604090205460ff166113275760405162461bcd60e51b815260040161084690612bc6565b6001600160a01b03831661134d5760405162461bcd60e51b815260040161084690612bfd565b6001600160a01b038316600090815260046020526040902060020154600160a01b900460ff16156113bc5760405162461bcd60e51b8152602060048201526019602482015278155b9bd4994e88185b1c9958591e48195e1a5cdd081c1bdbdb603a1b6044820152606401610846565b6001600160a01b03821660009081526006602052604081205460ff1615159003611446576001600160a01b0382166000818152600660205260408120805460ff191660019081179091556005805491820181559091527f036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db00180546001600160a01b03191690911790555b60408051608081018252600080825260208083018581526001600160a01b038781168587018181526001606088018181528c851680895260048852978a902098518955945190880155516002909601805493511515600160a01b026001600160a81b0319909416969092169590951791909117905583519283528201849052917f4135167fcda3c31ddaa41eecaaa00c3e3ba8aabf49d039cfad433be34bf659ab910160405180910390a2505050565b600080516020612d8b83398151915261150e81611fbb565b611516611f4b565b600854604051637a5402e960e01b8152600481018490526000916001600160a01b031690637a5402e99060240160a060405180830381865afa158015611560573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906115849190612cae565b5050505090506115948382612382565b506108bb611f95565b6115a5611f4b565b33600090815260046020526040902060020154600160a01b900460ff166115de5760405162461bcd60e51b815260040161084690612c80565b610f28338260016121d3565b6000918252600080516020612d6b833981519152602090815260408084206001600160a01b0393909316845291905290205460ff1690565b600061162c61248a565b905090565b611639611f4b565b6008546001600160a01b031633146116935760405162461bcd60e51b815260206004820181905260248201527f556e6f52653a206f6e6c792073616c6573506f6c6963792063616e2063616c6c6044820152606401610846565b600a5460ff166116de5760405162461bcd60e51b8152602060048201526016602482015275556e6f52653a206e6f20657869737420706f6c69637960501b6044820152606401610846565b6116e7816124be565b6117335760405162461bcd60e51b815260206004820181905260248201527f556e6f52653a206d6178696d756d206c65766572616765206f766572666c6f776044820152606401610846565b610f28816001612503565b600080516020612d8b83398151915261175681611fbb565b61175e611f4b565b6001600160a01b0382166117b45760405162461bcd60e51b815260206004820152601860248201527f556e6f52653a207a65726f20706f6f6c206164647265737300000000000000006044820152606401610846565b6001600160a01b0382166000908152600e602052604090205460ff161561181d5760405162461bcd60e51b815260206004820152601960248201527f556e6f52653a207768697465206c69737420616c7265616479000000000000006044820152606401610846565b6001600160a01b0382166000818152600e6020526040808220805460ff19166001179055517f398e8e2ed05e6be725398a28e81fdf023a447b92941bd666e68ce2091b82bcc79190a26108bb611f95565b600080516020612d8b83398151915261188681611fbb565b61188e611f4b565b6001600160a01b0382166118e45760405162461bcd60e51b815260206004820152601b60248201527f556e6f52653a207a65726f20666163746f7279206164647265737300000000006044820152606401610846565b600180546001600160a01b0319166001600160a01b0384169081179091556040517f6507596e94e343212d1c22479359f82fffb65f099deb3ebcae9eb33c3d06de9e90600090a26108bb611f95565b600080516020612d8b83398151915261194b81611fbb565b611953611f4b565b6001600160a01b0382166119a95760405162461bcd60e51b815260206004820152601c60248201527f556e6f52653a207a65726f206f70657261746f722061646472657373000000006044820152606401610846565b600380546001600160a01b0319166001600160a01b0384169081179091556040517f08c5d29613b4e7468e893fe5f104f5a3ea6e28298f00fbbab9dc9394578c89de90600090a26108bb611f95565b611a00611f4b565b6008546001600160a01b0316611a585760405162461bcd60e51b815260206004820152601b60248201527f556e6f52653a206e6f2065786973742073616c6573506f6c69637900000000006044820152606401610846565b600854604051637a5402e960e01b815260048101839052600091829182916001600160a01b031690637a5402e99060240160a060405180830381865afa158015611aa6573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190611aca9190612cae565b505092509250925060008183611ae09190612d05565b421080159150611b9657611af5846000612503565b6008546040516352eaf0a160e11b8152600481018790526001600160a01b039091169063a5d5e14290602401600060405180830381600087803b158015611b3b57600080fd5b505af1158015611b4f573d6000803e3d6000fd5b50506008546040518881526001600160a01b0390911692507faf1c77a8196c946ab8e645210cd1e2685b4fb758ddfd474fd918298854dea6fc915060200160405180910390a25b50505050610bdb611f95565b6000611bae83836120e6565b9392505050565b6000610816826124be565b611bc982610ae8565b611bd281611fbb565b610b26838361206a565b6003546001600160a01b03163314611c065760405162461bcd60e51b815260040161084690612bc6565b611c0e611f4b565b600d819055604051818152309033907fb2f30bd42a6b499419a01b9b79e7b98934167f5a8a8c389ce446e20a8e5df76590602001610bcb565b7ff0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a008054600160401b810460ff16159067ffffffffffffffff16600081158015611c8d5750825b905060008267ffffffffffffffff166001148015611caa5750303b155b905081158015611cb8575080155b15611cd65760405163f92ee8a960e01b815260040160405180910390fd5b845467ffffffffffffffff191660011785558315611d0057845460ff60401b1916600160401b1785555b6001600160a01b038916611d605760405162461bcd60e51b815260206004820152602160248201527f556e6f52653a207a65726f2065786368616e67654167656e74206164647265736044820152607360f81b6064820152608401610846565b6001600160a01b038816611db65760405162461bcd60e51b815260206004820152601860248201527f556e6f52653a207a65726f2055534443206164647265737300000000000000006044820152606401610846565b6001600160a01b038716611e175760405162461bcd60e51b815260206004820152602260248201527f556e6f52653a207a65726f206d756c746973696777616c6c6574206164647265604482015261737360f01b6064820152608401610846565b600080546001600160a01b03808c166001600160a01b031992831617909255600280548b84169083161790556003805492891692909116919091179055611e5c6125fd565b611e6461260f565b611e7c600080516020612d8b83398151915288611fc5565b50611e95600080516020612d8b83398151915280612617565b8315611edb57845460ff60401b19168555604051600181527fc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d29060200160405180910390a15b505050505050505050565b611eee611f4b565b33600090815260046020526040902060020154600160a01b900460ff16611f275760405162461bcd60e51b815260040161084690612c80565b611f33338460006121d3565b8015611f4357611f43838361267a565b610b5f611f95565b7f9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f00805460011901611f8f57604051633ee5aeb560e01b815260040160405180910390fd5b60029055565b60017f9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f0055565b610bdb8133612862565b6000600080516020612d6b833981519152611fe084846115ea565b612060576000848152602082815260408083206001600160a01b03871684529091529020805460ff191660011790556120163390565b6001600160a01b0316836001600160a01b0316857f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a46001915050610816565b6000915050610816565b6000600080516020612d6b83398151915261208584846115ea565b15612060576000848152602082815260408083206001600160a01b0387168085529252808320805460ff1916905551339287917ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9190a46001915050610816565b6001600160a01b0380831660009081526004602052604081206002015490911681808061211161248a565b6001600160a01b03851660009081526007602052604090205490935061214390859061213e908990612c6d565b61289b565b6001600160a01b03881660009081526004602052604090205490925061217090859061213e908990612c6d565b90506000670de0b6b3a7640000600c548561218b9190612d18565b6121959190612d2f565b6001600160a01b03891660009081526004602052604090206001015490841080159250908310159082906121c65750805b9998505050505050505050565b80612240576001600160a01b0383166000908152600460205260409020548211156122405760405162461bcd60e51b815260206004820152601c60248201527f556e6f52653a20706f6f6c206361706974616c206f766572666c6f77000000006044820152606401610846565b6001600160a01b03808416600090815260046020526040902060020154168161228c576001600160a01b038416600090815260046020526040902054612287908490612c6d565b6122b0565b6001600160a01b0384166000908152600460205260409020546122b0908490612d05565b6001600160a01b038516600090815260046020526040902055816122f7576001600160a01b0381166000908152600760205260409020546122f2908490612c6d565b61231b565b6001600160a01b03811660009081526007602052604090205461231b908490612d05565b6001600160a01b038281166000818152600760208181526040808420879055948a1680845260048252858420549490935290815283519283528201939093527f4c54f63d510ce2f2f9bf99bf203458cb67aa75fae97ccab560a1654eba9dbf2491016111b3565b6008546001600160a01b03166123da5760405162461bcd60e51b815260206004820152601b60248201527f556e6f52653a206e6f2065786973742073616c6573506f6c69637900000000006044820152606401610846565b6123e5816000612503565b6008546040516319d9b48f60e11b8152600481018490526001600160a01b03909116906333b3691e90602401600060405180830381600087803b15801561242b57600080fd5b505af115801561243f573d6000803e3d6000fd5b50506008546040518581526001600160a01b0390911692507f56b46e5b13fdb3c0b1989f448e91b2ad68cf0c8e8ddd87f996720708ae3a156991506020015b60405180910390a25050565b6002546001600160a01b0316600081815260076020526040812054909182916124b490829061289b565b611bae9083612d05565b6000806124c961248a565b9050670de0b6b3a7640000600d54826124e29190612d18565b6124ec9190612d2f565b83600b546124fa9190612d05565b11159392505050565b8061255a5760095482111561255a5760405162461bcd60e51b815260206004820152601f60248201527f556e6f52653a20706f6c69637920636f766572616765206f766572666c6f77006044820152606401610846565b806125725760095461256d908390612c6d565b612580565b600954612580908390612d05565b6009558061259b5781600b546125969190612c6d565b6125a9565b81600b546125a99190612d05565b600b8190556008546009546040805186815260208101929092528101929092526001600160a01b0316907facece99dd8b86cb96519fb17caded4d103b35a8261463d0d11f80a41146073009060600161247e565b6126056129ce565b61260d612a17565b565b61260d6129ce565b600080516020612d6b833981519152600061263184610ae8565b600085815260208490526040808220600101869055519192508491839187917fbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff9190a450505050565b600854604051637a5402e960e01b8152600481018390526001600160a01b03909116906000908290637a5402e99060240160a060405180830381865afa1580156126c8573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906126ec9190612cae565b505050506001600160a01b038381166000908152600f60209081526040808320888452825280832054338452600492839052818420600290810154855491549351631a44cdf360e11b81529087169481018590529286166024840152604483018b905295965094919391909116906334899be690606401602060405180830381865afa158015612780573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906127a49190612d51565b90506127b08382612d05565b8410156127ff5760405162461bcd60e51b815260206004820152601e60248201527f556e6f52653a20636f76657261676520616d6f756e74206973206c65737300006044820152606401610846565b6001600160a01b0385166000908152600f6020908152604080832089845290915281208054839290612832908490612d05565b90915550600090506128448483612d05565b851180159150612858576128588786612382565b5050505050505050565b61286c82826115ea565b6108bb5760405163e2517d3f60e01b81526001600160a01b038216600482015260248101839052604401610846565b60025460009081906001600160a01b03908116908516036128bd575081611bae565b6001600160a01b0384166129475760005460025460405163ba560ed960e01b81526001600160a01b0391821660048201526024810186905291169063ba560ed990604401602060405180830381865afa15801561291e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906129429190612d51565b6129c6565b600054600254604051631a44cdf360e11b81526001600160a01b0387811660048301529182166024820152604481018690529116906334899be690606401602060405180830381865afa1580156129a2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906129c69190612d51565b949350505050565b7ff0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a0054600160401b900460ff1661260d57604051631afcd79f60e31b815260040160405180910390fd5b611f956129ce565b600060208284031215612a3157600080fd5b81356001600160e01b031981168114611bae57600080fd5b80356001600160a01b0381168114612a6057600080fd5b919050565b600060208284031215612a7757600080fd5b611bae82612a49565b60008060408385031215612a9357600080fd5b82359150612aa360208401612a49565b90509250929050565b600060208284031215612abe57600080fd5b5035919050565b60008060408385031215612ad857600080fd5b612ae183612a49565b946020939093013593505050565b600080600060608486031215612b0457600080fd5b612b0d84612a49565b9250612b1b60208501612a49565b9150604084013590509250925092565b60008060008060808587031215612b4157600080fd5b612b4a85612a49565b9350612b5860208601612a49565b9250612b6660408601612a49565b9150612b7460608601612a49565b905092959194509250565b8015158114610bdb57600080fd5b600080600060608486031215612ba257600080fd5b83359250602084013591506040840135612bbb81612b7f565b809150509250925092565b6020808252601e908201527f556e6f52653a204361706974616c204167656e7420466f7262696464656e0000604082015260600190565b602080825260139082015272556e6f52653a207a65726f206164647265737360681b604082015260600190565b602080825260139082015272155b9bd4994e881b9bc8195e1a5d081c1bdbdb606a1b604082015260600190565b634e487b7160e01b600052601160045260246000fd5b8181038181111561081657610816612c57565b6020808252601490820152730556e6f52653a206e6f20657869737420737369760641b604082015260600190565b600080600080600060a08688031215612cc657600080fd5b8551945060208601519350604086015192506060860151612ce681612b7f565b6080870151909250612cf781612b7f565b809150509295509295909350565b8082018082111561081657610816612c57565b808202811582820484141761081657610816612c57565b600082612d4c57634e487b7160e01b600052601260045260246000fd5b500490565b600060208284031215612d6357600080fd5b505191905056fe02dd7bc7dec4dceedda775e58dd541e08a116c6c53815c0bd028192f7b626800a49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775a2646970667358221220edbfb43129ccf9a80880ebff83b76fba15fd25926e1f781cbe300eeddcc1491664736f6c63430008170033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106102d65760003560e01c80637d4163d311610182578063a88d2f7a116100e9578063d4688a45116100a2578063d9203b911161007c578063d9203b9114610789578063f045089f1461079c578063f8c8765e146107bf578063fb6cb847146107d257600080fd5b8063d4688a451461075a578063d547741f14610763578063d8c5c8631461077657600080fd5b8063a88d2f7a146106db578063b3ab15fb146106ee578063be22041b14610701578063c139b04f14610714578063c3ea3a2814610727578063c9245b961461073a57600080fd5b806392ff38ec1161013b57806392ff38ec14610643578063974e4d851461064b5780639a7b5f1114610669578063a0931af2146106ad578063a217fddf146106c0578063a65888fb146106c857600080fd5b80637d4163d3146105db5780637e29d6c2146105ee578063869bd44a146106015780638bb70831146106145780638be5a39f1461061d57806391d148541461063057600080fd5b8063385a128f1161024157806355b4b1a4116101fa57806365cb3a83116101d457806365cb3a83146105a2578063706c2d1b146105aa57806375b238fc146105bd578063794e5724146105d257600080fd5b806355b4b1a414610551578063570ca7351461057c5780635b44d5761461058f57600080fd5b8063385a128f146104975780633b7d0946146104aa5780633fecfbf2146104bd5780634341e0991461051c5780634a3a3d141461052f5780634dc70bac1461054257600080fd5b80631dfa426d116102935780631dfa426d14610407578063248a9ca31461041a57806325042fe91461043b5780632f2ff15d1461045e57806336568abe1461047157806336760a1c1461048457600080fd5b806301ffc9a7146102db57806306bfa938146103035780630d757531146103a15780630f5a9d01146103b657806311eac855146103c957806318a00d8e146103f4575b600080fd5b6102ee6102e9366004612a1f565b6107e5565b60405190151581526020015b60405180910390f35b610370610311366004612a65565b6001600160a01b03908116600090815260046020908152604091829020825160808101845281548082526001830154938201849052600290920154948516938101849052600160a01b90940460ff161515606090940184905293909290565b6040516102fa949392919093845260208401929092526001600160a01b031660408301521515606082015260800190565b6103b46103af366004612a80565b61081c565b005b6103b46103c4366004612a65565b6108bf565b6002546103dc906001600160a01b031681565b6040516001600160a01b0390911681526020016102fa565b6103b4610402366004612a65565b610984565b6103b4610415366004612a65565b610a27565b61042d610428366004612aac565b610ae8565b6040519081526020016102fa565b6102ee610449366004612a65565b600e6020526000908152604090205460ff1681565b6103b461046c366004612a80565b610b0a565b6103b461047f366004612a80565b610b2c565b6001546103dc906001600160a01b031681565b6103b46104a5366004612aac565b610b64565b6103b46104b8366004612a65565b610bde565b6104f5604080516060810182526008546001600160a01b031680825260095460208301819052600a5460ff1615159290930182905292565b604080516001600160a01b03909416845260208401929092521515908201526060016102fa565b6103b461052a366004612ac5565b610d16565b6103b461053d366004612a65565b610db8565b61042d670de0b6b3a764000081565b61042d61055f366004612ac5565b600f60209081526000928352604080842090915290825290205481565b6003546103dc906001600160a01b031681565b6103b461059d366004612aac565b610e85565b6103b4610f30565b6103b46105b8366004612aef565b610fd8565b61042d600080516020612d8b83398151915281565b61042d600c5481565b6103b46105e9366004612a65565b6111c1565b6103b46105fc366004612aef565b6112f8565b6103b461060f366004612aac565b6114f6565b61042d600d5481565b6103b461062b366004612aac565b61159d565b6102ee61063e366004612a80565b6115ea565b61042d611622565b600854600954600a546104f5926001600160a01b0316919060ff1683565b610370610677366004612a65565b6004602052600090815260409020805460018201546002909201549091906001600160a01b03811690600160a01b900460ff1684565b6103b46106bb366004612aac565b611631565b61042d600081565b6103b46106d6366004612a65565b61173e565b6103b46106e9366004612a65565b61186e565b6103b46106fc366004612a65565b611933565b6103b461070f366004612aac565b6119f8565b6102ee610722366004612ac5565b611ba2565b6102ee610735366004612aac565b611bb5565b61042d610748366004612a65565b60076020526000908152604090205481565b61042d600b5481565b6103b4610771366004612a80565b611bc0565b6103b4610784366004612aac565b611bdc565b6000546103dc906001600160a01b031681565b6102ee6107aa366004612a65565b60066020526000908152604090205460ff1681565b6103b46107cd366004612b2b565b611c47565b6103b46107e0366004612b8d565b611ee6565b60006001600160e01b03198216637965db0b60e01b148061081657506301ffc9a760e01b6001600160e01b03198316145b92915050565b6003546001600160a01b0316331461084f5760405162461bcd60e51b815260040161084690612bc6565b60405180910390fd5b610857611f4b565b6001600160a01b0381166000818152600460205260409081902060010184905551309033907fade0e16d2bd0d685eef1e5355dc835692faac192ef62225adb31cd0c0b99c8a8906108ab9087815260200190565b60405180910390a46108bb611f95565b5050565b600080516020612d8b8339815191526108d781611fbb565b6108df611f4b565b6001600160a01b0382166109355760405162461bcd60e51b815260206004820152601860248201527f556e6f52653a207a65726f2075736463206164647265737300000000000000006044820152606401610846565b600280546001600160a01b0319166001600160a01b0384169081179091556040517f103c5bd4d1fbed26f9d95c639ecfb64bbece2b8f7d599a45f9aaab41c3e9ded090600090a26108bb611f95565b600080516020612d8b83398151915261099c81611fbb565b6109a4611f4b565b6001600160a01b0382166109ca5760405162461bcd60e51b815260040161084690612bfd565b600080546001600160a01b0319166001600160a01b038416908117909155604051908152309033907f28e0ff29ad991f2655c48b0b095a69abbf13aec6c8bc181dd526dbb3f8c9d0b99060200160405180910390a36108bb611f95565b600080516020612d8b833981519152610a3f81611fbb565b610a47611f4b565b6001600160a01b038216610a6d5760405162461bcd60e51b815260040161084690612bfd565b604080516060810182526001600160a01b0384168082526000602083018190526001928401839052600880546001600160a01b031916831790556009819055600a805460ff191690931790925591517f8ba1947a8c64577d7adbd8cbc248c72b68738fe23afef984d842ba5ec5af5cfe9190a26108bb611f95565b6000908152600080516020612d6b833981519152602052604090206001015490565b610b1382610ae8565b610b1c81611fbb565b610b268383611fc5565b50505050565b6001600160a01b0381163314610b555760405163334bd91960e11b815260040160405180910390fd5b610b5f828261206a565b505050565b6003546001600160a01b03163314610b8e5760405162461bcd60e51b815260040161084690612bc6565b610b96611f4b565b600c819055604051818152309033907fa55ee73f4232498ac4c250ffa77f4337343a213648a66147d8848f6660fa3fdf906020015b60405180910390a3610bdb611f95565b50565b600080516020612d8b833981519152610bf681611fbb565b610bfe611f4b565b6001600160a01b038216600090815260046020526040902060020154600160a01b900460ff16610c405760405162461bcd60e51b815260040161084690612c2a565b6001600160a01b03821660009081526004602052604090205415610cb5576001600160a01b0380831660009081526004602090815260408083206002810154905494168084526007909252909120549091610c9a91612c6d565b6001600160a01b039091166000908152600760205260409020555b6001600160a01b0382166000818152600460205260408082208281556001810183905560020180546001600160a81b0319169055517ff54e47602c09e6190ae0c9cba6074e2e211bf36944fd714fbb0bd78aba514cab9190a26108bb611f95565b600080516020612d8b833981519152610d2e81611fbb565b610d36611f4b565b6001600160a01b038316600090815260046020526040902060020154600160a01b900460ff16610d785760405162461bcd60e51b815260040161084690612c2a565b6001600160a01b03808416600081815260046020818152604080842060028101549096168452600782528320879055929091529052829055610b5f611f95565b600080516020612d8b833981519152610dd081611fbb565b610dd8611f4b565b6001600160a01b0382166000908152600e602052604090205460ff16610e375760405162461bcd60e51b8152602060048201526014602482015273155b9bd4994e881b9bc81dda1a5d19481b1a5cdd60621b6044820152606401610846565b6001600160a01b0382166000818152600e6020526040808220805460ff19169055517f4151e001c03bfed83a194d10eea2c0edf04f98e382c440c94a947a99d38d2c329190a26108bb611f95565b610e8d611f4b565b33600090815260046020526040902060020154600160a01b900460ff16610ec65760405162461bcd60e51b815260040161084690612c80565b610ed033826120e6565b610f1c5760405162461bcd60e51b815260206004820181905260248201527f556e6f52653a206d696e696d756d206361706974616c20756e646572666c6f776044820152606401610846565b610f28338260006121d3565b610bdb611f95565b600080516020612d8b833981519152610f4881611fbb565b610f50611f4b565b600a5460ff16610f725760405162461bcd60e51b815260040161084690612c2a565b6000600b819055600880546001600160a01b03198116909155600a805460ff1916905560098290556040516001600160a01b039091169182917fffb315d96bed6cc0b00a9cc39d15fcbcab7d047fca09660a2d73569cfc75817c9190a250610bdb611f95565b600080516020612d8b833981519152610ff081611fbb565b6001600160a01b0384166110165760405162461bcd60e51b815260040161084690612bfd565b6001600160a01b038416600090815260046020526040902060020154600160a01b900460ff16156110855760405162461bcd60e51b8152602060048201526019602482015278155b9bd4994e88185b1c9958591e48195e1a5cdd081c1bdbdb603a1b6044820152606401610846565b6001600160a01b03831660009081526006602052604081205460ff161515900361110f576001600160a01b0383166000818152600660205260408120805460ff191660019081179091556005805491820181559091527f036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db00180546001600160a01b03191690911790555b60408051608081018252600080825260208083018681526001600160a01b038881168587018181526001606088018181528d851680895260048852978a902098518955945190880155516002909601805493511515600160a01b026001600160a81b0319909416969092169590951791909117905583519283528201859052917f4135167fcda3c31ddaa41eecaaa00c3e3ba8aabf49d039cfad433be34bf659ab91015b60405180910390a250505050565b6111c9611f4b565b600a5460ff16156112135760405162461bcd60e51b8152602060048201526014602482015273556e6f52653a20506f6c6963792065786973747360601b6044820152606401610846565b6001546001600160a01b0316331461127d5760405162461bcd60e51b815260206004820152602760248201527f556e6f52653a206f6e6c792073616c6573506f6c696379466163746f72792063604482015266185b8818d85b1b60ca1b6064820152608401610846565b604080516060810182526001600160a01b0383168082526000602083018190526001928401839052600880546001600160a01b031916831790556009819055600a805460ff191690931790925591517f8ba1947a8c64577d7adbd8cbc248c72b68738fe23afef984d842ba5ec5af5cfe9190a2610bdb611f95565b336000908152600e602052604090205460ff166113275760405162461bcd60e51b815260040161084690612bc6565b6001600160a01b03831661134d5760405162461bcd60e51b815260040161084690612bfd565b6001600160a01b038316600090815260046020526040902060020154600160a01b900460ff16156113bc5760405162461bcd60e51b8152602060048201526019602482015278155b9bd4994e88185b1c9958591e48195e1a5cdd081c1bdbdb603a1b6044820152606401610846565b6001600160a01b03821660009081526006602052604081205460ff1615159003611446576001600160a01b0382166000818152600660205260408120805460ff191660019081179091556005805491820181559091527f036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db00180546001600160a01b03191690911790555b60408051608081018252600080825260208083018581526001600160a01b038781168587018181526001606088018181528c851680895260048852978a902098518955945190880155516002909601805493511515600160a01b026001600160a81b0319909416969092169590951791909117905583519283528201849052917f4135167fcda3c31ddaa41eecaaa00c3e3ba8aabf49d039cfad433be34bf659ab910160405180910390a2505050565b600080516020612d8b83398151915261150e81611fbb565b611516611f4b565b600854604051637a5402e960e01b8152600481018490526000916001600160a01b031690637a5402e99060240160a060405180830381865afa158015611560573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906115849190612cae565b5050505090506115948382612382565b506108bb611f95565b6115a5611f4b565b33600090815260046020526040902060020154600160a01b900460ff166115de5760405162461bcd60e51b815260040161084690612c80565b610f28338260016121d3565b6000918252600080516020612d6b833981519152602090815260408084206001600160a01b0393909316845291905290205460ff1690565b600061162c61248a565b905090565b611639611f4b565b6008546001600160a01b031633146116935760405162461bcd60e51b815260206004820181905260248201527f556e6f52653a206f6e6c792073616c6573506f6c6963792063616e2063616c6c6044820152606401610846565b600a5460ff166116de5760405162461bcd60e51b8152602060048201526016602482015275556e6f52653a206e6f20657869737420706f6c69637960501b6044820152606401610846565b6116e7816124be565b6117335760405162461bcd60e51b815260206004820181905260248201527f556e6f52653a206d6178696d756d206c65766572616765206f766572666c6f776044820152606401610846565b610f28816001612503565b600080516020612d8b83398151915261175681611fbb565b61175e611f4b565b6001600160a01b0382166117b45760405162461bcd60e51b815260206004820152601860248201527f556e6f52653a207a65726f20706f6f6c206164647265737300000000000000006044820152606401610846565b6001600160a01b0382166000908152600e602052604090205460ff161561181d5760405162461bcd60e51b815260206004820152601960248201527f556e6f52653a207768697465206c69737420616c7265616479000000000000006044820152606401610846565b6001600160a01b0382166000818152600e6020526040808220805460ff19166001179055517f398e8e2ed05e6be725398a28e81fdf023a447b92941bd666e68ce2091b82bcc79190a26108bb611f95565b600080516020612d8b83398151915261188681611fbb565b61188e611f4b565b6001600160a01b0382166118e45760405162461bcd60e51b815260206004820152601b60248201527f556e6f52653a207a65726f20666163746f7279206164647265737300000000006044820152606401610846565b600180546001600160a01b0319166001600160a01b0384169081179091556040517f6507596e94e343212d1c22479359f82fffb65f099deb3ebcae9eb33c3d06de9e90600090a26108bb611f95565b600080516020612d8b83398151915261194b81611fbb565b611953611f4b565b6001600160a01b0382166119a95760405162461bcd60e51b815260206004820152601c60248201527f556e6f52653a207a65726f206f70657261746f722061646472657373000000006044820152606401610846565b600380546001600160a01b0319166001600160a01b0384169081179091556040517f08c5d29613b4e7468e893fe5f104f5a3ea6e28298f00fbbab9dc9394578c89de90600090a26108bb611f95565b611a00611f4b565b6008546001600160a01b0316611a585760405162461bcd60e51b815260206004820152601b60248201527f556e6f52653a206e6f2065786973742073616c6573506f6c69637900000000006044820152606401610846565b600854604051637a5402e960e01b815260048101839052600091829182916001600160a01b031690637a5402e99060240160a060405180830381865afa158015611aa6573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190611aca9190612cae565b505092509250925060008183611ae09190612d05565b421080159150611b9657611af5846000612503565b6008546040516352eaf0a160e11b8152600481018790526001600160a01b039091169063a5d5e14290602401600060405180830381600087803b158015611b3b57600080fd5b505af1158015611b4f573d6000803e3d6000fd5b50506008546040518881526001600160a01b0390911692507faf1c77a8196c946ab8e645210cd1e2685b4fb758ddfd474fd918298854dea6fc915060200160405180910390a25b50505050610bdb611f95565b6000611bae83836120e6565b9392505050565b6000610816826124be565b611bc982610ae8565b611bd281611fbb565b610b26838361206a565b6003546001600160a01b03163314611c065760405162461bcd60e51b815260040161084690612bc6565b611c0e611f4b565b600d819055604051818152309033907fb2f30bd42a6b499419a01b9b79e7b98934167f5a8a8c389ce446e20a8e5df76590602001610bcb565b7ff0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a008054600160401b810460ff16159067ffffffffffffffff16600081158015611c8d5750825b905060008267ffffffffffffffff166001148015611caa5750303b155b905081158015611cb8575080155b15611cd65760405163f92ee8a960e01b815260040160405180910390fd5b845467ffffffffffffffff191660011785558315611d0057845460ff60401b1916600160401b1785555b6001600160a01b038916611d605760405162461bcd60e51b815260206004820152602160248201527f556e6f52653a207a65726f2065786368616e67654167656e74206164647265736044820152607360f81b6064820152608401610846565b6001600160a01b038816611db65760405162461bcd60e51b815260206004820152601860248201527f556e6f52653a207a65726f2055534443206164647265737300000000000000006044820152606401610846565b6001600160a01b038716611e175760405162461bcd60e51b815260206004820152602260248201527f556e6f52653a207a65726f206d756c746973696777616c6c6574206164647265604482015261737360f01b6064820152608401610846565b600080546001600160a01b03808c166001600160a01b031992831617909255600280548b84169083161790556003805492891692909116919091179055611e5c6125fd565b611e6461260f565b611e7c600080516020612d8b83398151915288611fc5565b50611e95600080516020612d8b83398151915280612617565b8315611edb57845460ff60401b19168555604051600181527fc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d29060200160405180910390a15b505050505050505050565b611eee611f4b565b33600090815260046020526040902060020154600160a01b900460ff16611f275760405162461bcd60e51b815260040161084690612c80565b611f33338460006121d3565b8015611f4357611f43838361267a565b610b5f611f95565b7f9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f00805460011901611f8f57604051633ee5aeb560e01b815260040160405180910390fd5b60029055565b60017f9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f0055565b610bdb8133612862565b6000600080516020612d6b833981519152611fe084846115ea565b612060576000848152602082815260408083206001600160a01b03871684529091529020805460ff191660011790556120163390565b6001600160a01b0316836001600160a01b0316857f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a46001915050610816565b6000915050610816565b6000600080516020612d6b83398151915261208584846115ea565b15612060576000848152602082815260408083206001600160a01b0387168085529252808320805460ff1916905551339287917ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9190a46001915050610816565b6001600160a01b0380831660009081526004602052604081206002015490911681808061211161248a565b6001600160a01b03851660009081526007602052604090205490935061214390859061213e908990612c6d565b61289b565b6001600160a01b03881660009081526004602052604090205490925061217090859061213e908990612c6d565b90506000670de0b6b3a7640000600c548561218b9190612d18565b6121959190612d2f565b6001600160a01b03891660009081526004602052604090206001015490841080159250908310159082906121c65750805b9998505050505050505050565b80612240576001600160a01b0383166000908152600460205260409020548211156122405760405162461bcd60e51b815260206004820152601c60248201527f556e6f52653a20706f6f6c206361706974616c206f766572666c6f77000000006044820152606401610846565b6001600160a01b03808416600090815260046020526040902060020154168161228c576001600160a01b038416600090815260046020526040902054612287908490612c6d565b6122b0565b6001600160a01b0384166000908152600460205260409020546122b0908490612d05565b6001600160a01b038516600090815260046020526040902055816122f7576001600160a01b0381166000908152600760205260409020546122f2908490612c6d565b61231b565b6001600160a01b03811660009081526007602052604090205461231b908490612d05565b6001600160a01b038281166000818152600760208181526040808420879055948a1680845260048252858420549490935290815283519283528201939093527f4c54f63d510ce2f2f9bf99bf203458cb67aa75fae97ccab560a1654eba9dbf2491016111b3565b6008546001600160a01b03166123da5760405162461bcd60e51b815260206004820152601b60248201527f556e6f52653a206e6f2065786973742073616c6573506f6c69637900000000006044820152606401610846565b6123e5816000612503565b6008546040516319d9b48f60e11b8152600481018490526001600160a01b03909116906333b3691e90602401600060405180830381600087803b15801561242b57600080fd5b505af115801561243f573d6000803e3d6000fd5b50506008546040518581526001600160a01b0390911692507f56b46e5b13fdb3c0b1989f448e91b2ad68cf0c8e8ddd87f996720708ae3a156991506020015b60405180910390a25050565b6002546001600160a01b0316600081815260076020526040812054909182916124b490829061289b565b611bae9083612d05565b6000806124c961248a565b9050670de0b6b3a7640000600d54826124e29190612d18565b6124ec9190612d2f565b83600b546124fa9190612d05565b11159392505050565b8061255a5760095482111561255a5760405162461bcd60e51b815260206004820152601f60248201527f556e6f52653a20706f6c69637920636f766572616765206f766572666c6f77006044820152606401610846565b806125725760095461256d908390612c6d565b612580565b600954612580908390612d05565b6009558061259b5781600b546125969190612c6d565b6125a9565b81600b546125a99190612d05565b600b8190556008546009546040805186815260208101929092528101929092526001600160a01b0316907facece99dd8b86cb96519fb17caded4d103b35a8261463d0d11f80a41146073009060600161247e565b6126056129ce565b61260d612a17565b565b61260d6129ce565b600080516020612d6b833981519152600061263184610ae8565b600085815260208490526040808220600101869055519192508491839187917fbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff9190a450505050565b600854604051637a5402e960e01b8152600481018390526001600160a01b03909116906000908290637a5402e99060240160a060405180830381865afa1580156126c8573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906126ec9190612cae565b505050506001600160a01b038381166000908152600f60209081526040808320888452825280832054338452600492839052818420600290810154855491549351631a44cdf360e11b81529087169481018590529286166024840152604483018b905295965094919391909116906334899be690606401602060405180830381865afa158015612780573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906127a49190612d51565b90506127b08382612d05565b8410156127ff5760405162461bcd60e51b815260206004820152601e60248201527f556e6f52653a20636f76657261676520616d6f756e74206973206c65737300006044820152606401610846565b6001600160a01b0385166000908152600f6020908152604080832089845290915281208054839290612832908490612d05565b90915550600090506128448483612d05565b851180159150612858576128588786612382565b5050505050505050565b61286c82826115ea565b6108bb5760405163e2517d3f60e01b81526001600160a01b038216600482015260248101839052604401610846565b60025460009081906001600160a01b03908116908516036128bd575081611bae565b6001600160a01b0384166129475760005460025460405163ba560ed960e01b81526001600160a01b0391821660048201526024810186905291169063ba560ed990604401602060405180830381865afa15801561291e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906129429190612d51565b6129c6565b600054600254604051631a44cdf360e11b81526001600160a01b0387811660048301529182166024820152604481018690529116906334899be690606401602060405180830381865afa1580156129a2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906129c69190612d51565b949350505050565b7ff0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a0054600160401b900460ff1661260d57604051631afcd79f60e31b815260040160405180910390fd5b611f956129ce565b600060208284031215612a3157600080fd5b81356001600160e01b031981168114611bae57600080fd5b80356001600160a01b0381168114612a6057600080fd5b919050565b600060208284031215612a7757600080fd5b611bae82612a49565b60008060408385031215612a9357600080fd5b82359150612aa360208401612a49565b90509250929050565b600060208284031215612abe57600080fd5b5035919050565b60008060408385031215612ad857600080fd5b612ae183612a49565b946020939093013593505050565b600080600060608486031215612b0457600080fd5b612b0d84612a49565b9250612b1b60208501612a49565b9150604084013590509250925092565b60008060008060808587031215612b4157600080fd5b612b4a85612a49565b9350612b5860208601612a49565b9250612b6660408601612a49565b9150612b7460608601612a49565b905092959194509250565b8015158114610bdb57600080fd5b600080600060608486031215612ba257600080fd5b83359250602084013591506040840135612bbb81612b7f565b809150509250925092565b6020808252601e908201527f556e6f52653a204361706974616c204167656e7420466f7262696464656e0000604082015260600190565b602080825260139082015272556e6f52653a207a65726f206164647265737360681b604082015260600190565b602080825260139082015272155b9bd4994e881b9bc8195e1a5d081c1bdbdb606a1b604082015260600190565b634e487b7160e01b600052601160045260246000fd5b8181038181111561081657610816612c57565b6020808252601490820152730556e6f52653a206e6f20657869737420737369760641b604082015260600190565b600080600080600060a08688031215612cc657600080fd5b8551945060208601519350604086015192506060860151612ce681612b7f565b6080870151909250612cf781612b7f565b809150509295509295909350565b8082018082111561081657610816612c57565b808202811582820484141761081657610816612c57565b600082612d4c57634e487b7160e01b600052601260045260246000fd5b500490565b600060208284031215612d6357600080fd5b505191905056fe02dd7bc7dec4dceedda775e58dd541e08a116c6c53815c0bd028192f7b626800a49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775a2646970667358221220edbfb43129ccf9a80880ebff83b76fba15fd25926e1f781cbe300eeddcc1491664736f6c63430008170033",
+  "devdoc": {
+    "details": "update and manage all pools capital and policy utlized amount, whenever user stake and withdraw from the pool and buy policy from salesPolicy notifies to capital agent to update pool capital and policy coverage*",
+    "errors": {
+      "AccessControlBadConfirmation()": [
+        {
+          "details": "The caller of a function is not the expected one. NOTE: Don't confuse with {AccessControlUnauthorizedAccount}."
+        }
+      ],
+      "AccessControlUnauthorizedAccount(address,bytes32)": [
+        {
+          "details": "The `account` is missing a role."
+        }
+      ],
+      "InvalidInitialization()": [
+        {
+          "details": "The contract is already initialized."
+        }
+      ],
+      "NotInitializing()": [
+        {
+          "details": "The contract is not initializing."
+        }
+      ],
+      "ReentrancyGuardReentrantCall()": [
+        {
+          "details": "Unauthorized reentrant call."
+        }
+      ]
+    },
+    "events": {
+      "Initialized(uint64)": {
+        "details": "Triggered when the contract has been initialized or reinitialized."
+      },
+      "RoleAdminChanged(bytes32,bytes32,bytes32)": {
+        "details": "Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted signaling this."
+      },
+      "RoleGranted(bytes32,address,address)": {
+        "details": "Emitted when `account` is granted `role`. `sender` is the account that originated the contract call, an admin role bearer except when using {AccessControl-_setupRole}."
+      },
+      "RoleRevoked(bytes32,address,address)": {
+        "details": "Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)"
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "SSIPPolicyCaim(uint256,uint256,bool)": {
+        "details": "update pool(caller) capital from capital agent, decrease capital of pool by _withdrawAmount, if user claim policy from pool",
+        "params": {
+          "_withdrawAmount": "amount to withdraw*"
+        }
+      },
+      "SSIPStaking(uint256)": {
+        "details": "update pool(caller) capital from capital agent, increase capital of pool by _stakingAmount, if user stake in pool",
+        "params": {
+          "_stakingAmount": "amount to deposit*"
+        }
+      },
+      "SSIPWithdraw(uint256)": {
+        "details": "update pool(caller) capital from capital agent, decrease capital of pool by _withdrawAmount, if user withdraw from pool remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively",
+        "params": {
+          "_withdrawAmount": "amount to withdraw*"
+        }
+      },
+      "addPool(address,address,uint256)": {
+        "details": "add pool into capitalAgent to stake capital, can only be call by whitelisted pools",
+        "params": {
+          "_currency": "pool lp currency address",
+          "_scr": "pool scr value(minimum capital should maintain in capital agent)*",
+          "_ssip": "address of pool to add"
+        }
+      },
+      "addPoolByAdmin(address,address,uint256)": {
+        "details": "add pool into capitalAgent to stake capital, can only be call by admin role",
+        "params": {
+          "_currency": "pool lp currency address",
+          "_scr": "pool scr value(minimum capital should maintain in capital agent)*",
+          "_ssip": "address of pool to add"
+        }
+      },
+      "addPoolWhiteList(address)": {
+        "details": "whitelist pool address, can only be call by admin role",
+        "params": {
+          "_pool": "address of pool to whitelist*"
+        }
+      },
+      "checkCapitalByMCR(address,uint256)": {
+        "details": "return if pool can withdraw this amount, remaning pool capital and total capital staked from same currency should be greater pool SCR and MCR respectively",
+        "params": {
+          "_pool": "address of pool",
+          "_withdrawAmount": "withdraw amount*"
+        }
+      },
+      "checkCoverageByMLR(uint256)": {
+        "details": "return if user can buy policy from this coverage amount, total utlized amount plus coverage should be less than MLR of total capital staked",
+        "params": {
+          "_coverageAmount": "coverage amount*"
+        }
+      },
+      "getRoleAdmin(bytes32)": {
+        "details": "Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}."
+      },
+      "grantRole(bytes32,address)": {
+        "details": "Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event."
+      },
+      "hasRole(bytes32,address)": {
+        "details": "Returns `true` if `account` has been granted `role`."
+      },
+      "markToClaimPolicy(uint256)": {
+        "details": "update policy status to not exist, can only be called by admin role",
+        "params": {
+          "_policyId": "policy id to update status*"
+        }
+      },
+      "policySale(uint256)": {
+        "details": "update policy coverage if user buy policy from SalesPolicy, only sales policy can call this function",
+        "params": {
+          "_coverageAmount": "coverage amount*"
+        }
+      },
+      "removePolicy()": {
+        "details": "remove sales policy from capital agent, can only be call by admin role*"
+      },
+      "removePool(address)": {
+        "details": "remove pool from capitalAgent, can only be call by admin role",
+        "params": {
+          "_ssip": "address of pool to remove*"
+        }
+      },
+      "removePoolWhiteList(address)": {
+        "details": "remove whitelisted pool, can only be call by admin role",
+        "params": {
+          "_pool": "address of pool to remove from whitelist*"
+        }
+      },
+      "renounceRole(bytes32,address)": {
+        "details": "Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event."
+      },
+      "revokeRole(bytes32,address)": {
+        "details": "Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event."
+      },
+      "setExchangeAgent(address)": {
+        "details": "set new exchange agent address, can only be called by admin role",
+        "params": {
+          "_exchangeAgent": "new exchange agent address*"
+        }
+      },
+      "setMCR(uint256)": {
+        "details": "set new MCR, can only be called by operator",
+        "params": {
+          "_MCR": "new value to update*"
+        }
+      },
+      "setMLR(uint256)": {
+        "details": "set new MLR, can only be called by operator",
+        "params": {
+          "_MLR": "new value to update*"
+        }
+      },
+      "setOperator(address)": {
+        "details": "set operator, can only be call by admin role",
+        "params": {
+          "_operator": "new operator address*"
+        }
+      },
+      "setPolicy(address)": {
+        "details": "set sales policy, can only be call by SalesPolicyFactory",
+        "params": {
+          "_policy": "address of new SalesPolicy*"
+        }
+      },
+      "setPolicyByAdmin(address)": {
+        "details": "set sales policy, can only be call by admin role",
+        "params": {
+          "_policy": "address of new SalesPolicy*"
+        }
+      },
+      "setSCR(uint256,address)": {
+        "details": "set new SCR of pool, can only be called by operator",
+        "params": {
+          "_SCR": "new value to update",
+          "_pool": "address of pool*"
+        }
+      },
+      "setSalesPolicyFactory(address)": {
+        "details": "set sales policy factory, can only be call by admin role",
+        "params": {
+          "_factory": "new sales policy factory address*"
+        }
+      },
+      "setUSDCToken(address)": {
+        "details": "set usdc token, can only be call by admin role",
+        "params": {
+          "_usdcToken": "new usdc token address*"
+        }
+      },
+      "supportsInterface(bytes4)": {
+        "details": "See {IERC165-supportsInterface}."
+      },
+      "totalCapitalStaked()": {
+        "details": "return total capital in usdc staked in capital agent by pools*"
+      },
+      "updatePolicyStatus(uint256)": {
+        "details": "update policy status, if expired update policy coverage and notify to sales policy",
+        "params": {
+          "_policyId": "policy id to update status*"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 1201,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "exchangeAgent",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 1203,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "salesPolicyFactory",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "astId": 1205,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "usdcToken",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "astId": 1207,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "operator",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_address"
+      },
+      {
+        "astId": 1228,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "poolInfo",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_address,t_struct(PoolInfo)1216_storage)"
+      },
+      {
+        "astId": 1231,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "currencyList",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_array(t_address)dyn_storage"
+      },
+      {
+        "astId": 1235,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "existedCurrencies",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_mapping(t_address,t_bool)"
+      },
+      {
+        "astId": 1239,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "totalCapitalStakedByCurrency",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 1242,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "policyInfo",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_struct(PolicyInfo)1223_storage"
+      },
+      {
+        "astId": 1244,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "totalUtilizedAmount",
+        "offset": 0,
+        "slot": "11",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 1246,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "MCR",
+        "offset": 0,
+        "slot": "12",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 1248,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "MLR",
+        "offset": 0,
+        "slot": "13",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 1255,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "poolWhiteList",
+        "offset": 0,
+        "slot": "14",
+        "type": "t_mapping(t_address,t_bool)"
+      },
+      {
+        "astId": 1261,
+        "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+        "label": "claimedAmount",
+        "offset": 0,
+        "slot": "15",
+        "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)dyn_storage": {
+        "base": "t_address",
+        "encoding": "dynamic_array",
+        "label": "address[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => mapping(uint256 => uint256))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_uint256,t_uint256)"
+      },
+      "t_mapping(t_address,t_struct(PoolInfo)1216_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct CapitalAgent.PoolInfo)",
+        "numberOfBytes": "32",
+        "value": "t_struct(PoolInfo)1216_storage"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_uint256,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(PolicyInfo)1223_storage": {
+        "encoding": "inplace",
+        "label": "struct CapitalAgent.PolicyInfo",
+        "members": [
+          {
+            "astId": 1218,
+            "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+            "label": "policy",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 1220,
+            "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+            "label": "utilizedAmount",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1222,
+            "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+            "label": "exist",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bool"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_struct(PoolInfo)1216_storage": {
+        "encoding": "inplace",
+        "label": "struct CapitalAgent.PoolInfo",
+        "members": [
+          {
+            "astId": 1209,
+            "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+            "label": "totalCapital",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1211,
+            "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+            "label": "SCR",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1213,
+            "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+            "label": "currency",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "astId": 1215,
+            "contract": "contracts/CapitalAgent.sol:CapitalAgent",
+            "label": "exist",
+            "offset": 20,
+            "slot": "2",
+            "type": "t_bool"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

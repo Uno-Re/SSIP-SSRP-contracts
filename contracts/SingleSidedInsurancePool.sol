@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -501,10 +500,7 @@ contract SingleSidedInsurancePool is
         emit LogUserUpdated(address(this), _user, _amount);
     }
 
-    function setLpPriceInRiskPool(
-        uint256 _lpPriceUno
-    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
-
+    function setLpPriceInRiskPool(uint256 _lpPriceUno) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         IRiskPool(riskPool).setLpPriceUno(_lpPriceUno);
     }
 

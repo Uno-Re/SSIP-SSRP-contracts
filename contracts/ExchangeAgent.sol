@@ -24,7 +24,6 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
     uint256 public swapDeadline;
 
     mapping(address => bool) public whiteList;
-
     event ConvertedTokenToToken(
         address indexed _dexAddress,
         address indexed _convertToken,

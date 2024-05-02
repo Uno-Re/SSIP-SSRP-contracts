@@ -26,9 +26,7 @@ contract PriceOracle is Ownable {
     event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);
     event SetETHUSDAggregator(address _oldAggregator, address _newAggregator);
 
-    constructor(address _admin) Ownable(_admin) {
-
-    }
+    constructor(address _admin) Ownable(_admin) {}
 
     function stableCoins() external view returns (address[] memory) {
         return _stableCoins.values();
@@ -70,11 +68,7 @@ contract PriceOracle is Ownable {
     /**
      * returns the tokenB amount for tokenA
      */
-    function consult(
-        address tokenA,
-        address tokenB,
-        uint256 amountA
-    ) external view returns (uint256) {
+    function consult(address tokenA, address tokenB, uint256 amountA) external view returns (uint256) {
         if (_stableCoins.contains(tokenA) && _stableCoins.contains(tokenB)) {
             return amountA;
         }
@@ -86,7 +80,7 @@ contract PriceOracle is Ownable {
         require(ethPriceA != 0 && ethPriceB != 0, "PO: Prices of both tokens should be set");
 
         return
-            (amountA * ethPriceA * (10**IERC20Metadata(tokenB).decimals())) /
-            (10**IERC20Metadata(tokenA).decimals() * ethPriceB);
+            (amountA * ethPriceA * (10 ** IERC20Metadata(tokenB).decimals())) /
+            (10 ** IERC20Metadata(tokenA).decimals() * ethPriceB);
     }
 }
