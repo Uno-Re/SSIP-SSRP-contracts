@@ -16,11 +16,10 @@ import "../../contracts/Mocks/MockSalesPolicyFactory.sol";
 import "../../contracts/uma/EscalationManager.sol";
 import "../../contracts/PremiumPool.sol";
 import "../../contracts/Mocks/OraclePriceFeed.sol";
-import "../../contracts/governance/ClaimProcessor.sol";
+import "../../contracts/deprecated/ClaimProcessor.sol";
 import "../../contracts/interfaces/IUniswapRouter01.sol";
 import "../../contracts/interfaces/IUniswapRouter02.sol";
 import "../../contracts/interfaces/IUniswapFactory.sol";
-
 
 // import "../contracts";
 
@@ -40,10 +39,10 @@ contract Claim is Test {
     Rewarder rewarder;
     RewarderFactory rewarderFactory;
     OptimisticOracleV3Interface optimisticOracleV3;
-    MockSalesPolicy  mockSalesPolicy;
+    MockSalesPolicy mockSalesPolicy;
     MockSalesPolicyFactory salesPolicyFactory;
     EscalationManager escalationManager;
-    PremiumPool premiumPool; 
+    PremiumPool premiumPool;
     OraclePriceFeed priceFeed;
     ClaimProcessor claimProcessor;
 
@@ -60,8 +59,15 @@ contract Claim is Test {
         uno = new MockUNO();
         usdt = new MockUSDT();
         priceFeed = new OraclePriceFeed();
-        exchangeAgent = new ExchangeAgent(address(usdt), 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6,  address(priceFeed), 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f, address(this));
-        premiumPool =  new PremiumPool(address(exchangeAgent), address(uno), address(usdt), address(this), address(this));
+        exchangeAgent = new ExchangeAgent(
+            address(usdt),
+            0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6,
+            address(priceFeed),
+            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D,
+            0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f,
+            address(this)
+        );
+        premiumPool = new PremiumPool(address(exchangeAgent), address(uno), address(usdt), address(this), address(this));
 
         capitalAgent = new CapitalAgent();
         singleSidedInsurancePool = new SingleSidedInsurancePool();
@@ -75,18 +81,41 @@ contract Claim is Test {
 
         rewarderFactory = new RewarderFactory();
         riskPoolFactory = new RiskPoolFactory();
-        salesPolicyFactory = new MockSalesPolicyFactory(address(usdt), address(exchangeAgent), address(premiumPool), address(proxycapital), address(this));
+        salesPolicyFactory = new MockSalesPolicyFactory(
+            address(usdt),
+            address(exchangeAgent),
+            address(premiumPool),
+            address(proxycapital),
+            address(this)
+        );
         claimProcessor = new ClaimProcessor(address(this));
         optimisticOracleV3 = OptimisticOracleV3Interface(0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB);
         escalationManager = new EscalationManager(0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB, address(this));
-        proxySSIP.initialize(address(proxycapital), address(this), address(this), address(claimProcessor), address(escalationManager), 0x07865c6E87B9F70255377e024ace6630C1Eaa37F, address(optimisticOracleV3));
+        proxySSIP.initialize(
+            address(proxycapital),
+            address(this),
+            address(this),
+            address(claimProcessor),
+            address(escalationManager),
+            0x07865c6E87B9F70255377e024ace6630C1Eaa37F,
+            address(optimisticOracleV3)
+        );
 
         uno.faucetToken(500000000000000000000000000000);
         usdt.faucetToken(500000000000000000000000000000);
         uno.approve(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 10000000000000000000000000000);
         usdt.approve(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 10000000000000000000000000000);
 
-        IUniswapRouter02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D).addLiquidity(address(uno), address(usdt), 3000000, 3000, 3000000, 3000, address(this), block.timestamp);
+        IUniswapRouter02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D).addLiquidity(
+            address(uno),
+            address(usdt),
+            3000000,
+            3000,
+            3000000,
+            3000,
+            address(this),
+            block.timestamp
+        );
         proxycapital.addPoolWhiteList(address(proxySSIP));
         proxySSIP.createRewarder(address(this), address(rewarderFactory), address(uno));
         rewarder = Rewarder(payable(proxySSIP.rewarder()));
@@ -96,7 +125,7 @@ contract Claim is Test {
 
         uno.approve(address(proxySSIP), 1000000000000000000000000);
         usdt.approve(address(proxySSIP), 10000000000000000000000000);
-        
+
         proxycapital.setSalesPolicyFactory(address(salesPolicyFactory));
         address salesP = salesPolicyFactory.newSalesPolicy(address(exchangeAgent), address(uno), address(proxycapital));
         mockSalesPolicy = MockSalesPolicy(payable(salesP));
@@ -106,7 +135,6 @@ contract Claim is Test {
     }
 
     function test_EnterInPool() public {
-
         proxySSIP.enterInPool(85000);
         proxySSIP.enterInPool(10000000);
         assertEq(usdt.balanceOf(proxySSIP.riskPool()), 85000 + 10000000);
@@ -117,5 +145,4 @@ contract Claim is Test {
         proxySSIP.enterInPool(10000000);
         proxySSIP.leaveFromPoolInPending(10000000);
     }
-
 }
