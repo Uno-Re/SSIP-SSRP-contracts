@@ -25,12 +25,12 @@ describe("SSIP Reward attack", function () {
     this.MockUNO = await ethers.getContractFactory("MockUNO")
     this.MockUSDT = await ethers.getContractFactory("MockUSDT")
     this.RewardAttack = await ethers.getContractFactory("RewardAttack")
-    this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
+    this.MockOraclePriceFeed = await ethers.getContractFactory("PriceOracle")
     this.EscalationManager = await ethers.getContractFactory("EscalationManager")
     this.signers = await ethers.getSigners()
     this.zeroAddress = "0x0000000000000000000000000000000000000000";
     this.routerContract = new ethers.Contract(
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
       JSON.stringify(UniswapV2Router.abi),
       ethers.provider,
     )
@@ -58,12 +58,12 @@ describe("SSIP Reward attack", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
 
     console.log("Adding liquidity...")
@@ -100,10 +100,10 @@ describe("SSIP Reward attack", function () {
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
+      WETH_ADDRESS.sepolia,
       this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
+      UNISWAP_FACTORY_ADDRESS.sepolia,
       this.multisig.address,
       getBigNumber("60")
     )

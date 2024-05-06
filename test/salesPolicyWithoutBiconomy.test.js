@@ -41,7 +41,7 @@
 //     this.signers = await ethers.getSigners()
 //     this.zeroAddress = ethers.constants.AddressZero
 //     this.routerContract = new ethers.Contract(
-//       UNISWAP_ROUTER_ADDRESS.rinkeby,
+//       UNISWAP_ROUTER_ADDRESS.sepolia,
 //       JSON.stringify(UniswapV2Router.abi),
 //       ethers.provider,
 //     )
@@ -61,8 +61,8 @@
 //   })
 
 //   beforeEach(async function () {
-//     this.mockUNO = this.MockUNO.attach(UNO.rinkeby)
-//     this.mockUSDT = this.MockUSDT.attach(USDT.rinkeby)
+//     this.mockUNO = this.MockUNO.attach(UNO.sepolia)
+//     this.mockUSDT = this.MockUSDT.attach(USDT.sepolia)
 //     this.rewarderFactory = await this.RewarderFactory.deploy()
 //     await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber(500000000), { from: this.signers[0].address })
 //     await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber(500000, 6), { from: this.signers[0].address })
@@ -80,12 +80,12 @@
 //     await (
 //       await this.mockUNO
 //         .connect(this.signers[0])
-//         .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber(10000000), { from: this.signers[0].address })
+//         .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber(10000000), { from: this.signers[0].address })
 //     ).wait()
 //     await (
 //       await this.mockUSDT
 //         .connect(this.signers[0])
-//         .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber(10000000, 6), { from: this.signers[0].address })
+//         .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber(10000000, 6), { from: this.signers[0].address })
 //     ).wait()
 
 //     console.log("Adding liquidity...")
@@ -108,10 +108,10 @@
 
 //     this.exchangeAgent = await this.ExchangeAgent.deploy(
 //       this.mockUSDT.address,
-//       WETH_ADDRESS.rinkeby,
-//       TWAP_ORACLE_PRICE_FEED_FACTORY.rinkeby,
-//       UNISWAP_ROUTER_ADDRESS.rinkeby,
-//       UNISWAP_FACTORY_ADDRESS.rinkeby,
+//       WETH_ADDRESS.sepolia,
+//       TWAP_ORACLE_PRICE_FEED_FACTORY.sepolia,
+//       UNISWAP_ROUTER_ADDRESS.sepolia,
+//       UNISWAP_FACTORY_ADDRESS.sepolia,
 //       getBigNumber("60")
 //     )
 

@@ -72,7 +72,7 @@ async function main() {
   }
   const flatSig = await signers[1].signMessage(ethers.utils.arrayify(ethers.utils.keccak256(hexData)))
   const splitSig = ethers.utils.splitSignature(flatSig)
-  const jsonRpcProvider = new ethers.providers.JsonRpcProvider(hre.config.networks.rinkeby.url)
+  const jsonRpcProvider = new ethers.providers.JsonRpcProvider(hre.config.networks.sepolia.url)
 
   const biconomy = new Biconomy(jsonRpcProvider, { apiKey: process.env.BICONOMY_API_KEY, debug: true })
   const ethersProvider = new ethers.providers.Web3Provider(biconomy)
