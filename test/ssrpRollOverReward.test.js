@@ -81,7 +81,7 @@ describe("SingleSidedReinsurancePool RollOverReward", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address);
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],

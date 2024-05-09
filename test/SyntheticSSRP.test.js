@@ -4,11 +4,15 @@ const { ethers, network, upgrades } = require("hardhat")
 const { getBigNumber, getNumber, advanceBlockTo } = require("../scripts/shared/utilities")
 
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
+const Usdt = require("../scripts/abis/MockUSDT.json")
+const Uno = require("../scripts/abis/MockUNO.json")
 
 const {
   WETH_ADDRESS,
   UNISWAP_FACTORY_ADDRESS,
-  UNISWAP_ROUTER_ADDRESS
+  UNISWAP_ROUTER_ADDRESS,
+  UNO,
+  USDT
 } = require("../scripts/shared/constants")
 
 
@@ -23,23 +27,20 @@ describe("Synthetic SSRP", function () {
     this.Rewarder = await ethers.getContractFactory("Rewarder")
     this.RewarderFactory = await ethers.getContractFactory("RewarderFactory")
     this.SyntheticSSRPFactory = await ethers.getContractFactory("SyntheticSSRPFactory")
-    this.MockUNO = await ethers.getContractFactory("MockUNO")
-    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
     this.MockOraclePriceFeed = await ethers.getContractFactory("PriceOracle")
     this.signers = await ethers.getSigners()
     this.zeroAddress = "0x0000000000000000000000000000000000000000";
-    this.routerContract = new ethers.Contract(
-      UNISWAP_ROUTER_ADDRESS.sepolia,
-      JSON.stringify(UniswapV2Router.abi),
-      ethers.provider,
-    )
+    this.routerContract = await ethers.getContractAt('IUniswapRouter02', UNISWAP_ROUTER_ADDRESS.sepolia);
+    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
+    this.MockUNO = await ethers.getContractFactory("MockUNO")
+
   })
 
   beforeEach(async function () {
-    //     this.mockUNO = this.MockUNO.attach(UNO.sepolia)
-    //     this.mockUSDT = this.MockUSDT.attach(USDT.sepolia)
     this.mockUNO = await this.MockUNO.deploy()
+    console.log("uno deployed")
     this.mockUSDT = await this.MockUSDT.deploy()
+    console.log("usdt deployed")
     await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000"), { from: this.signers[0].address })
     await this.mockUSDT.connect(this.signers[0]).faucetToken(getBigNumber("500000", 6), { from: this.signers[0].address })
     this.masterChefOwner = this.signers[0].address
@@ -56,38 +57,33 @@ describe("Synthetic SSRP", function () {
     // const timestamp = new Date().getTime()
     const timestamp = (await ethers.provider.getBlock('latest')).timestamp + 100;
 
-    await (
-      await this.mockUNO
-        .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
-    ).wait()
-    await (
-      await this.mockUSDT
-        .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
-    ).wait()
+    await this.mockUNO
+      .connect(this.signers[0])
+      .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address });
 
+
+    await this.mockUSDT
+      .connect(this.signers[0])
+      .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     console.log("before Adding liquidity...")
 
-    await (
-      await this.routerContract
-        .connect(this.signers[0])
-        .addLiquidity(
-          this.mockUNO.target,
-          this.mockUSDT.target,
-          getBigNumber("3000000"),
-          getBigNumber("3000", 6),
-          getBigNumber("3000000"),
-          getBigNumber("3000", 6),
-          this.signers[0].address,
-          timestamp,
-          { from: this.signers[0].address, gasLimit: 9999999 },
-        )
-    ).wait()
-        console.log("after Adding liquidity...")
+    await this.routerContract
+      .connect(this.signers[0])
+      .addLiquidity(
+        this.mockUNO.target,
+        this.mockUSDT.target,
+        getBigNumber("3000000"),
+        getBigNumber("3000", 6),
+        getBigNumber("3000000"),
+        getBigNumber("3000", 6),
+        this.signers[0].address,
+        timestamp,
+        { from: this.signers[0].address, gasLimit: 9999999 },
+      )
+    console.log("after Adding liquidity...")
 
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address);
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
@@ -97,6 +93,7 @@ describe("Synthetic SSRP", function () {
       "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
       "0x1000000000000000000000000000000000",
     ]);
+
 
     this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
 
@@ -115,14 +112,14 @@ describe("Synthetic SSRP", function () {
     await this.exchangeAgent.connect(this.multisig).addWhiteList(this.premiumPool.target)
     //await this.premiumPool.connect(this.multisig).addWhiteList(this.signers[0].address )
 
-    await (
-      await this.mockUSDT
+    await
+      this.mockUSDT
         .connect(this.signers[0])
         .approve(this.premiumPool.target, getBigNumber("10000000"), { from: this.signers[0].address })
-    ).wait()
-    await (await this.premiumPool.connect(this.multisig).addCurrency(this.mockUSDT.target)).wait()
 
-    await (await this.premiumPool.collectPremium(this.mockUSDT.target, getBigNumber("10000", 6))).wait()
+    await this.premiumPool.connect(this.multisig).addCurrency(this.mockUSDT.target)
+
+    await this.premiumPool.collectPremium(this.mockUSDT.target, getBigNumber("10000", 6))
 
     this.singleSidedReinsurancePool = await upgrades.deployProxy(
       this.SingleSidedReinsurancePool, [
@@ -141,15 +138,14 @@ describe("Synthetic SSRP", function () {
 
     expect(this.rewarder.target).equal(await this.singleSidedReinsurancePool.rewarder())
 
-    await (
-      await this.singleSidedReinsurancePool.createRiskPool(
-        "UNO-LP",
-        "UNO-LP",
-        this.riskPoolFactory.target,
-        this.mockUNO.target,
-        getBigNumber("1"),
-      )
-    ).wait()
+    await this.singleSidedReinsurancePool.createRiskPool(
+      "UNO-LP",
+      "UNO-LP",
+      this.riskPoolFactory.target,
+      this.mockUNO.target,
+      getBigNumber("1"),
+    )
+
 
     this.riskPoolAddress = await this.singleSidedReinsurancePool.riskPool()
 
@@ -157,7 +153,6 @@ describe("Synthetic SSRP", function () {
 
     await this.singleSidedReinsurancePool.createSyntheticSSRP(this.signers[0].address, this.syntheticSSRPFactory.target)
     this.syntheticSSRPAddr = await this.singleSidedReinsurancePool.syntheticSSRP()
-    console.log(this.syntheticSSRPAddr)
 
     this.syntheticSSRP = await this.SyntheticSSRP.attach(this.syntheticSSRPAddr)
 
@@ -165,21 +160,28 @@ describe("Synthetic SSRP", function () {
     this.syntheticRewarderAddr = await this.syntheticSSRP.rewarder()
     this.syntheticRewarder = await this.Rewarder.attach(this.syntheticRewarderAddr)
 
-    await (
-      await this.riskPool
+    await
+      this.riskPool
         .connect(this.signers[0])
         .approve(this.syntheticSSRP.target, getBigNumber("10000000"), { from: this.signers[0].address })
-    ).wait()
-    await (
-      await this.riskPool
+
+    await
+      this.riskPool
         .connect(this.signers[1])
         .approve(this.syntheticSSRP.target, getBigNumber("10000000"), { from: this.signers[1].address })
-    ).wait()
+
 
     await this.mockUSDT.transfer(this.syntheticRewarder.target, getBigNumber("100000", 6))
 
     await this.singleSidedReinsurancePool.setStakingStartTime(Math.round(timestamp / 1000 - 3600 * 7))
     console.log(Math.round(timestamp / 1000 - 3600 * 7))
+  })
+
+  describe("Check", function () {
+    it("Should set reward per block factor", async function () {
+      const poolInfoBefore = await this.mockUNO.decimals()
+      expect(poolInfoBefore).equal("18")
+    })
   })
 
   describe("Synthetic SSRP Basic", function () {

@@ -67,8 +67,8 @@ describe("SingleSidedInsurancePool", function () {
       "0x1000000000000000000000000000000000",
     ]);
 
-   // const timestamp = new Date().getTime()
-    
+    // const timestamp = new Date().getTime()
+
     const timestamp = (await ethers.provider.getBlock('latest')).timestamp + 100;
 
     await (
@@ -100,7 +100,7 @@ describe("SingleSidedInsurancePool", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.multiSigWallet.target);
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
@@ -498,7 +498,7 @@ describe("SingleSidedInsurancePool", function () {
         await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
         const currentDate = new Date(((await ethers.provider.getBlock('latest')).timestamp) * 1000)
         //const afterFiveDays = new Date(currentDate.setDate(currentDate.getDate() + 5))
-        const afterFiveDaysTimeStampUTC = (await ethers.provider.getBlock('latest')).timestamp +6*86400;
+        const afterFiveDaysTimeStampUTC = (await ethers.provider.getBlock('latest')).timestamp + 6 * 86400;
         network.provider.send("evm_setNextBlockTimestamp", [afterFiveDaysTimeStampUTC])
         await network.provider.send("evm_mine")
         // after 10000 blocks
@@ -509,7 +509,7 @@ describe("SingleSidedInsurancePool", function () {
         // signer 0 submit WR for the 1000 UNO again
         await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
         //const afterTenDays = new Date(afterFiveDays.setDate(currentDate.getDate() + 11))
-        const afterTenDaysTimeStampUTC = (await ethers.provider.getBlock('latest')).timestamp +11*86400;
+        const afterTenDaysTimeStampUTC = (await ethers.provider.getBlock('latest')).timestamp + 11 * 86400;
         network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
         await network.provider.send("evm_mine")
         // signer 0 can claim after 10 days since the last WR
@@ -857,10 +857,10 @@ describe("SingleSidedInsurancePool", function () {
 
         // await this.singleSidedInsurancePool1.enterInPool(getBigNumber("100000");
 
-        
+
         this.poolInfov2 = await this.capitalAgent.poolInfo(this.singleSidedInsurancePool.target);
         this.scrv2 = this.poolInfov2.SCR
-       
+
         //setting pool capital to v2 pool capital
         await this.capitalAgent.setPoolCapital(this.singleSidedInsurancePool1.target, this.poolInfov2.totalCapital);
         await this.capitalAgent.setSCR(this.poolInfov2.SCR, this.singleSidedInsurancePool1.target);
@@ -892,9 +892,9 @@ describe("SingleSidedInsurancePool", function () {
 
         const userInfoV2 = await this.singleSidedInsurancePool.userInfo(this.signers[0].address);
         console.log('userInfov2', userInfoV2)
-      
+
         //migrating user position 
-        await this.singleSidedInsurancePool1.setUserDetails(this.signers[0].address,userInfoV2.amount, 1);
+        await this.singleSidedInsurancePool1.setUserDetails(this.signers[0].address, userInfoV2.amount, 1);
         const userInfoV3 = await this.singleSidedInsurancePool1.userInfo(this.signers[0].address);
 
         expect(userInfoV3.amount).to.equal(userInfoV2.amount);
@@ -916,7 +916,7 @@ describe("SingleSidedInsurancePool", function () {
 
         expect(userInfoV3.amount).to.equal(userInfoV2.amount);
         expect(userInfoV3.rewardDebt).to.equal(1);
-        
+
         // //user leave from pool 
         await expect(this.singleSidedInsurancePool.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted;
         await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted;

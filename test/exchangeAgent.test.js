@@ -115,7 +115,7 @@ describe("ExchangeAgent", function () {
     ).wait()
 
     this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired)
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6");
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
       WETH_ADDRESS.sepolia,
@@ -127,16 +127,16 @@ describe("ExchangeAgent", function () {
     )
 
     await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [this.multiSigWallet.target],
-      });
-  
-      await network.provider.send("hardhat_setBalance", [
-        this.multiSigWallet.target,
-        "0x1000000000000000000000000000000000",
-      ]);
-  
-      this.multisig = await ethers.getSigner(this.multiSigWallet.target)
+      method: "hardhat_impersonateAccount",
+      params: [this.multiSigWallet.target],
+    });
+
+    await network.provider.send("hardhat_setBalance", [
+      this.multiSigWallet.target,
+      "0x1000000000000000000000000000000000",
+    ]);
+
+    this.multisig = await ethers.getSigner(this.multiSigWallet.target)
 
   })
 
@@ -167,7 +167,7 @@ describe("ExchangeAgent", function () {
       let encodedCallData
       encodedCallData = this.exchangeAgent.interface.encodeFunctionData("setSlippage", [5])
 
-    expect(await this.multiSigWallet.submitTransaction(this.exchangeAgent.target, 0, encodedCallData)).to.emit(this.multiSigWallet, "SubmitTransaction").withArgs(this.signers[0].address, this.txIdx, this.exchangeAgent.target, 0, encodedCallData)
+      expect(await this.multiSigWallet.submitTransaction(this.exchangeAgent.target, 0, encodedCallData)).to.emit(this.multiSigWallet, "SubmitTransaction").withArgs(this.signers[0].address, this.txIdx, this.exchangeAgent.target, 0, encodedCallData)
 
       await expect(this.multiSigWallet.confirmTransaction(this.txIdx, false))
         .to.emit(this.multiSigWallet, "ConfirmTransaction")
@@ -194,7 +194,7 @@ describe("ExchangeAgent", function () {
         .withArgs(this.signers[1].address, this.txIdx)
 
       this.txIdx++
-        await this.exchangeAgent.connect(this.multisig).setSlippage(5)
+      await this.exchangeAgent.connect(this.multisig).setSlippage(5)
     })
     it("Should not allow others to convert tokens", async function () {
       await (
@@ -211,21 +211,21 @@ describe("ExchangeAgent", function () {
     })
 
     // it("should convert UNO to USDT", async function () {
-        // const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
-        //       await (
-        //         await this.mockUNO
-        //           .connect(this.signers[0])
-        //           .approve(this.exchangeAgent.target, getBigNumber("10000000"), { from: this.signers[0].address })
-        //       ).wait()
-        //       await this.mockUNO
-        //         .connect(this.signers[0])
-        //         .transfer(this.exchangeAgent.target, getBigNumber("2000"), { from: this.signers[0].address })
-        //       const usdtConvert = await (
-        //         await this.exchangeAgent.convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"))
-        //       ).wait()
-        //       const convertedAmount = usdtConvert.events[usdtConvert.events.length - 1].args._convertedAmount
-        //       const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
-        //       expect(usdtBalanceAfter).to.equal(usdtBalanceBefore.add(convertedAmount))
+    // const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
+    //       await (
+    //         await this.mockUNO
+    //           .connect(this.signers[0])
+    //           .approve(this.exchangeAgent.target, getBigNumber("10000000"), { from: this.signers[0].address })
+    //       ).wait()
+    //       await this.mockUNO
+    //         .connect(this.signers[0])
+    //         .transfer(this.exchangeAgent.target, getBigNumber("2000"), { from: this.signers[0].address })
+    //       const usdtConvert = await (
+    //         await this.exchangeAgent.convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"))
+    //       ).wait()
+    //       const convertedAmount = usdtConvert.events[usdtConvert.events.length - 1].args._convertedAmount
+    //       const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
+    //       expect(usdtBalanceAfter).to.equal(usdtBalanceBefore.add(convertedAmount))
     // })
   })
 })

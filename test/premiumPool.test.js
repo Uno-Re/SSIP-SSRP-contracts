@@ -1,7 +1,7 @@
 const { expect } = require("chai")
 
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber} = require("../scripts/shared/utilities")
+const { getBigNumber } = require("../scripts/shared/utilities")
 
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
 
@@ -123,7 +123,7 @@ describe("Premium Pool", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.multiSigWallet.address);
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,

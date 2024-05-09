@@ -23,7 +23,7 @@ describe("SalesPolicy", function () {
   before(async function () {
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
-    this.CapitalAgent1 = await ethers.getContractFactory("CapitalAgent1")
+    this.CapitalAgent1 = await ethers.getContractFactory("CapitalAgent")
     this.PremiumPool = await ethers.getContractFactory("PremiumPool")
     this.Rewarder = await ethers.getContractFactory("Rewarder")
     this.RewarderFactory = await ethers.getContractFactory("RewarderFactory")
@@ -115,7 +115,7 @@ describe("SalesPolicy", function () {
     ).wait()
 
     this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired);
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.MultiSigWallet.target);
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
@@ -781,7 +781,7 @@ describe("SalesPolicy", function () {
           gasLimit: 1000000,
         })).to.be.revertedWith('UnoRe: invalid signer')
     })
-  
+
     it("Should buy policy in ETH  ", async function () {
       this.txIdx = this.txIdx1;
       let hexData

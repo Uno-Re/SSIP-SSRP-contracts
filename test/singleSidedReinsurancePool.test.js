@@ -86,7 +86,7 @@ describe("SingleSidedReinsurancePool", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address);
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
