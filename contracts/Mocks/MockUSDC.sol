@@ -13,8 +13,8 @@ contract MockUSDC is ERC20 {
         _mint(msg.sender, 10000000000 * 10 ** 18);
     }
 
-    function faucetToken(address _to, uint256 _amount) external {
+    function faucetToken(uint256 _amount) external {
         // require(_faucets[msg.sender] + _amount <= faucetLimit, "Uno: Faucet amount limitation");
-        _mint(_to, _amount);
+        _mint(msg.sender, _amount);
     }
 }
