@@ -402,15 +402,15 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     function _checkCapitalByMCRAndSCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
         address currency = poolInfo[_pool].currency;
-        uint256 totalCapitalStakedInUSDC;
+        uint256 totalCapitalStakedInUSDCPool;
         uint256 mcrInUSDC;
         uint256 scrInUSDC;
 
-        totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();
+        totalCapitalStakedInUSDCPool = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
         mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency] - _withdrawAmount);
         scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
 
-        bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDC * MCR) / CALC_PRECISION;
+        bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDCPool * MCR) / CALC_PRECISION;
         bool isSCRPass = scrInUSDC >= poolInfo[_pool].SCR;
 
         return isMCRPass && isSCRPass;

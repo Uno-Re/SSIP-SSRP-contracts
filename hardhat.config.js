@@ -80,18 +80,18 @@ module.exports = {
       chainId: 56,
       accounts,
       live: true,
-      
-    },   
+
+    },
 
     sepolia: {
       url: process.env.SEPOLIA_URL,
       accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
     },
-    rolluxTestnet:{
-    url: process.env.ROLLUXTEST_URL,
-    accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
-    allowUnlimitedContractSize: true,
-    saveDeployments: true,
+    rolluxTestnet: {
+      url: process.env.ROLLUXTEST_URL,
+      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+      allowUnlimitedContractSize: true,
+      saveDeployments: true,
     },
   },
   etherscan: {
@@ -100,11 +100,11 @@ module.exports = {
       rolluxTestnet: 'abc',
       tanenbaum: 'abc',
       syscoin: 'abc',
-    bscMain: process.env.API_KEY, // BSC_API_KEY
-    sepolia: process.env.API_SEP,
-},
-  customChains: [
-       {
+      bscMain: process.env.API_KEY, // BSC_API_KEY
+      sepolia: process.env.API_SEP,
+    },
+    customChains: [
+      {
         network: "rolluxMainnet",
         chainId: 570,
         urls: {
@@ -138,7 +138,7 @@ module.exports = {
         }
       }
     ]
-},
+  },
   paths: {
     deploy: "deploy",
     deployments: "deployments",
@@ -157,16 +157,29 @@ module.exports = {
     compilers: [
       {
         version: "0.8.23",
-        settings: {optimizer: {
-        enabled: true,
-        runs: 200,},
-      },
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      }, {
+        version: "0.8.21",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       {
         version: "0.7.6",
-        settings: {optimizer: {
-        enabled: true,
-        runs: 200,},
-      },
-  }],
-  }}
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      }],
+  }
+}
