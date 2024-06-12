@@ -1,0 +1,641 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x76Ad7e8BfC07F3880423B6F88DFd58465d3138ee",
+    "txHash": "0xf5f9cd9097bb6e7ef3abe034ce475d796aaefa924541745072bcda021a8d0b8b"
+  },
+  "proxies": [
+    {
+      "address": "0xdDead40fdeEd9395Ce21f0F8b42D8C6137c5951F",
+      "txHash": "0x4c9016ec337e1b0c1c7a68fbf4d9506793d0265fa5a462a79b8d0f9b206be6c0",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x397a58f293A4b6Cb1AF641CeF7e094dE73bb532f",
+      "txHash": "0x9987d57f75942f7cbf36550f4856322ca2242095abb87a36e16a7a514fb47a9e",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "2fc591401b820bf9e91d3ad04d1ba527328ba2526d793f26f6fcb95357560d2d": {
+      "address": "0xBF5746Bef69023034986CcDC5282E294d8924039",
+      "txHash": "0x0e333cbe77a9b4c1740e7b8583a1fccb06cadab77219a5e70c562bc75bd108e5",
+      "layout": {
+        "solcVersion": "0.8.23",
+        "storage": [
+          {
+            "label": "migrateTo",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:30"
+          },
+          {
+            "label": "capitalAgent",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:31"
+          },
+          {
+            "label": "killed",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:33"
+          },
+          {
+            "label": "emergencyWithdrawAllowed",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:34"
+          },
+          {
+            "label": "rewarder",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:35"
+          },
+          {
+            "label": "riskPool",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:37"
+          },
+          {
+            "label": "lockTime",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:39"
+          },
+          {
+            "label": "stakingStartTime",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:40"
+          },
+          {
+            "label": "roleLockTime",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_uint256))",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:61"
+          },
+          {
+            "label": "policies",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_uint256,t_struct(Policy)17614_storage)",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:63"
+          },
+          {
+            "label": "userInfo",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_struct(UserInfo)17607_storage)",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:65"
+          },
+          {
+            "label": "poolInfo",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_struct(PoolInfo)17598_storage",
+            "contract": "SingleSidedInsurancePool",
+            "src": "contracts/SingleSidedInsurancePool.sol:67"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)25_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)34_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)25_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)93_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)165_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)226_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)25_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_mapping(t_address,t_struct(UserInfo)17607_storage)": {
+            "label": "mapping(address => struct SingleSidedInsurancePool.UserInfo)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(bytes32 => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Policy)17614_storage)": {
+            "label": "mapping(uint256 => struct SingleSidedInsurancePool.Policy)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Policy)17614_storage": {
+            "label": "struct SingleSidedInsurancePool.Policy",
+            "members": [
+              {
+                "label": "insuranceAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "payoutAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "settled",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(PoolInfo)17598_storage": {
+            "label": "struct SingleSidedInsurancePool.PoolInfo",
+            "members": [
+              {
+                "label": "lastRewardBlock",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "accUnoPerShare",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "unoMultiplierPerBlock",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(UserInfo)17607_storage": {
+            "label": "struct SingleSidedInsurancePool.UserInfo",
+            "members": [
+              {
+                "label": "lastWithdrawTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "rewardDebt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "isNotRollOver",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)25_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:40",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "ecd4a0ad08daac47741518c52e2f88b17d444a6ef81427e59dafd317f4eaa063": {
+      "address": "0x8E6572AD267d2486DF9d9a3F10E3C91641322315",
+      "txHash": "0x27d182a4c32acc3df721096ef8d0a3ccec0f3e38941f32d9a6212a7156a1f728",
+      "layout": {
+        "solcVersion": "0.8.23",
+        "storage": [
+          {
+            "label": "_guardianCouncil",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:24"
+          },
+          {
+            "label": "optimisticOracle",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(OptimisticOracleV3Interface)27718",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:26"
+          },
+          {
+            "label": "ssip",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(ISingleSidedInsurancePool)26842",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:27"
+          },
+          {
+            "label": "capitalAgent",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_contract(ICapitalAgent)26080",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:28"
+          },
+          {
+            "label": "defaultCurrency",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_contract(IERC20)2354",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:29"
+          },
+          {
+            "label": "defaultIdentifier",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bytes32",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:30"
+          },
+          {
+            "label": "assertionliveTime",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:31"
+          },
+          {
+            "label": "escalationManager",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_address",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:32"
+          },
+          {
+            "label": "claimsDao",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:33"
+          },
+          {
+            "label": "assertedPolicies",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_bytes32,t_struct(Policy)29302_storage)",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:34"
+          },
+          {
+            "label": "isUMAFailed",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_bool",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:35"
+          },
+          {
+            "label": "lockTime",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:37"
+          },
+          {
+            "label": "roleLockTime",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:38"
+          },
+          {
+            "label": "settleAssertionUmaFailed",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:39"
+          },
+          {
+            "label": "ipfsUrl",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_bytes32",
+            "contract": "PayoutRequest",
+            "src": "contracts/uma/PayoutRequest.sol:40"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)93_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)165_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(ICapitalAgent)26080": {
+            "label": "contract ICapitalAgent",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC20)2354": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISingleSidedInsurancePool)26842": {
+            "label": "contract ISingleSidedInsurancePool",
+            "numberOfBytes": "20"
+          },
+          "t_contract(OptimisticOracleV3Interface)27718": {
+            "label": "contract OptimisticOracleV3Interface",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(Policy)29302_storage)": {
+            "label": "mapping(bytes32 => struct PayoutRequest.Policy)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Policy)29302_storage": {
+            "label": "struct PayoutRequest.Policy",
+            "members": [
+              {
+                "label": "insuranceAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "policyId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "payoutAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "settled",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
