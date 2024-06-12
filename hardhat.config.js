@@ -92,6 +92,11 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
       allowUnlimitedContractSize: true,
       saveDeployments: true,
+    rolluxTestnet: {
+      url: process.env.ROLLUXTEST_URL,
+      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+      allowUnlimitedContractSize: true,
+      saveDeployments: true,
     },
     rolluxMainnet: {
       url: process.env.ROLLUXMAIN_URL,
