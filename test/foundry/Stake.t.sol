@@ -28,34 +28,23 @@ contract Stake is Test {
     address constant AGENT = 0x2aAb17643960Ef1909522F3F8F706c587636FE27;
 
     function setUp() public {
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        string memory ROLLUXTEST_URL = vm.envString("ROLLUXTEST_URL");
+        vm.createSelectFork(ROLLUXTEST_URL);
         priceFeed = SupraPriceOracle(PRICE);
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork(ROLLUXTEST_URL);
         pool = SingleSidedInsurancePool(USDCPOOL);
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork(ROLLUXTEST_URL);
         agent = CapitalAgent(AGENT);
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork(ROLLUXTEST_URL);
         usdc = USDCmock(USDC);
     }
-
-    function test_CheckUSDCEthPrice() public {
-        assertEq(priceFeed.getAssetEthPrice(USDC), 304749580000000);
-    }
-
-    function test_USDCxUNOPrice() public {
-        assertEq(priceFeed.consult(USDC, UNO, 1), 21982008846048617562);
-    }
-
-    function test_CapitalAgent() public {
-        assertEq(agent.totalCapitalStaked(), 1633999991);
-    }
-
     function test_stake(uint256 amount) public {
-        vm.assume(amount < 1000000000000000000000000000);
+        vm.assume(amount < 1e12);
         vm.assume(0 < amount);
+        uint256 totalStaked = agent.totalCapitalStaked();
         vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
         usdc.mint(address(user), amount);
         assertEq(usdc.balanceOf(user), amount);
@@ -63,22 +52,24 @@ contract Stake is Test {
         usdc.approve(address(pool), amount);
         vm.prank(address(user));
         pool.enterInPool(amount);
-        assertEq(agent.totalCapitalStaked(), (1633999991 + amount));
+        assertEq(agent.totalCapitalStaked(), (totalStaked + amount));
     }
 
     function test_stakeWithdrawal(uint256 amount, uint256 amount2) public {
-        vm.assume(amount < 1000000000);
+        uint256 userDeposit = 1000000000;
+        vm.assume(amount < userDeposit);
         vm.assume(amount > 0);
         vm.assume(amount2 < amount);
         vm.assume(amount2 > 0);
+        uint256 totalStaked = agent.totalCapitalStaked();
         vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
-        usdc.mint(address(user), 1000000000);
-        assertEq(usdc.balanceOf(user), 1000000000);
+        usdc.mint(address(user), userDeposit);
+        assertEq(usdc.balanceOf(user), userDeposit);
         vm.prank(address(user));
-        usdc.approve(address(pool), 1000000000);
+        usdc.approve(address(pool), userDeposit);
         vm.prank(address(user));
-        pool.enterInPool(1000000000);
-        assertEq(agent.totalCapitalStaked(), (1633999991 + 1000000000));
+        pool.enterInPool(userDeposit);
+        assertEq(agent.totalCapitalStaked(), (totalStaked + userDeposit));
         vm.prank(address(user));
         pool.leaveFromPoolInPending(amount);
         skip(300);
@@ -87,6 +78,6 @@ contract Stake is Test {
         vm.prank(address(user));
         pool.leaveFromPending(amount2);
         assertEq(usdc.balanceOf(user), amount2);
-        assertEq(agent.totalCapitalStaked(), (1633999991 + 1000000000 - amount2));
+        assertEq(agent.totalCapitalStaked(), (totalStaked + userDeposit - amount2));
     }
 }

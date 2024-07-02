@@ -8,3 +8,5 @@ artifacts
 .env
 lib
 out
+
+cache_forge/
