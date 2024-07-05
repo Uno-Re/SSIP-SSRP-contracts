@@ -23,6 +23,8 @@ const {
 } = require("../scripts/shared/constants")
 const OptimisticOracleV3Abi = require("../scripts/abis/OptimisticOracleV3.json")
 
+const ethSigUtil = require("@metamask/eth-sig-util")
+
 describe("CLaimsDao SalesPolicy", async function () {
   before(async function () {
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
@@ -190,6 +192,10 @@ describe("CLaimsDao SalesPolicy", async function () {
     this.MockOracleAncillary = await ethers.getContractAt("MockOracleAncillaryInterface", MOCK_ORACLE_ANCILLARY.sepolia)
     this.FeeManager = await ethers.getContractAt("IFeeManger", STORE_UMA.sepolia)
     this.admin = await ethers.getImpersonatedSigner("0x9A8f92a830A5cB89a3816e3D267CB7791c16b04D")
+    await network.provider.send("hardhat_setBalance", [
+      "0x9A8f92a830A5cB89a3816e3D267CB7791c16b04D",
+      "0x1000000000000000000000000000000000",
+    ])
     await this.AddressWhitelist.connect(this.admin).addToWhitelist(this.mockUNO.target)
     await this.FeeManager.connect(this.admin).setFinalFee(this.mockUNO.target, [10])
     await this.optimisticOracleV3.connect(this.admin).setAdminProperties(this.mockUNO.target, 120, ethers.parseEther("0.1"))
@@ -343,6 +349,12 @@ describe("CLaimsDao SalesPolicy", async function () {
       verifyingContract: this.salesPolicyAddress,
       salt: getPaddedHexStrFromBN(chainId),
     }
+    // const domain = {
+    //   name: "BuyPolicyMetaTransaction",
+    //   version: "1",
+    //   verifyingContract: this.salesPolicyAddress,
+    //   salt: getPaddedHexStrFromBN(chainId),
+    // }
 
     const types = {
       MetaTransaction: [
@@ -351,17 +363,51 @@ describe("CLaimsDao SalesPolicy", async function () {
         { name: "functionSignature", type: "bytes" },
       ],
     }
+    // const types = {
+    //   EIP712Domain: [
+    //     { name: "name", type: "string" },
+    //     { name: "version", type: "string" },
+    //     { name: "verifyingContract", type: "address" },
+    //     { name: "salt", type: "bytes32" },
+    //   ],
+    //   MetaTransaction: [
+    //     { name: "nonce", type: "uint256" },
+    //     { name: "from", type: "address" },
+    //     { name: "functionSignature", type: "bytes" },
+    //   ],
+    // }
+
     const message = {
       nonce: Number(nonce),
       from: this.signers[0].address,
       functionSignature: functionSignature,
     }
 
+    // Manually encode the payload
+    // const payload = {
+    //   domain,
+    //   types,
+    //   message,
+    //   primaryType: "MetaTransaction",
+    // }
+
+    // console.log(payload)
+    // Directly send the JSON-RPC request
+    // const signature = await this.signers[0].provider.send("eth_signTypedData_v4", [
+    //   this.signers[0].address.toLowerCase(),
+    //   payload,
+    // ])
+
+    // console.log("Signature:", signature)
+
     const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
     expect(premiumPoolBalanceBefore).to.equal(0)
     console.log("[TODO: fix signature error below]")
+    // console.log(domainData)
+    // console.log(types)
+    // console.log(message)
     const signature = await this.signers[0].signTypedData(domainData, types, message)
-
+    console.log("Signature:", signature)
     let { r, s, v } = getSignatureParameters(signature)
     try {
       let tx = await this.salesPolicy.executeMetaTransaction(this.signers[0].address, functionSignature, r, s, v, {
