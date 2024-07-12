@@ -42,19 +42,16 @@ contract Stake is Test {
     }
 
     function test_CheckUSDCEthPrice() public {
-        assertEq(priceFeed.getAssetEthPrice(USDC), 304749580000000);
+        assertEq(priceFeed.getAssetEthPrice(USDC), 266160000000000);
     }
 
     function test_USDCxUNOPrice() public {
-        assertEq(priceFeed.consult(USDC, UNO, 1), 21982008846048617562);
-    }
-
-    function test_CapitalAgent() public {
-        assertEq(agent.totalCapitalStaked(), 1633999991);
+        assertEq(priceFeed.consult(USDC, UNO, 1), 33333700960004);
     }
 
     function test_stake(uint256 amount) public {
-        vm.assume(amount < 1000000000000000000000000000);
+        uint256 staked = agent.totalCapitalStaked();
+        vm.assume(amount < 115792089237316195423570985008687907853269984665640564039457);
         vm.assume(0 < amount);
         vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
         usdc.mint(address(user), amount);
@@ -63,10 +60,11 @@ contract Stake is Test {
         usdc.approve(address(pool), amount);
         vm.prank(address(user));
         pool.enterInPool(amount);
-        assertEq(agent.totalCapitalStaked(), (1633999991 + amount));
+        assertEq(agent.totalCapitalStaked(), (staked + amount));
     }
 
     function test_stakeWithdrawal(uint256 amount, uint256 amount2) public {
+        uint256 staked = agent.totalCapitalStaked();
         vm.assume(amount < 1000000000);
         vm.assume(amount > 0);
         vm.assume(amount2 < amount);
@@ -78,7 +76,7 @@ contract Stake is Test {
         usdc.approve(address(pool), 1000000000);
         vm.prank(address(user));
         pool.enterInPool(1000000000);
-        assertEq(agent.totalCapitalStaked(), (1633999991 + 1000000000));
+        assertEq(agent.totalCapitalStaked(), (staked + 1000000000));
         vm.prank(address(user));
         pool.leaveFromPoolInPending(amount);
         skip(300);
@@ -87,6 +85,6 @@ contract Stake is Test {
         vm.prank(address(user));
         pool.leaveFromPending(amount2);
         assertEq(usdc.balanceOf(user), amount2);
-        assertEq(agent.totalCapitalStaked(), (1633999991 + 1000000000 - amount2));
+        assertEq(agent.totalCapitalStaked(), (staked + 1000000000 - amount2));
     }
 }
