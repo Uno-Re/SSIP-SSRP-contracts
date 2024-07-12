@@ -8,3 +8,8 @@ artifacts
 .env
 lib
 out
+deployments
+bin
+cache_forge
+.github
+.vscode
