@@ -41,6 +41,7 @@ contract Stake is Test {
         vm.createSelectFork(ROLLUXTEST_URL);
         usdc = USDCmock(USDC);
     }
+
     function test_stake(uint256 amount) public {
         vm.assume(amount < 1e12);
         vm.assume(0 < amount);
