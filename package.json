@@ -29,12 +29,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@openzeppelin/hardhat-upgrades": "^3.2.0",
     "chai": "^4.3.8",
     "chai-eventemitter2": "^0.2.1",
     "dotenv": "^10.0.0",
     "ethereum-waffle": "^3.4.0",
-    "ethers": "6.9.0",
-    "hardhat": "^2.22.1",
+    "ethers": "^6.13.1",
+    "hardhat": "^2.22.5",
     "hardhat-contract-sizer": "^2.10.0",
     "hardhat-deploy": "^0.11.44",
     "hardhat-deploy-ethers": "^0.4.1",
@@ -52,7 +53,6 @@
     "@nomiclabs/hardhat-waffle": "^2.0.6",
     "@openzeppelin/contracts": "^5.0.0",
     "@openzeppelin/contracts-upgradeable": "^5.0.0",
-    "@openzeppelin/hardhat-upgrades": "^2.5.0",
     "@uniswap/lib": "^4.0.1-alpha",
     "@uniswap/v2-core": "^1.0.1",
     "eth-sig-util": "^3.0.1"
