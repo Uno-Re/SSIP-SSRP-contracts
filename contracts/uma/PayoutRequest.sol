@@ -67,7 +67,7 @@ contract PayoutRequest is PausableUpgradeable {
         escalationManager = _escalationManager;
         claimsDao = _claimsDao;
         _guardianCouncil = __guardianCouncil;
-        //defaultIdentifier = optimisticOracle.defaultIdentifier();
+        defaultIdentifier = optimisticOracle.defaultIdentifier();
         assertionliveTime = 10 days;
         isUMAFailed = true;
     }
@@ -75,7 +75,12 @@ contract PayoutRequest is PausableUpgradeable {
     /**
      * @param _hyperlaneMessage Starting string texts for claim data prefix, eg. "Request for claim is for"
      */
-    function initRequest(uint256 _policyId, uint256 _amount, address _to, bytes32 _hyperlaneMessage) public whenNotPaused returns (bytes32 assertionId) {
+    function initRequest(
+        uint256 _policyId,
+        uint256 _amount,
+        address _to,
+        bytes32 _hyperlaneMessage
+    ) public whenNotPaused returns (bytes32 assertionId) {
         (address salesPolicy, , ) = ICapitalAgent(capitalAgent).getPolicyInfo();
         ICapitalAgent(capitalAgent).updatePolicyStatus(_policyId);
         _checkForCoverage(salesPolicy, _policyId, _amount);
@@ -239,7 +244,7 @@ contract PayoutRequest is PausableUpgradeable {
         address _exchangeAgent = ICapitalAgent(capitalAgent).exchangeAgent();
         (, , address _currency, ) = ICapitalAgent(capitalAgent).getPoolInfo(address(ssip));
         address _usdcToken = IExchangeAgent(_exchangeAgent).usdcToken();
-        uint256 usdcTokenAmount = IExchangeAgent(_exchangeAgent).getNeededTokenAmount(_currency, _usdcToken, _amount);  // @Audit: there might be a chance of amount loss due to precision loss
+        uint256 usdcTokenAmount = IExchangeAgent(_exchangeAgent).getNeededTokenAmount(_currency, _usdcToken, _amount); // @Audit: there might be a chance of amount loss due to precision loss
         require(usdcTokenAmount + _claimed <= _coverageAmount, "UnoRe: amount exceeds coverage amount");
         require(_exist && !_expired, "UnoRe: policy expired or not exist");
     }
