@@ -3,11 +3,12 @@ node_modules
 #Hardhat files
 cache
 artifacts
-cache_forge
+cache_forge //apagar
 
 # .env
 .env
-lib
 out
 deployments
-lib
+lib 
+bin //apagar
+.openzeppelin
