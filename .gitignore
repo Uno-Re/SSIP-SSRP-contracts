@@ -10,5 +10,5 @@ cache_forge //apagar
 out
 deployments
 lib 
-bin //apagar
+bin
 .openzeppelin
