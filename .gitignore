@@ -12,3 +12,4 @@ deployments
 lib 
 bin
 .openzeppelin
+.vscode
