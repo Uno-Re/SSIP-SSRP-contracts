@@ -13,7 +13,7 @@ async function main() {
   let poolSCR = getBigNumber("1", 6)
   let MCR = getBigNumber("10", 6)
   let MLR = getBigNumber("1", 6)
-  let signerInSalesPolicy = "0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863"
+  let signerInSalesPolicy = "0x8B591289Afd87d94344b188B4103e250717BDF0e"
 
   let ssipAbi = (await artifacts.readArtifact("SingleSidedInsurancePool")).abi
   let capitalAgentAbi = (await artifacts.readArtifact("CapitalAgent")).abi

@@ -97,6 +97,7 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
       allowUnlimitedContractSize: true,
       saveDeployments: true,
+      evmVersion: "paris",
     },
   },
   etherscan: {
@@ -171,6 +172,15 @@ module.exports = {
       },
       {
         version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.10",
         settings: {
           optimizer: {
             enabled: true,

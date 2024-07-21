@@ -15,7 +15,7 @@ contract SupraPriceOracle is Ownable {
      * e.x ethPrice[uno_address] = 123456 means 1 UNO = 123456 / (10 ** 18 eth)
      */
     mapping(address => uint256) ethPrices;
-    address private ethUSDAggregator = 0x14Dbb98a8e9A77cE5B946145bb0194aDE5dA7611;
+    address private ethUSDAggregator = 0xbc0453F6FAC74FB46223EA5CC55Bd82852f0C670;
 
     event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);
     event SetETHUSDAggregator(address _oldAggregator, address _newAggregator);
