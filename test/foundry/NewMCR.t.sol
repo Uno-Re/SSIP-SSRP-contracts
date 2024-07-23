@@ -18,7 +18,7 @@ import "forge-std/console.sol";
 import "lib/forge-std/src/Test.sol";
 import "../../src/TransparentProxy.sol";
 
-contract Stake is Test {
+contract NewMCR is Test {
     MockUNO uno;
     USDCmock usdc;
     SupraPriceOracle priceFeed;
@@ -212,6 +212,7 @@ contract Stake is Test {
         pool.enterInPool(amount3);
 
         assertEq(proxycapital.totalCapitalStaked(), (5000000000000 + (3 * amount) + (2 * amount2) + amount3 + amount4));
+        console.log(proxycapital.totalCapitalStaked());
         proxycapital.setMCR((proxycapital.totalCapitalStaked() / 2)); //50%
 
         vm.prank(address(user2));
