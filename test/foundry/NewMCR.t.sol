@@ -40,38 +40,40 @@ contract NewMCR is Test {
     address user7 = address(7);
     address user8 = address(8);
     address admin = address(this);
-    address constant USDC = 0xa68E417905ACdEdC32ae8DA9113a6d4d2b6B2F30;
-    address constant UNO = 0x1E61F32cBc30d919AdC92CA1eD92dA3fd115a530;
-    address constant PRICE = 0xf0641df8Dd1290016229083F0695fE49067EcB79;
-    address constant USDCPOOL = 0xc0c7fbcd46E16e9b91fcFd63792240399e7B0459;
-    address constant SALES_FACTORY = 0x1A2e278c7231557DBb2cA3eEeC9df4985Ace2404;
+    address constant USDC = 0xdb2587DEb089c8f914BA6FeDf1E3d3Cb8660A015;
+    address constant UNO = 0xF75C8E49831c055a88957adbc97450f778460FD9;
+    address constant PRICE = 0x8F0872F5A2ad8384c385138A2a47dBC29F6C0135;
+    address constant USDCPOOL = 0x3A83bD2e395EaBdD534c8f1EbB283B67418Abe31;
+    address constant SALES_FACTORY = 0xA21E48961F782b57D1708f697E93ee433fC84e92;
     uint256 constant MCR = 10000000;
     uint256 constant MLR = 1000000;
-    address constant PREMIUM_POOL = 0x34c76160d79C6d0C678b0B48d40eC5ddc895f4ED;
-    address constant PAYOUT = 0x9e8946ad9db08cB87De0E27E9Af624070a71Bb7A;
-    address constant EXCHANGE_AGENT_ADDRESS = 0xE7DC3F496e92D4D0b856A51c96B16237A7d42C2a;
-    address constant SALES = 0x54D0F1E9102045eEB06118E7Aed2E9461FA2b357;
+    address constant PREMIUM_POOL = 0xcb2B848AF2C87C6a5B213C6dB4259CfA95A7c7E3;
+    address constant PAYOUT = 0x9a752bc5Af86ec2AAAfed8E18751960d4e348752;
+    address constant EXCHANGE_AGENT_ADDRESS = 0x0A32617d981EC576796C1D7E267F6563aCf82375;
+    address constant SALES = 0x0d9E62654EDAc0efFB2262Cfb9F68fdb9Fa8E80E;
 
     function setUp() public {
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        string memory SEPOLIA_URL = vm.envString("SEPOLIA_URL");
+
+        vm.createSelectFork("SEPOLIA_URL");
         priceFeed = SupraPriceOracle(PRICE);
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork("SEPOLIA_URL");
         salesPolicy = SalesPolicy(payable(SALES));
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork("SEPOLIA_URL");
         salesFactory = SalesPolicyFactory(SALES_FACTORY);
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork("SEPOLIA_URL");
         pool = SingleSidedInsurancePool(USDCPOOL);
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork("SEPOLIA_URL");
         usdc = USDCmock(USDC);
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork("SEPOLIA_URL");
         exchange = ExchangeAgent(payable(EXCHANGE_AGENT_ADDRESS));
 
-        vm.createSelectFork("https://rpc-tanenbaum.rollux.com");
+        vm.createSelectFork("SEPOLIA_URL");
         payout = PayoutRequest((PAYOUT));
 
         capitalAgent = new CapitalAgent();
@@ -93,11 +95,11 @@ contract NewMCR is Test {
     }
 
     function test_CheckUSDCEthPrice() public {
-        assertEq(priceFeed.getAssetEthPrice(USDC), 266160000000000);
+        assertEq(priceFeed.getAssetEthPrice(USDC), 270000000000000);
     }
 
     function test_USDCxUNOPrice() public {
-        assertEq(priceFeed.consult(USDC, UNO, 1), 33333700960004);
+        assertEq(priceFeed.consult(USDC, UNO, 1), 6419400855);
     }
 
     function test_CapitalAgent() public {
@@ -275,6 +277,6 @@ contract NewMCR is Test {
 
         vm.prank(address(user));
         vm.expectRevert();
-        pool.leaveFromPoolInPending(200000000000);
+        pool.leaveFromPoolInPending(260000000000);
     }
 }
