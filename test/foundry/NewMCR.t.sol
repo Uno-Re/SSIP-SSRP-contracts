@@ -54,26 +54,26 @@ contract NewMCR is Test {
 
     function setUp() public {
         string memory SEPOLIA_URL = vm.envString("SEPOLIA_URL");
-
-        vm.createSelectFork("SEPOLIA_URL");
+        console.log(SEPOLIA_URL);
+        vm.createSelectFork(SEPOLIA_URL);
         priceFeed = SupraPriceOracle(PRICE);
 
-        vm.createSelectFork("SEPOLIA_URL");
+        vm.createSelectFork(SEPOLIA_URL);
         salesPolicy = SalesPolicy(payable(SALES));
 
-        vm.createSelectFork("SEPOLIA_URL");
+        vm.createSelectFork(SEPOLIA_URL);
         salesFactory = SalesPolicyFactory(SALES_FACTORY);
 
-        vm.createSelectFork("SEPOLIA_URL");
+        vm.createSelectFork(SEPOLIA_URL);
         pool = SingleSidedInsurancePool(USDCPOOL);
 
-        vm.createSelectFork("SEPOLIA_URL");
+        vm.createSelectFork(SEPOLIA_URL);
         usdc = USDCmock(USDC);
 
-        vm.createSelectFork("SEPOLIA_URL");
+        vm.createSelectFork(SEPOLIA_URL);
         exchange = ExchangeAgent(payable(EXCHANGE_AGENT_ADDRESS));
 
-        vm.createSelectFork("SEPOLIA_URL");
+        vm.createSelectFork(SEPOLIA_URL);
         payout = PayoutRequest((PAYOUT));
 
         capitalAgent = new CapitalAgent();
