@@ -33,7 +33,7 @@
     "chai": "^4.3.8",
     "chai-eventemitter2": "^0.2.1",
     "dotenv": "^10.0.0",
-    "ethereum-waffle": "^3.4.0",
+    "ethereum-waffle": "^3.4.4",
     "ethers": "^6.13.1",
     "hardhat": "^2.22.5",
     "hardhat-contract-sizer": "^2.10.0",
@@ -44,7 +44,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.16"
   },
   "dependencies": {
-    "@biconomy/mexa": "^2.0.24",
+    "@biconomy/mexa": "^3.0.6",
     "@metamask/eth-sig-util": "^7.0.2",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
