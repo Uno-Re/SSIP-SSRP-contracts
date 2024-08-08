@@ -38,6 +38,15 @@ describe("SingleSidedInsurancePool", function () {
       JSON.stringify(UniswapV2Router.abi),
       ethers.provider,
     )
+    this.owners = [
+      this.signers[0].address,
+      this.signers[1].address,
+      this.signers[2].address,
+      this.signers[3].address,
+      this.signers[4].address,
+    ]
+
+    this.numConfirmationsRequired = 2
   })
 
   beforeEach(async function () {
@@ -100,8 +109,8 @@ describe("SingleSidedInsurancePool", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.multiSigWallet.target);
-
+    this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired)
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6");
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
       WETH_ADDRESS.sepolia,

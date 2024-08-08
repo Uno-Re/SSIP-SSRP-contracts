@@ -53,9 +53,10 @@ module.exports = {
       evmVersion: "byzantium",
       forking: {
         url: "https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp",
+        //url: "https://bnb.rpc.subquery.network/public",
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
         enabled: true,
-        // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355
+        //blockNumber: 36927257 //7041459 //6430278 //7041458 //6615559 10207859 11869355
       },
       gasPrice: "auto",
       accounts,
