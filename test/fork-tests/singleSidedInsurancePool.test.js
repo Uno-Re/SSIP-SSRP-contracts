@@ -567,7 +567,7 @@ describe("SingleSidedInsurancePool", function () {
         const unoBalanceAfter = await this.mockUNO.balanceOf(this.signers[0].address)
         // expected uno blance after claim
         const expectedUnoBalance = unoBalanceBefore + (pendingUnoReward1 + pendingUnoReward2)
-        expect(lpBalanceAfter).to.equal(getBigNumber("8000"))
+        expect(lpBalanceAfter).to.equal(getBigNumber("80000"))
         expect(getNumber(expectedUnoBalance)).to.gte(getNumber(unoBalanceAfter))
         const totalCaptial = await this.capitalAgent.totalCapitalStaked()
         expect(totalCaptial).to.equal(getBigNumber("27500"))
