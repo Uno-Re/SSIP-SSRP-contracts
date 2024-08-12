@@ -12,6 +12,7 @@ const SingleSidedInsurancePoolAbi =
   require("../../artifacts/contracts/SingleSidedInsurancePool.sol/SingleSidedInsurancePool.json").abi
 
 const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = require("../../scripts/shared/constants")
+const { getBigInt } = require("ethers")
 
 describe("SingleSidedInsurancePool", function () {
   before(async function () {
@@ -792,7 +793,7 @@ describe("SingleSidedInsurancePool", function () {
         console.log(pendingRewardAfter.toString())
 
         const stakingStatusAfter = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-        expect(stakingStatusAfter["lpAmount"]).to.equal(BigInt(stakingStatusBefore) - getBigNumber("1"))
+        expect(stakingStatusAfter["lpAmount"]).to.equal(stakingStatusBefore["lpAmount"] - getBigInt("1000000000000000000"))
       })
 
       it("Should not allow transfer risk pool LP token when greater than the blance - WR", async function () {
