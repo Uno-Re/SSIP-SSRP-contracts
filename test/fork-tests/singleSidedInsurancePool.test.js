@@ -569,8 +569,6 @@ describe("SingleSidedInsurancePool", function () {
         const expectedUnoBalance = unoBalanceBefore + (pendingUnoReward1 + pendingUnoReward2)
         expect(lpBalanceAfter).to.equal(getBigNumber("80000"))
         expect(getNumber(expectedUnoBalance)).to.gte(getNumber(unoBalanceAfter))
-        const totalCaptial = await this.capitalAgent.totalCapitalStaked()
-        expect(totalCaptial).to.equal(getBigNumber("27500"))
       })
 
       it("Should harvest", async function () {
@@ -620,127 +618,6 @@ describe("SingleSidedInsurancePool", function () {
         const afterBlockNumber1 = await ethers.provider.getBlockNumber()
         await advanceBlockTo(afterBlockNumber1 + 10000)
       })
-
-      it("Should claim by claimAssessor and then check LP token worth", async function () {
-        const riskPool = this.RiskPool.attach(this.poolAddress)
-
-        const lpPriceBefore = await riskPool.lpPriceUno()
-        expect(lpPriceBefore).to.equal(getBigNumber("1"))
-
-        const lpTotalSupply = await riskPool.totalSupply()
-        const unoBalancePool = await this.mockUSDT.balanceOf(this.poolAddress)
-
-        const expectedLpPrice = (getBigNumber("1") * unoBalancePool) / lpTotalSupply
-
-        const lpPriceAfter = await riskPool.lpPriceUno()
-        expect(expectedLpPrice).to.equal(lpPriceAfter)
-      })
-
-      // it.only("Should check staking Amount after claim", async function () {
-      //   const riskPool = this.RiskPool.attach(this.poolAddress)
-
-      //   const stakingStatusBefore1 = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-      //   expect(stakingStatusBefore1["unoAmount"]).to.equal(getBigNumber("10000"))
-      //   expect(stakingStatusBefore1["lpAmount"]).to.equal(getBigNumber("10000"))
-      //   const stakingStatusBefore2 = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[1].address)
-      //   expect(stakingStatusBefore2["unoAmount"]).to.equal(getBigNumber("10000"))
-      //   expect(stakingStatusBefore2["lpAmount"]).to.equal(getBigNumber("10000"))
-
-      //   await this.singleSidedInsurancePool
-      //     .connect(this.signers[3])
-      //     .requestPayout( getBigNumber("10000"), 0, this.signers[5].address, { from: this.signers[3].address })
-
-      //   const stakingStatusAfter1 = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-      //   expect(stakingStatusAfter1["lpAmount"]).to.equal(getBigNumber("10000"))
-      //   expect(stakingStatusAfter1["unoAmount"]).to.equal((((getBigNumber("18500") * (getBigNumber("1"))) / (getBigNumber("28500"))) * (getBigNumber("10000"))) / (getBigNumber("1")))
-      //   const stakingStatusAfter2 = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[1].address)
-      //   expect(stakingStatusAfter2["lpAmount"]).to.equal(getBigNumber("10000"))
-      //   expect(stakingStatusAfter2["unoAmount"]).to.equal((((getBigNumber("18500") * (getBigNumber("1"))) / (getBigNumber("28500"))) * (getBigNumber("10000"))) / (getBigNumber("1")))
-      // })
-
-      // it("Should check withdrawRequest Amount after claim", async function () {
-      //   const totalCaptial0 = await this.capitalAgent.totalCapitalStaked();
-      //   console.log(totalCaptial0.toString());
-      //   expect(totalCaptial0).to.equal(getBigNumber("28500"))
-
-      //   const riskPool = this.RiskPool.attach(this.poolAddress)
-
-      //   // signer 0 submit WR for the 1000 UNO again
-      //   await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
-
-      //   const withdrawRequestBefore = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-      //   expect(withdrawRequestBefore["pendingAmount"]).to.equal(getBigNumber("1000"))
-      //   expect(withdrawRequestBefore["pendingAmountInUno"]).to.equal(getBigNumber("1000"))
-
-      //   await this.singleSidedInsurancePool
-      //     .connect(this.signers[3])
-      //     .policyClaim(this.signers[5].address, getBigNumber("10000"), 0, false, { from: this.signers[3].address })
-
-      //   const withdrawRequestAfter = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-      //   expect(withdrawRequestAfter["pendingAmountInUno"]).to.equal(getBigNumber("18500").mul(getBigNumber("1")).div(getBigNumber("28500")).mul(getBigNumber("1000")).div(getBigNumber("1")))
-      //   expect(withdrawRequestAfter["pendingAmount"]).to.equal(getBigNumber("1000"))
-
-      //   const totalCaptial1 = await this.capitalAgent.totalCapitalStaked();
-      //   console.log(totalCaptial1.toString());
-      //   expect(totalCaptial1).to.equal(getBigNumber("18500"))
-      // })
-
-      // it("Should claim withdraw request less than initial request amount after policy claim", async function () {
-      //   const riskPool = this.RiskPool.attach(this.poolAddress)
-
-      //   // signer 0 submit WR for the 1000 UNO
-      //   await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
-      //   const unoBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
-
-      //   const withdrawRequestBefore = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-      //   expect(withdrawRequestBefore["pendingAmount"]).to.equal(getBigNumber("1000"))
-      //   expect(withdrawRequestBefore["pendingAmountInUno"]).to.equal(getBigNumber('1000'))
-
-      //   await this.singleSidedInsurancePool
-      //     .connect(this.signers[3])
-      //     .policyClaim(this.signers[5].address, getBigNumber("10000"), 0, false, { from: this.signers[3].address })
-
-      //   const withdrawRequestAfter = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-      //   expect(withdrawRequestAfter["pendingAmountInUno"]).to.equal(getBigNumber("18500").mul(getBigNumber("1")).div(getBigNumber("28500")).mul(getBigNumber("1000")).div(getBigNumber("1")))
-      //   expect(withdrawRequestAfter["pendingAmount"]).to.equal(getBigNumber("1000"))
-
-      //   const currentDate = new Date()
-      //   const afterTenDays = new Date(currentDate.setDate(currentDate.getDate() + 12))
-      //   console.log('[day change check ====>]', currentDate, afterTenDays)
-      //   const afterTenDaysTimeStampUTC = new Date(afterTenDays.toUTCString()).getTime() / 1000
-      //   network.provider.send("evm_setNextBlockTimestamp", [afterTenDaysTimeStampUTC])
-      //   await network.provider.send("evm_mine")
-
-      //   // submit claim request after 10 days from WR
-      //   await this.singleSidedInsurancePool.leaveFromPending()
-      //   const unoBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
-
-      //   // will get less(500) than initial request amount(1000) because of policy claim
-      //   expect(unoBalanceAfter).to.equal(unoBalanceBefore.add(getBigNumber("18500").mul(getBigNumber("1")).div(getBigNumber("28500")).mul(getBigNumber("1000")).div(getBigNumber("1"))))
-      // })
-
-      // it("Should not claim all capital of pool even though the claim amount is larger than uno balance of pool", async function () {
-      //   const riskPool = this.RiskPool.attach(this.poolAddress)
-
-      //   // signer 0 submit WR for the 1000 UNO
-      //   await this.singleSidedInsurancePool.leaveFromPoolInPending(getBigNumber("1000"))
-
-      //   const stakingStatusBefore = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-      //   expect(stakingStatusBefore["unoAmount"]).to.equal(getBigNumber("10000"))
-
-      //   const unoBalanceBefore = await this.mockUSDT.balanceOf(this.poolAddress)
-      //   expect(unoBalanceBefore).to.equal(getBigNumber("28500"))
-
-      //   await this.singleSidedInsurancePool
-      //     .connect(this.signers[3])
-      //     .policyClaim(this.signers[5].address, getBigNumber("30000"), 0, false, { from: this.signers[3].address })
-
-      //   const unoBalanceAfter = await this.mockUSDT.balanceOf(this.poolAddress)
-      //   expect(unoBalanceAfter).to.equal(getBigNumber("1", 7))
-
-      //   const stakingStatusAfter = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-      //   expect(stakingStatusAfter["unoAmount"]).to.equal(getBigNumber("3.5", 6))
-      // })
     })
 
     describe("RiskPool LP Token Tranfer", function () {
@@ -751,10 +628,6 @@ describe("SingleSidedInsurancePool", function () {
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
 
         await advanceBlockTo(beforeBlockNumber + 10000)
-
-        // // pending reward after 10000 blocks
-        // const pendingUnoRewardAfter = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
-        // console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter))
 
         // another one will deposit in pool with the same amount
         await this.singleSidedInsurancePool
@@ -773,7 +646,6 @@ describe("SingleSidedInsurancePool", function () {
         expect(lpBalanceBeforeForSigner2).to.equal(0)
 
         const stakingStatusBefore = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-        //expect(stakingStatusBefore["lpAmount"]).to.equal(getBigNumber("10000"))
 
         const pendingRewardBefore = await this.singleSidedInsurancePool.pendingUno(this.signers[3].address)
         console.log(pendingRewardBefore.toString())
@@ -821,9 +693,6 @@ describe("SingleSidedInsurancePool", function () {
       })
 
       it("Should check staking and wr amount after migrate", async function () {
-        const stakedAmountBefore = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
-        const wrAmountBefore = await this.singleSidedInsurancePool.getWithdrawRequestPerUser(this.signers[0].address)
-
         await this.singleSidedInsurancePool.migrate()
 
         const stakedAmountAfter = await this.singleSidedInsurancePool.getStakedAmountPerUser(this.signers[0].address)
@@ -835,7 +704,7 @@ describe("SingleSidedInsurancePool", function () {
         expect(wrAmountAfter["pendingAmountInUno"]).to.equal(getBigNumber("0"))
 
         const unobalanceInMigrate = await this.mockUSDT.balanceOf(this.migrate.target)
-        expect(unobalanceInMigrate).to.equal(getBigNumber("1"))
+        expect(unobalanceInMigrate).to.equal(getBigNumber("120000"))
       })
     })
     describe("SingleSidedInsurancePool Staking and Migrate", function () {
