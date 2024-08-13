@@ -3,18 +3,14 @@ const { ethers, network, upgrades } = require("hardhat")
 const { getBigNumber, getNumber, advanceBlockTo } = require("../../scripts/shared/utilities")
 
 const UniswapV2Router = require("../../scripts/abis/UniswapV2Router.json")
-const OptimisticOracleV3Abi = require("../../scripts/abis/OptimisticOracleV3.json");
-const mockUSDCAbi = require("../../scripts/abis/MockUSDC.json");
+const OptimisticOracleV3Abi = require("../../scripts/abis/OptimisticOracleV3.json")
+const mockUSDCAbi = require("../../scripts/abis/MockUSDC.json")
 const mockUnoAbi = require("../../scripts/abis/Uno.json")
 
-const SingleSidedInsurancePoolAbi = require("../../artifacts/contracts/SingleSidedInsurancePool.sol/SingleSidedInsurancePool.json").abi
+const SingleSidedInsurancePoolAbi =
+  require("../../artifacts/contracts/SingleSidedInsurancePool.sol/SingleSidedInsurancePool.json").abi
 
-const {
-  WETH_ADDRESS,
-  UNISWAP_FACTORY_ADDRESS,
-  UNISWAP_ROUTER_ADDRESS,
-} = require("../../scripts/shared/constants")
-
+const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = require("../../scripts/shared/constants")
 
 describe("SingleSidedInsurancePool RollOverReward", function () {
   before(async function () {
@@ -71,9 +67,8 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
     this.rewarderFactory = await this.RewarderFactory.deploy()
     this.syntheticSSIPFactory = await this.SyntheticSSIPFactory.deploy()
 
-
     // const timestamp = new Date().getTime()
-    const timestamp = (await ethers.provider.getBlock('latest')).timestamp + 100;
+    const timestamp = (await ethers.provider.getBlock("latest")).timestamp + 100
 
     await (
       await this.mockUNO
@@ -104,19 +99,19 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address)
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: ["0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"],
-    });
+      params: ["0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e"],
+    })
 
     await network.provider.send("hardhat_setBalance", [
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e",
       "0x1000000000000000000000000000000000",
-    ]);
+    ])
 
-    this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
+    this.multisig = await ethers.getSigner("0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e")
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
@@ -125,39 +120,41 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
       UNISWAP_ROUTER_ADDRESS.sepolia,
       UNISWAP_FACTORY_ADDRESS.sepolia,
       this.multisig.address,
-      getBigNumber("60")
+      getBigNumber("60"),
     )
 
-    this.capitalAgent = await upgrades.deployProxy(
-      this.CapitalAgent, [
+    this.capitalAgent = await upgrades.deployProxy(this.CapitalAgent, [
       this.exchangeAgent.target,
       this.mockUSDT.target,
-      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-      this.signers[0].address]
-    );
+      "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e",
+      this.signers[0].address,
+    ])
 
-    await this.capitalAgent.connect(this.multisig).grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
+    await this.capitalAgent.connect(this.multisig).grantRole(await this.capitalAgent.ADMIN_ROLE(), this.signers[0].address)
 
-    this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB");
-    this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address);
+    this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB")
+    this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address)
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0x8c0f1b5c01a7146259d51f798a114f4f8dc0177e"],
-    });
+    })
     this.admin = await ethers.getSigner("0x8c0f1b5c01a7146259d51f798a114f4f8dc0177e")
 
-    this.singleSidedInsurancePool = await ethers.getContractAt(SingleSidedInsurancePoolAbi,"0xa64D680DdDFb738c7681ED18CA1E289fB0e6b24f");
-    await this.singleSidedInsurancePool.connect(this.admin).revivePool();
-    
-    await this.singleSidedInsurancePool.connect(this.admin).grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
-    await this.singleSidedInsurancePool.connect(this.admin).grantRole((await this.singleSidedInsurancePool.BOT_ROLE()), this.signers[1].address);
+    this.singleSidedInsurancePool = await ethers.getContractAt(
+      SingleSidedInsurancePoolAbi,
+      "0xa64D680DdDFb738c7681ED18CA1E289fB0e6b24f",
+    )
+    await this.singleSidedInsurancePool.connect(this.admin).revivePool()
+
+    await this.singleSidedInsurancePool
+      .connect(this.admin)
+      .grantRole(await this.capitalAgent.ADMIN_ROLE(), this.signers[0].address)
+    await this.singleSidedInsurancePool
+      .connect(this.admin)
+      .grantRole(await this.singleSidedInsurancePool.BOT_ROLE(), this.signers[1].address)
 
     await (await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool.target)).wait()
-    await this.singleSidedInsurancePool.createRewarder(
-      this.signers[0].address,
-      this.rewarderFactory.target,
-      this.mockUNO.target,
-    )
+    await this.singleSidedInsurancePool.createRewarder(this.signers[0].address, this.rewarderFactory.target, this.mockUNO.target)
 
     this.rewarderAddress = await this.singleSidedInsurancePool.rewarder()
     this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
@@ -180,7 +177,9 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
       const poolInfo = await this.singleSidedInsurancePool.poolInfo()
       expect(poolInfo.unoMultiplierPerBlock).equal(1)
       this.poolAddress = await this.singleSidedInsurancePool.riskPool()
-      await this.singleSidedInsurancePool.connect(this.signers[2]).enterInPool(getBigNumber("100"), { from: this.signers[2].address })
+      await this.singleSidedInsurancePool
+        .connect(this.signers[2])
+        .enterInPool(getBigNumber("100"), { from: this.signers[2].address })
     })
 
     describe("SingleSidedInsurancePool RollOverReward", function () {
@@ -194,24 +193,33 @@ describe("SingleSidedInsurancePool RollOverReward", function () {
         console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
         const poolBalance1Before = await riskPool.balanceOf(this.signers[0].address)
         const poolBalance2Before = await riskPool.balanceOf(this.signers[1].address)
-        await this.singleSidedInsurancePool.connect(this.signers[0]).enterInPool(getBigNumber("8500"), { from: this.signers[0].address })
-        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
+        await this.singleSidedInsurancePool
+          .connect(this.signers[0])
+          .enterInPool(getBigNumber("8500"), { from: this.signers[0].address })
+        await this.singleSidedInsurancePool
+          .connect(this.signers[1])
+          .enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
 
         const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
         expect(poolBalance1).to.equal(getBigNumber("8500") + poolBalance1Before)
         const poolBalance2 = await riskPool.balanceOf(this.signers[1].address)
-        expect(poolBalance2).to.equal(getBigNumber("10000")+ poolBalance2Before)
+        expect(poolBalance2).to.equal(getBigNumber("10000") + poolBalance2Before)
+
+        await this.singleSidedInsurancePool.connect(this.multisig).setRewardMultiplier(2000, { from: this.multisig })
 
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
-        await advanceBlockTo(beforeBlockNumber + 10000)
+        await advanceBlockTo(beforeBlockNumber + 1000)
 
         const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardAfter2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
         console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
         expect(pendingUnoRewardAfter2).to.gt(pendingUnoRewardBefore2)
 
-        await (await this.singleSidedInsurancePool.connect(this.signers[1]).rollOverReward([this.signers[0].address, this.signers[1].address],
-          { from: this.signers[1].address })).wait()
+        await (
+          await this.singleSidedInsurancePool
+            .connect(this.signers[1])
+            .rollOverReward([this.signers[0].address, this.signers[1].address], { from: this.signers[1].address })
+        ).wait()
 
         const pendingUnoRewardAfterRollOverReward1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardAfterRollOverReward2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
