@@ -74,6 +74,7 @@ describe("SingleSidedInsurancePool", function () {
     await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[0], getBigNumber("500000"))
     await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[1], getBigNumber("500000"))
     await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[2], getBigNumber("500000"))
+    await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[4], getBigNumber("500000"))
 
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
@@ -713,6 +714,8 @@ describe("SingleSidedInsurancePool", function () {
 
         await this.singleSidedInsurancePool.connect(this.signers[0]).enterInPool(getBigNumber("100"))
         await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("100"))
+        await this.mockUSDT.connect(this.signers[4]).approve(this.singleSidedInsurancePool, getBigNumber("100000"))
+        await this.singleSidedInsurancePool.connect(this.signers[4]).enterInPool(getBigNumber("100000"))
 
         const afterTenDaysTimeStampUTC = Number((await ethers.provider.getBlock("latest")).timestamp) + Number(11 * 86400)
 
@@ -787,6 +790,8 @@ describe("SingleSidedInsurancePool", function () {
         this.poolInfov3 = await this.capitalAgent.poolInfo(this.singleSidedInsurancePool1.target)
         expect(this.poolInfov3.SCR).to.equal(this.poolInfov2.SCR)
         expect(this.poolInfov3.totalCapital).to.equal(this.poolInfov2.totalCapital)
+        await this.mockUSDT.connect(this.signers[4]).approve(this.singleSidedInsurancePool1, getBigNumber("100000"))
+        await this.singleSidedInsurancePool1.connect(this.signers[4]).enterInPool(getBigNumber("100000"))
       })
 
       it("should Override the v2 position", async function () {
@@ -831,8 +836,10 @@ describe("SingleSidedInsurancePool", function () {
         expect(userInfoV3.rewardDebt).to.equal(1)
 
         // //user leave from pool
-        await expect(this.singleSidedInsurancePool.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted
-        await expect(this.singleSidedInsurancePool1.leaveFromPoolInPending(userInfoV3.amount)).not.to.be.reverted
+        await expect(this.singleSidedInsurancePool.connect(this.signers[0]).leaveFromPoolInPending(userInfoV3.amount)).not.to.be
+          .reverted
+        await expect(this.singleSidedInsurancePool1.connect(this.signers[0]).leaveFromPoolInPending(userInfoV3.amount)).not.to.be
+          .reverted
 
         const afterTenDaysTimeStampUTC = Number((await ethers.provider.getBlock("latest")).timestamp) + Number(11 * 86400)
 
