@@ -46,7 +46,7 @@ contract UmaProcess is Test {
 
     function setUp() public {
         //should include sepolia RPC
-        //string memory SEPOLIA_URL = "{sepolia rpc}";
+        string memory SEPOLIA_URL = "https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp";
 
         vm.createSelectFork(SEPOLIA_URL);
         salesPolicy = SalesPolicy(payable(SALES));

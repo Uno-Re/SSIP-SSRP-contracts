@@ -9,7 +9,6 @@ cache_forge
 .env
 out
 deployments
-lib 
 bin
 .openzeppelin
 .vscode
