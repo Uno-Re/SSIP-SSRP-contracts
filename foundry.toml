@@ -9,3 +9,4 @@ remappings = [
     "@openzeppelin/contracts=node_modules/@openzeppelin/contracts/",
     "@openzeppelin/contracts-upgradeable=node_modules/@openzeppelin/contracts-upgradeable/"
 ]
+evm_version = 'cancun'

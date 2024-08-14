@@ -45,34 +45,38 @@ contract UmaProcess is Test {
     bytes32 constant CLAIM_PROCESSOR_ROLE = 0x3b745c09aefb8f732a168ec71c3c87b50c0a4cfd1d104649ae3c04a4623b26bf;
 
     function setUp() public {
-        vm.createSelectFork("https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp");
+        //should include sepolia RPC
+        //string memory SEPOLIA_URL = "{sepolia rpc}";
+
+        vm.createSelectFork(SEPOLIA_URL);
         salesPolicy = SalesPolicy(payable(SALES));
 
-        vm.createSelectFork("https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp");
+        vm.createSelectFork(SEPOLIA_URL);
         capitalAgent = CapitalAgent(payable(CAPITAL));
 
-        vm.createSelectFork("https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp");
+        vm.createSelectFork(SEPOLIA_URL);
         usdc = USDCmock(USDC);
 
-        vm.createSelectFork("https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp");
+        vm.createSelectFork(SEPOLIA_URL);
         payout = PayoutRequest((PAYOUT));
 
-        vm.createSelectFork("https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp");
+        vm.createSelectFork(SEPOLIA_URL);
         poolUsdc = SingleSidedInsurancePool((USDCPOOL));
     }
 
-    function test_claimPolicy() public {
-        assertEq(salesPolicy.balanceOf(user), 7);
-        uint256 initialUsdcBalance = usdc.balanceOf(user);
+    //function test_claimPolicy() public {
+    //  uint256 initialUsdcBalance = usdc.balanceOf(user);
 
-        uint256 id = 5;
-        uint256 amount = 1;
-        bytes32 hyperlaneMessage = 0x6c7563617320717565722064696e686569726f00000000000000000000000000;
-        vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
-        payout.initRequest(id, amount, user, hyperlaneMessage);
+    //uint256 id = 5;
+    //uint256 amount = 1;
+    //bytes32 hyperlaneMessage = 0x6c7563617320717565722064696e686569726f00000000000000000000000000;
+    //vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
+    //payout.initRequest(id, amount, user, hyperlaneMessage);
 
-        assertEq(usdc.balanceOf(user), initialUsdcBalance + amount);
-    }
+    //assertEq(usdc.balanceOf(user), initialUsdcBalance + amount);
+
+    //"This test shouldn't be used anymore forking sepolia. As we setted UMA to be used again, this test will fail"
+    //}
 
     function test_claimPolicyUMA() public {
         payout = new PayoutRequest();

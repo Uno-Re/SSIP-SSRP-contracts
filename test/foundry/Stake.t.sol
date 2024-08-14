@@ -28,7 +28,8 @@ contract Stake is Test {
     address constant AGENT = 0x2aAb17643960Ef1909522F3F8F706c587636FE27;
 
     function setUp() public {
-        string memory ROLLUXTEST_URL = vm.envString("ROLLUXTEST_URL");
+        string memory ROLLUXTEST_URL = "https://rpc-tanenbaum.rollux.com";
+
         vm.createSelectFork(ROLLUXTEST_URL);
         priceFeed = SupraPriceOracle(PRICE);
 
