@@ -127,6 +127,20 @@ async function main() {
   this.PayoutUSDC = await ethers.getContractAt(payoutAbi, this.PayoutUSDC)
   this.PayoutUSDT = await ethers.getContractAt(payoutAbi, this.PayoutUSDT)
 
+  await this.CapitalAgent.addPoolWhiteList(this.SSIPETH.target)
+  await this.CapitalAgent.addPoolWhiteList(this.SSIPUNO.target)
+  await this.CapitalAgent.addPoolWhiteList(this.SSIPUSDC.target)
+  await this.CapitalAgent.addPoolWhiteList(this.SSIPUSDT.target)
+
+  await this.CapitalAgent.setMCR(MCR)
+  await this.CapitalAgent.setMLR(MLR)
+  await this.CapitalAgent.setSalesPolicyFactory(this.SalesPolicyFactory.target)
+
+  this.PayoutETH = await ethers.getContractAt(payoutAbi, this.PayoutETH)
+  this.PayoutUNO = await ethers.getContractAt(payoutAbi, this.PayoutUNO)
+  this.PayoutUSDC = await ethers.getContractAt(payoutAbi, this.PayoutUSDC)
+  this.PayoutUSDT = await ethers.getContractAt(payoutAbi, this.PayoutUSDT)
+
   await this.PayoutETH.setCapitalAgent(this.CapitalAgent.target)
   await this.PayoutUNO.setCapitalAgent(this.CapitalAgent.target)
   await this.PayoutUSDC.setCapitalAgent(this.CapitalAgent.target)
@@ -140,6 +154,7 @@ async function main() {
   await this.SalesPolicyFactory.approvePremiumInPolicy(UNOToken)
   await this.SalesPolicyFactory.approvePremiumInPolicy(USDCToken)
   await this.SalesPolicyFactory.approvePremiumInPolicy(USDTToken)
+
   let salesPolicy = (await this.CapitalAgent.getPolicyInfo())[0]
   console.log(salesPolicy)
 

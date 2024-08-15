@@ -29,6 +29,7 @@ contract Stake is Test {
 
     function setUp() public {
         string memory ROLLUXTEST_URL = vm.envString("ROLLUXTEST_URL");
+
         vm.createSelectFork(ROLLUXTEST_URL);
         priceFeed = SupraPriceOracle(PRICE);
 
@@ -41,6 +42,7 @@ contract Stake is Test {
         vm.createSelectFork(ROLLUXTEST_URL);
         usdc = USDCmock(USDC);
     }
+
     function test_stake(uint256 amount) public {
         vm.assume(amount < 1e12);
         vm.assume(0 < amount);
@@ -72,8 +74,6 @@ contract Stake is Test {
         assertEq(agent.totalCapitalStaked(), (totalStaked + userDeposit));
         vm.prank(address(user));
         pool.leaveFromPoolInPending(amount);
-        skip(300);
-        (uint256 request, , , ) = pool.getWithdrawRequestPerUser(address(user));
         skip(300);
         vm.prank(address(user));
         pool.leaveFromPending(amount2);
