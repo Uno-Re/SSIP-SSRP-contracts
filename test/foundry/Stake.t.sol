@@ -28,7 +28,7 @@ contract Stake is Test {
     address constant AGENT = 0x2aAb17643960Ef1909522F3F8F706c587636FE27;
 
     function setUp() public {
-        string memory ROLLUXTEST_URL = "https://rpc-tanenbaum.rollux.com";
+        string memory ROLLUXTEST_URL = vm.envString("ROLLUXTEST_URL");
 
         vm.createSelectFork(ROLLUXTEST_URL);
         priceFeed = SupraPriceOracle(PRICE);
@@ -74,8 +74,6 @@ contract Stake is Test {
         assertEq(agent.totalCapitalStaked(), (totalStaked + userDeposit));
         vm.prank(address(user));
         pool.leaveFromPoolInPending(amount);
-        skip(300);
-        (uint256 request, , , ) = pool.getWithdrawRequestPerUser(address(user));
         skip(300);
         vm.prank(address(user));
         pool.leaveFromPending(amount2);
