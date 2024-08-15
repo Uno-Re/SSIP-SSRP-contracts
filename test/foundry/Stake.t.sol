@@ -21,25 +21,25 @@ contract Stake is Test {
     CapitalAgent agent;
     address user = address(1);
     address admin = address(this);
-    address constant USDC = 0xdb2587DEb089c8f914BA6FeDf1E3d3Cb8660A015;
-    address constant UNO = 0xF75C8E49831c055a88957adbc97450f778460FD9;
-    address constant PRICE = 0x8F0872F5A2ad8384c385138A2a47dBC29F6C0135;
-    address constant USDCPOOL = 0x3A83bD2e395EaBdD534c8f1EbB283B67418Abe31;
-    address constant AGENT = 0x0A32617d981EC576796C1D7E267F6563aCf82375;
+    address constant USDC = 0xa68E417905ACdEdC32ae8DA9113a6d4d2b6B2F30;
+    address constant UNO = 0x1E61F32cBc30d919AdC92CA1eD92dA3fd115a530;
+    address constant PRICE = 0xf0641df8Dd1290016229083F0695fE49067EcB79;
+    address constant USDCPOOL = 0xc0c7fbcd46E16e9b91fcFd63792240399e7B0459;
+    address constant AGENT = 0x2aAb17643960Ef1909522F3F8F706c587636FE27;
 
     function setUp() public {
-        string memory ROLLUXTEST_URL = vm.envString("ROLLUXTEST_URL");
+        string memory CHAIN_URL = vm.envString("ROLLUXTEST_URL");
 
-        vm.createSelectFork(ROLLUXTEST_URL);
+        vm.createSelectFork(CHAIN_URL);
         priceFeed = SupraPriceOracle(PRICE);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         pool = SingleSidedInsurancePool(USDCPOOL);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         agent = CapitalAgent(AGENT);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         usdc = USDCmock(USDC);
     }
 

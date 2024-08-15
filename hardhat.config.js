@@ -1,11 +1,10 @@
-require("@nomicfoundation/hardhat-ethers")
 require("hardhat-deploy")
 require("hardhat-deploy-ethers")
-require("@nomicfoundation/hardhat-verify")
 require("hardhat-contract-sizer")
-require("@nomicfoundation/hardhat-verify")
 require("hardhat-gas-reporter")
 require("@openzeppelin/hardhat-upgrades")
+require("@nomicfoundation/hardhat-ethers")
+require("@nomicfoundation/hardhat-verify")
 require("@nomicfoundation/hardhat-foundry")
 require("@nomicfoundation/hardhat-chai-matchers")
 require("dotenv").config()
@@ -92,109 +91,103 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
       allowUnlimitedContractSize: true,
       saveDeployments: true,
-      rolluxTestnet: {
-        url: process.env.ROLLUXTEST_URL,
-        accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
-        allowUnlimitedContractSize: true,
-        saveDeployments: true,
+    },
+    rolluxMainnet: {
+      url: process.env.ROLLUXMAIN_URL,
+      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+      allowUnlimitedContractSize: true,
+      saveDeployments: true,
+      evmVersion: "paris",
+    },
+  },
+  etherscan: {
+    apiKey: {
+      rolluxMainnet: "abc",
+      rolluxTestnet: "abc",
+      tanenbaum: "abc",
+      syscoin: "abc",
+      bscMain: process.env.API_KEY, // BSC_API_KEY
+      sepolia: process.env.API_SEP,
+    },
+    customChains: [
+      {
+        network: "rolluxMainnet",
+        chainId: 570,
+        urls: {
+          apiURL: "https://explorer.rollux.com/api",
+          browserURL: "https://explorer.rollux.com",
+        },
       },
-      rolluxMainnet: {
-        url: process.env.ROLLUXMAIN_URL,
-        accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
-        allowUnlimitedContractSize: true,
-        saveDeployments: true,
-        evmVersion: "paris",
+      {
+        network: "rolluxTestnet",
+        chainId: 57000,
+        urls: {
+          apiURL: "https://rollux.tanenbaum.io/api",
+          browserURL: "https://rollux.tanenbaum.io",
+          saveDeployments: true,
+        },
       },
-    },
-    etherscan: {
-      apiKey: {
-        rolluxMainnet: "abc",
-        rolluxTestnet: "abc",
-        tanenbaum: "abc",
-        syscoin: "abc",
-        bscMain: process.env.API_KEY, // BSC_API_KEY
-        sepolia: process.env.API_SEP,
+      {
+        network: "tanenbaum",
+        chainId: 5700,
+        urls: {
+          apiURL: "https://tanenbaum.io/api",
+          browserURL: "https://tanenbaum.io",
+        },
       },
-      customChains: [
-        {
-          network: "rolluxMainnet",
-          chainId: 570,
-          urls: {
-            apiURL: "https://explorer.rollux.com/api",
-            browserURL: "https://explorer.rollux.com",
+      {
+        network: "syscoin",
+        chainId: 57,
+        urls: {
+          apiURL: "https://explorer.syscoin.org/api/eth-rpc",
+          browserURL: "https://explorer.syscoin.org",
+        },
+      },
+    ],
+  },
+  paths: {
+    deploy: "deploy",
+    deployments: "deployments",
+    sources: "contracts",
+    tests: "test",
+  },
+  mocha: {
+    timeout: 300000,
+  },
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: true,
+    runOnCompile: true,
+  },
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.23",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
           },
         },
-        {
-          network: "rolluxTestnet",
-          chainId: 57000,
-          urls: {
-            apiURL: "https://rollux.tanenbaum.io/api",
-            browserURL: "https://rollux.tanenbaum.io",
-            saveDeployments: true,
+      },
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
           },
         },
-        {
-          network: "tanenbaum",
-          chainId: 5700,
-          urls: {
-            apiURL: "https://tanenbaum.io/api",
-            browserURL: "https://tanenbaum.io",
+      },
+      {
+        version: "0.8.10",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
           },
         },
-        {
-          network: "syscoin",
-          chainId: 57,
-          urls: {
-            apiURL: "https://explorer.syscoin.org/api/eth-rpc",
-            browserURL: "https://explorer.syscoin.org",
-          },
-        },
-      ],
-    },
-    paths: {
-      deploy: "deploy",
-      deployments: "deployments",
-      sources: "contracts",
-      tests: "test",
-    },
-    mocha: {
-      timeout: 300000,
-    },
-    contractSizer: {
-      alphaSort: true,
-      disambiguatePaths: true,
-      runOnCompile: true,
-    },
-    solidity: {
-      compilers: [
-        {
-          version: "0.8.23",
-          settings: {
-            optimizer: {
-              enabled: true,
-              runs: 200,
-            },
-          },
-        },
-        {
-          version: "0.7.6",
-          settings: {
-            optimizer: {
-              enabled: true,
-              runs: 200,
-            },
-          },
-        },
-        {
-          version: "0.8.10",
-          settings: {
-            optimizer: {
-              enabled: true,
-              runs: 200,
-            },
-          },
-        },
-      ],
-    },
+      },
+    ],
   },
 }
