@@ -46,20 +46,20 @@ contract UmaProcess is Test {
 
     function setUp() public {
         //should include sepolia RPC
-        string memory SEPOLIA_URL = vm.envString("SEPOLIA_URL");
-        vm.createSelectFork(SEPOLIA_URL);
+        string memory CHAIN_URL = vm.envString("SEPOLIA_URL");
+        vm.createSelectFork(CHAIN_URL);
         salesPolicy = SalesPolicy(payable(SALES));
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         capitalAgent = CapitalAgent(payable(CAPITAL));
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         usdc = USDCmock(USDC);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         payout = PayoutRequest((PAYOUT));
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         poolUsdc = SingleSidedInsurancePool((USDCPOOL));
     }
 
