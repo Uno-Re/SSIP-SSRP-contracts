@@ -188,4 +188,89 @@ contract MCRScenario is Test {
         vm.expectRevert();
         pool.leaveFromPoolInPending(totalUserStaked);
     }
+
+    function test_poolScenario2() public {
+        vm.prank(MintAddress);
+        usdc.mint(address(user), 10000000000000);
+        vm.prank(MintAddress);
+        usdc.mint(address(user1), 8000000000000);
+        vm.prank(MintAddress);
+        usdc.mint(address(user2), 5500000000000);
+        vm.prank(MintAddress);
+        usdc.mint(address(user3), 6000000000000);
+        vm.prank(MintAddress);
+        usdc.mint(address(user4), 8002000000000);
+        vm.prank(MintAddress);
+        usdc.mint(address(user5), 9540000000700);
+
+        vm.prank(address(user));
+        usdc.approve(address(pool), 10000000000000);
+        vm.prank(address(user1));
+        usdc.approve(address(pool), 8000000000000);
+        vm.prank(address(user2));
+        usdc.approve(address(pool), 5500000000000);
+        vm.prank(address(user3));
+        usdc.approve(address(pool), 6000000000000);
+        vm.prank(address(user4));
+        usdc.approve(address(pool), 8002000000000);
+        vm.prank(address(user5));
+        usdc.approve(address(pool), 9540000000700);
+
+        uint256 stakedBefore = proxycapital.totalCapitalStaked();
+
+        vm.prank(address(user));
+        pool.enterInPool(10000000000000);
+        vm.prank(address(user1));
+        pool.enterInPool(8000000000000);
+        vm.prank(address(user2));
+        pool.enterInPool(5500000000000);
+        vm.prank(address(user3));
+        pool.enterInPool(6000000000000);
+        vm.prank(address(user4));
+        pool.enterInPool(8002000000000);
+        vm.prank(address(user5));
+        pool.enterInPool(9540000000700);
+
+        uint256 stakedAfter = proxycapital.totalCapitalStaked();
+
+        proxycapital.setMCR(stakedAfter / 2);
+        proxycapital.MCR();
+
+        uint256 totalUserStaked = (10000000000000);
+
+        //Here user will withdrawl all of his money and should not fail by the MCR
+        vm.prank(address(user));
+        pool.leaveFromPoolInPending(totalUserStaked);
+        skip(3000);
+        vm.prank(address(user));
+        pool.leaveFromPending(totalUserStaked);
+
+        //here user stake all his money again
+        vm.prank(address(user));
+        usdc.approve(address(pool), totalUserStaked);
+        vm.prank(address(user));
+        pool.enterInPool(totalUserStaked);
+
+        proxycapital.totalCapitalStaked();
+        proxycapital.MCR();
+
+        //Here other users will withdrawl all of their money
+        vm.prank(address(user1));
+        pool.leaveFromPoolInPending(8000000000000);
+        vm.prank(address(user2));
+        pool.leaveFromPoolInPending(5500000000000);
+        vm.prank(address(user3));
+        pool.leaveFromPoolInPending(6000000000000);
+        vm.prank(address(user4));
+        pool.leaveFromPoolInPending(8002000000000);
+        vm.prank(address(user5));
+        pool.leaveFromPoolInPending(9540000000700);
+
+        proxycapital.totalCapitalStaked();
+
+        //Here user will withdrawl all of his money and it should fail by the MCR
+        vm.prank(address(user));
+        vm.expectRevert();
+        pool.leaveFromPoolInPending(totalUserStaked);
+    }
 }
