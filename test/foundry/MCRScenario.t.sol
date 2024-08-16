@@ -272,5 +272,5 @@ contract MCRScenario is Test {
         vm.prank(address(user));
         vm.expectRevert();
         pool.leaveFromPoolInPending(totalUserStaked);
-    }
+    } //this second scenario has an error
 }
