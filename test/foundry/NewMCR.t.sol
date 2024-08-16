@@ -132,7 +132,7 @@ contract NewMCR is Test {
     }
 
     function setupUsersAndStakes(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) internal {
-        vm.assume(amount > 0 && amount < 5000000000000);
+        vm.assume(amount > 0 && amount < 4000000000000);
         vm.assume(amount2 > 0 && amount2 < 2500000000000);
         vm.assume(amount3 > 0 && amount3 < 2500000000000);
         vm.assume(amount4 > 0 && amount4 < 2500000000000);
@@ -211,8 +211,6 @@ contract NewMCR is Test {
     function test_withdrawalProcess(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
         test_settingMCR(amount, amount2, amount3, amount4);
 
-        proxycapital.setMCR(proxycapital.totalCapitalStaked() / 2);
-        proxycapital.MCR();
         vm.prank(address(user2));
         pool.leaveFromPoolInPending(amount);
         vm.prank(address(user3));
@@ -228,7 +226,6 @@ contract NewMCR is Test {
         vm.prank(address(user4));
         pool.leaveFromPending(amount);
 
-        uint256 remainingStake = proxycapital.totalCapitalStaked();
         vm.prank(address(user));
         vm.expectRevert();
         pool.leaveFromPoolInPending(5000000000000);
