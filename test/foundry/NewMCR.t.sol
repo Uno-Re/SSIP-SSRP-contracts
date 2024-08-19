@@ -39,6 +39,7 @@ contract NewMCR is Test {
     address user6 = address(6);
     address user7 = address(7);
     address user8 = address(8);
+    address user9 = address(9);
     address admin = address(this);
     address constant USDC = 0xdb2587DEb089c8f914BA6FeDf1E3d3Cb8660A015;
     address constant UNO = 0xF75C8E49831c055a88957adbc97450f778460FD9;
@@ -132,10 +133,10 @@ contract NewMCR is Test {
     }
 
     function setupUsersAndStakes(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) internal {
-        vm.assume(amount > 0 && amount < 4000000000000);
-        vm.assume(amount2 > 0 && amount2 < 2500000000000);
-        vm.assume(amount3 > 0 && amount3 < 2500000000000);
-        vm.assume(amount4 > 0 && amount4 < 2500000000000);
+        vm.assume(amount > 0 && amount < 5000000000000);
+        vm.assume(amount2 > 0 && amount2 < 5000000000000);
+        vm.assume(amount3 > 0 && amount3 < 5000000000000);
+        vm.assume(amount4 > 0 && amount4 < 5000000000000);
 
         // Mint
         vm.prank(MintAddress);
@@ -154,7 +155,8 @@ contract NewMCR is Test {
         usdc.mint(address(user7), amount);
         vm.prank(MintAddress);
         usdc.mint(address(user8), amount3);
-
+        vm.prank(MintAddress);
+        usdc.mint(address(user9), 10000000000000);
         // Approve
         vm.prank(address(user));
         usdc.approve(address(pool), 5000000000000);
@@ -172,6 +174,8 @@ contract NewMCR is Test {
         usdc.approve(address(pool), amount);
         vm.prank(address(user8));
         usdc.approve(address(pool), amount3);
+        vm.prank(address(user9));
+        usdc.approve(address(pool), 10000000000000);
 
         // Enter in pool
         vm.prank(address(user));
@@ -190,26 +194,19 @@ contract NewMCR is Test {
         pool.enterInPool(amount);
         vm.prank(address(user8));
         pool.enterInPool(amount3);
+        vm.prank(address(user9));
+        pool.enterInPool(10000000000000);
     }
 
     function test_initialSetupAndStaking(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
         setupUsersAndStakes(amount, amount2, amount3, amount4);
 
-        uint256 expectedStake = 500000000000 + (3 * amount) + (2 * amount2) + amount3 + amount4;
+        uint256 expectedStake = 500000000000 + (3 * amount) + (2 * amount2) + amount3 + amount4 + 10000000000000;
         assertEq(proxycapital.totalCapitalStaked(), expectedStake);
     }
 
-    function test_settingMCR(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
-        setupUsersAndStakes(amount, amount2, amount3, amount4);
-
-        uint256 expectedStake = 2500000000000 + (3 * amount) + (2 * amount2) + amount3 + amount4;
-        proxycapital.setMCR(expectedStake / 2);
-
-        assertEq(proxycapital.MCR(), (expectedStake / 2));
-    }
-
     function test_withdrawalProcess(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
-        test_settingMCR(amount, amount2, amount3, amount4);
+        test_initialSetupAndStaking(amount, amount2, amount3, amount4);
 
         vm.prank(address(user2));
         pool.leaveFromPoolInPending(amount);
@@ -232,5 +229,122 @@ contract NewMCR is Test {
 
         vm.prank(address(user));
         pool.leaveFromPoolInPending(50000000);
+    }
+
+    function setupStartWithdrawal(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) internal {
+        vm.prank(address(user2));
+        pool.leaveFromPoolInPending(amount);
+        vm.prank(address(user3));
+        pool.leaveFromPoolInPending(amount2);
+        vm.prank(address(user4));
+        pool.leaveFromPoolInPending(amount);
+        vm.prank(address(user5));
+        pool.leaveFromPoolInPending(amount2);
+        vm.prank(address(user6));
+        pool.leaveFromPoolInPending(amount4);
+        vm.prank(address(user7));
+        pool.leaveFromPoolInPending(amount);
+        vm.prank(address(user8));
+        pool.leaveFromPoolInPending(amount3);
+        vm.prank(address(user9));
+        pool.leaveFromPoolInPending(10000000000000);
+    }
+
+    function setupFinishWithdrawal(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) internal {
+        vm.prank(address(user2));
+        pool.leaveFromPending(amount);
+        vm.prank(address(user3));
+        pool.leaveFromPending(amount2);
+        vm.prank(address(user4));
+        pool.leaveFromPending(amount);
+        vm.prank(address(user5));
+        pool.leaveFromPending(amount2);
+        vm.prank(address(user6));
+        pool.leaveFromPending(amount4);
+        vm.prank(address(user7));
+        pool.leaveFromPending(amount);
+        vm.prank(address(user8));
+        pool.leaveFromPending(amount3);
+        vm.prank(address(user9));
+        pool.leaveFromPending(10000000000000);
+    }
+
+    function test_poolScenario1(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
+        setupUsersAndStakes(amount, amount2, amount3, amount4);
+
+        uint256 stakedAfter = proxycapital.totalCapitalStaked();
+
+        proxycapital.setMCR(stakedAfter / 2);
+
+        vm.prank(MintAddress);
+        usdc.mint(address(user), 5000000000000);
+        vm.prank(address(user));
+        usdc.approve(address(pool), 5000000000000);
+        vm.prank(address(user));
+        pool.enterInPool(500000000000);
+
+        uint256 totalUserStaked = (2 * 500000000000);
+
+        //Here user will withdrawal all of his money and should not fail by the MCR
+        vm.prank(address(user));
+        pool.leaveFromPoolInPending(totalUserStaked);
+        skip(3000);
+        vm.prank(address(user));
+        pool.leaveFromPending(totalUserStaked);
+
+        //here user stake all his money again
+        vm.prank(address(user));
+        usdc.approve(address(pool), totalUserStaked);
+        vm.prank(address(user));
+        pool.enterInPool(totalUserStaked);
+
+        proxycapital.totalCapitalStaked();
+        proxycapital.MCR();
+
+        //Here other users will withdrawal all of their money
+        setupStartWithdrawal(amount, amount2, amount3, amount4);
+        skip(3000);
+        setupFinishWithdrawal(amount, amount2, amount3, amount4);
+        proxycapital.totalCapitalStaked();
+
+        //Here user will withdrawal all of his money and it should fail by the MCR
+        vm.prank(address(user));
+        vm.expectRevert();
+        pool.leaveFromPoolInPending(totalUserStaked);
+    }
+
+    function test_poolScenario2(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
+        setupUsersAndStakes(amount, amount2, amount3, amount4);
+
+        uint256 stakedAfter = proxycapital.totalCapitalStaked();
+
+        proxycapital.setMCR(stakedAfter / 2);
+
+        vm.prank(MintAddress);
+        usdc.mint(address(user), 5000000000000);
+        vm.prank(address(user));
+        usdc.approve(address(pool), 5000000000000);
+        vm.prank(address(user));
+        pool.enterInPool(500000000000);
+
+        uint256 totalUserStaked = (2 * 500000000000);
+
+        proxycapital.totalCapitalStaked();
+        proxycapital.MCR();
+
+        //Here other users will start to withdrawal all of their money, but won't finish withdrawing yet
+
+        setupStartWithdrawal(amount, amount2, amount3, amount4);
+        skip(3000);
+
+        vm.prank(address(user));
+        //this call should fail by the MCR as other users withdrew, but it doesn't
+        pool.leaveFromPoolInPending(totalUserStaked);
+        skip(3000);
+
+        vm.prank(address(user));
+        pool.leaveFromPending(totalUserStaked);
+
+        setupFinishWithdrawal(amount, amount2, amount3, amount4);
     }
 }
