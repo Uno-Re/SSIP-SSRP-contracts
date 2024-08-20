@@ -55,27 +55,27 @@ contract NewMCR is Test {
     address constant MintAddress = 0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863;
 
     function setUp() public {
-        string memory SEPOLIA_URL = vm.envString("SEPOLIA_URL");
+        string memory CHAIN_URL = vm.envString("SEPOLIA_URL");
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         priceFeed = SupraPriceOracle(PRICE);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         salesPolicy = SalesPolicy(payable(SALES));
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         salesFactory = SalesPolicyFactory(SALES_FACTORY);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         pool = SingleSidedInsurancePool(USDCPOOL);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         usdc = USDCmock(USDC);
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         exchange = ExchangeAgent(payable(EXCHANGE_AGENT_ADDRESS));
 
-        vm.createSelectFork(SEPOLIA_URL);
+        vm.createSelectFork(CHAIN_URL);
         payout = PayoutRequest((PAYOUT));
 
         capitalAgent = new CapitalAgent();
@@ -94,42 +94,6 @@ contract NewMCR is Test {
         vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
         pool.setCapitalAgent(address(proxycapital));
         proxycapital.addPoolByAdmin(USDCPOOL, USDC, 1000000);
-    }
-
-    function test_stake(uint256 amount) public {
-        vm.assume(amount < 10000000000);
-        vm.assume(0 < amount);
-        vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
-        usdc.mint(address(user), amount);
-        address riskPool = pool.riskPool();
-        uint256 balanceBefore = usdc.balanceOf(riskPool);
-        assertEq(usdc.balanceOf(user), amount);
-        vm.prank(address(user));
-        usdc.approve(address(pool), amount);
-        vm.prank(address(user));
-        pool.enterInPool(amount);
-
-        assertEq(usdc.balanceOf(address(riskPool)), (balanceBefore + amount));
-    }
-
-    function test_stakeWithdrawal(uint256 amount) public {
-        vm.assume(amount < 10000000000);
-        vm.assume(amount > 0);
-        vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
-        usdc.mint(address(user), 10000000000);
-        assertEq(usdc.balanceOf(user), 10000000000);
-        vm.prank(address(user));
-        usdc.approve(address(pool), 10000000000);
-        vm.prank(address(user));
-        pool.enterInPool(10000000000);
-        assertEq(proxycapital.totalCapitalStaked(), 10000000000);
-        vm.prank(address(user));
-        pool.leaveFromPoolInPending(amount);
-        skip(300);
-        vm.prank(address(user));
-        pool.leaveFromPending(amount);
-        assertEq(usdc.balanceOf(user), amount);
-        assertEq(proxycapital.totalCapitalStaked(), (10000000000 - amount));
     }
 
     function setupUsersAndStakes(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) internal {
@@ -198,39 +162,6 @@ contract NewMCR is Test {
         pool.enterInPool(10000000000000);
     }
 
-    function test_initialSetupAndStaking(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
-        setupUsersAndStakes(amount, amount2, amount3, amount4);
-
-        uint256 expectedStake = 500000000000 + (3 * amount) + (2 * amount2) + amount3 + amount4 + 10000000000000;
-        assertEq(proxycapital.totalCapitalStaked(), expectedStake);
-    }
-
-    function test_withdrawalProcess(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
-        test_initialSetupAndStaking(amount, amount2, amount3, amount4);
-
-        vm.prank(address(user2));
-        pool.leaveFromPoolInPending(amount);
-        vm.prank(address(user3));
-        pool.leaveFromPoolInPending(amount2);
-        vm.prank(address(user4));
-        pool.leaveFromPoolInPending(amount);
-
-        skip(300);
-        vm.prank(address(user2));
-        pool.leaveFromPending(amount);
-        vm.prank(address(user3));
-        pool.leaveFromPending(amount2);
-        vm.prank(address(user4));
-        pool.leaveFromPending(amount);
-
-        vm.prank(address(user));
-        vm.expectRevert();
-        pool.leaveFromPoolInPending(5000000000000);
-
-        vm.prank(address(user));
-        pool.leaveFromPoolInPending(50000000);
-    }
-
     function setupStartWithdrawal(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) internal {
         vm.prank(address(user2));
         pool.leaveFromPoolInPending(amount);
@@ -269,7 +200,76 @@ contract NewMCR is Test {
         pool.leaveFromPending(10000000000000);
     }
 
-    function test_poolScenario1(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
+    function test_stake(uint256 amount) public {
+        vm.assume(amount < 10000000000);
+        vm.assume(0 < amount);
+        vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
+        usdc.mint(address(user), amount);
+        address riskPool = pool.riskPool();
+        uint256 balanceBefore = usdc.balanceOf(riskPool);
+        assertEq(usdc.balanceOf(user), amount);
+        vm.prank(address(user));
+        usdc.approve(address(pool), amount);
+        vm.prank(address(user));
+        pool.enterInPool(amount);
+
+        assertEq(usdc.balanceOf(address(riskPool)), (balanceBefore + amount));
+    }
+
+    function test_stakeWithdrawal(uint256 amount) public {
+        vm.assume(amount < 10000000000);
+        vm.assume(amount > 0);
+        vm.prank(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
+        usdc.mint(address(user), 10000000000);
+        assertEq(usdc.balanceOf(user), 10000000000);
+        vm.prank(address(user));
+        usdc.approve(address(pool), 10000000000);
+        vm.prank(address(user));
+        pool.enterInPool(10000000000);
+        assertEq(proxycapital.totalCapitalStaked(), 10000000000);
+        vm.prank(address(user));
+        pool.leaveFromPoolInPending(amount);
+        skip(300);
+        vm.prank(address(user));
+        pool.leaveFromPending(amount);
+        assertEq(usdc.balanceOf(user), amount);
+        assertEq(proxycapital.totalCapitalStaked(), (10000000000 - amount));
+    }
+
+    function test_initialSetupAndStaking(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
+        setupUsersAndStakes(amount, amount2, amount3, amount4);
+
+        uint256 expectedStake = 500000000000 + (3 * amount) + (2 * amount2) + amount3 + amount4 + 10000000000000;
+        assertEq(proxycapital.totalCapitalStaked(), expectedStake);
+    }
+
+    function test_withdrawalProcess(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
+        test_initialSetupAndStaking(amount, amount2, amount3, amount4);
+
+        vm.prank(address(user2));
+        pool.leaveFromPoolInPending(amount);
+        vm.prank(address(user3));
+        pool.leaveFromPoolInPending(amount2);
+        vm.prank(address(user4));
+        pool.leaveFromPoolInPending(amount);
+
+        skip(300);
+        vm.prank(address(user2));
+        pool.leaveFromPending(amount);
+        vm.prank(address(user3));
+        pool.leaveFromPending(amount2);
+        vm.prank(address(user4));
+        pool.leaveFromPending(amount);
+
+        vm.prank(address(user));
+        vm.expectRevert();
+        pool.leaveFromPoolInPending(5000000000000);
+
+        vm.prank(address(user));
+        pool.leaveFromPoolInPending(50000000);
+    }
+
+    function test_cantWithdrawAmountBelowMCR(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
         setupUsersAndStakes(amount, amount2, amount3, amount4);
 
         uint256 stakedAfter = proxycapital.totalCapitalStaked();
@@ -313,7 +313,7 @@ contract NewMCR is Test {
         pool.leaveFromPoolInPending(totalUserStaked);
     }
 
-    function test_poolScenario2(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
+    function test_shouldNotFailWithdrawalCompletion(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
         setupUsersAndStakes(amount, amount2, amount3, amount4);
 
         uint256 stakedAfter = proxycapital.totalCapitalStaked();
