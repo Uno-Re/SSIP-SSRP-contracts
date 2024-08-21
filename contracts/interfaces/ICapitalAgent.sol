@@ -20,11 +20,13 @@ interface ICapitalAgent {
 
     function updatePolicyStatus(uint256 _policyId) external;
 
-    function getPolicyInfo() external returns(address, uint256, bool);
+    function getPolicyInfo() external returns (address, uint256, bool);
 
-    function claimedAmount(address _policy, uint256 _policyId) external returns(uint256);
+    function claimedAmount(address _policy, uint256 _policyId) external returns (uint256);
 
-    function exchangeAgent() external view returns(address);
+    function exchangeAgent() external view returns (address);
 
-    function getPoolInfo(address _pool) external view returns(uint256, uint256, address, bool);
+    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool, uint256);
+
+    function updatePoolWithdrawPendingCapital(address _pool, uint256 _amount, bool) external;
 }

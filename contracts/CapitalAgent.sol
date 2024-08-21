@@ -26,6 +26,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 SCR;
         address currency;
         bool exist;
+        uint256 totalWithdrawPendingCapital;
     }
 
     struct PolicyInfo {
@@ -75,6 +76,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     event LogRemovePoolWhiteList(address indexed _pool);
     event LogSetOperator(address indexed _operator);
     event LogSetUSDC(address indexed _usdcToken);
+    event LogupdatePoolWithdrawPendingCapital(address indexed _ssip, uint256 _poolPendingCapital);
 
     function initialize(
         address _exchangeAgent,
@@ -109,9 +111,15 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         return (_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
-    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool) {
+    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool, uint256) {
         PoolInfo memory _poolInfo = poolInfo[_pool];
-        return (_poolInfo.totalCapital, _poolInfo.SCR, _poolInfo.currency, _poolInfo.exist);
+        return (
+            _poolInfo.totalCapital,
+            _poolInfo.SCR,
+            _poolInfo.currency,
+            _poolInfo.exist,
+            _poolInfo.totalWithdrawPendingCapital
+        );
     }
 
     /**
@@ -186,7 +194,13 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
             existedCurrencies[_currency] = true;
             currencyList.push(_currency);
         }
-        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
+        poolInfo[_ssip] = PoolInfo({
+            totalCapital: 0,
+            currency: _currency,
+            SCR: _scr,
+            exist: true,
+            totalWithdrawPendingCapital: 0
+        });
 
         emit LogAddPool(_ssip, _currency, _scr);
     }
@@ -205,7 +219,13 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
             existedCurrencies[_currency] = true;
             currencyList.push(_currency);
         }
-        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, SCR: _scr, exist: true});
+        poolInfo[_ssip] = PoolInfo({
+            totalCapital: 0,
+            currency: _currency,
+            SCR: _scr,
+            exist: true,
+            totalWithdrawPendingCapital: 0
+        });
 
         emit LogAddPool(_ssip, _currency, _scr);
     }
@@ -277,6 +297,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         require(_checkCapitalByMCRAndSCR(msg.sender, _withdrawAmount), "UnoRe: minimum capital underflow");
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
+        _updatePoolWithdrawPendingCapital(msg.sender, _withdrawAmount, false);
     }
 
     /**
@@ -315,6 +336,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     function SSIPStaking(uint256 _stakingAmount) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
         _updatePoolCapital(msg.sender, _stakingAmount, true);
+    }
+
+    function updatePoolWithdrawPendingCapital(address _pool, uint256 _amount, bool isAdd) external nonReentrant {
+        require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
+        _updatePoolWithdrawPendingCapital(_pool, _amount, isAdd);
     }
 
     /**
@@ -391,6 +417,16 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         emit LogUpdatePoolCapital(_pool, poolInfo[_pool].totalCapital, totalCapitalStakedByCurrency[currency]);
     }
 
+    function _updatePoolWithdrawPendingCapital(address _pool, uint256 _amount, bool isAdd) private {
+        if (!isAdd) {
+            require(poolInfo[_pool].totalWithdrawPendingCapital >= _amount, "UnoRe: total Capital Pending underflow");
+        }
+        poolInfo[_pool].totalWithdrawPendingCapital = isAdd
+            ? poolInfo[_pool].totalWithdrawPendingCapital + _amount
+            : poolInfo[_pool].totalWithdrawPendingCapital - _amount;
+        emit LogupdatePoolWithdrawPendingCapital(_pool, poolInfo[_pool].totalWithdrawPendingCapital);
+    }
+
     function _updatePolicyCoverage(uint256 _amount, bool isAdd) private {
         if (!isAdd) {
             require(policyInfo.utilizedAmount >= _amount, "UnoRe: policy coverage overflow");
@@ -405,12 +441,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 totalCapitalStakedInUSDCPool;
         uint256 mcrInUSDC;
         uint256 scrInUSDC;
+        uint256 totalWithdrawPendingCapital;
 
+        totalWithdrawPendingCapital = poolInfo[_pool].totalWithdrawPendingCapital;
         totalCapitalStakedInUSDCPool = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
         mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency] - _withdrawAmount);
         scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
 
-        bool isMCRPass = mcrInUSDC >= (totalCapitalStakedInUSDCPool * MCR) / CALC_PRECISION;
+        bool isMCRPass = mcrInUSDC >= ((totalCapitalStakedInUSDCPool - totalWithdrawPendingCapital) * MCR) / CALC_PRECISION;
         bool isSCRPass = scrInUSDC >= poolInfo[_pool].SCR;
 
         return isMCRPass && isSCRPass;
