@@ -55,13 +55,8 @@ describe("SingleSidedInsurancePool", function () {
     this.USDCMillionaire = await ethers.getSigner("0x8A4AA176007196D48d39C89402d3753c39AE64c1")
     this.SYSMillionaire = await ethers.getSigner("0xbb8b9456f615545c88528653024e87c6069d1598")
     this.USDCMillionaire2 = await ethers.getSigner("0xdB6fb44ef463e55F20220117BF90A46100b3Fe01")
-    this.UNOMillionaire = await ethers.getSigner("0x260687ebc6c55dadd578264260f9f6e968f7b2a5")
+    this.UNOMillionaire = await ethers.getSigner("0x72986f6964afBB6F0dFa16aD2236cf8efBb10F10")
     this.proxyAdmin = await ethers.getSigner("0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863")
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0xdB6fb44ef463e55F20220117BF90A46100b3Fe01"],
-    })
-
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xbb8b9456f615545c88528653024e87c6069d1598"],
@@ -69,16 +64,19 @@ describe("SingleSidedInsurancePool", function () {
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
+      params: ["0x72986f6964afBB6F0dFa16aD2236cf8efBb10F10"],
+    })
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
       params: ["0x8A4AA176007196D48d39C89402d3753c39AE64c1"],
     })
+
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: ["0x260687ebc6c55dadd578264260f9f6e968f7b2a5"],
+      params: ["0xdB6fb44ef463e55F20220117BF90A46100b3Fe01"],
     })
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863"],
-    })
+
     await this.SYSMillionaire.sendTransaction({
       to: this.USDCMillionaire2.address,
       value: ethers.parseUnits("20", "ether"),
@@ -94,12 +92,13 @@ describe("SingleSidedInsurancePool", function () {
       "0x1000000000000000000000000000000000",
     ])
 
-    await this.mockUNO.connect(this.UNOMillionaire).mint(this.signers[0], getBigNumber("50"), { from: this.UNOMillionaire })
-    // await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[1], 5, { from: this.UNOMillionaire })
-    // await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[2], 5, { from: this.UNOMillionaire })
+    await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[0], getBigNumber("500"), { from: this.UNOMillionaire })
+    await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[1], getBigNumber("500"), { from: this.UNOMillionaire })
+    await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[2], getBigNumber("500"), { from: this.UNOMillionaire })
 
     await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[0], 500000000)
     await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[1], 500000000)
+    
     await this.mockUSDT.connect(this.USDCMillionaire2).transfer(this.signers[2], 50000000)
     await this.mockUSDT.connect(this.USDCMillionaire2).transfer(this.signers[4], 500000000)
 
@@ -202,7 +201,7 @@ describe("SingleSidedInsurancePool", function () {
 
     expect(this.rewarder.target).equal(await this.singleSidedInsurancePool.rewarder())
 
-    await (await this.mockUNO.transfer(this.rewarder.target, getBigNumber("100000"))).wait()
+    await (await this.mockUNO.transfer(this.rewarder.target, getBigNumber("50"))).wait()
 
     this.rewardAttack = await this.RewardAttack.deploy()
 
