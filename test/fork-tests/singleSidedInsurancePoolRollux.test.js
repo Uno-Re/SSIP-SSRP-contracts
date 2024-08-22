@@ -11,6 +11,8 @@ const mockUnoAbi = require("../../scripts/abis/Uno.json")
 const SingleSidedInsurancePoolAbi =
   require("../../artifacts/contracts/SingleSidedInsurancePool.sol/SingleSidedInsurancePool.json").abi
 
+const ProxyAbi = require("../../scripts/abis/ProxyAbi.json")
+
 const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = require("../../scripts/shared/constants")
 const { getBigInt } = require("ethers")
 
@@ -77,6 +79,11 @@ describe("SingleSidedInsurancePool", function () {
       params: ["0xdB6fb44ef463e55F20220117BF90A46100b3Fe01"],
     })
 
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863"],
+    })
+
     await this.SYSMillionaire.sendTransaction({
       to: this.USDCMillionaire2.address,
       value: ethers.parseUnits("20", "ether"),
@@ -98,7 +105,7 @@ describe("SingleSidedInsurancePool", function () {
 
     await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[0], 500000000)
     await this.mockUSDT.connect(this.USDCMillionaire).transfer(this.signers[1], 500000000)
-    
+
     await this.mockUSDT.connect(this.USDCMillionaire2).transfer(this.signers[2], 50000000)
     await this.mockUSDT.connect(this.USDCMillionaire2).transfer(this.signers[4], 500000000)
 
@@ -184,6 +191,8 @@ describe("SingleSidedInsurancePool", function () {
 
     this.admin = await ethers.getSigner("0x15E18e012cb6635b228e0DF0b6FC72627C8b2429")
 
+    this.proxy = await ethers.getContractAt(ProxyAbi, "0x2c89687036445089c962F4621B1F03571BBa798e")
+
     this.singleSidedInsurancePool = await ethers.getContractAt(
       SingleSidedInsurancePoolAbi,
       "0x2c89687036445089c962F4621B1F03571BBa798e",
@@ -207,9 +216,7 @@ describe("SingleSidedInsurancePool", function () {
 
     this.newImplementation = await this.SingleSidedInsurancePool.deploy()
 
-    await this.singleSidedInsurancePool
-      .connect(this.proxyAdmin)
-      .upgradeTo(this.SingleSidedInsurancePool.target, this.newImplementation.target)
+    await this.proxy.connect(this.proxyAdmin).upgradeTo(this.newImplementation.target)
   })
 
   describe("SingleSidedInsurancePool Basic", function () {
