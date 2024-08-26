@@ -31,22 +31,22 @@ contract UmaProcess is Test {
 
     address user = address(0x6ae23169D0809c5727f7bB1bF59335DbF9748fdd);
     address userDisputer = address(0x6ae23169d081234527F7bB1bf59335Dbf9748FdD);
-    address dao = address(0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863);
+    address dao = address(0xE7598Ff1fA06F3D3b696524A431cdE7C777b466A);
     address admin = address(this);
-    address constant USDC = 0xdb2587DEb089c8f914BA6FeDf1E3d3Cb8660A015;
-    address constant UNO = 0xF75C8E49831c055a88957adbc97450f778460FD9;
-    address constant CAPITAL = 0x11819a1eB9373F86f4E1f7dAE8508E678BAF5D7B;
-    address constant SALES = 0x0d9E62654EDAc0efFB2262Cfb9F68fdb9Fa8E80E;
-    address constant PAYOUT = 0x9a752bc5Af86ec2AAAfed8E18751960d4e348752;
-    address constant USDCPOOL = 0x3A83bD2e395EaBdD534c8f1EbB283B67418Abe31;
-    address constant ORACLE = 0xFd9e2642a170aDD10F53Ee14a93FcF2F31924944;
-    address constant DEFAULTCURRENCY = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9;
-    address constant ESCMANAGER = 0x14504281A72Fa3e183f1235496A3CF777439016A;
+    address constant USDC = 0x368433CaC2A0B8D76E64681a9835502a1f2A8A30;
+    address constant UNO = 0x570baA32dB74279a50491E88D712C957F4C9E409;
+    address constant CAPITAL = 0xB754842C7b0FA838e08fe5C028dB0ecd919f2d30;
+    address constant SALES = 0x5B170693E096D8602f970757068859b9A117fA6D;
+    address constant PAYOUT = 0x1024a3a9D000aD3cd6Ac88490F86aD9FEAef7DCA;
+    address constant USDCPOOL = 0x2c89687036445089c962F4621B1F03571BBa798e;
+    address constant ORACLE = 0x9A2F48a2F66Ef86A6664Bb6FbC49a7407d6E33B5;
+    address constant DEFAULTCURRENCY = 0x4200000000000000000000000000000000000006;
+    address constant ESCMANAGER = 0x9153a7017505De5E37892a5362B54904F878409a;
     bytes32 constant CLAIM_PROCESSOR_ROLE = 0x3b745c09aefb8f732a168ec71c3c87b50c0a4cfd1d104649ae3c04a4623b26bf;
 
     function setUp() public {
         //should include sepolia RPC
-        string memory CHAIN_URL = vm.envString("SEPOLIA_URL");
+        string memory CHAIN_URL = vm.envString("ROLLUXMAIN_URL");
         vm.createSelectFork(CHAIN_URL);
         salesPolicy = SalesPolicy(payable(SALES));
 

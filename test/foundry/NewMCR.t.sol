@@ -41,21 +41,21 @@ contract NewMCR is Test {
     address user8 = address(8);
     address user9 = address(9);
     address admin = address(this);
-    address constant USDC = 0xdb2587DEb089c8f914BA6FeDf1E3d3Cb8660A015;
-    address constant UNO = 0xF75C8E49831c055a88957adbc97450f778460FD9;
-    address constant PRICE = 0x8F0872F5A2ad8384c385138A2a47dBC29F6C0135;
-    address constant USDCPOOL = 0x3A83bD2e395EaBdD534c8f1EbB283B67418Abe31;
-    address constant SALES_FACTORY = 0xA21E48961F782b57D1708f697E93ee433fC84e92;
+    address constant USDC = 0x368433CaC2A0B8D76E64681a9835502a1f2A8A30;
+    address constant UNO = 0x570baA32dB74279a50491E88D712C957F4C9E409;
+    address constant PRICE = 0x9A2F48a2F66Ef86A6664Bb6FbC49a7407d6E33B5;
+    address constant USDCPOOL = 0x2c89687036445089c962F4621B1F03571BBa798e;
+    address constant SALES_FACTORY = 0xD86D9be9143Dc514340C73502f2B77d93d0B11f4;
     uint256 constant MCR = 10000000;
     uint256 constant MLR = 1000000;
-    address constant PREMIUM_POOL = 0xcb2B848AF2C87C6a5B213C6dB4259CfA95A7c7E3;
-    address constant PAYOUT = 0x9a752bc5Af86ec2AAAfed8E18751960d4e348752;
-    address constant EXCHANGE_AGENT_ADDRESS = 0x0A32617d981EC576796C1D7E267F6563aCf82375;
-    address constant SALES = 0x0d9E62654EDAc0efFB2262Cfb9F68fdb9Fa8E80E;
+    address constant PREMIUM_POOL = 0xc94002a997d4e4E90D423778170588f695c5f242;
+    address constant PAYOUT = 0x1024a3a9D000aD3cd6Ac88490F86aD9FEAef7DCA;
+    address constant EXCHANGE_AGENT_ADDRESS = 0x826404CB1924e8b2773250c9d15503E5CDe7eE20;
+    address constant SALES = 0x5B170693E096D8602f970757068859b9A117fA6D;
     address constant MintAddress = 0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863;
 
     function setUp() public {
-        string memory CHAIN_URL = vm.envString("SEPOLIA_URL");
+        string memory CHAIN_URL = vm.envString("ROLLUXMAIN_URL");
 
         vm.createSelectFork(CHAIN_URL);
         priceFeed = SupraPriceOracle(PRICE);
