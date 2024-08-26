@@ -21,14 +21,14 @@ contract Stake is Test {
     CapitalAgent agent;
     address user = address(1);
     address admin = address(this);
-    address constant USDC = 0xa68E417905ACdEdC32ae8DA9113a6d4d2b6B2F30;
-    address constant UNO = 0x1E61F32cBc30d919AdC92CA1eD92dA3fd115a530;
-    address constant PRICE = 0xf0641df8Dd1290016229083F0695fE49067EcB79;
-    address constant USDCPOOL = 0xc0c7fbcd46E16e9b91fcFd63792240399e7B0459;
-    address constant AGENT = 0x2aAb17643960Ef1909522F3F8F706c587636FE27;
+    address constant USDC = 0x368433CaC2A0B8D76E64681a9835502a1f2A8A30;
+    address constant UNO = 0x570baA32dB74279a50491E88D712C957F4C9E409;
+    address constant PRICE = 0x9A2F48a2F66Ef86A6664Bb6FbC49a7407d6E33B5;
+    address constant USDCPOOL = 0x2c89687036445089c962F4621B1F03571BBa798e;
+    address constant AGENT = 0xB754842C7b0FA838e08fe5C028dB0ecd919f2d30;
 
     function setUp() public {
-        string memory CHAIN_URL = vm.envString("ROLLUXTEST_URL");
+        string memory CHAIN_URL = vm.envString("ROLLUXMAIN_URL");
 
         vm.createSelectFork(CHAIN_URL);
         priceFeed = SupraPriceOracle(PRICE);
