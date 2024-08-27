@@ -1,16 +1,28 @@
-const fs = require("fs")
-const { ethers, network } = require("hardhat")
 const hre = require("hardhat")
+require("dotenv").config()
 
 async function main() {
-  const Oracle = await ethers.getContractFactory("SupraPriceOracle")
-  const oracle = (await Oracle.deploy("0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863")).waitForDeployment
-  
-  console.log(oracle.address)
-;}
+  const deployerPrivateKey = process.env.PRIVATE_KEY_1
 
+  // Connect the wallet to the provider
+  const deployerWallet = new ethers.Wallet(deployerPrivateKey, ethers.provider)
+
+  console.log("Deploying contracts with the account:", deployerWallet.address)
+
+  // Get the contract to deploy
+  const SingleSidedInsurancePool = await hre.ethers.getContractFactory(
+    "contracts/SingleSidedInsurancePool.sol:SingleSidedInsurancePool",
+    deployerWallet,
+  )
+
+  // Deploy the contract
+  const singleSidedInsurancePool = await SingleSidedInsurancePool.deploy()
+
+  console.log("SingleSidedInsurancePool deployed to:", singleSidedInsurancePool.address)
+}
+
+// Execute the script
 main()
-
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
