@@ -42,7 +42,7 @@ contract SupraPriceOracle is Ownable {
         ISupraSValueFeed priceFeeder = ISupraSValueFeed(ethUSDAggregator);
         ISupraSValueFeed.priceFeed memory sValue = priceFeeder.getSvalue(46);
         uint256 price = sValue.price;
-        return uint256(price);
+        return uint256(price / (10 ** 18));
     }
 
     function getAssetEthPrice(address _asset) external view returns (uint256) {
@@ -68,9 +68,9 @@ contract SupraPriceOracle is Ownable {
             return amountA;
         }
 
-        uint256 ethPriceA = _stableCoins.contains(tokenA) ? 1e18 / _fetchEthUsdPrice() : ethPrices[tokenA];
+        uint256 ethPriceA = _stableCoins.contains(tokenA) ? (10 ** 18) / _fetchEthUsdPrice() : ethPrices[tokenA];
 
-        uint256 ethPriceB = _stableCoins.contains(tokenB) ? 1e18 / _fetchEthUsdPrice() : ethPrices[tokenB];
+        uint256 ethPriceB = _stableCoins.contains(tokenB) ? (10 ** 18) / _fetchEthUsdPrice() : ethPrices[tokenB];
 
         require(ethPriceA != 0 && ethPriceB != 0, "PO: Prices of both tokens should be set");
 
