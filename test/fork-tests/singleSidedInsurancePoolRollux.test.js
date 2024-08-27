@@ -184,11 +184,15 @@ describe("SingleSidedInsurancePool", function () {
     await this.singleSidedInsurancePool.createRewarder(this.signers[0].address, this.rewarderFactory.target, this.mockUNO.target)
     this.rewarderAddress = await this.singleSidedInsurancePool.rewarder()
     this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
-    await this.mockUNO.connect(this.UNOMillionaire).mint(getBigNumber("50000"), { from: this.UNOMillionaire })
+    await this.mockUNO.connect(this.UNOMillionaire).mint(getBigNumber("5000000"), { from: this.UNOMillionaire })
+    await this.mockUNO.connect(this.UNOMillionaire).mint(getBigNumber("5000000"), { from: this.UNOMillionaire })
 
     await this.mockUNO
       .connect(this.UNOMillionaire)
-      .transfer(this.rewarderAddress, getBigNumber("50000"), { from: this.UNOMillionaire })
+      .transfer(this.rewarderAddress, getBigNumber("5000000"), { from: this.UNOMillionaire })
+    await this.mockUNO
+      .connect(this.UNOMillionaire)
+      .transfer(this.rewarderAddress, getBigNumber("5000000"), { from: this.UNOMillionaire })
 
     expect(this.rewarder.target).equal(await this.singleSidedInsurancePool.rewarder())
 
@@ -753,7 +757,7 @@ describe("SingleSidedInsurancePool", function () {
 
         await this.singleSidedInsurancePool.setMigrateTo(this.singleSidedInsurancePool1.target)
         // await this.singleSidedInsurancePool.migrate();
-
+        await (await this.mockUNO.mint(getBigNumber("100000"))).wait()
         await (await this.mockUNO.transfer(this.rewarder1.target, getBigNumber("100000"))).wait()
 
         // await this.singleSidedInsurancePool1.enterInPool(getBigNumber("100000");
