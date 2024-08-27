@@ -8,7 +8,7 @@ const UniswapV2Router = require("../../scripts/abis/UniswapV2Router.json")
 const OptimisticOracleV3Abi = require("../../scripts/abis/OptimisticOracleV3.json")
 const mockERC20 = require("../../scripts/abis/ERC20.json")
 const mockWSYS = require("../../scripts/abis/WETH9.json")
-const mockUnoAbi = require("../../scripts/abis/Uno.json")
+const mockUnoAbi = require("../../scripts/abis/MockUNO.json")
 const SingleSidedInsurancePoolAbi =
   require("../../artifacts/contracts/SingleSidedInsurancePool.sol/SingleSidedInsurancePool.json").abi
 const CapitalAgentAbi = require("../../artifacts/contracts/CapitalAgent.sol/CapitalAgent.json").abi
@@ -52,7 +52,7 @@ describe("SingleSidedInsurancePool", function () {
 
   beforeEach(async function () {
     // I'm using PSYS as uno for the tests since we don't have uno on Chain
-    this.mockUNO = await ethers.getContractAt(mockUnoAbi, "0x48023b16c3e81AA7F6eFFbdEB35Bb83f4f31a8fd")
+    this.mockUNO = await ethers.getContractAt(mockUnoAbi, "0x553A7E44043C98eAaAc71334d49Ecbec92916c36")
     // Staking asset for the test.
     this.stakingAsset = await ethers.getContractAt(mockWSYS, "0x4200000000000000000000000000000000000006")
     this.multisig = await ethers.getSigner("0x15E18e012cb6635b228e0DF0b6FC72627C8b2429")
@@ -62,16 +62,16 @@ describe("SingleSidedInsurancePool", function () {
     })
     // Account that has enought tokens to transfer all test account a bunch of times
     this.stakingAssetMillionaire = await ethers.getSigner("0x3F0e40bC7e9cb5f46E906dAEd18651Fb6212Aa8E")
-        await hre.network.provider.request({
-          method: "hardhat_impersonateAccount",
-          params: ["0x3F0e40bC7e9cb5f46E906dAEd18651Fb6212Aa8E"],
-        })
-        await network.provider.send("hardhat_setBalance", [
-          "0x3F0e40bC7e9cb5f46E906dAEd18651Fb6212Aa8E",
-          "0x900000000000000000000000000000000000",
-        ]);
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0x3F0e40bC7e9cb5f46E906dAEd18651Fb6212Aa8E"],
+    })
+    await network.provider.send("hardhat_setBalance", [
+      "0x3F0e40bC7e9cb5f46E906dAEd18651Fb6212Aa8E",
+      "0x900000000000000000000000000000000000",
+    ])
 
-    await this.stakingAssetMillionaire.sendTransaction({to: this.stakingAsset, value: getBigNumber("50000000")})
+    await this.stakingAssetMillionaire.sendTransaction({ to: this.stakingAsset, value: getBigNumber("50000000") })
     console.log(await this.stakingAsset.balanceOf(this.stakingAssetMillionaire.address))
 
     this.UNOMillionaire = await ethers.getSigner("0xBB6Ae6BaE1356226cfFE33d131EE66194FE4E0aD")
@@ -84,16 +84,16 @@ describe("SingleSidedInsurancePool", function () {
       to: this.UNOMillionaire.address,
       value: ethers.parseUnits("1", "ether"),
     })
-    await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[0], getBigNumber("50000"), { from: this.UNOMillionaire })
-    await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[1], getBigNumber("50000"), { from: this.UNOMillionaire })
-    await this.mockUNO.connect(this.UNOMillionaire).transfer(this.signers[2], getBigNumber("50000"), { from: this.UNOMillionaire })
+    await this.mockUNO.connect(this.signers[0]).mint(getBigNumber("50000"), { from: this.signers[0] })
+    await this.mockUNO.connect(this.signers[1]).mint(getBigNumber("50000"), { from: this.signers[1] })
+    await this.mockUNO.connect(this.signers[2]).mint(getBigNumber("50000"), { from: this.signers[2] })
 
     await this.stakingAsset.connect(this.stakingAssetMillionaire).transfer(this.signers[0], getBigNumber("500000"))
     await this.stakingAsset.connect(this.stakingAssetMillionaire).transfer(this.signers[1], getBigNumber("500000"))
     await this.stakingAsset.connect(this.stakingAssetMillionaire).transfer(this.signers[2], getBigNumber("500000"))
     await this.stakingAsset.connect(this.stakingAssetMillionaire).transfer(this.signers[3], getBigNumber("500000"))
     await this.stakingAsset.connect(this.stakingAssetMillionaire).transfer(this.signers[4], getBigNumber("500000"))
-    await this.stakingAssetMillionaire.sendTransaction({to: this.multisig, value: getBigNumber("5000")})
+    await this.stakingAssetMillionaire.sendTransaction({ to: this.multisig, value: getBigNumber("5000") })
 
     // Used for staking assets that are not wsys
     // await this.stakingAsset.connect(this.stakingAssetMillionaire).transfer(this.signers[0], getBigNumber("500000"))
@@ -157,10 +157,7 @@ describe("SingleSidedInsurancePool", function () {
       getBigNumber("60"),
     )
 
-    this.capitalAgent = await ethers.getContractAt(
-      CapitalAgentAbi,
-      "0xB754842C7b0FA838e08fe5C028dB0ecd919f2d30",
-    )
+    this.capitalAgent = await ethers.getContractAt(CapitalAgentAbi, "0xB754842C7b0FA838e08fe5C028dB0ecd919f2d30")
 
     this.admin = await ethers.getSigner("0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863")
     await hre.network.provider.request({
@@ -172,7 +169,6 @@ describe("SingleSidedInsurancePool", function () {
 
     this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB")
     this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address)
-
 
     this.singleSidedInsurancePool = await ethers.getContractAt(
       SingleSidedInsurancePoolAbi,
@@ -188,7 +184,11 @@ describe("SingleSidedInsurancePool", function () {
     await this.singleSidedInsurancePool.createRewarder(this.signers[0].address, this.rewarderFactory.target, this.mockUNO.target)
     this.rewarderAddress = await this.singleSidedInsurancePool.rewarder()
     this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
-    await this.mockUNO.connect(this.UNOMillionaire).transfer(this.rewarderAddress, getBigNumber("50000"), { from: this.UNOMillionaire })
+    await this.mockUNO.connect(this.UNOMillionaire).mint(getBigNumber("50000"), { from: this.UNOMillionaire })
+
+    await this.mockUNO
+      .connect(this.UNOMillionaire)
+      .transfer(this.rewarderAddress, getBigNumber("50000"), { from: this.UNOMillionaire })
 
     expect(this.rewarder.target).equal(await this.singleSidedInsurancePool.rewarder())
 
@@ -217,7 +217,6 @@ describe("SingleSidedInsurancePool", function () {
     })
 
     it("Should set uno multiplier factor", async function () {
-
       const poolInfoBefore = await this.singleSidedInsurancePool.poolInfo()
       expect(poolInfoBefore.unoMultiplierPerBlock).equal(3995433752000000)
       await this.singleSidedInsurancePool.connect(this.multisig).setRewardMultiplier(getBigNumber("2"))
