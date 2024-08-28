@@ -726,7 +726,7 @@ describe("SingleSidedInsurancePool", function () {
 
         this.singleSidedInsurancePool1 = await upgrades.deployProxy(this.SingleSidedInsurancePool, [
           this.capitalAgent.target,
-          "0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e",
+          this.multisig.address,
         ])
 
         await this.singleSidedInsurancePool1
@@ -767,7 +767,7 @@ describe("SingleSidedInsurancePool", function () {
 
         //setting pool capital to v2 pool capital
         await this.capitalAgent.setPoolCapital(this.singleSidedInsurancePool1.target, this.poolInfov2.totalCapital)
-        await this.capitalAgent.setSCR(this.poolInfov2.SCR, this.singleSidedInsurancePool1.target)
+        await this.capitalAgent.connect(this.admin).setSCR(this.poolInfov2.SCR, this.singleSidedInsurancePool1.target)
         //transfer capital lp to riskpool
         await (await this.stakingAsset.transfer(this.riskPool1.target, this.poolInfov2.totalCapital)).wait()
 
