@@ -443,7 +443,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 scrInUSDC;
         uint256 totalWithdrawPendingCapital;
 
-        totalWithdrawPendingCapital = poolInfo[_pool].totalWithdrawPendingCapital;
+        totalWithdrawPendingCapital = _convertTokenToUSDC(currency, poolInfo[_pool].totalWithdrawPendingCapital);
         totalCapitalStakedInUSDCPool = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
         mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency] - _withdrawAmount);
         scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
