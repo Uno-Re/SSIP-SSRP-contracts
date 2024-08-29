@@ -260,7 +260,7 @@ describe("SSIP Reward attack", function () {
           getNumber(pendingUnoRewardAfterHarvest2),
         )
       })
-      it("should revert harvest through malicious contract after 200000 block", async function () {
+      it("should revert harvest through malicious contract after 300000 block", async function () {
         const riskPool = this.RiskPool.attach(this.poolAddress)
         const pendingUnoRewardBefore1 = await this.singleSidedInsurancePool.pendingUno(this.signers[0].address)
         const pendingUnoRewardBefore2 = await this.singleSidedInsurancePool.pendingUno(this.signers[1].address)
@@ -281,7 +281,7 @@ describe("SSIP Reward attack", function () {
         expect(poolBalance2).to.equal(getBigNumber("8500") + initBalance1)
 
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
-        await advanceBlockTo(beforeBlockNumber + 200000)
+        await advanceBlockTo(beforeBlockNumber + 300000)
         const afterBlockNumber = await ethers.provider.getBlockNumber()
 
         const pendingUnoRewardAfter1 = await this.singleSidedInsurancePool.pendingUno(this.rewardAttack.target)
