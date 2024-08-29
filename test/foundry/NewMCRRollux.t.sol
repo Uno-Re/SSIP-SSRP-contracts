@@ -96,7 +96,7 @@ contract NewMCRRollux is Test {
 
         vm.prank(Multisig);
         pool.setCapitalAgent(address(proxycapital));
-        proxycapital.addPoolByAdmin(WSYSPOOL, WSYS, 1000000);
+        proxycapital.addPoolByAdmin(address(pool), WSYS, 1000000);
     }
 
     function setupUsersAndStakes(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) internal {
@@ -220,34 +220,53 @@ contract NewMCRRollux is Test {
     }
 
     function test_stakeWithdrawal(uint256 amount) public {
-        vm.assume(amount < 10000000000);
-        vm.assume(amount > 0);
+        vm.assume(amount < 50000000000000000000000);
+        vm.assume(amount > 10000000000000000000000);
+
         vm.prank(SysMillionaire);
-        sys.transfer(address(user), 10000000000);
-        assertEq(sys.balanceOf(user), 10000000000);
-        vm.prank(address(user));
-        sys.approve(address(pool), 10000000000);
-        vm.prank(address(user));
-        pool.enterInPool(10000000000);
-        assertEq(proxycapital.totalCapitalStaked(), 10000000000);
-        vm.prank(address(user));
-        pool.leaveFromPoolInPending(amount);
-        skip(950400); //11 days
-        vm.prank(address(user));
-        pool.leaveFromPending(amount);
+        sys.transfer(address(user), amount);
         assertEq(sys.balanceOf(user), amount);
-        assertEq(proxycapital.totalCapitalStaked(), (10000000000 - amount));
+
+        vm.prank(address(user));
+        sys.approve(address(pool), amount);
+
+        vm.prank(address(user));
+        pool.enterInPool(amount);
+
+        uint256 expectedValueBefore = proxycapital._convertTokenToUSDC(address(sys), amount);
+        assertEq(proxycapital.totalCapitalStaked(), expectedValueBefore);
+
+        vm.prank(address(user));
+        vm.expectRevert(); //should revert by the mcr, as he's the only one staked
+        pool.leaveFromPoolInPending(amount);
+
+        vm.prank(address(user));
+        pool.leaveFromPoolInPending(amount / 48);
+
+        skip(950400); //11 days
+
+        vm.prank(address(user));
+        pool.leaveFromPending(amount / 48);
+
+        assertEq(sys.balanceOf(user), (amount / 48));
+
+        uint256 expectedValue = proxycapital._convertTokenToUSDC(address(sys), amount - (amount / 48));
+
+        assertEq(proxycapital.totalCapitalStaked(), expectedValue);
     }
 
     function test_initialSetupAndStaking(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
         setupUsersAndStakes(amount, amount2, amount3, amount4);
 
-        uint256 expectedStake = 5000000000000000000000 +
+        uint256 calcExpectedStake = 5000000000000000000000 +
             (3 * amount) +
             (2 * amount2) +
             amount3 +
             amount4 +
             10000000000000000000000;
+
+        uint256 expectedStake = proxycapital._convertTokenToUSDC(address(sys), calcExpectedStake);
+
         assertEq(proxycapital.totalCapitalStaked(), expectedStake);
     }
 
@@ -281,7 +300,6 @@ contract NewMCRRollux is Test {
         setupUsersAndStakes(amount, amount2, amount3, amount4);
 
         uint256 stakedAfter = proxycapital.totalCapitalStaked();
-
         proxycapital.setMCR(stakedAfter / 2);
 
         vm.prank(SysMillionaire);
@@ -291,25 +309,14 @@ contract NewMCRRollux is Test {
         vm.prank(address(user));
         pool.enterInPool(500000000000);
 
-        proxycapital.getPoolInfo(address(pool));
-        uint256 total = proxycapital.totalCapitalStakedByCurrency(WSYS);
-        proxycapital._convertTokenToUSDC(WSYS, total);
-
         uint256 totalUserStaked = (500000000000 + 5000000000000000000000);
 
         //Here user will withdrawal all of his money and should not fail by the MCR
         vm.prank(address(user));
-        pool.leaveFromPoolInPending(totalUserStaked);
+        pool.leaveFromPoolInPending(500000000000);
         skip(950400); //11 days
         vm.prank(address(user));
-        pool.leaveFromPending(totalUserStaked);
-
-        //here user stake all his money again
-        vm.prank(address(user));
-        sys.approve(address(pool), totalUserStaked);
-        vm.prank(address(user));
-        pool.enterInPool(totalUserStaked);
-        skip(50400); //11 days
+        pool.leaveFromPending(500000000000);
 
         proxycapital.totalCapitalStaked();
         proxycapital.MCR();
@@ -318,19 +325,21 @@ contract NewMCRRollux is Test {
         setupStartWithdrawal(amount, amount2, amount3, amount4);
         skip(950400); //11 days
         setupFinishWithdrawal(amount, amount2, amount3, amount4);
+
         proxycapital.totalCapitalStaked();
+        proxycapital.getPoolInfo(address(pool));
+        proxycapital.MCR();
 
         //Here user will withdrawal all of his money and it should fail by the MCR
         vm.prank(address(user));
         vm.expectRevert();
-        pool.leaveFromPoolInPending(totalUserStaked);
+        pool.leaveFromPoolInPending((totalUserStaked - 500000000000));
     }
 
     function test_shouldNotFailWithdrawalCompletion(uint256 amount, uint256 amount2, uint256 amount3, uint256 amount4) public {
         setupUsersAndStakes(amount, amount2, amount3, amount4);
 
         uint256 stakedAfter = proxycapital.totalCapitalStaked();
-
         proxycapital.setMCR(stakedAfter / 2);
 
         vm.prank(SysMillionaire);
@@ -343,6 +352,7 @@ contract NewMCRRollux is Test {
         uint256 totalUserStaked = (500000000000 + 5000000000000000000000);
 
         proxycapital.totalCapitalStaked();
+        proxycapital.totalCapitalStakedByCurrency(WSYS);
         proxycapital.MCR();
 
         //Here other users will start to withdrawal all of their money, but won't finish withdrawing yet
@@ -352,12 +362,11 @@ contract NewMCRRollux is Test {
 
         vm.prank(address(user));
         //this call should fail by the MCR as other users withdrew, but it doesn't
-        pool.leaveFromPoolInPending(totalUserStaked);
+        pool.leaveFromPoolInPending(totalUserStaked / 48);
         skip(950400); //11 days
 
         vm.prank(address(user));
-        pool.leaveFromPending(totalUserStaked);
-
+        pool.leaveFromPending(totalUserStaked / 48);
         setupFinishWithdrawal(amount, amount2, amount3, amount4);
     }
 }
