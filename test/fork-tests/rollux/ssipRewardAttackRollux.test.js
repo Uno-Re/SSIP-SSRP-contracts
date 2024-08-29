@@ -1,18 +1,18 @@
 const { expect } = require("chai")
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber, getNumber, advanceBlockTo } = require("../../scripts/shared/utilities")
+const { getBigNumber, getNumber, advanceBlockTo } = require("../../../scripts/shared/utilities")
 
-const UniswapV2Router = require("../../scripts/abis/UniswapV2Router.json")
+const UniswapV2Router = require("../../../scripts/abis/UniswapV2Router.json")
 
-const OptimisticOracleV3Abi = require("../../scripts/abis/OptimisticOracleV3.json")
-const SingleSidedInsurancePoolAbi = require("../../scripts/abis/SingleSidedInsurancePool.json")
-const mockOracleAbi = require("../../scripts/abis/mockOracle.json")
-const mockWSYS = require("../../scripts/abis/WETH9.json")
-const mockUnoAbi = require("../../scripts/abis/MockUNO.json")
-const CapitalAgentAbi = require("../../artifacts/contracts/CapitalAgent.sol/CapitalAgent.json").abi
-const exchangeAgentAbi = require("../../artifacts/contracts/ExchangeAgent.sol/ExchangeAgent.json").abi
+const OptimisticOracleV3Abi = require("../../../scripts/abis/OptimisticOracleV3.json")
+const SingleSidedInsurancePoolAbi = require("../../../scripts/abis/SingleSidedInsurancePool.json")
+const mockOracleAbi = require("../../../scripts/abis/mockOracle.json")
+const mockWSYS = require("../../../scripts/abis/WETH9.json")
+const mockUnoAbi = require("../../../scripts/abis/MockUNO.json")
+const CapitalAgentAbi = require("../../../artifacts/contracts/CapitalAgent.sol/CapitalAgent.json").abi
+const exchangeAgentAbi = require("../../../artifacts/contracts/ExchangeAgent.sol/ExchangeAgent.json").abi
 
-const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = require("../../scripts/shared/constants")
+const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = require("../../../scripts/shared/constants")
 
 describe("SSIP Reward attack", function () {
   before(async function () {
@@ -134,7 +134,7 @@ describe("SSIP Reward attack", function () {
 
     this.exchangeAgent = await ethers.getContractAt(exchangeAgentAbi, "0x83f618d714B9464C8e63F1d95592BaAa2d51a54E")
 
-    this.capitalAgent = await ethers.getContractAt(CapitalAgentAbi, "0x14eF9C6cD5A8C78af407cEcCA3E4668e466F2B18")
+    this.capitalAgent = await ethers.getContractAt(CapitalAgentAbi, "0xB754842C7b0FA838e08fe5C028dB0ecd919f2d30")
 
     await this.capitalAgent.connect(this.multisig).grantRole(await this.capitalAgent.ADMIN_ROLE(), this.signers[0].address)
 
@@ -152,16 +152,15 @@ describe("SSIP Reward attack", function () {
     )
 
     await this.singleSidedInsurancePool
-      .connect(this.admin)
+      .connect(this.multisig)
       .grantRole(await this.capitalAgent.ADMIN_ROLE(), this.signers[0].address)
-    await (await this.capitalAgent.addPoolWhiteList(this.singleSidedInsurancePool.target)).wait()
     await this.singleSidedInsurancePool.createRewarder(this.signers[0].address, this.rewarderFactory.target, this.mockUNO.target)
     this.rewarderAddress = await this.singleSidedInsurancePool.rewarder()
     this.rewarder = await this.Rewarder.attach(this.rewarderAddress)
 
     expect(await this.rewarder.target).equal(await this.singleSidedInsurancePool.rewarder())
 
-    await (await this.mockUNO.transfer(this.rewarder.target, getBigNumber("100000"))).wait()
+    await (await this.mockUNO.transfer(this.rewarder.target, getBigNumber("1000"))).wait()
 
     this.rewardAttack = await this.RewardAttack.deploy()
   })
