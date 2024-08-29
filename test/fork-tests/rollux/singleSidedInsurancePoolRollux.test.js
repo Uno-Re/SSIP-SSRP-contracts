@@ -1,18 +1,18 @@
 const { expect } = require("chai")
 
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber, getNumber, advanceBlockTo } = require("../../scripts/shared/utilities")
+const { getBigNumber, getNumber, advanceBlockTo } = require("../../../scripts/shared/utilities")
 
-const UniswapV2Router = require("../../scripts/abis/UniswapV2Router.json")
+const UniswapV2Router = require("../../../scripts/abis/UniswapV2Router.json")
 
-const OptimisticOracleV3Abi = require("../../scripts/abis/OptimisticOracleV3.json")
-const mockERC20 = require("../../scripts/abis/ERC20.json")
-const mockWSYS = require("../../scripts/abis/WETH9.json")
-const mockUnoAbi = require("../../scripts/abis/MockUNO.json")
+const OptimisticOracleV3Abi = require("../../../scripts/abis/OptimisticOracleV3.json")
+const mockERC20 = require("../../../scripts/abis/ERC20.json")
+const mockWSYS = require("../../../scripts/abis/WETH9.json")
+const mockUnoAbi = require("../../../scripts/abis/MockUNO.json")
 const SingleSidedInsurancePoolAbi =
-  require("../../artifacts/contracts/SingleSidedInsurancePool.sol/SingleSidedInsurancePool.json").abi
-const CapitalAgentAbi = require("../../artifacts/contracts/CapitalAgent.sol/CapitalAgent.json").abi
-const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = require("../../scripts/shared/constants")
+  require("../../../artifacts/contracts/SingleSidedInsurancePool.sol/SingleSidedInsurancePool.json").abi
+const CapitalAgentAbi = require("../../../artifacts/contracts/CapitalAgent.sol/CapitalAgent.json").abi
+const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = require("../../../scripts/shared/constants")
 const { getBigInt } = require("ethers")
 
 describe("SingleSidedInsurancePool", function () {
