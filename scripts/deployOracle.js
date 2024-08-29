@@ -11,14 +11,14 @@ async function main() {
 
   // Get the contract to deploy
   const SingleSidedInsurancePool = await hre.ethers.getContractFactory(
-    "contracts/SingleSidedInsurancePool.sol:SingleSidedInsurancePool",
+    "contracts/uma/PayoutRequest.sol:PayoutRequest",
     deployerWallet,
   )
 
   // Deploy the contract
   const singleSidedInsurancePool = await SingleSidedInsurancePool.deploy()
 
-  console.log("SingleSidedInsurancePool deployed to:", singleSidedInsurancePool.address)
+  console.log(await "SingleSidedInsurancePool deployed to:", singleSidedInsurancePool.address)
 }
 
 // Execute the script
