@@ -13,7 +13,7 @@ import "../interfaces/ICapitalAgent.sol";
  * whenever user stake and withdraw from the pool and buy policy from salesPolicy
  * notifies to capital agent to update pool capital and policy coverage
  **/
-contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
+contract MockCapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address public exchangeAgent;
