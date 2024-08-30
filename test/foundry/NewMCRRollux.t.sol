@@ -23,9 +23,9 @@ contract NewMCRRollux is Test {
     USDCmock sys;
     SupraPriceOracle priceFeed;
     SingleSidedInsurancePool pool;
-    CapitalAgent capitalAgent;
+    MockCapitalAgent capitalAgent;
     TransparentProxy capitalAgentProxy;
-    CapitalAgent proxycapital;
+    MockCapitalAgent proxycapital;
     ExchangeAgent exchange;
     PayoutRequest payout;
     SalesPolicyFactory salesFactory;
@@ -81,9 +81,9 @@ contract NewMCRRollux is Test {
         vm.createSelectFork(CHAIN_URL);
         payout = PayoutRequest((PAYOUT));
 
-        capitalAgent = new CapitalAgent();
+        capitalAgent = new MockCapitalAgent();
         capitalAgentProxy = new TransparentProxy(address(capitalAgent), address(this), "");
-        proxycapital = CapitalAgent(address(capitalAgentProxy));
+        proxycapital = MockCapitalAgent(address(capitalAgentProxy));
         proxycapital.initialize(address(exchange), USDC, address(this), address(this));
         proxycapital.setMCR(MCR);
         proxycapital.setMLR(MLR);
