@@ -29,7 +29,7 @@ describe("SalesPolicy", function () {
     this.RiskPool = await ethers.getContractFactory("RiskPool")
     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
     this.MockUNO = await ethers.getContractFactory("MockUNO")
-    this.MockUSDT = await ethers.getContractFactory("MockUSDT")
+    this.stakingAsset = await ethers.getContractFactory("MockUSDT")
     this.SalesPolicyFactory = await ethers.getContractFactory("SalesPolicyFactory")
     this.SalesPolicy = await ethers.getContractFactory("SalesPolicy")
     this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
@@ -115,7 +115,7 @@ describe("SalesPolicy", function () {
     this.riskPoolFactory = await this.RiskPoolFactory.deploy()
     await this.mockUNO.connect(this.signers[1]).mint(getBigNumber("3000000"), { from: this.signers[1] })
     await this.mockUNO.connect(this.signers[2]).mint(getBigNumber("3000000"), { from: this.signers[2] })
-    const assetArray = [this.mockUSDT.address, this.mockUNO.address, this.zeroAddress]
+    const assetArray = [this.stakingAsset.address, this.mockUNO.address, this.zeroAddress]
     const timestamp = new Date().getTime()
 
     await (
@@ -124,7 +124,7 @@ describe("SalesPolicy", function () {
         .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
     await (
-      await this.mockUSDT
+      await this.stakingAsset
         .connect(this.signers[0])
         .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
@@ -134,7 +134,7 @@ describe("SalesPolicy", function () {
         .connect(this.signers[0])
         .addLiquidity(
           this.mockUNO.target,
-          this.mockUSDT.target,
+          this.stakingAsset.target,
           getBigNumber("3000000"),
           getBigNumber("3000", 6),
           getBigNumber("3000000"),
@@ -148,7 +148,7 @@ describe("SalesPolicy", function () {
     this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy("0x8C0F1b5C01A7146259d51F798a114f4F8dC0177e")
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
-      this.mockUSDT.target,
+      this.stakingAsset.target,
       WETH_ADDRESS.sepolia,
       this.mockOraclePriceFeed.target,
       UNISWAP_ROUTER_ADDRESS.sepolia,
@@ -160,18 +160,18 @@ describe("SalesPolicy", function () {
     this.premiumPool = await this.PremiumPool.deploy(
       this.exchangeAgent.target,
       this.mockUNO.target,
-      this.mockUSDT.target,
+      this.stakingAsset.target,
       this.multisig.target,
       this.multisig.target,
     )
     this.capitalAgent = await upgrades.deployProxy(this.CapitalAgent, [
       this.exchangeAgent.target,
-      this.mockUSDT.target,
+      this.stakingAsset.target,
       this.multisig.target,
       this.multisig.target,
     ])
     this.salesPolicyFactory = await this.SalesPolicyFactory.deploy(
-      this.mockUSDT.target,
+      this.stakingAsset.target,
       this.exchangeAgent.target,
       this.premiumPool.target,
       this.capitalAgent.target,
@@ -203,7 +203,7 @@ describe("SalesPolicy", function () {
 
     expect(await this.salesPolicyFactory.allProtocolsLength()).equal(3)
 
-    encodedCallData = await this.premiumPool.interface.encodeFunctionData("addCurrency", [this.mockUSDT.target])
+    encodedCallData = await this.premiumPool.interface.encodeFunctionData("addCurrency", [this.stakingAsset.target])
 
     await expect(this.multisig.submitTransaction(this.premiumPool.target, 0, encodedCallData))
       .to.emit(this.multisig, "SubmitTransaction")
@@ -219,7 +219,7 @@ describe("SalesPolicy", function () {
 
     this.txIdx++
 
-    // await (await this.premiumPool.addCurrency(this.mockUSDT.address)).wait()
+    // await (await this.premiumPool.addCurrency(this.stakingAsset.address)).wait()
     this.optimisticOracleV3 = await ethers.getContractAt(OptimisticOracleV3Abi, "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB")
     this.escalationManager = await this.EscalationManager.deploy(this.optimisticOracleV3.target, this.signers[0].address)
 
@@ -280,16 +280,7 @@ describe("SalesPolicy", function () {
       "0x1000000000000000000000000000000000",
     ])
     this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
-    await this.singleSidedInsurancePool
-      .connect(this.multisig)
-      .createRiskPool(
-        "UNO-LP",
-        "UNO-LP",
-        this.riskPoolFactory.target,
-        this.mockUNO.target,
-        getBigNumber("1"),
-        getBigNumber("10", 6),
-      )
+
     if (false) {
       encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createRiskPool", [
         "UNO-LP",
@@ -415,7 +406,9 @@ describe("SalesPolicy", function () {
       const privateKey = process.env.PRIVATE_KEY
 
       const protocol = await this.salesPolicyFactory.getProtocol(1)
-      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [this.mockUSDT.target])
+      let encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
+        this.stakingAsset.target,
+      ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multisig, "SubmitTransaction")
@@ -463,15 +456,15 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
+      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.stakingAsset.address)).wait()
       // await (await this.salesPolicyFactory.setSignerInPolicy(this.signers[5].address)).wait()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("1000000000"))).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, getBigNumber("1000000000"))).wait()
       // await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
       // await (await this.salesPolicyFactory.updateCheckIfProtocolInWhitelistArray(true)).wait()
       // await (await this.salesPolicyFactory.setBlackListProtocolById(0)).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -495,7 +488,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.salesPolicy.target.slice(2) +
         paddedChainId.slice(2)
@@ -511,7 +504,7 @@ describe("SalesPolicy", function () {
         coverageDuration,
         policyPrice,
         deadline,
-        this.mockUSDT.target,
+        this.stakingAsset.target,
         splitSig.r,
         splitSig.s,
         splitSig.v,
@@ -539,7 +532,7 @@ describe("SalesPolicy", function () {
         functionSignature: functionSignature,
       }
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumPoolBalanceBefore = await this.stakingAsset.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
 
       const signature = await this.signers[0].signTypedData(domainData, types, message)
@@ -554,10 +547,10 @@ describe("SalesPolicy", function () {
       } catch (error) {
         console.log("[error]", error)
       }
-      const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
-      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
-      const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
-      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
+      const premiumPoolBalanceAfter = await this.stakingAsset.balanceOf(this.premiumPool.target)
+      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.stakingAsset.target)
+      const premiumForSSIP = await this.premiumPool.ssipPremium(this.stakingAsset.target)
+      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.stakingAsset.target)
       expect(premiumPoolBalanceAfter).to.equal(getBigNumber("300", 6))
       expect(premiumForSSRP).to.equal(getBigNumber("30", 6))
       expect(premiumForSSIP).to.equal(getBigNumber("210", 6))
@@ -573,7 +566,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -621,13 +614,13 @@ describe("SalesPolicy", function () {
         .withArgs(this.signers[1].address, this.txIdx)
 
       this.txIdx++
-      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
+      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.stakingAsset.address)).wait()
       // await (await this.salesPolicyFactory.setSignerInPolicy(this.signers[5].address)).wait()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
       // await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -651,7 +644,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.signers[0].address.slice(2) +
         paddedChainId.slice(2)
@@ -659,7 +652,7 @@ describe("SalesPolicy", function () {
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumPoolBalanceBefore = await this.stakingAsset.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
 
       try {
@@ -670,7 +663,7 @@ describe("SalesPolicy", function () {
           coverageDuration,
           policyPrice,
           deadline,
-          this.mockUSDT.target,
+          this.stakingAsset.target,
           splitSig.r,
           splitSig.s,
           splitSig.v,
@@ -686,15 +679,15 @@ describe("SalesPolicy", function () {
       }
       console.log("this.salesPolicyAddress", this.salesPolicyAddress)
       console.log(
-        "await this.mockUSDT.balanceOf(this.salesPolicyAddress)",
-        await this.mockUSDT.balanceOf(this.salesPolicyAddress),
+        "await this.stakingAsset.balanceOf(this.salesPolicyAddress)",
+        await this.stakingAsset.balanceOf(this.salesPolicyAddress),
       )
-      console.log("await this.mockUSDT.balanceOf(this.premium)", await this.mockUSDT.balanceOf(this.premiumPool.target))
+      console.log("await this.stakingAsset.balanceOf(this.premium)", await this.stakingAsset.balanceOf(this.premiumPool.target))
 
-      const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
-      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
-      const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
-      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
+      const premiumPoolBalanceAfter = await this.stakingAsset.balanceOf(this.premiumPool.target)
+      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.stakingAsset.target)
+      const premiumForSSIP = await this.premiumPool.ssipPremium(this.stakingAsset.target)
+      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.stakingAsset.target)
       expect(premiumPoolBalanceAfter).to.equal(getBigNumber("300", 6))
       expect(premiumForSSRP).to.equal(getBigNumber("30", 6))
       expect(premiumForSSIP).to.equal(getBigNumber("210", 6))
@@ -708,7 +701,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -756,13 +749,13 @@ describe("SalesPolicy", function () {
         .withArgs(this.signers[1].address, this.txIdx)
 
       this.txIdx++
-      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
+      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.stakingAsset.address)).wait()
       // await (await this.salesPolicyFactory.setSignerInPolicy(this.signers[5].address)).wait()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
       // await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -784,7 +777,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.signers[1].address.slice(2) +
         paddedChainId.slice(2)
@@ -802,7 +795,7 @@ describe("SalesPolicy", function () {
             coverageDuration,
             policyPrice,
             deadline,
-            this.mockUSDT.target,
+            this.stakingAsset.target,
             splitSig.r,
             splitSig.s,
             splitSig.v,
@@ -822,7 +815,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -872,7 +865,7 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const value = await this.exchangeAgent.getETHAmountForUSDC(policyPrice)
 
@@ -905,7 +898,7 @@ describe("SalesPolicy", function () {
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumPoolBalanceBefore = await this.stakingAsset.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
 
       try {
@@ -950,7 +943,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -1000,7 +993,7 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
 
       const protocols = [this.signers[0].address, this.signers[1].address]
@@ -1031,7 +1024,7 @@ describe("SalesPolicy", function () {
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumPoolBalanceBefore = await this.stakingAsset.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
 
       await expect(
@@ -1062,7 +1055,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -1148,7 +1141,7 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
 
       const protocols = [this.signers[0].address, this.signers[1].address]
@@ -1179,7 +1172,7 @@ describe("SalesPolicy", function () {
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumPoolBalanceBefore = await this.stakingAsset.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
       const value = await this.exchangeAgent.getETHAmountForUSDC(policyPrice)
 
@@ -1228,7 +1221,7 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multisig, "SubmitTransaction")
@@ -1276,10 +1269,10 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       const amount = await this.capitalAgent.totalCapitalStaked()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, amount)).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, amount)).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -1303,7 +1296,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.signers[0].address.slice(2) +
         paddedChainId.slice(2)
@@ -1318,7 +1311,7 @@ describe("SalesPolicy", function () {
           coverageDuration,
           policyPrice,
           deadline,
-          this.mockUSDT.target,
+          this.stakingAsset.target,
           splitSig.r,
           splitSig.s,
           splitSig.v,
@@ -1337,7 +1330,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -1386,10 +1379,10 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -1414,7 +1407,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.signers[0].address.slice(2) +
         paddedChainId.slice(2)
@@ -1431,7 +1424,7 @@ describe("SalesPolicy", function () {
           coverageDuration,
           policyPrice,
           deadline,
-          this.mockUSDT.target,
+          this.stakingAsset.target,
           splitSig.r,
           splitSig.s,
           splitSig.v,
@@ -1473,7 +1466,7 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multisig, "SubmitTransaction")
@@ -1521,10 +1514,10 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       const amount = await this.capitalAgent.totalCapitalStaked()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, amount)).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, amount)).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -1548,7 +1541,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.signers[0].address.slice(2) +
         paddedChainId.slice(2)
@@ -1563,7 +1556,7 @@ describe("SalesPolicy", function () {
           coverageDuration,
           policyPrice,
           deadline,
-          this.mockUSDT.target,
+          this.stakingAsset.target,
           splitSig.r,
           splitSig.s,
           splitSig.v,
@@ -1594,7 +1587,7 @@ describe("SalesPolicy", function () {
           coverageDuration,
           policyPrice,
           deadline,
-          this.mockUSDT.target,
+          this.stakingAsset.target,
           splitSig.r,
           splitSig.s,
           splitSig.v,
@@ -1613,7 +1606,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -1662,10 +1655,10 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, getBigNumber("100000000"))).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -1690,7 +1683,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.signers[0].address.slice(2) +
         paddedChainId.slice(2)
@@ -1706,7 +1699,7 @@ describe("SalesPolicy", function () {
           coverageDuration,
           policyPrice,
           deadline,
-          this.mockUSDT.target,
+          this.stakingAsset.target,
           splitSig.r,
           splitSig.s,
           splitSig.v,
@@ -1759,7 +1752,7 @@ describe("SalesPolicy", function () {
       const protocol = await this.salesPolicyFactory.getProtocol(0)
 
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
 
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
@@ -1809,7 +1802,7 @@ describe("SalesPolicy", function () {
       this.txIdx++
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
 
       const protocols = [this.signers[0].address, this.signers[1].address]
@@ -1840,7 +1833,7 @@ describe("SalesPolicy", function () {
       const flatSig = await this.signers[5].signMessage(ethers.getBytes(ethers.keccak256(hexData)))
       const splitSig = ethers.Signature.from(flatSig)
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumPoolBalanceBefore = await this.stakingAsset.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
       const value = await this.exchangeAgent.getETHAmountForUSDC(policyPrice)
 
@@ -1876,7 +1869,7 @@ describe("SalesPolicy", function () {
 
       const protocol = await this.salesPolicyFactory.getProtocol(1)
       let encodedCallData = await this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [
-        this.mockUSDT.target,
+        this.stakingAsset.target,
       ])
       await expect(this.multisig.submitTransaction(this.salesPolicyFactory.target, 0, encodedCallData))
         .to.emit(this.multisig, "SubmitTransaction")
@@ -1924,15 +1917,15 @@ describe("SalesPolicy", function () {
 
       this.txIdx++
 
-      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.mockUSDT.address)).wait()
+      // await (await this.salesPolicyFactory.approvePremiumInPolicy(this.stakingAsset.address)).wait()
       // await (await this.salesPolicyFactory.setSignerInPolicy(this.signers[5].address)).wait()
-      await (await this.mockUSDT.approve(this.salesPolicyAddress, getBigNumber("1000000000"))).wait()
+      await (await this.stakingAsset.approve(this.salesPolicyAddress, getBigNumber("1000000000"))).wait()
       // await (await this.premiumPool.addWhiteList(this.salesPolicy.address)).wait()
       // await (await this.salesPolicyFactory.updateCheckIfProtocolInWhitelistArray(true)).wait()
       // await (await this.salesPolicyFactory.setBlackListProtocolById(0)).wait()
 
       //   prepare sign data
-      const assets = [this.mockUSDT.target, this.mockUSDT.target]
+      const assets = [this.stakingAsset.target, this.stakingAsset.target]
       const policyPrice = getBigNumber("300", 6)
       const protocols = [this.signers[0].address, this.signers[1].address]
       const coverageDuration = [getBigNumber(`${24 * 3600 * 30}`, 1), getBigNumber(`${24 * 3600 * 15}`, 1)]
@@ -1955,7 +1948,7 @@ describe("SalesPolicy", function () {
         paddedCoverageDurationHexStr.slice(2) +
         paddedCoverageAmountHexStr.slice(2) +
         paddedDeadlineHexStr.slice(2) +
-        this.mockUSDT.target.slice(2) +
+        this.stakingAsset.target.slice(2) +
         paddedNonceHexStr.slice(2) +
         this.salesPolicy.target.slice(2) +
         paddedChainId.slice(2)
@@ -1972,7 +1965,7 @@ describe("SalesPolicy", function () {
         coverageDuration,
         policyPrice,
         deadline,
-        this.mockUSDT.target,
+        this.stakingAsset.target,
         splitSig.r,
         splitSig.s,
         splitSig.v,
@@ -2001,7 +1994,7 @@ describe("SalesPolicy", function () {
         functionSignature: functionSignature,
       }
 
-      const premiumPoolBalanceBefore = await this.mockUSDT.balanceOf(this.premiumPool.target)
+      const premiumPoolBalanceBefore = await this.stakingAsset.balanceOf(this.premiumPool.target)
       expect(premiumPoolBalanceBefore).to.equal(0)
 
       const signature = await this.signers[0].signTypedData(domainData, types, message)
@@ -2015,10 +2008,10 @@ describe("SalesPolicy", function () {
       } catch (error) {
         console.log("[error]", error)
       }
-      const premiumPoolBalanceAfter = await this.mockUSDT.balanceOf(this.premiumPool.target)
-      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.mockUSDT.target)
-      const premiumForSSIP = await this.premiumPool.ssipPremium(this.mockUSDT.target)
-      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.mockUSDT.target)
+      const premiumPoolBalanceAfter = await this.stakingAsset.balanceOf(this.premiumPool.target)
+      const premiumForSSRP = await this.premiumPool.ssrpPremium(this.stakingAsset.target)
+      const premiumForSSIP = await this.premiumPool.ssipPremium(this.stakingAsset.target)
+      const premiumForBackBurn = await this.premiumPool.backBurnUnoPremium(this.stakingAsset.target)
       expect(premiumPoolBalanceAfter).to.equal(getBigNumber("300", 6))
       expect(premiumForSSRP).to.equal(getBigNumber("30", 6))
       expect(premiumForSSIP).to.equal(getBigNumber("210", 6))
