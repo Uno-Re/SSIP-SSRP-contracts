@@ -5,7 +5,7 @@ import "../../contracts/Mocks/MockUNO.sol";
 import "../../contracts/Mocks/USDCRollux.sol";
 import "../../contracts/Mocks/SupraPriceOracle.sol";
 import "../../contracts/SingleSidedInsurancePool.sol";
-import "../../contracts/CapitalAgent.sol";
+import "../../contracts/Mocks/MockCapitalAgent.sol";
 import "../../contracts/ExchangeAgent.sol";
 import "../../contracts/uma/PayoutRequest.sol";
 import "../../contracts/factories/SalesPolicyFactory.sol";
