@@ -16,6 +16,7 @@ const { WETH_ADDRESS, UNISWAP_FACTORY_ADDRESS, UNISWAP_ROUTER_ADDRESS } = requir
 const OptimisticOracleV3Abi = require("../../../scripts/abis/OptimisticOracleV3.json")
 const mockUnoAbi = require("../../../scripts/abis/MockUNO.json")
 const mockWSYS = require("../../../scripts/abis/WETH9.json")
+const riskPoolFactoryAbi = require("../../../scripts/abis/riskPoolFactoryAbi.json")
 
 describe("SalesPolicy", function () {
   before(async function () {
@@ -112,7 +113,8 @@ describe("SalesPolicy", function () {
 
     this.masterChefOwner = this.signers[0].address
     this.claimAssessor = this.signers[3].address
-    this.riskPoolFactory = await this.RiskPoolFactory.deploy()
+    this.riskPoolFactory = await ethers.getContractAt(riskPoolFactoryAbi, "0x188A7092f2020088052D589F1C626Bb955AB5436")
+
     await this.mockUNO.connect(this.signers[1]).mint(getBigNumber("3000000"), { from: this.signers[1] })
     await this.mockUNO.connect(this.signers[2]).mint(getBigNumber("3000000"), { from: this.signers[2] })
     const assetArray = [this.stakingAsset.address, this.mockUNO.address, this.zeroAddress]
@@ -280,31 +282,6 @@ describe("SalesPolicy", function () {
       "0x1000000000000000000000000000000000",
     ])
     this.multisig = await ethers.getSigner("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6")
-
-    if (false) {
-      encodedCallData = this.singleSidedInsurancePool.interface.encodeFunctionData("createRiskPool", [
-        "UNO-LP",
-        "UNO-LP",
-        this.riskPoolFactory.target,
-        this.mockUNO.target,
-        getBigNumber("1"),
-        getBigNumber("10", 6),
-      ])
-
-      await expect(this.multisig.submitTransaction(this.singleSidedInsurancePool.target, 0, encodedCallData))
-        .to.emit(this.multisig, "SubmitTransaction")
-        .withArgs(this.signers[0].address, this.txIdx, this.singleSidedInsurancePool.target, 0, encodedCallData)
-
-      await expect(this.multisig.confirmTransaction(this.txIdx, false))
-        .to.emit(this.multisig, "ConfirmTransaction")
-        .withArgs(this.signers[0].address, this.txIdx)
-
-      await expect(this.multisig.connect(this.signers[1]).confirmTransaction(this.txIdx, true))
-        .to.emit(this.multisig, "ConfirmTransaction")
-        .withArgs(this.signers[1].address, this.txIdx)
-
-      this.txIdx++
-    }
 
     await this.mockUNO.approve(this.singleSidedInsurancePool.target, getBigNumber("1000000"))
     await this.mockUNO
