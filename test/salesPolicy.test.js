@@ -23,7 +23,7 @@ describe("SalesPolicy", function () {
   before(async function () {
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.CapitalAgent = await ethers.getContractFactory("CapitalAgent")
-    this.CapitalAgent1 = await ethers.getContractFactory("CapitalAgent1")
+    this.CapitalAgent1 = await ethers.getContractFactory("CapitalAgent")
     this.PremiumPool = await ethers.getContractFactory("PremiumPool")
     this.Rewarder = await ethers.getContractFactory("Rewarder")
     this.RewarderFactory = await ethers.getContractFactory("RewarderFactory")
@@ -35,12 +35,12 @@ describe("SalesPolicy", function () {
     this.SalesPolicyFactory = await ethers.getContractFactory("SalesPolicyFactory")
     this.SalesPolicy = await ethers.getContractFactory("SalesPolicy")
     this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
-    this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
+    this.MockOraclePriceFeed = await ethers.getContractFactory("PriceOracle")
     this.EscalationManager = await ethers.getContractFactory("EscalationManager")
     this.signers = await ethers.getSigners()
     this.zeroAddress = ethers.ZeroAddress;
     this.routerContract = new ethers.Contract(
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
       JSON.stringify(UniswapV2Router.abi),
       ethers.provider,
     )
@@ -90,12 +90,12 @@ describe("SalesPolicy", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
 
     await (
@@ -115,14 +115,14 @@ describe("SalesPolicy", function () {
     ).wait()
 
     this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired);
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.MultiSigWallet.target);
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
+      WETH_ADDRESS.sepolia,
       this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
+      UNISWAP_FACTORY_ADDRESS.sepolia,
       this.multiSigWallet.target,
       getBigNumber("60")
     )
@@ -781,7 +781,7 @@ describe("SalesPolicy", function () {
           gasLimit: 1000000,
         })).to.be.revertedWith('UnoRe: invalid signer')
     })
-  
+
     it("Should buy policy in ETH  ", async function () {
       this.txIdx = this.txIdx1;
       let hexData

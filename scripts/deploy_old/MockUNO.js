@@ -7,13 +7,29 @@ module.exports = async function ({ getNamedAccounts, deployments, getChainId }) 
     log: true,
     deterministicDeployment: false,
   })
-}
+};
+
+const verify = async (contractAddress) => {
+    console.log("Verifying contract...");
+    try {
+        await run("verify:verify", {
+            address: contractAddress,
+            constructorArguments: args,
+        });
+    } catch (e) {
+        if (e.message.toLowerCase().includes("already verified")) {
+            console.log("Already verified!");
+        } else {
+            console.log(e);
+        }
+    }
+};
 
 module.exports.skip = ({ getChainId }) =>
   new Promise(async (resolve, reject) => {
     try {
       const chainId = await getChainId()
-      resolve(chainId === "1" || chainId === "56")
+      resolve(chainId === "57000" || chainId === "56")
     } catch (error) {
       reject(error)
     }

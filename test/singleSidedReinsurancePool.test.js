@@ -24,19 +24,19 @@ describe("SingleSidedReinsurancePool", function () {
     this.SyntheticSSRPFactory = await ethers.getContractFactory("SyntheticSSRPFactory")
     this.MockUNO = await ethers.getContractFactory("MockUNO")
     this.MockUSDT = await ethers.getContractFactory("MockUSDT")
-    this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
+    this.MockOraclePriceFeed = await ethers.getContractFactory("PriceOracle")
     this.signers = await ethers.getSigners()
     this.zeroAddress = "0x0000000000000000000000000000000000000000";
     this.routerContract = new ethers.Contract(
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
       JSON.stringify(UniswapV2Router.abi),
       ethers.provider,
     )
   })
 
   beforeEach(async function () {
-    // this.mockUNO = this.MockUNO.attach(UNO.rinkeby)
-    // this.mockUSDT = this.MockUSDT.attach(USDT.rinkeby)
+    // this.mockUNO = this.MockUNO.attach(UNO.sepolia)
+    // this.mockUSDT = this.MockUSDT.attach(USDT.sepolia)
     this.mockUNO = await this.MockUNO.deploy()
     this.mockUSDT = await this.MockUSDT.deploy()
     await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000"), { from: this.signers[0].address })
@@ -60,12 +60,12 @@ describe("SingleSidedReinsurancePool", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
 
     console.log("Adding liquidity...")
@@ -86,7 +86,7 @@ describe("SingleSidedReinsurancePool", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address);
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -102,10 +102,10 @@ describe("SingleSidedReinsurancePool", function () {
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
+      WETH_ADDRESS.sepolia,
       this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
+      UNISWAP_FACTORY_ADDRESS.sepolia,
       this.multisig.address,
       getBigNumber("60")
     )

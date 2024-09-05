@@ -38,7 +38,7 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     address public premiumPool;
     address public capitalAgent;
     address public signer;
-    address public immutable usdcToken; //
+    address public immutable usdcToken;
 
     string private protocolURI;
 
@@ -110,17 +110,17 @@ contract SalesPolicy is EIP712MetaTransaction("BuyPolicyMetaTransaction", "1"), 
     receive() external payable {}
 
     /**
-    * @dev user can buy policy by paying policy price
-    * new policy id will be minted at user address
-    * policy id will be claim by user at the time settlement
-    * @param _assets address of assets
-    * @param _protocols address of protocol for insurance
-    * @param _coverageAmount amount of coverage user wants to claim
-    * @param _coverageDuration duration after which can not claim policy id
-    * @param _policyPriceInUSDC price of policy user wants to pay
-    * @param _signedTime signed time
-    * @param _premiumCurrency currency to pay
-    **/
+     * @dev user can buy policy by paying policy price
+     * new policy id will be minted at user address
+     * policy id will be claim by user at the time settlement
+     * @param _assets address of assets
+     * @param _protocols address of protocol for insurance
+     * @param _coverageAmount amount of coverage user wants to claim
+     * @param _coverageDuration duration after which can not claim policy id
+     * @param _policyPriceInUSDC price of policy user wants to pay
+     * @param _signedTime signed time
+     * @param _premiumCurrency currency to pay
+     **/
     function buyPolicy(
         address[] memory _assets,
         address[] memory _protocols,

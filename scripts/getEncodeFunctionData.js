@@ -14,12 +14,12 @@ const {
   UNO_USDT_PRICE_FEED,
 } = require("../scripts/shared/constants")
 
-const capitalAgentDeployment = require("../deployments/rinkeby/CapitalAgent.json")
-const excahngeAgentDeployment = require("../deployments/rinkeby/ExchangeAgent.json")
-const multiSigWalletDeployment = require("../deployments/rinkeby/MultiSigWallet.json")
-const premiumPoolDeployment = require("../deployments/rinkeby/PremiumPool.json")
-const salesPolicyFactoryDeployment = require("../deployments/rinkeby/SalesPolicyFactory.json")
-const singleSidedInsurancePoolDeployment = require("../deployments/rinkeby/SingleSidedInsurancePool.json")
+const capitalAgentDeployment = require("../deployments/sepolia/CapitalAgent.json")
+const excahngeAgentDeployment = require("../deployments/sepolia/ExchangeAgent.json")
+const multiSigWalletDeployment = require("../deployments/sepolia/MultiSigWallet.json")
+const premiumPoolDeployment = require("../deployments/sepolia/PremiumPool.json")
+const salesPolicyFactoryDeployment = require("../deployments/sepolia/SalesPolicyFactory.json")
+const singleSidedInsurancePoolDeployment = require("../deployments/sepolia/SingleSidedInsurancePool.json")
 
 async function main() {
   this.signers = await ethers.getSigners()
@@ -115,7 +115,7 @@ async function main() {
 
   this.txIdx++
 
-  encodedCallData = this.premiumPool.interface.encodeFunctionData("addCurrency", [USDT.rinkeby])
+  encodedCallData = this.premiumPool.interface.encodeFunctionData("addCurrency", [USDT.sepolia])
   console.log("[addCurrency]", encodedCallData)
 
   await expect(this.multiSigWallet.submitTransaction(this.premiumPool.address, 0, encodedCallData))
@@ -194,7 +194,7 @@ async function main() {
 
   this.txIdx++
 
-  encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [USDT.rinkeby])
+  encodedCallData = this.salesPolicyFactory.interface.encodeFunctionData("approvePremiumInPolicy", [USDT.sepolia])
   console.log("[approvePremiumInPolicy]", encodedCallData)
 
   await expect(this.multiSigWallet.submitTransaction(this.salesPolicyFactory.address, 0, encodedCallData))

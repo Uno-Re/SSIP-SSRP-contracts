@@ -54,6 +54,12 @@ describe("ExchangeAgent", function () {
     this.signers = await ethers.getSigners()
     this.zeroAddress = "0x0000000000000000000000000000000000000000";
 
+    this.routerContract = new ethers.Contract(
+      UNISWAP_ROUTER_ADDRESS.sepolia,
+      JSON.stringify(UniswapV2Router.abi),
+      ethers.provider,
+    )
+
     this.owners = [
       this.signers[0].address,
       this.signers[1].address,
@@ -100,32 +106,14 @@ describe("ExchangeAgent", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("100000000000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("100000000000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("100000000000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("100000000000000"), { from: this.signers[0].address })
     ).wait();
-    this.uniswapV3Factory = new ethers.Contract(UNISWAP_FACTORY_ADDRESS.goerli, IUniswapV3FactoryABI, ethers.provider);
 
-    const fee = 3000;
-    const createPoolTx = await this.uniswapV3Factory.connect(this.signers[0]).createPool(this.mockUNO.target,
-      this.mockUSDT.target, fee);
-    const createPoolReceipt = await createPoolTx.wait();
-
-    const events = await this.uniswapV3Factory.queryFilter("PoolCreated", createPoolReceipt.blockNumber, createPoolReceipt.blockNumber);
-    
-    const eventData = events[0].args;
-    const poolAddress = eventData.pool;
-    expect(eventData.token0).to.equal(this.mockUNO.target)
-    expect(eventData.token1).to.equal(this.mockUSDT.target)
-
-    let uniswapV3Pool = new ethers.Contract(
-      poolAddress,
-      IUniswapV3PoolABI,
-      ethers.provider
-    )
 
     await uniswapV3Pool.connect(this.signers[0]).initialize(this.price.toString());
 
@@ -204,15 +192,14 @@ describe("ExchangeAgent", function () {
     console.log("Added liquidity...")
 
     this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired)
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address);
-    await this.mockOraclePriceFeed.addStableCoin(this.mockUSDT.target)
-    await this.mockOraclePriceFeed.addStableCoin(this.mockUNO.target)
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6");
+  
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
+      WETH_ADDRESS.sepolia,
       this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
+      UNISWAP_FACTORY_ADDRESS.sepolia,
       this.multiSigWallet.target,
       getBigNumber("60")
     )
@@ -300,24 +287,5 @@ describe("ExchangeAgent", function () {
           .convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"), { from: this.signers[2].address }),
       ).to.be.revertedWith("UnoRe: ExchangeAgent Forbidden")
     })
-
-    // it("should convert UNO to USDT", async function () {
-    //   await this.exchangeAgent.addWhiteList(this.signers[0].address)
-    // const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
-    //       await (
-    //         await this.mockUNO
-    //           .connect(this.signers[0])
-    //           .approve(this.exchangeAgent.target, getBigNumber("10000000"), { from: this.signers[0].address })
-    //       ).wait()
-    //       await this.mockUNO
-    //         .connect(this.signers[0])
-    //         .transfer(this.exchangeAgent.target, getBigNumber("2000"), { from: this.signers[0].address })
-    //       const usdtConvert = await (
-    //         await this.exchangeAgent.convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"))
-    //       ).wait()
-    //       const convertedAmount = usdtConvert.events[usdtConvert.events.length - 1].args._convertedAmount
-    //       const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
-    //       expect(usdtBalanceAfter).to.equal(usdtBalanceBefore.add(convertedAmount))
-    // })
   })
 })

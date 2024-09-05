@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity =0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -337,6 +336,8 @@ contract SingleSidedInsurancePool is
         IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
 
         userInfo[msg.sender].lastWithdrawTime = block.timestamp;
+        //As user is starting the withdraw we add the value to pending capital
+        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), _amount, true);
         emit LeftPool(msg.sender, riskPool, _amount);
     }
 
@@ -351,6 +352,7 @@ contract SingleSidedInsurancePool is
 
         (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender, _amount);
 
+        //As user is finishing the withdraw we subtract the value of pending capital (done inside SSIPWithdraw)
         ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
 
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
@@ -445,6 +447,11 @@ contract SingleSidedInsurancePool is
      */
     function cancelWithdrawRequest() external nonReentrant whenNotPaused isAlive {
         (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
+
+        //if user return the pending value into staking again by canceling withdraw,
+        //we remove the amount from the pending capital
+        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), cancelAmount, false);
+
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 
@@ -501,10 +508,7 @@ contract SingleSidedInsurancePool is
         emit LogUserUpdated(address(this), _user, _amount);
     }
 
-    function setLpPriceInRiskPool(
-        uint256 _lpPriceUno
-    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
-
+    function setLpPriceInRiskPool(uint256 _lpPriceUno) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         IRiskPool(riskPool).setLpPriceUno(_lpPriceUno);
     }
 

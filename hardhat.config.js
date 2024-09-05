@@ -1,11 +1,10 @@
-require("@nomicfoundation/hardhat-ethers")
 require("hardhat-deploy")
 require("hardhat-deploy-ethers")
-require("@nomicfoundation/hardhat-verify")
 require("hardhat-contract-sizer")
-require("@nomicfoundation/hardhat-verify")
 require("hardhat-gas-reporter")
 require("@openzeppelin/hardhat-upgrades")
+require("@nomicfoundation/hardhat-ethers")
+require("@nomicfoundation/hardhat-verify")
 require("@nomicfoundation/hardhat-foundry")
 require("@nomicfoundation/hardhat-chai-matchers")
 require("dotenv").config()
@@ -50,12 +49,14 @@ module.exports = {
     hardhat: {
       // hardfork: "london",
       allowUnlimitedContractSize: true,
-      evmVersion: "byzantium",
+      evmVersion: "paris",
       forking: {
-        url: "https://eth-goerli.g.alchemy.com/v2/HK0kZcIo_6y1ahCx3d3E_AgVWP0k9fs-",
+        url: "https://rpc1.rollux.com",
+        //url: "https://eth-sepolia.g.alchemy.com/v2/xEb_B2WFRsE6nEtBVPryB8CB4uQbyThp",
+        //url: "https://bnb.rpc.subquery.network/public",
         // url: 'https://eth-mainnet.alchemyapi.io/v2/kX2m_40xGyLvewVGbo7JaAe6mZTha838',
         enabled: true,
-        // blockNumber: 7041459 //6430278 //7041458 //6615559 10207859 11869355
+        //blockNumber: 36927257 //7041459 //6430278 //7041458 //6615559 10207859 11869355
       },
       gasPrice: "auto",
       accounts,
@@ -80,15 +81,70 @@ module.exports = {
       chainId: 56,
       accounts,
       live: true,
+    },
+
+    sepolia: {
+      url: process.env.SEPOLIA_URL,
+      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+    },
+    rolluxTestnet: {
+      url: process.env.ROLLUXTEST_URL,
+      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+      allowUnlimitedContractSize: true,
       saveDeployments: true,
     },
-    goerli: {
-      url: process.env.GOERLI_URL,
+    rolluxMainnet: {
+      url: process.env.ROLLUXMAIN_URL,
       accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+      allowUnlimitedContractSize: true,
+      saveDeployments: true,
+      evmVersion: "paris",
     },
   },
   etherscan: {
-    apiKey: process.env.API_KEY, // BSC_API_KEY
+    apiKey: {
+      rolluxMainnet: "abc",
+      rolluxTestnet: "abc",
+      tanenbaum: "abc",
+      syscoin: "abc",
+      bscMain: process.env.API_KEY, // BSC_API_KEY
+      sepolia: process.env.API_SEP,
+    },
+    customChains: [
+      {
+        network: "rolluxMainnet",
+        chainId: 570,
+        urls: {
+          apiURL: "https://explorer.rollux.com/api",
+          browserURL: "https://explorer.rollux.com",
+        },
+      },
+      {
+        network: "rolluxTestnet",
+        chainId: 57000,
+        urls: {
+          apiURL: "https://rollux.tanenbaum.io/api",
+          browserURL: "https://rollux.tanenbaum.io",
+          saveDeployments: true,
+        },
+      },
+      {
+        network: "tanenbaum",
+        chainId: 5700,
+        urls: {
+          apiURL: "https://tanenbaum.io/api",
+          browserURL: "https://tanenbaum.io",
+        },
+      },
+      {
+        network: "syscoin",
+        chainId: 57,
+        urls: {
+          apiURL: "https://explorer.syscoin.org/api/eth-rpc",
+          browserURL: "https://explorer.syscoin.org",
+        },
+      },
+    ],
   },
   paths: {
     deploy: "deploy",
@@ -102,15 +158,37 @@ module.exports = {
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: true,
-    runOnCompile: true
+    runOnCompile: true,
   },
   solidity: {
-    version: "0.8.23",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.8.23",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
-    },
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.10",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
   },
 }

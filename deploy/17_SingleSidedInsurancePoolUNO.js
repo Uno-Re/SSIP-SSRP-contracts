@@ -12,8 +12,8 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   const escalationManager = await hre.deployments.get("EscalationManager")
   const governance = process.env.GOVERNANCE;
   const multiSigWallet = process.env.MULTISIGWALLET;
-  const guardianCouncil = process.env.GAURDIAN_COUNCIL;
-  const defaultCurrency = process.env.DEAFAULT_CURRENCY;
+  const guardianCouncil = process.env.GUARDIAN_COUNCIL; 
+  const defaultCurrency = process.env.DEFAULT_CURRENCY;
   const optimisticOracleV3 = process.env.OPTIMISTIC_ORACLE_V3;
   const claimsDao = process.env.CLAIMS_DAO;
 

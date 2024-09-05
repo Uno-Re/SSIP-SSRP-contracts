@@ -3,8 +3,12 @@ node_modules
 #Hardhat files
 cache
 artifacts
+cache_forge
 
 # .env
 .env
-lib
 out
+deployments
+bin
+.openzeppelin
+.vscode

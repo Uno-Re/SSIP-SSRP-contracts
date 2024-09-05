@@ -1,7 +1,7 @@
 const { expect } = require("chai")
 
 const { ethers, network, upgrades } = require("hardhat")
-const { getBigNumber} = require("../scripts/shared/utilities")
+const { getBigNumber } = require("../scripts/shared/utilities")
 
 const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
 
@@ -32,7 +32,7 @@ describe("Premium Pool", function () {
     this.SalesPolicy = await ethers.getContractFactory("MockSalesPolicy")
     this.SalesPolicyFactory = await ethers.getContractFactory("MockSalesPolicyFactory")
     this.EscalationManager = await ethers.getContractFactory("EscalationManager")
-    this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
+    this.MockOraclePriceFeed = await ethers.getContractFactory("PriceOracle")
     this.PremiumPool = await ethers.getContractFactory("PremiumPool")
 
     this.SyntheticSSRP = await ethers.getContractFactory("SyntheticSSRP")
@@ -42,7 +42,7 @@ describe("Premium Pool", function () {
     this.zeroAddress = "0x0000000000000000000000000000000000000000";
 
     this.routerContract = new ethers.Contract(
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
       JSON.stringify(UniswapV2Router.abi),
       ethers.provider,
     )
@@ -83,12 +83,12 @@ describe("Premium Pool", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("100000000000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("100000000000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("100000000000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("100000000000000"), { from: this.signers[0].address })
     ).wait()
 
     console.log("Adding liquidity...")
@@ -123,14 +123,14 @@ describe("Premium Pool", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.multiSigWallet.address);
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
+      WETH_ADDRESS.sepolia,
       this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
+      UNISWAP_FACTORY_ADDRESS.sepolia,
       this.multiSigWallet.target,
       getBigNumber("60")
     )

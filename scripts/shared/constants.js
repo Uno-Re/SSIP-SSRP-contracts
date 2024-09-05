@@ -1,30 +1,47 @@
 const WETH_ADDRESS = {
-  rinkeby: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6", // this is WETH address in Uniswap router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D on rinkeby
+  sepolia: "0xfff9976782d46cc05630d1f6ebab18b2324d6b14", // this is WETH address in Uniswap router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D on sepolia
 }
 
 const UNISWAP_FACTORY_ADDRESS = {
-  rinkeby: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-  goerli:"0x1F98431c8aD98523631AE4a59f267346ea31F984"
+  sepolia: "0x0227628f3F023bb0B980b67D528571c95c6DaC1c",
 }
 
 const UNISWAP_ROUTER_ADDRESS = {
-  rinkeby: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+  sepolia: "0xc532a74256d3db42d0bf7a0400fefdbad7694008",
 }
 
 const TWAP_ORACLE_PRICE_FEED_FACTORY = {
-  rinkeby: "0x6fa8a7E5c13E4094fD4Fa288ba59544791E4c9d3",
+  sepolia: "0x18Ca744fd1960d9Dda0Af5E22CC5C92aD75901E8",
 }
 
 const UNO = {
-  rinkeby: "0x53fb43BaE4C13d6AFAD37fB37c3fC49f3Af433F5",
+  sepolia: "0xF75C8E49831c055a88957adbc97450f778460FD9",
 }
 
 const USDT = {
-  rinkeby: "0x40c035016AD732b6cFce34c3F881040B6C6cf71E",
+  sepolia: "0xdb2587DEb089c8f914BA6FeDf1E3d3Cb8660A015",
 }
 
 const UNO_USDT_PRICE_FEED = {
-  rinkeby: "0x8E8074be1A0627574659E746B4Af1E5078F4B72c",
+  sepolia: "0x18Ca744fd1960d9Dda0Af5E22CC5C92aD75901E8",
+}
+
+//Helper link to UMA deployment contract addresses on sepolia: https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/11155111.json
+
+const OPTIMISM_ORACLE_V3 = {
+  sepolia: "0xFd9e2642a170aDD10F53Ee14a93FcF2F31924944",
+}
+
+const ADDRESS_WHITELIST_UMA = {
+  sepolia: "0xE8DE4bcE27f6214dcE18D8a7629f233C66A97B84",
+}
+
+const MOCK_ORACLE_ANCILLARY = {
+  sepolia: "0x5FE28AEa36420414692b1C907F7d0114d304eb0C",
+}
+
+const STORE_UMA = {
+  sepolia: "0x39e7FFA77A4ac4D34021C6BbE4C8778d47F684F2",
 }
 
 module.exports = {
@@ -35,4 +52,8 @@ module.exports = {
   UNO,
   USDT,
   UNO_USDT_PRICE_FEED,
+  OPTIMISM_ORACLE_V3,
+  ADDRESS_WHITELIST_UMA,
+  MOCK_ORACLE_ANCILLARY,
+  STORE_UMA,
 }

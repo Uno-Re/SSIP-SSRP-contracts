@@ -25,17 +25,17 @@ describe("SSIP Reward attack", function () {
     this.MockUNO = await ethers.getContractFactory("MockUNO")
     this.MockUSDT = await ethers.getContractFactory("MockUSDT")
     this.RewardAttack = await ethers.getContractFactory("RewardAttack")
-    this.MockOraclePriceFeed = await ethers.getContractFactory("MockOraclePriceFeed")
+    this.MockOraclePriceFeed = await ethers.getContractFactory("PriceOracle")
     this.EscalationManager = await ethers.getContractFactory("EscalationManager")
     this.signers = await ethers.getSigners()
     this.zeroAddress = "0x0000000000000000000000000000000000000000";
     this.routerContract = new ethers.Contract(
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
       JSON.stringify(UniswapV2Router.abi),
       ethers.provider,
     )
   })
-    
+
   beforeEach(async function () {
     this.mockUNO = await this.MockUNO.deploy()
     this.mockUSDT = await this.MockUSDT.deploy()
@@ -58,12 +58,12 @@ describe("SSIP Reward attack", function () {
     await (
       await this.mockUNO
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
     await (
       await this.mockUSDT
         .connect(this.signers[0])
-        .approve(UNISWAP_ROUTER_ADDRESS.rinkeby, getBigNumber("10000000"), { from: this.signers[0].address })
+        .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("10000000"), { from: this.signers[0].address })
     ).wait()
 
     console.log("Adding liquidity...")
@@ -84,7 +84,7 @@ describe("SSIP Reward attack", function () {
         )
     ).wait()
 
-    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.mockUNO.target, this.mockUSDT.target);
+    this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy(this.signers[0].address);
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -100,20 +100,20 @@ describe("SSIP Reward attack", function () {
 
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
-      WETH_ADDRESS.rinkeby,
+      WETH_ADDRESS.sepolia,
       this.mockOraclePriceFeed.target,
-      UNISWAP_ROUTER_ADDRESS.rinkeby,
-      UNISWAP_FACTORY_ADDRESS.rinkeby,
+      UNISWAP_ROUTER_ADDRESS.sepolia,
+      UNISWAP_FACTORY_ADDRESS.sepolia,
       this.multisig.address,
       getBigNumber("60")
     )
 
     this.capitalAgent = await upgrades.deployProxy(
       this.CapitalAgent, [
-        this.exchangeAgent.target, 
-        this.mockUSDT.target,
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
-        this.signers[0].address]
+      this.exchangeAgent.target,
+      this.mockUSDT.target,
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6",
+      this.signers[0].address]
     );
 
     await this.capitalAgent.connect(this.multisig).grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
@@ -123,9 +123,9 @@ describe("SSIP Reward attack", function () {
 
     this.singleSidedInsurancePool = await upgrades.deployProxy(
       this.SingleSidedInsurancePool, [
-        this.capitalAgent.target,
-        "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
-      ]
+      this.capitalAgent.target,
+      "0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6"
+    ]
     );
 
     await this.singleSidedInsurancePool.connect(this.multisig).grantRole((await this.capitalAgent.ADMIN_ROLE()), this.signers[0].address);
@@ -166,7 +166,7 @@ describe("SSIP Reward attack", function () {
       const poolInfo = await this.singleSidedInsurancePool.poolInfo()
       expect(poolInfo.unoMultiplierPerBlock).equal(getBigNumber("1"))
       this.poolAddress = await this.singleSidedInsurancePool.riskPool()
-      await this.singleSidedInsurancePool.connect(this.signers[2]).enterInPool(getBigNumber("1000"), {from: this.signers[2].address})
+      await this.singleSidedInsurancePool.connect(this.signers[2]).enterInPool(getBigNumber("1000"), { from: this.signers[2].address })
     })
 
     describe("SingleSidedInsurancePool harvest attack", function () {
@@ -178,7 +178,7 @@ describe("SSIP Reward attack", function () {
         console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
 
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
-        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), {from: this.signers[1].address})
+        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
 
         const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
         expect(poolBalance1).to.equal(getBigNumber("8500"))
@@ -212,7 +212,7 @@ describe("SSIP Reward attack", function () {
         console.log("[pendingUnoRewardBefore]", pendingUnoRewardBefore1.toString(), pendingUnoRewardBefore2.toString())
 
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
-        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), {from: this.signers[1].address})
+        await this.singleSidedInsurancePool.connect(this.signers[1]).enterInPool(getBigNumber("10000"), { from: this.signers[1].address })
 
         const poolBalance1 = await riskPool.balanceOf(this.signers[0].address)
         expect(poolBalance1).to.equal(getBigNumber("8500"))
@@ -228,7 +228,7 @@ describe("SSIP Reward attack", function () {
         console.log("[pendingUnoRewardAfter]", getNumber(pendingUnoRewardAfter1), getNumber(pendingUnoRewardAfter2))
         expect(pendingUnoRewardAfter1).to.gt(pendingUnoRewardBefore1)
 
-        
+
         // await expect(this.singleSidedInsurancePool.harvest(this.signers[1].address)).to.be.revertedWith(
         //   "UnoRe: must be message sender",
         // )
@@ -313,7 +313,7 @@ describe("SSIP Reward attack", function () {
       })
       it("Should revert double harvest after attack with zero address", async function () {
         await this.singleSidedInsurancePool.enterInPool(getBigNumber("8500"))
-        
+
         const beforeBlockNumber = await ethers.provider.getBlockNumber()
         await advanceBlockTo(beforeBlockNumber + 10000)
         const afterBlockNumber = await ethers.provider.getBlockNumber()
