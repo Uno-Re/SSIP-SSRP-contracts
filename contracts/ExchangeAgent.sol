@@ -7,16 +7,17 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
-import "./interfaces/IUniswapFactory.sol";
-import "./interfaces/IUniswapRouter02.sol";
+//import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+
 import "./interfaces/IOraclePriceFeed.sol";
 import "./interfaces/IExchangeAgent.sol";
 import "./libraries/TransferHelper.sol";
 
 contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausable {
     address public immutable override usdcToken;
-    address public immutable UNISWAP_FACTORY;
-    address public immutable UNISWAP_ROUTER;
+    address public immutable UNISWAP_FACTORY_V3;
+    address public immutable UNISWAP_ROUTER_V3;
     address public immutable WETH;
     address public oraclePriceFeed;
     uint256 public slippage;
@@ -61,8 +62,8 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         require(_WETH != address(0), "UnoRe: zero WETH address");
         require(_multiSigWallet != address(0), "UnoRe: zero multisigwallet address");
         usdcToken = _usdcToken;
-        UNISWAP_FACTORY = _uniswapFactory;
-        UNISWAP_ROUTER = _uniswapRouter;
+        UNISWAP_FACTORY_V3 = _uniswapFactory;
+        UNISWAP_ROUTER_V3 = _uniswapRouter;
         WETH = _WETH;
         oraclePriceFeed = _oraclePriceFeed;
         whiteList[msg.sender] = true;
@@ -189,7 +190,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         require(twapPrice > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPrice * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
 
-        uint256 convertedAmount = _convertTokenForToken(UNISWAP_ROUTER, _token0, _token1, _token0Amount, desiredAmount);
+        uint256 convertedAmount = _convertTokenForToken(UNISWAP_ROUTER_V3, _token0, _token1, _token0Amount, desiredAmount);
         return convertedAmount;
     }
 
@@ -209,7 +210,7 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         require(twapPriceInUSDC > 0, "UnoRe: no pairs");
         uint256 desiredAmount = (twapPriceInUSDC * (100 * SLIPPAGE_PRECISION - slippage)) / 100 / SLIPPAGE_PRECISION;
 
-        uint256 convertedAmount = _convertTokenForETH(UNISWAP_ROUTER, _token, _convertAmount, desiredAmount);
+        uint256 convertedAmount = _convertTokenForETH(UNISWAP_ROUTER_V3, _token, _convertAmount, desiredAmount);
         return convertedAmount;
     }
 
@@ -220,35 +221,26 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         uint256 _convertAmount,
         uint256 _desiredAmount
     ) private returns (uint256) {
-        IUniswapRouter02 _dexRouter = IUniswapRouter02(_dexAddress);
-        address _factory = _dexRouter.factory();
+        ISwapRouter _swapRouter = ISwapRouter(_dexAddress);
+        //address _factory = _swapRouter.factory();
         uint256 usdtBalanceBeforeSwap = IERC20(_token1).balanceOf(msg.sender);
-        address inpToken = _dexRouter.WETH();
+        address inpToken = WETH;
         if (_token0 != address(0)) {
             inpToken = _token0;
-            TransferHelper.safeApprove(_token0, address(_dexRouter), _convertAmount);
+            TransferHelper.safeApprove(_token0, address(_swapRouter), _convertAmount);
         }
-        if (IUniswapFactory(_factory).getPair(inpToken, _token1) != address(0)) {
-            address[] memory path = new address[](2);
-            path[0] = inpToken;
-            path[1] = _token1;
-            if (_token0 == address(0)) {
-                _dexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _convertAmount}(
-                    _desiredAmount,
-                    path,
-                    msg.sender,
-                    block.timestamp + swapDeadline
-                );
-            } else {
-                _dexRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                    _convertAmount,
-                    _desiredAmount,
-                    path,
-                    msg.sender,
-                    block.timestamp
-                );
-            }
-        }
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: _token0,
+            tokenOut: _token1,
+            fee: 3000,
+            recipient: msg.sender,
+            deadline: block.timestamp + swapDeadline,
+            amountIn: _convertAmount,
+            amountOutMinimum: _desiredAmount,
+            sqrtPriceLimitX96: 0
+        });
+        uint256 amountOut = _swapRouter.exactInputSingle(params);
+
         uint256 usdtBalanceAfterSwap = IERC20(_token1).balanceOf(msg.sender);
         emit ConvertedTokenToToken(
             _dexAddress,
@@ -267,22 +259,22 @@ contract ExchangeAgent is IExchangeAgent, ReentrancyGuard, Ownable2Step, Pausabl
         uint256 _convertAmount,
         uint256 _desiredAmount
     ) private returns (uint256) {
-        IUniswapRouter02 _dexRouter = IUniswapRouter02(_dexAddress);
-        address _factory = _dexRouter.factory();
+        ISwapRouter _swapRouter = ISwapRouter(_dexAddress);
+        //address _factory = _swapRouter.factory();
         uint256 ethBalanceBeforeSwap = address(msg.sender).balance;
-        SafeERC20.forceApprove(IERC20(_token), address(_dexRouter), _convertAmount);
-        if (IUniswapFactory(_factory).getPair(_token, WETH) != address(0)) {
-            address[] memory path = new address[](2);
-            path[0] = _token;
-            path[1] = WETH;
-            _dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
-                _convertAmount,
-                _desiredAmount,
-                path,
-                msg.sender,
-                block.timestamp + swapDeadline
-            );
-        }
+        SafeERC20.forceApprove(IERC20(_token), address(_swapRouter), _convertAmount);
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: _token,
+            tokenOut:WETH,
+            fee: 3000,
+            recipient: msg.sender,
+            deadline: block.timestamp + swapDeadline,
+            amountIn: _convertAmount,
+            amountOutMinimum: _desiredAmount,
+            sqrtPriceLimitX96: 0
+        });
+        uint256 amountOut = _swapRouter.exactInputSingle(params);
+
         uint256 ethBalanceAfterSwap = address(msg.sender).balance;
         emit ConvertedTokenToETH(_dexAddress, _token, _convertAmount, _desiredAmount, ethBalanceAfterSwap - ethBalanceBeforeSwap);
         return ethBalanceAfterSwap - ethBalanceBeforeSwap;

@@ -1,10 +1,26 @@
 const { expect } = require("chai")
-
-
+const bn = require('bignumber.js')
+bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 })
 const { ethers, network } = require("hardhat")
 const { getBigNumber } = require("../scripts/shared/utilities")
+const { Token } = require('@uniswap/sdk-core')
+const { Pool, Position, nearestUsableTick, encodeSqrtRatioX96 } = require('@uniswap/v3-sdk')
+const { abi: IUniswapV3PoolABI } = require("@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json")
+const { abi: IUniswapV3FactoryABI } = require("@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Factory.sol/IUniswapV3Factory.json")
+const { abi: INonfungiblePositionManagerABI } = require('@uniswap/v3-periphery/artifacts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json')
 
-const UniswapV2Router = require("../scripts/abis/UniswapV2Router.json")
+
+function encodePriceSqrt(reserve1, reserve0) {
+  return BigInt(
+    new bn(reserve1.toString())
+      .div(reserve0.toString())
+      .sqrt()
+      .multipliedBy(new bn(2).pow(96))
+      .integerValue(3)
+      .toString()
+  )
+}
+
 
 const {
   WETH_ADDRESS,
@@ -16,6 +32,7 @@ const {
 
 describe("ExchangeAgent", function () {
   before(async function () {
+    this.price = encodePriceSqrt(1, 1);
     this.MultiSigWallet = await ethers.getContractFactory("MultiSigWallet")
     this.ExchangeAgent = await ethers.getContractFactory("ExchangeAgent")
     this.SingleSidedInsurancePool = await ethers.getContractFactory("SingleSidedInsurancePool")
@@ -56,7 +73,7 @@ describe("ExchangeAgent", function () {
 
   })
 
-  beforeEach(async function () {
+  before(async function () {
     this.mockUNO = await this.MockUNO.deploy()
     this.mockUSDT = await this.MockUSDT.deploy()
     await this.mockUNO.connect(this.signers[0]).faucetToken(getBigNumber("500000000000000"), { from: this.signers[0].address })
@@ -84,7 +101,8 @@ describe("ExchangeAgent", function () {
       "0x1000000000000000000000000000000000",
     ]);
 
-
+    console.log("Adding liquidity...")
+    
     await (
       await this.mockUNO
         .connect(this.signers[0])
@@ -94,28 +112,88 @@ describe("ExchangeAgent", function () {
       await this.mockUSDT
         .connect(this.signers[0])
         .approve(UNISWAP_ROUTER_ADDRESS.sepolia, getBigNumber("100000000000000"), { from: this.signers[0].address })
-    ).wait()
+    ).wait();
 
-    console.log("Adding liquidity...")
 
-    await (
-      await this.routerContract
-        .connect(this.signers[0])
-        .addLiquidity(
-          this.mockUNO.target,
-          this.mockUSDT.target,
-          getBigNumber("3000000"),
-          getBigNumber("3000", 6),
-          getBigNumber("3000000"),
-          getBigNumber("3000", 6),
-          this.signers[0].address,
-          timestamp,
-          { from: this.signers[0].address, gasLimit: 9999999 },
-        )
-    ).wait()
+    await uniswapV3Pool.connect(this.signers[0]).initialize(this.price.toString());
+
+    const poolData = await getPoolData(uniswapV3Pool);
+    const UNOToken = new Token(31337, this.mockUNO.target, 18, 'UNO', 'UNORE')
+    const UsdtToken = new Token(31337, this.mockUSDT.target, 18, 'USDT', 'USDT')
+
+    const configuredPool = new Pool(
+      UNOToken,
+      UsdtToken,
+      Number(poolData.fee),
+      poolData.sqrtPriceX96.toString(),
+      poolData.liquidity.toString(),
+      Number(poolData.tick)
+    )
+   
+    const position = new Position({
+      pool: configuredPool,
+      liquidity: ethers.toBeHex(ethers.parseEther('1')),
+      tickLower: nearestUsableTick(configuredPool.tickCurrent, configuredPool.tickSpacing) -
+        configuredPool.tickSpacing * 2,
+      tickUpper: nearestUsableTick(configuredPool.tickCurrent, configuredPool.tickSpacing) +
+        configuredPool.tickSpacing * 2,
+    })
+
+    const { amount0: amount0Desired, amount1: amount1Desired} = position.mintAmounts
+
+    params = {
+      token0: this.mockUNO.target,
+      token1: this.mockUSDT.target,
+      fee: poolData.fee,
+      tickLower: nearestUsableTick(configuredPool.tickCurrent, configuredPool.tickSpacing) -
+      configuredPool.tickSpacing * 2,
+      tickUpper: nearestUsableTick(configuredPool.tickCurrent, configuredPool.tickSpacing) +
+      configuredPool.tickSpacing * 2,
+      amount0Desired: amount0Desired.toString(),
+      amount1Desired: amount1Desired.toString(),
+      amount0Min: 0,
+      amount1Min: 0,
+      recipient: this.signers[0].address,
+      deadline: Math.floor(Date.now() / 1000) + (60 * 10)
+    }
+  
+    const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88";
+    const nonfungiblePositionManager = new ethers.Contract(
+      positionManagerAddress,
+      INonfungiblePositionManagerABI,
+      ethers.provider
+    )
+    
+  await this.mockUNO.connect(this.signers[0]).approve(positionManagerAddress, ethers.parseEther('3000'))
+  await this.mockUSDT.connect(this.signers[0]).approve(positionManagerAddress, ethers.parseEther('3000'))
+
+    const tx = await nonfungiblePositionManager.connect(this.signers[0]).mint(
+      params,
+      { gasLimit: '1000000' }
+    )
+    const receipt = await tx.wait()
+   
+    async function getPoolData(poolContract) {
+      const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
+        poolContract.tickSpacing(),
+        poolContract.fee(),
+        poolContract.liquidity(),
+        poolContract.slot0(),
+      ])
+
+      return {
+        tickSpacing: tickSpacing,
+        fee: fee,
+        liquidity: liquidity,
+        sqrtPriceX96: slot0[0],
+        tick: slot0[1],
+      }
+    }
+    console.log("Added liquidity...")
 
     this.multiSigWallet = await this.MultiSigWallet.deploy(this.owners, this.numConfirmationsRequired)
     this.mockOraclePriceFeed = await this.MockOraclePriceFeed.deploy("0xBC13Ca15b56BEEA075E39F6f6C09CA40c10Ddba6");
+  
     this.exchangeAgent = await this.ExchangeAgent.deploy(
       this.mockUSDT.target,
       WETH_ADDRESS.sepolia,
@@ -209,23 +287,5 @@ describe("ExchangeAgent", function () {
           .convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"), { from: this.signers[2].address }),
       ).to.be.revertedWith("UnoRe: ExchangeAgent Forbidden")
     })
-
-    // it("should convert UNO to USDT", async function () {
-    // const usdtBalanceBefore = await this.mockUSDT.balanceOf(this.signers[0].address)
-    //       await (
-    //         await this.mockUNO
-    //           .connect(this.signers[0])
-    //           .approve(this.exchangeAgent.target, getBigNumber("10000000"), { from: this.signers[0].address })
-    //       ).wait()
-    //       await this.mockUNO
-    //         .connect(this.signers[0])
-    //         .transfer(this.exchangeAgent.target, getBigNumber("2000"), { from: this.signers[0].address })
-    //       const usdtConvert = await (
-    //         await this.exchangeAgent.convertForToken(this.mockUNO.target, this.mockUSDT.target, getBigNumber("2000"))
-    //       ).wait()
-    //       const convertedAmount = usdtConvert.events[usdtConvert.events.length - 1].args._convertedAmount
-    //       const usdtBalanceAfter = await this.mockUSDT.balanceOf(this.signers[0].address)
-    //       expect(usdtBalanceAfter).to.equal(usdtBalanceBefore.add(convertedAmount))
-    // })
   })
 })
