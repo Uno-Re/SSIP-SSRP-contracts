@@ -160,7 +160,7 @@ describe("SSIP Reward attack", function () {
 
     expect(await this.rewarder.target).equal(await this.singleSidedInsurancePool.rewarder())
 
-    await (await this.mockUNO.transfer(this.rewarder.target, getBigNumber("1000"))).wait()
+    await (await this.mockUNO.transfer(this.rewarder.target, getBigNumber("10000"))).wait()
 
     this.rewardAttack = await this.RewardAttack.deploy()
   })
@@ -176,7 +176,6 @@ describe("SSIP Reward attack", function () {
         .approve(this.singleSidedInsurancePool, getBigNumber("1000000"), { from: this.signers[2].address })
 
       const poolInfo = await this.singleSidedInsurancePool.poolInfo()
-      //expect(poolInfo.unoMultiplierPerBlock).equal(getBigNumber("1"))
       this.poolAddress = await this.singleSidedInsurancePool.riskPool()
 
       await this.singleSidedInsurancePool
@@ -354,11 +353,6 @@ describe("SSIP Reward attack", function () {
         await this.singleSidedInsurancePool.harvest(this.zeroAddress)
         const unoBalanceAfterZeroHarvest2 = await this.mockUNO.balanceOf(this.signers[0].address)
         expect(unoBalanceAfterZeroHarvest2 - unoBalanceAfterFirstHarvest).to.equal(0)
-
-        // double harvest with its own address
-        // await expect(this.singleSidedInsurancePool.connect(this.signers[0]).harvest(this.zeroAddress)).to.be.revertedWith("UnoRe: invalid reward amount")
-        // const unoBalanceAfterSecondHarvest = await this.mockUNO.balanceOf(this.signers[0].address)
-        // expect(unoBalanceAfterSecondHarvest - (unoBalanceAfterZeroHarvest)).to.equal(0)
       })
     })
   })
