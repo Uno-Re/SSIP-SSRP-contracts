@@ -222,7 +222,7 @@ describe("SingleSidedInsurancePool", function () {
 
     it("Should set uno multiplier factor", async function () {
       const poolInfoBefore = await this.singleSidedInsurancePool.poolInfo()
-      expect(poolInfoBefore.unoMultiplierPerBlock).equal(3995433752000000)
+      expect(poolInfoBefore.unoMultiplierPerBlock).equal(26000000000000000n)
       await this.singleSidedInsurancePool.connect(this.multisig).setRewardMultiplier(getBigNumber("2"))
       const poolInfoAfter = await this.singleSidedInsurancePool.poolInfo()
       expect(poolInfoAfter.unoMultiplierPerBlock).equal(getBigNumber("2"))
