@@ -107,7 +107,7 @@ module.exports = {
       rolluxTestnet: "abc",
       tanenbaum: "abc",
       syscoin: "abc",
-      bscMain: process.env.API_KEY, // BSC_API_KEY
+      bsc: process.env.BSCSCAN_API_KEY,
       sepolia: process.env.API_SEP,
     },
     customChains: [
