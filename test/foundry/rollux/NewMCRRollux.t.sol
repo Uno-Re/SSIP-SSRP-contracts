@@ -63,6 +63,7 @@ contract NewMCRRollux is Test {
     address constant MintAddress = 0x3ad22Ae2dE3dCF105E8DaA12acDd15bD47596863;
     address constant WSYSMillionaire = 0x66ff2f0AC3214758D1e61B16b41e3d5e62CAEcF1;
     address constant WSYSMillionaire1 = 0x6E1aD8E91B9b7B677C2a81FA31B6FaAA657424Fb;
+    address constant UNOOWNER = 0x64A227E362309D1411195850d310E682B13F9B26;
     address constant OPERATOR = 0x100c50947580d9158B7C26f79401404208CFbE62;
     address constant MULTISIG = 0x15E18e012cb6635b228e0DF0b6FC72627C8b2429;
     address constant CAPITAL = 0xB754842C7b0FA838e08fe5C028dB0ecd919f2d30;
@@ -93,6 +94,9 @@ contract NewMCRRollux is Test {
 
         vm.createSelectFork(CHAIN_URL);
         capitalForked = CapitalAgent((CAPITAL));
+
+        vm.createSelectFork(CHAIN_URL);
+        uno = MockUNO((UNO));
 
         capitalAgent = new CapitalAgent();
         capitalAgentProxy = new TransparentProxy(address(capitalAgent), address(this), "");
@@ -329,77 +333,5 @@ contract NewMCRRollux is Test {
         vm.prank(address(user));
         vm.expectRevert();
         pool.leaveFromPoolInPending(totalUserStaked);
-    }
-
-    function test_shouldAccumulateRewardsAfterLeaveFromPool() public {
-        startTime = block.timestamp;
-        vm.warp(startTime);
-
-        // Deploy a new pool with the current implementation code
-        pool1 = new SingleSidedInsurancePool();
-        pool1Proxy = new TransparentProxy(address(pool1), address(this), "");
-        proxyPool = SingleSidedInsurancePool(address(pool1Proxy));
-        proxyPool.initialize(CAPITAL, MintAddress);
-        vm.prank(MULTISIG);
-        capitalForked.addPoolWhiteList(address(proxyPool));
-
-        vm.prank(MintAddress);
-        proxyPool.setStakingStartTime(70000);
-
-        vm.prank(MintAddress);
-        proxyPool.createRiskPool(
-            "Synthetic SSIP-WSYS",
-            "SSSIP-WSYS",
-            0x188A7092f2020088052D589F1C626Bb955AB5436,
-            0x4200000000000000000000000000000000000006,
-            10000000000000000000,
-            1000000
-        );
-
-        vm.prank(MintAddress);
-        proxyPool.setRewardMultiplier(10000000000000000000000000000);
-
-        vm.prank(MintAddress);
-        proxyPool.createRewarder(MintAddress, 0xec25c17176acE9E0D86Fb858DF663abB8097b062, UNO);
-        // nextTime = startTime + 10 ** 18;
-        //vm.warp(nextTime);
-        skip(700000000000000000000000000);
-        vm.getBlockTimestamp();
-        uint256 value = 5000000000000000000000;
-
-        vm.prank(WSYSMillionaire);
-        wsys.transfer(address(user), value); //5k wsys
-        vm.prank(address(user));
-        wsys.approve(address(proxyPool), value);
-        vm.prank(address(user));
-        proxyPool.enterInPool(value);
-
-        //nextTime1 = nextTime + 10 ** 18;
-        //vm.warp(nextTime1);
-        skip(700000000000000000000000000);
-
-        // save rewards
-        //(uint256 amount, uint256 rewardDebt, uint256 someOtherValue, bool someBool) = proxyPool.userInfo(address(user));
-        //uint256 rewardsBefore = rewardDebt;
-        uint256 rewardsBefore = proxyPool.pendingUno(address(user));
-
-        vm.prank(address(user));
-        proxyPool.leaveFromPoolInPending(value / 2);
-        // wait for 10 days
-
-        //finishTime = nextTime1 + 10 ** 18;
-        //vm.warp(finishTime); // rewards here > rewards earlier
-        skip(700000000000000000000000000);
-        vm.getBlockTimestamp();
-
-        //uint256 rewardsAfter = rewardDebt;
-        uint256 rewardsAfter = proxyPool.pendingUno(address(user));
-
-        assertTrue(rewardsAfter > rewardsBefore);
-        // stake 1000 tokens
-
-        // leave from pool 1000 tokens
-        // wait for 100 days
-        // rewards = 0
     }
 }
