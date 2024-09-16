@@ -6,19 +6,14 @@ import "../../../contracts/Mocks/WsysMock.sol";
 import "../../../contracts/Mocks/SupraPriceOracle.sol";
 import "../../../contracts/SingleSidedInsurancePool.sol";
 import "../../../contracts/CapitalAgent.sol";
-import "../../../contracts/ExchangeAgent.sol";
-import "../../../contracts/uma/PayoutRequest.sol";
-import "../../../contracts/factories/SalesPolicyFactory.sol";
 import "../../../contracts/factories/RiskPoolFactory.sol";
 import "../../../contracts/factories/RewarderFactory.sol";
-import "../../../contracts/interfaces/ICapitalAgent.sol";
-import "../../../contracts/SalesPolicy.sol";
+import "../../../src/TransparentProxy.sol";
 
 import "lib/forge-std/src/Vm.sol";
 import "forge-std/console.sol";
 
 import "lib/forge-std/src/Test.sol";
-import "../../../src/TransparentProxy.sol";
 
 contract RewardsTest is Test {
     MockUNO uno;
@@ -29,9 +24,6 @@ contract RewardsTest is Test {
     TransparentProxy capitalAgentProxy;
     TransparentProxy poolProxy;
     CapitalAgent proxycapital;
-    PayoutRequest payout;
-    SalesPolicyFactory salesFactory;
-    SalesPolicy salesPolicy;
     uint public startTime;
     uint public nextTime;
     uint public nextTime1;
@@ -41,14 +33,7 @@ contract RewardsTest is Test {
 
     address user = address(1);
     address user2 = address(2);
-    address user3 = address(3);
-    address user4 = address(4);
-    address user5 = address(5);
-    address user6 = address(6);
-    address user7 = address(7);
-    address user8 = address(8);
-    address user9 = address(9);
-    address admin = address(this);
+
     uint256 constant MCR = 10000000;
     uint256 constant MLR = 1000000;
     uint256 rewardMultiplier = 7000000000000000000000;
