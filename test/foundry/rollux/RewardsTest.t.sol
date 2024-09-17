@@ -36,7 +36,7 @@ contract RewardsTest is Test {
 
     uint256 constant MCR = 10000000;
     uint256 constant MLR = 1000000;
-    uint256 rewardMultiplier = 7000000000000000000000;
+    uint256 rewardMultiplier = 7000000000000000000;
     uint256 poolSCR = 1000000;
 
     function setUp() public {
@@ -75,16 +75,8 @@ contract RewardsTest is Test {
     }
 
     function test_shouldAccumulateRewardsAfterLeaveFromPool() public {
-        startTime = block.timestamp;
-        vm.warp(startTime);
 
-        proxypool.setStakingStartTime(70000);
-
-        //nextTime = startTime + 10 ** 18;
-        //vm.warp(nextTime);
-        skip(700000000000000000000000000);
-        vm.getBlockTimestamp();
-        uint256 value = 5000000000000000000000;
+        uint256 value = 5000000000000000000;
 
         wsys.mint(address(user), value);
 
@@ -94,27 +86,15 @@ contract RewardsTest is Test {
         vm.prank(address(user));
         proxypool.enterInPool(value);
 
-        // nextTime1 = nextTime + 10 ** 18;
-        // vm.warp(nextTime1);
-        skip(700000000000000000000000000);
-
-        // save rewards
-        (uint256 amount, uint256 rewardDebt, uint256 someOtherValue, bool someBool) = proxypool.userInfo(address(user));
-        uint256 rewardsBefore = rewardDebt;
-        // uint256 rewardsBefore = proxypool.pendingUno(address(user));
+        uint256 rewardsBefore = proxypool.pendingUno(address(user));
 
         vm.prank(address(user));
-        proxypool.leaveFromPoolInPending(value / 2);
-
+        proxypool.leaveFromPoolInPending(value/2);
         // wait for 10 days
-        // finishTime = nextTime1 + 10 ** 18;
-        //vm.warp(finishTime); // rewards here > rewards earlier
-        skip(700000000000000000000000000);
-        vm.getBlockTimestamp();
+        vm.roll(block.number + 20);
+        skip(10 * 24 * 60 * 60);
 
-        uint256 rewardsAfter = rewardDebt;
-
-        //uint256 rewardsAfter = proxypool.pendingUno(address(user));
+        uint256 rewardsAfter = proxypool.pendingUno(address(user));
 
         assertTrue(rewardsAfter > rewardsBefore);
         // stake 1000 tokens
