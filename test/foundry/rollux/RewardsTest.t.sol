@@ -75,7 +75,6 @@ contract RewardsTest is Test {
     }
 
     function test_shouldAccumulateRewardsAfterLeaveFromPool() public {
-
         uint256 value = 5000000000000000000;
 
         wsys.mint(address(user), value);
@@ -89,7 +88,7 @@ contract RewardsTest is Test {
         uint256 rewardsBefore = proxypool.pendingUno(address(user));
 
         vm.prank(address(user));
-        proxypool.leaveFromPoolInPending(value/2);
+        proxypool.leaveFromPoolInPending(value / 2);
         // wait for 10 days
         vm.roll(block.number + 20);
         skip(10 * 24 * 60 * 60);
@@ -102,5 +101,39 @@ contract RewardsTest is Test {
         // leave from pool 1000 tokens
         // wait for 100 days
         // rewards = 0
+    }
+
+    function test_shouldNotAccumulateRewards() public {
+        uint256 value = 5000000000000000000;
+        proxypool.setRewardMultiplier(44736800269291200);
+
+        wsys.mint(address(user), value);
+        wsys.mint(address(user2), (value * 5));
+
+        vm.prank(address(user2));
+        wsys.approve(address(proxypool), (value * 5));
+        vm.prank(address(user2));
+        proxypool.enterInPool((value * 5));
+
+        vm.prank(address(user));
+        wsys.approve(address(proxypool), value);
+        vm.prank(address(user));
+        proxypool.enterInPool(value);
+
+        // wait for 10 minutes
+        vm.roll(block.number + 7453453);
+        skip(10 * 60 * 60);
+        uint256 rewardsBefore = proxypool.pendingUno(address(user));
+
+        vm.prank(address(user));
+        proxypool.leaveFromPoolInPending(value);
+
+        // wait for 10 days
+        vm.roll(block.number + 20);
+        skip(10 * 24 * 60 * 60);
+
+        uint256 rewardsAfter = proxypool.pendingUno(address(user));
+
+        assertEq(rewardsAfter, 0);
     }
 }
