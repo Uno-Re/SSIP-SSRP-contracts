@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.23;
 
-import "../../../contracts/Mocks/MockUNO.sol";
-import "../../../contracts/Mocks/WsysMock.sol";
-import "../../../contracts/Mocks/SupraPriceOracle.sol";
-import "../../../contracts/SingleSidedInsurancePool.sol";
-import "../../../contracts/CapitalAgent.sol";
-import "../../../contracts/factories/RiskPoolFactory.sol";
-import "../../../contracts/factories/RewarderFactory.sol";
-import "../../../src/TransparentProxy.sol";
+import "../../contracts/Mocks/MockUNO.sol";
+import "../../contracts/Mocks/WsysMock.sol";
+import "../../contracts/Mocks/SupraPriceOracle.sol";
+import "../../contracts/SingleSidedInsurancePool.sol";
+import "../../contracts/CapitalAgent.sol";
+import "../../contracts/factories/RiskPoolFactory.sol";
+import "../../contracts/factories/RewarderFactory.sol";
+import "../../src/TransparentProxy.sol";
 
 import "lib/forge-std/src/Vm.sol";
 import "forge-std/console.sol";
@@ -38,6 +38,7 @@ contract RewardsTest is Test {
     uint256 constant MLR = 1000000;
     uint256 rewardMultiplier = 7000000000000000000;
     uint256 poolSCR = 1000000;
+    uint256 value = 5000000000000000000;
 
     function setUp() public {
         wsys = new WsysMock("Wrapped Sys", "WSYS", 7000000000000000000000);
@@ -71,13 +72,11 @@ contract RewardsTest is Test {
         uno.mint(5000000000);
         address rewarder = proxypool.rewarder();
 
-        uno.transfer(rewarder, 5000000000);
+        uno.transfer(rewarder, 5000000000); 
     }
 
-    function test_shouldAccumulateRewardsAfterLeaveFromPool() public {
-        uint256 value = 5000000000000000000;
-
-        wsys.mint(address(user), value);
+    function enterInPool() internal {
+         wsys.mint(address(user), value);
 
         vm.prank(address(user));
         wsys.approve(address(proxypool), value);
@@ -85,48 +84,37 @@ contract RewardsTest is Test {
         vm.prank(address(user));
         proxypool.enterInPool(value);
 
-        uint256 rewardsBefore = proxypool.pendingUno(address(user));
-
-        vm.prank(address(user));
-        proxypool.leaveFromPoolInPending(value / 2);
-        // wait for 10 days
-        vm.roll(block.number + 20);
-        skip(10 * 24 * 60 * 60);
-
-        uint256 rewardsAfter = proxypool.pendingUno(address(user));
-
-        assertTrue(rewardsAfter > rewardsBefore);
-        // stake 1000 tokens
-
-        // leave from pool 1000 tokens
-        // wait for 100 days
-        // rewards = 0
-    }
-
-    function test_shouldNotAccumulateRewards() public {
-        uint256 value = 5000000000000000000;
-        proxypool.setRewardMultiplier(44736800269291200);
-
-        wsys.mint(address(user), value);
         wsys.mint(address(user2), (value * 5));
 
         vm.prank(address(user2));
         wsys.approve(address(proxypool), (value * 5));
+        
         vm.prank(address(user2));
         proxypool.enterInPool((value * 5));
+    }
 
-        vm.prank(address(user));
-        wsys.approve(address(proxypool), value);
-        vm.prank(address(user));
-        proxypool.enterInPool(value);
 
-        // wait for 10 minutes
-        vm.roll(block.number + 7453453);
-        skip(10 * 60 * 60);
+    function test_shouldAccumulateRewardsAfterLeaveFromPool() public {
+        enterInPool();
+        vm.prank(address(user));
+        proxypool.leaveFromPoolInPending(value / 2);
+        //Checks rewards right after withdrawing tokens
         uint256 rewardsBefore = proxypool.pendingUno(address(user));
+        // wait for 10 days and skip 20 blocks
+        vm.roll(block.number + 20);
+        skip(10 * 24 * 60 * 60);
+        // Checks rewards after a couple of days
+        uint256 rewardsAfter = proxypool.pendingUno(address(user));
+
+        assertTrue(rewardsAfter > rewardsBefore);
+    }
+
+    function test_shouldNotAccumulateRewards() public {
+        enterInPool();
 
         vm.prank(address(user));
         proxypool.leaveFromPoolInPending(value);
+        uint256 rewardsBefore = proxypool.pendingUno(address(user));
 
         // wait for 10 days
         vm.roll(block.number + 20);
@@ -134,6 +122,6 @@ contract RewardsTest is Test {
 
         uint256 rewardsAfter = proxypool.pendingUno(address(user));
 
-        assertEq(rewardsAfter, 0);
+        assertEq(rewardsAfter, rewardsBefore);
     }
 }

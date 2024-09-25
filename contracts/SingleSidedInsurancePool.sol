@@ -291,7 +291,8 @@ contract SingleSidedInsurancePool is
             uint256 unoReward = blocks * poolInfo.unoMultiplierPerBlock;
             accUnoPerShare = accUnoPerShare + (unoReward * ACC_UNO_PRECISION) / tokenSupply;
         }
-        uint256 userBalance = userInfo[_to].amount;
+        (uint256 pendingAmount,,) = IRiskPool(riskPool).getWithdrawRequest(_to);
+        uint256 userBalance = userInfo[_to].amount - pendingAmount;
         pending = (userBalance * uint256(accUnoPerShare)) / ACC_UNO_PRECISION - userInfo[_to].rewardDebt;
     }
 
@@ -550,20 +551,13 @@ contract SingleSidedInsurancePool is
     }
 
     function _updateReward(address _to) internal returns (uint256, uint256) {
-        uint256 amount = userInfo[_to].amount;
+        (uint256 pendingAmount,,) = IRiskPool(riskPool).getWithdrawRequest(_to);
+        uint256 amount = userInfo[_to].amount - pendingAmount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
         // Effects
         userInfo[_to].rewardDebt = accumulatedUno;
-        
-        uint256 pendingAmount;
-        uint256 requestTime;
-        (pendingAmount, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
-        if (requestTime > 0) {
-
-            return (_pendingUno, amount - pendingAmount);
-        }
         return (_pendingUno, amount);
     }
 
