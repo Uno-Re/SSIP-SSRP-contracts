@@ -68,11 +68,11 @@ contract RewardsTest is Test {
             poolSCR
         );
         proxypool.createRewarder(address(this), address(rewardFactory), address(uno));
-
-        uno.mint(5000000000);
+        uno.mint(50000000000000000000000000);
         address rewarder = proxypool.rewarder();
 
-        uno.transfer(rewarder, 5000000000); 
+        uno.transfer(rewarder, 50000000000000000000000000); 
+        proxypool.setAccUnoPerShare(10,1);
     }
 
     function enterInPool() internal {
@@ -93,11 +93,12 @@ contract RewardsTest is Test {
         proxypool.enterInPool((value * 5));
     }
 
-
     function test_shouldAccumulateRewardsAfterLeaveFromPool() public {
         enterInPool();
+
         vm.prank(address(user));
         proxypool.leaveFromPoolInPending(value / 2);
+        vm.roll(block.number + 1);
         //Checks rewards right after withdrawing tokens
         uint256 rewardsBefore = proxypool.pendingUno(address(user));
         // wait for 10 days and skip 20 blocks
@@ -107,6 +108,17 @@ contract RewardsTest is Test {
         uint256 rewardsAfter = proxypool.pendingUno(address(user));
 
         assertTrue(rewardsAfter > rewardsBefore);
+
+        vm.prank(address(user));
+        proxypool.leaveFromPoolInPending(value / 2);
+        rewardsBefore = proxypool.pendingUno(address(user));
+        vm.roll(block.number + 20);
+        skip(10 * 24 * 60 * 60);
+        vm.prank(address(user));
+        proxypool.userInfo(address(user));
+        rewardsAfter = proxypool.pendingUno(address(user));
+
+        assertEq(rewardsAfter, rewardsBefore);
     }
 
     function test_shouldNotAccumulateRewards() public {
@@ -123,5 +135,7 @@ contract RewardsTest is Test {
         uint256 rewardsAfter = proxypool.pendingUno(address(user));
 
         assertEq(rewardsAfter, rewardsBefore);
+        vm.prank(address(user));
+        proxypool.leaveFromPending(value);
     }
 }
