@@ -23,7 +23,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     struct PoolInfo {
         uint256 totalCapital;
-        uint256 SCR;
         address currency;
         bool exist;
         uint256 totalWithdrawPendingCapital;
@@ -38,6 +37,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     mapping(address => PoolInfo) public poolInfo;
 
     address[] private currencyList;
+    address[] private poolList;
     mapping(address => bool) public existedCurrencies;
     mapping(address => uint256) public totalCapitalStakedByCurrency;
 
@@ -45,7 +45,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     uint256 public totalUtilizedAmount;
 
-    uint256 public MCR;
     uint256 public MLR;
 
     uint256 public constant CALC_PRECISION = 1e18;
@@ -54,7 +53,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     mapping(address => mapping(uint256 => uint256)) public claimedAmount;
 
-    event LogAddPool(address indexed _ssip, address _currency, uint256 _scr);
+    event LogAddPool(address indexed _ssip, address _currency);
     event LogRemovePool(address indexed _ssip);
     event LogSetPolicy(address indexed _salesPolicy);
     event LogRemovePolicy(address indexed _salesPolicy);
@@ -106,20 +105,14 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         _;
     }
 
-    function getPolicyInfo() external view returns (address, uint256, bool) {
+    function getPolicyInfo() public view returns (address, uint256, bool) {
         PolicyInfo memory _policy = policyInfo;
         return (_policy.policy, _policy.utilizedAmount, _policy.exist);
     }
 
-    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool, uint256) {
+    function getPoolInfo(address _pool) external view returns (uint256, address, bool, uint256) {
         PoolInfo memory _poolInfo = poolInfo[_pool];
-        return (
-            _poolInfo.totalCapital,
-            _poolInfo.SCR,
-            _poolInfo.currency,
-            _poolInfo.exist,
-            _poolInfo.totalWithdrawPendingCapital
-        );
+        return (_poolInfo.totalCapital, _poolInfo.currency, _poolInfo.exist, _poolInfo.totalWithdrawPendingCapital);
     }
 
     /**
@@ -184,9 +177,8 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @dev add pool into capitalAgent to stake capital, can only be call by whitelisted pools
      * @param _ssip address of pool to add
      * @param _currency pool lp currency address
-     * @param _scr pool scr value(minimum capital should maintain in capital agent)
      **/
-    function addPool(address _ssip, address _currency, uint256 _scr) external override onlyPoolWhiteList {
+    function addPool(address _ssip, address _currency) external override onlyPoolWhiteList {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
 
@@ -194,24 +186,19 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
             existedCurrencies[_currency] = true;
             currencyList.push(_currency);
         }
-        poolInfo[_ssip] = PoolInfo({
-            totalCapital: 0,
-            currency: _currency,
-            SCR: _scr,
-            exist: true,
-            totalWithdrawPendingCapital: 0
-        });
 
-        emit LogAddPool(_ssip, _currency, _scr);
+        poolList.push(_ssip);
+        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, exist: true, totalWithdrawPendingCapital: 0});
+
+        emit LogAddPool(_ssip, _currency);
     }
 
     /**
      * @dev add pool into capitalAgent to stake capital, can only be call by admin role
      * @param _ssip address of pool to add
      * @param _currency pool lp currency address
-     * @param _scr pool scr value(minimum capital should maintain in capital agent)
      **/
-    function addPoolByAdmin(address _ssip, address _currency, uint256 _scr) external onlyRole(ADMIN_ROLE) {
+    function addPoolByAdmin(address _ssip, address _currency) external onlyRole(ADMIN_ROLE) {
         require(_ssip != address(0), "UnoRe: zero address");
         require(!poolInfo[_ssip].exist, "UnoRe: already exist pool");
 
@@ -219,15 +206,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
             existedCurrencies[_currency] = true;
             currencyList.push(_currency);
         }
-        poolInfo[_ssip] = PoolInfo({
-            totalCapital: 0,
-            currency: _currency,
-            SCR: _scr,
-            exist: true,
-            totalWithdrawPendingCapital: 0
-        });
-
-        emit LogAddPool(_ssip, _currency, _scr);
+        poolInfo[_ssip] = PoolInfo({totalCapital: 0, currency: _currency, exist: true, totalWithdrawPendingCapital: 0});
+        poolList.push(_ssip);
+        emit LogAddPool(_ssip, _currency);
     }
 
     /**
@@ -295,7 +276,9 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      **/
     function SSIPWithdraw(uint256 _withdrawAmount) external override nonReentrant {
         require(poolInfo[msg.sender].exist, "UnoRe: no exist ssip");
+        //TODOOOOOOOOOOOOOOOOOOOOOOOOOOOO
         require(_checkCapitalByMCRAndSCR(msg.sender, _withdrawAmount), "UnoRe: minimum capital underflow");
+
         _updatePoolCapital(msg.sender, _withdrawAmount, false);
         _updatePoolWithdrawPendingCapital(msg.sender, _withdrawAmount, false);
     }
@@ -349,11 +332,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @param _pool address of pool
      * @param _withdrawAmount withdraw amount
      **/
-    function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view override returns (bool) {
-        return _checkCapitalByMCRAndSCR(_pool, _withdrawAmount);
+    function checkCapitalByMLR(address _pool, uint256 _withdrawAmount) external view override returns (bool) {
+        return _checkCapitalByMLR(_pool, _withdrawAmount);
     }
 
-    /**
+    /**TODOOOOOOOOOOOOO
      * @dev return if user can buy policy from this coverage amount,
      * total utlized amount plus coverage should be less than MLR of total capital staked
      * @param _coverageAmount coverage amount
@@ -369,6 +352,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     function policySale(uint256 _coverageAmount) external override nonReentrant {
         require(msg.sender == policyInfo.policy, "UnoRe: only salesPolicy can call");
         require(policyInfo.exist, "UnoRe: no exist policy");
+        //TODOOOOOOOOOOOOOOOOOOOOOOOO
         require(_checkCoverageByMLR(_coverageAmount), "UnoRe: maximum leverage overflow");
         _updatePolicyCoverage(_coverageAmount, true);
     }
@@ -436,22 +420,22 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         emit LogUpdatePolicyCoverage(policyInfo.policy, _amount, policyInfo.utilizedAmount, totalUtilizedAmount);
     }
 
-    function _checkCapitalByMCRAndSCR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
+    //todoooooooooooooo
+    function _checkCapitalByMLR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
         address currency = poolInfo[_pool].currency;
-        uint256 totalCapitalStakedInUSDCPool;
-        uint256 mcrInUSDC;
-        uint256 scrInUSDC;
+        uint256 mlrInUSDC;
         uint256 totalWithdrawPendingCapital;
+        uint256 withdrawInUSDC;
+        uint256 totalCapitalStakedInUSDC;
 
-        totalWithdrawPendingCapital = _convertTokenToUSDC(currency, poolInfo[_pool].totalWithdrawPendingCapital);
-        totalCapitalStakedInUSDCPool = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
-        mcrInUSDC = _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency] - _withdrawAmount);
-        scrInUSDC = _convertTokenToUSDC(currency, poolInfo[_pool].totalCapital - _withdrawAmount);
+        (, uint256 totalPremiumSold, ) = getPolicyInfo();
+        withdrawInUSDC = _convertTokenToUSDC(currency, _withdrawAmount);
+        totalWithdrawPendingCapital = _getTotalPendingCapitalInUSDC();
+        totalCapitalStakedInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked());
 
-        bool isMCRPass = mcrInUSDC >= ((totalCapitalStakedInUSDCPool - totalWithdrawPendingCapital) * MCR) / CALC_PRECISION;
-        bool isSCRPass = scrInUSDC >= poolInfo[_pool].SCR;
+        bool isMLRPass = MLR * (totalCapitalStakedInUSDC - totalWithdrawPendingCapital - withdrawInUSDC) >= totalPremiumSold;
 
-        return isMCRPass && isSCRPass;
+        return isMLRPass;
     }
 
     function _convertTokenToUSDC(address _currency, uint256 _amount) private view returns (uint256) {
@@ -477,6 +461,23 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         }
 
         return totalCapitalStakedInUSDC;
+    }
+
+    /**
+     * @dev Value in withdrawl pending from of all pools
+     * @return uint256 Total value in pending withdraw from all pools
+     **/
+    function _getTotalPendingCapitalInUSDC() private view returns (uint256) {
+        uint256 totalPendingCapitalInUSDC;
+        for (uint256 i = 0; i < poolList.length; i++) {
+            if (poolInfo[poolList[i]].exist == true) {
+                totalPendingCapitalInUSDC =
+                    totalPendingCapitalInUSDC +
+                    _convertTokenToUSDC(poolInfo[poolList[i]].currency, poolInfo[poolList[i]].totalWithdrawPendingCapital);
+            }
+        }
+
+        return totalPendingCapitalInUSDC;
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
