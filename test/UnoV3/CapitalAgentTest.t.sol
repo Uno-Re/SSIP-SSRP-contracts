@@ -6,39 +6,70 @@ import "../src/CapitalAgent.sol";
 
 contract CapitalAgentTest is Test {
     CapitalAgent public capitalAgent;
+    address public admin;
+    address public operator;
+    address public exchangeAgent;
+    address public usdcToken;
+    address public multiSigWallet;
 
     function setUp() public {
-        // TODO: Setup the CapitalAgent contract and any necessary mock contracts
+        admin = address(this);
+        operator = address(0x1);
+        exchangeAgent = address(0x2);
+        usdcToken = address(0x3);
+        multiSigWallet = address(0x4);
+
+        vm.prank(admin);
+        capitalAgent = new CapitalAgent();
+        capitalAgent.initialize(exchangeAgent, usdcToken, multiSigWallet, operator);
     }
 
     // 1. Initialization
     function testInitialize() public {
-        // TODO: Test initialization with valid parameters
+        assertEq(capitalAgent.exchangeAgent(), exchangeAgent);
+        assertEq(capitalAgent.usdcToken(), usdcToken);
+        assertEq(capitalAgent.operator(), operator);
+        assertTrue(capitalAgent.hasRole(capitalAgent.ADMIN_ROLE(), multiSigWallet));
     }
 
     function testInitializeZeroExchangeAgent() public {
-        // TODO: Test initialization with zero address for exchangeAgent
+        CapitalAgent newCapitalAgent = new CapitalAgent();
+        vm.expectRevert("UnoRe: zero exchangeAgent address");
+        newCapitalAgent.initialize(address(0), usdcToken, multiSigWallet, operator);
     }
 
     function testInitializeZeroUSDCToken() public {
-        // TODO: Test initialization with zero address for USDC token
+        CapitalAgent newCapitalAgent = new CapitalAgent();
+        vm.expectRevert("UnoRe: zero USDC address");
+        newCapitalAgent.initialize(exchangeAgent, address(0), multiSigWallet, operator);
     }
 
     function testInitializeZeroMultiSigWallet() public {
-        // TODO: Test initialization with zero address for multiSigWallet
+        CapitalAgent newCapitalAgent = new CapitalAgent();
+        vm.expectRevert("UnoRe: zero multisigwallet address");
+        newCapitalAgent.initialize(exchangeAgent, usdcToken, address(0), operator);
     }
 
     function testAdminRoleGranted() public {
-        // TODO: Verify ADMIN_ROLE is granted to multiSigWallet
+        assertTrue(capitalAgent.hasRole(capitalAgent.ADMIN_ROLE(), multiSigWallet));
     }
 
     function testAdminRoleAdmin() public {
-        // TODO: Verify ADMIN_ROLE is set as admin for ADMIN_ROLE
+        assertEq(capitalAgent.getRoleAdmin(capitalAgent.ADMIN_ROLE()), capitalAgent.ADMIN_ROLE());
     }
 
     // 2. Access Control
     function testOnlyAdminCanAddPool() public {
-        // TODO: Verify only ADMIN_ROLE can add pools
+        address pool = address(0x5);
+        address currency = address(0x6);
+        
+        vm.prank(address(0x7)); // Non-admin address
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000007 is missing role 0x0000000000000000000000000000000000000000000000000000000000000000");
+        capitalAgent.addPoolByAdmin(pool, currency);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+        assertTrue(capitalAgent.poolInfo(pool).exist);
     }
 
     function testOnlyAdminCanRemovePool() public {
@@ -80,30 +111,71 @@ contract CapitalAgentTest is Test {
     function testOnlyAdminCanRemovePoolWhitelist() public {
         // TODO: Verify only ADMIN_ROLE can remove pool from whitelist
     }
+ function testOnlyOperatorCanSetMLR() public {
+        uint256 newMLR = 1500000000000000000; // 1.5 in 1e18
 
-    function testOnlyOperatorCanSetMLR() public {
-        // TODO: Verify only operator can set MLR
+        vm.prank(address(0x7)); // Non-operator address
+        vm.expectRevert("UnoRe: Capital Agent Forbidden");
+        capitalAgent.setMLR(newMLR);
+
+        vm.prank(operator);
+        capitalAgent.setMLR(newMLR);
+        assertEq(capitalAgent.MLR(), newMLR);
     }
 
     // 3. Pool Management
     function testAddPool() public {
-        // TODO: Test adding pool with valid parameters
+        address pool = address(0x5);
+        address currency = address(0x6);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+
+        (uint256 totalCapital, address poolCurrency, bool exist, ) = capitalAgent.getPoolInfo(pool);
+        assertEq(totalCapital, 0);
+        assertEq(poolCurrency, currency);
+        assertTrue(exist);
     }
 
     function testAddPoolZeroAddress() public {
-        // TODO: Test adding pool with zero address
+        address currency = address(0x6);
+
+        vm.prank(multiSigWallet);
+        vm.expectRevert("UnoRe: zero address");
+        capitalAgent.addPoolByAdmin(address(0), currency);
     }
 
     function testAddExistingPool() public {
-        // TODO: Test adding already existing pool
+        address pool = address(0x5);
+        address currency = address(0x6);
+
+        vm.startPrank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+        vm.expectRevert("UnoRe: already exist pool");
+        capitalAgent.addPoolByAdmin(pool, currency);
+        vm.stopPrank();
     }
 
     function testRemovePool() public {
-        // TODO: Test removing existing pool
+        address pool = address(0x5);
+        address currency = address(0x6);
+
+        vm.startPrank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+        capitalAgent.removePool(pool);
+        vm.stopPrank();
+
+        (,, bool exist,) = capitalAgent.getPoolInfo(pool);
+        assertFalse(exist);
     }
 
     function testRemoveNonExistentPool() public {
-        // TODO: Test removing non-existent pool
+        address pool = address(0x5);
+
+        vm.prank(multiSigWallet);
+        vm.expectRevert("UnoRe: no exit pool");
+        capitalAgent.removePool(pool);
+    }
     }
 
     function testPoolAddedToPoolList() public {
@@ -122,21 +194,41 @@ contract CapitalAgentTest is Test {
         // TODO: Test setting capital for non-existent pool
     }
 
-    // 4. Policy Management
+ // 4. Policy Management
     function testSetPolicy() public {
-        // TODO: Test setting policy with valid parameters
+        address policy = address(0x7);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(policy);
+
+        (address policyAddress, uint256 utilizedAmount, bool exist) = capitalAgent.getPolicyInfo();
+        assertEq(policyAddress, policy);
+        assertEq(utilizedAmount, 0);
+        assertTrue(exist);
     }
 
     function testSetPolicyAlreadyExists() public {
-        // TODO: Test setting policy when one already exists
-    }
+        address policy1 = address(0x7);
+        address policy2 = address(0x8);
 
-    function testSetPolicyNonFactoryAddress() public {
-        // TODO: Test setting policy from non-factory address
+        vm.startPrank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(policy1);
+        vm.expectRevert("UnoRe: Policy exists");
+        capitalAgent.setPolicyByAdmin(policy2);
+        vm.stopPrank();
     }
 
     function testRemovePolicy() public {
-        // TODO: Test removing existing policy
+        address policy = address(0x7);
+
+        vm.startPrank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(policy);
+        capitalAgent.removePolicy();
+        vm.stopPrank();
+
+        (address policyAddress,, bool exist) = capitalAgent.getPolicyInfo();
+        assertEq(policyAddress, address(0));
+        assertFalse(exist);
     }
 
     function testRemoveNonExistentPolicy() public {
@@ -243,17 +335,36 @@ contract CapitalAgentTest is Test {
         // TODO: Verify correct calculation of total pending capital
     }
 
-    // 9. Event Emissions
+ // 9. Event Emissions
     function testLogAddPoolEvent() public {
-        // TODO: Verify LogAddPool event emission
+        address pool = address(0x5);
+        address currency = address(0x6);
+
+        vm.prank(multiSigWallet);
+        vm.expectEmit(true, true, false, false);
+        emit LogAddPool(pool, currency);
+        capitalAgent.addPoolByAdmin(pool, currency);
     }
 
     function testLogRemovePoolEvent() public {
-        // TODO: Verify LogRemovePool event emission
+        address pool = address(0x5);
+        address currency = address(0x6);
+
+        vm.startPrank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+        vm.expectEmit(true, false, false, false);
+        emit LogRemovePool(pool);
+        capitalAgent.removePool(pool);
+        vm.stopPrank();
     }
 
     function testLogSetPolicyEvent() public {
-        // TODO: Verify LogSetPolicy event emission
+        address policy = address(0x7);
+
+        vm.prank(multiSigWallet);
+        vm.expectEmit(true, false, false, false);
+        emit LogSetPolicy(policy);
+        capitalAgent.setPolicyByAdmin(policy);
     }
 
     function testLogRemovePolicyEvent() public {
