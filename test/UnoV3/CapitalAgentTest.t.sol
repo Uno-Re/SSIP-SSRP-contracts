@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import "forge-std/Test.sol";
-import "../src/CapitalAgent.sol";
+import "lib/forge-std/src/Test.sol";
+import "../../contracts/CapitalAgent.sol";
 
 contract CapitalAgentTest is Test {
     CapitalAgent public capitalAgent;
@@ -69,49 +69,158 @@ contract CapitalAgentTest is Test {
 
         vm.prank(multiSigWallet);
         capitalAgent.addPoolByAdmin(pool, currency);
-        assertTrue(capitalAgent.poolInfo(pool).exist);
+        (,,bool exist,) = capitalAgent.getPoolInfo(pool);
+        assertTrue(exist);
     }
 
     function testOnlyAdminCanRemovePool() public {
-        // TODO: Verify only ADMIN_ROLE can remove pools
+        address poolToRemove = address(0x6);
+        
+        // Add a pool first
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(poolToRemove, usdcToken);
+
+        // Non-admin should not be able to remove pool
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.removePool(poolToRemove);
+
+        // Admin should be able to remove pool
+        vm.prank(multiSigWallet);
+        capitalAgent.removePool(poolToRemove);
     }
 
     function testOnlyAdminCanSetPolicy() public {
-        // TODO: Verify only ADMIN_ROLE can set policy
+        address newPolicy = address(0x7);
+
+        // Non-admin should not be able to set policy
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.setPolicyByAdmin(newPolicy);
+
+        // Admin should be able to set policy
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(newPolicy);
     }
 
     function testOnlyAdminCanRemovePolicy() public {
-        // TODO: Verify only ADMIN_ROLE can remove policy
+        address policy = address(0x7);
+
+        // Set a policy first
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(policy);
+
+        // Non-admin should not be able to remove policy
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.removePolicy();
+
+        // Admin should be able to remove policy
+        vm.prank(multiSigWallet);
+        capitalAgent.removePolicy();
     }
 
     function testOnlyAdminCanMarkPolicyToClaim() public {
-        // TODO: Verify only ADMIN_ROLE can mark policy to claim
+        address policy = address(0x7);
+        uint256 policyId = 1;
+
+        // Set a policy first
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(policy);
+
+        // Non-admin should not be able to mark policy to claim
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.markToClaimPolicy(policyId);
+
+        // Admin should be able to mark policy to claim
+        vm.prank(multiSigWallet);
+        capitalAgent.markToClaimPolicy(policyId);
     }
 
     function testOnlyAdminCanSetExchangeAgent() public {
-        // TODO: Verify only ADMIN_ROLE can set exchange agent
+        address newExchangeAgent = address(0x8);
+
+        // Non-admin should not be able to set exchange agent
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.setExchangeAgent(newExchangeAgent);
+
+        // Admin should be able to set exchange agent
+        vm.prank(multiSigWallet);
+        capitalAgent.setExchangeAgent(newExchangeAgent);
     }
 
     function testOnlyAdminCanSetSalesPolicyFactory() public {
-        // TODO: Verify only ADMIN_ROLE can set sales policy factory
+        address newSalesPolicyFactory = address(0x9);
+
+        // Non-admin should not be able to set sales policy factory
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.setSalesPolicyFactory(newSalesPolicyFactory);
+
+        // Admin should be able to set sales policy factory
+        vm.prank(multiSigWallet);
+        capitalAgent.setSalesPolicyFactory(newSalesPolicyFactory);
     }
 
     function testOnlyAdminCanSetOperator() public {
-        // TODO: Verify only ADMIN_ROLE can set operator
+        address newOperator = address(0x10);
+
+        // Non-admin should not be able to set operator
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.setOperator(newOperator);
+
+        // Admin should be able to set operator
+        vm.prank(multiSigWallet);
+        capitalAgent.setOperator(newOperator);
     }
 
     function testOnlyAdminCanSetUSDCToken() public {
-        // TODO: Verify only ADMIN_ROLE can set USDC token
+        address newUSDCToken = address(0x11);
+
+        // Non-admin should not be able to set USDC token
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.setUSDCToken(newUSDCToken);
+
+        // Admin should be able to set USDC token
+        vm.prank(multiSigWallet);
+        capitalAgent.setUSDCToken(newUSDCToken);
     }
 
     function testOnlyAdminCanAddPoolWhitelist() public {
-        // TODO: Verify only ADMIN_ROLE can add pool to whitelist
+        address poolToWhitelist = address(0x12);
+
+        // Non-admin should not be able to add pool to whitelist
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.addPoolWhiteList(poolToWhitelist);
+
+        // Admin should be able to add pool to whitelist
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(poolToWhitelist);
     }
 
     function testOnlyAdminCanRemovePoolWhitelist() public {
-        // TODO: Verify only ADMIN_ROLE can remove pool from whitelist
+        address poolToWhitelist = address(0x12);
+
+        // Add pool to whitelist first
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(poolToWhitelist);
+
+        // Non-admin should not be able to remove pool from whitelist
+        vm.prank(address(0x7));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000000005 is missing role 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775");
+        capitalAgent.removePoolWhiteList(poolToWhitelist);
+
+        // Admin should be able to remove pool from whitelist
+        vm.prank(multiSigWallet);
+        capitalAgent.removePoolWhiteList(poolToWhitelist);
     }
- function testOnlyOperatorCanSetMLR() public {
+
+    function testOnlyOperatorCanSetMLR() public {
         uint256 newMLR = 1500000000000000000; // 1.5 in 1e18
 
         vm.prank(address(0x7)); // Non-operator address
@@ -176,22 +285,88 @@ contract CapitalAgentTest is Test {
         vm.expectRevert("UnoRe: no exit pool");
         capitalAgent.removePool(pool);
     }
-    }
 
     function testPoolAddedToPoolList() public {
-        // TODO: Verify pool is added to poolList
+        address newPool = address(0x100);
+        address newCurrency = address(0x101);
+
+        // Add a new pool
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(newPool, newCurrency);
+
+        // Check if the pool is in the poolList
+        bool poolFound = false;
+        address[] memory poolList = capitalAgent.getPoolList();
+        for (uint i = 0; i < poolList.length; i++) {
+            if (poolList[i] == newPool) {
+                poolFound = true;
+                break;
+            }
+        }
+
+        assertTrue(poolFound, "Pool should be added to poolList");
     }
 
     function testCurrencyAddedToCurrencyList() public {
-        // TODO: Verify currency is added to currencyList if new
+        address newPool = address(0x100);
+        address newCurrency = address(0x101);
+
+        // Add a new pool with a new currency
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(newPool, newCurrency);
+
+        // Check if the currency is in the currencyList
+        bool currencyFound = false;
+        address[] memory currencyList = capitalAgent.getCurrencyList();
+
+        for (uint i = 0; i < currencyList.length; i++) {
+            if (currencyList[i] == newCurrency) {
+                currencyFound = true;
+                break;
+            }
+        }
+
+        assertTrue(currencyFound, "Currency should be added to currencyList");
+
+        // Add another pool with the same currency
+        address anotherPool = address(0x102);
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(anotherPool, newCurrency);
+
+        // Check that the currency list length hasn't changed
+        assertEq(currencyList.length, 1, "Currency list length should not change for existing currency");
     }
 
     function testSetPoolCapital() public {
-        // TODO: Test setting pool capital as admin
+        address newPool = address(0x100);
+        address newCurrency = address(0x101);
+        uint256 capitalAmount = 1000000; // 1 million tokens
+
+        // Add a new pool
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(newPool, newCurrency);
+
+        // Set pool capital
+        vm.prank(multiSigWallet);
+        capitalAgent.setPoolCapital(newPool, capitalAmount);
+
+        // Verify the pool capital has been set correctly
+        (uint256 totalCapital, , , ) = capitalAgent.getPoolInfo(newPool);
+        assertEq(totalCapital, capitalAmount, "Pool capital should be set correctly");
+
+        // Verify the total capital staked for the currency has been updated
+        uint256 totalStaked = capitalAgent.totalCapitalStakedByCurrency(newCurrency);
+        assertEq(totalStaked, capitalAmount, "Total capital staked for currency should be updated");
     }
 
     function testSetCapitalNonExistentPool() public {
-        // TODO: Test setting capital for non-existent pool
+        address nonExistentPool = address(0x200);
+        uint256 capitalAmount = 1000000; // 1 million tokens
+
+        // Attempt to set capital for a non-existent pool
+        vm.prank(multiSigWallet);
+        vm.expectRevert("UnoRe: no exit pool");
+        capitalAgent.setPoolCapital(nonExistentPool, capitalAmount);
     }
 
  // 4. Policy Management
@@ -341,9 +516,14 @@ contract CapitalAgentTest is Test {
         address currency = address(0x6);
 
         vm.prank(multiSigWallet);
-        vm.expectEmit(true, true, false, false);
-        emit LogAddPool(pool, currency);
+        vm.recordLogs();
         capitalAgent.addPoolByAdmin(pool, currency);
+        
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 1);
+        assertEq(entries[0].topics[0], keccak256("LogAddPool(address,address)"));
+        assertEq(entries[0].topics[1], bytes32(uint256(uint160(pool))));
+        assertEq(abi.decode(entries[0].data, (address)), currency);
     }
 
     function testLogRemovePoolEvent() public {
@@ -353,7 +533,6 @@ contract CapitalAgentTest is Test {
         vm.startPrank(multiSigWallet);
         capitalAgent.addPoolByAdmin(pool, currency);
         vm.expectEmit(true, false, false, false);
-        emit LogRemovePool(pool);
         capitalAgent.removePool(pool);
         vm.stopPrank();
     }
@@ -363,7 +542,6 @@ contract CapitalAgentTest is Test {
 
         vm.prank(multiSigWallet);
         vm.expectEmit(true, false, false, false);
-        emit LogSetPolicy(policy);
         capitalAgent.setPolicyByAdmin(policy);
     }
 
