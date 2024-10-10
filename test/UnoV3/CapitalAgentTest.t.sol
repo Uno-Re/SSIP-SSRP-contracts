@@ -14,11 +14,28 @@ contract CapitalAgentTest is Test {
     address public salesPolicyFactory;
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
+    event LogAddPool(address indexed, address);
+    event LogAddPool(address indexed);
     event LogRemovePool(address indexed);
     event LogSetPolicy(address indexed);
     event LogRemovePolicy(address indexed);
     event LogUpdatePoolCapital(address indexed, uint256, uint256);
-    event LogUpdatePolicyCoverage(address indexed,uint256, uint256, uint256);
+    event LogUpdatePolicyCoverage(
+        address indexed,
+        uint256,
+        uint256,
+        uint256
+    );
+    event LogUpdatePolicyExpired(address indexed, uint256);
+    event LogMarkToClaimPolicy(address indexed, uint256);
+    event LogSetMLR(address indexed, address indexed, uint256 _MLR);
+    event LogSetExchangeAgent(address indexed, address indexed, address);
+    event LogSetSalesPolicyFactory(address indexed);
+    event LogAddPoolWhiteList(address indexed);
+    event LogRemovePoolWhiteList(address indexed);
+    event LogSetOperator(address indexed);
+    event LogSetUSDC(address indexed);
+    event LogupdatePoolWithdrawPendingCapital(address indexed, uint256);
 
     function setUp() public {
         admin = address(this);
@@ -473,11 +490,38 @@ contract CapitalAgentTest is Test {
     }
 
     function testRemoveNonExistentPolicy() public {
-        // TODO: Test removing non-existent policy
+        // Ensure no policy exists initially
+        (,, bool exists) = capitalAgent.getPolicyInfo();
+        assertFalse(exists, "Policy should not exist initially");
+
+        // Attempt to remove a non-existent policy
+        vm.prank(multiSigWallet);
+        vm.expectRevert("UnoRe: no exit pool");
+        capitalAgent.removePolicy();
+
+        // Verify that the state hasn't changed
+        (,, exists) = capitalAgent.getPolicyInfo();
+        assertFalse(exists, "Policy should still not exist after failed removal");
     }
 
     function testPolicyInfoUpdated() public {
-        // TODO: Verify policy info is updated correctly
+        address testPolicy = address(0x123);
+
+        // Check initial state
+        (address initialPolicyAddress, uint256 initialUtilizedAmount, bool initialExists) = capitalAgent.getPolicyInfo();
+        assertEq(initialPolicyAddress, address(0), "Initial policy address should be zero");
+        assertEq(initialUtilizedAmount, 0, "Initial utilized amount should be zero");
+        assertFalse(initialExists, "Policy should not exist initially");
+
+        // Set the policy
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(testPolicy);
+
+        // Check updated state
+        (address updatedPolicyAddress, uint256 updatedUtilizedAmount, bool updatedExists) = capitalAgent.getPolicyInfo();
+        assertEq(updatedPolicyAddress, testPolicy, "Policy address should be updated");
+        assertEq(updatedUtilizedAmount, 0, "Utilized amount should still be zero");
+        assertTrue(updatedExists, "Policy should now exist");
     }
 
     // 5. Capital Operations
@@ -663,35 +707,107 @@ contract CapitalAgentTest is Test {
     }
 
     function testLogSetMLREvent() public {
-        // TODO: Verify LogSetMLR event emission
+        uint256 newMLR = 2 * 1e18; // 200%
+
+        vm.expectEmit(true, true, true, true);
+        emit LogSetMLR(operator, address(capitalAgent), newMLR);
+
+        vm.prank(operator);
+        capitalAgent.setMLR(newMLR);
+        assertEq(capitalAgent.MLR(), newMLR, "MLR not updated correctly");
     }
 
     function testLogSetExchangeAgentEvent() public {
-        // TODO: Verify LogSetExchangeAgent event emission
+        address newExchangeAgent = address(0x123);
+
+        vm.expectEmit(true, true, true, true);
+        emit LogSetExchangeAgent(multiSigWallet, address(capitalAgent), newExchangeAgent);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setExchangeAgent(newExchangeAgent);
+
+        assertEq(capitalAgent.exchangeAgent(), newExchangeAgent, "Exchange agent not updated correctly");
     }
 
     function testLogSetSalesPolicyFactoryEvent() public {
-        // TODO: Verify LogSetSalesPolicyFactory event emission
+        address newSalesPolicyFactory = address(0x123);
+
+        vm.expectEmit(true, true, true, true);
+        emit LogSetSalesPolicyFactory(newSalesPolicyFactory);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setSalesPolicyFactory(newSalesPolicyFactory);
+
+        assertEq(capitalAgent.salesPolicyFactory(), newSalesPolicyFactory);
     }
 
     function testLogAddPoolWhiteListEvent() public {
-        // TODO: Verify LogAddPoolWhiteList event emission
+        address poolToWhitelist = address(0x123);
+
+        vm.expectEmit(true, true, true, true);
+        emit LogAddPoolWhiteList(poolToWhitelist);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(poolToWhitelist);
+
+        assertTrue(capitalAgent.poolWhiteList(poolToWhitelist));
     }
 
     function testLogRemovePoolWhiteListEvent() public {
-        // TODO: Verify LogRemovePoolWhiteList event emission
+        address poolToRemove = address(0x123);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(poolToRemove);
+
+        vm.expectEmit(true, true, true, true);
+        emit LogRemovePoolWhiteList(poolToRemove);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.removePoolWhiteList(poolToRemove);
+
+        assertFalse(capitalAgent.poolWhiteList(poolToRemove));
     }
 
     function testLogSetOperatorEvent() public {
-        // TODO: Verify LogSetOperator event emission
+        address newOperator = address(0x456);
+
+        vm.expectEmit(true, true, true, true);
+        emit LogSetOperator(newOperator);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setOperator(newOperator);
+
+        assertEq(capitalAgent.operator(), newOperator);
     }
 
     function testLogSetUSDCEvent() public {
-        // TODO: Verify LogSetUSDC event emission
+        address newUSDCToken = address(0x789);
+
+        vm.expectEmit(true, true, true, true);
+        emit LogSetUSDC(newUSDCToken);
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setUSDCToken(newUSDCToken);
+
+        assertEq(capitalAgent.usdcToken(), newUSDCToken);
     }
 
     function testLogUpdatePoolWithdrawPendingCapitalEvent() public {
-        // TODO: Verify LogupdatePoolWithdrawPendingCapital event emission
+        address testPool = address(0xABC);
+        address testCurrency = address(0xDEF);
+        uint256 pendingAmount = 100 ether;
+
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(testPool, testCurrency);
+
+        vm.expectEmit(true, true, true, true);
+        emit LogupdatePoolWithdrawPendingCapital(testPool, pendingAmount);
+
+        vm.prank(testPool);
+        capitalAgent.updatePoolWithdrawPendingCapital(testPool, pendingAmount, true);
+
+        (,,, uint256 totalWithdrawPendingCapital) = capitalAgent.getPoolInfo(testPool);
+        assertEq(totalWithdrawPendingCapital, pendingAmount);
     }
 
     // 10. Edge Cases and Boundary Testing
