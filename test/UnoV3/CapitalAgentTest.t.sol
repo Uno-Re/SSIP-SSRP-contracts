@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
 import "lib/forge-std/src/Test.sol";
@@ -11,10 +11,14 @@ contract CapitalAgentTest is Test {
     address public exchangeAgent;
     address public usdcToken;
     address public multiSigWallet;
+    address public salesPolicyFactory;
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     event LogRemovePool(address indexed);
     event LogSetPolicy(address indexed);
+    event LogRemovePolicy(address indexed);
+    event LogUpdatePoolCapital(address indexed, uint256, uint256);
+    event LogUpdatePolicyCoverage(address indexed,uint256, uint256, uint256);
 
     function setUp() public {
         admin = address(this);
@@ -22,10 +26,12 @@ contract CapitalAgentTest is Test {
         exchangeAgent = address(0x2);
         usdcToken = address(0x3);
         multiSigWallet = address(0x4);
-
+        salesPolicyFactory = address(0x99);
         vm.prank(admin);
         capitalAgent = new CapitalAgent();
         capitalAgent.initialize(exchangeAgent, usdcToken, multiSigWallet, operator);
+        vm.prank(multiSigWallet);
+        capitalAgent.setSalesPolicyFactory(salesPolicyFactory);
     }
 
     // 1. Initialization
@@ -608,11 +614,40 @@ contract CapitalAgentTest is Test {
     }
 
     function testLogRemovePolicyEvent() public {
-        // TODO: Verify LogRemovePolicy event emission
+        address policy = address(0x7);
+
+        vm.prank(salesPolicyFactory);
+        capitalAgent.setPolicy(policy);
+        
+        vm.prank(multiSigWallet);
+        // Prepare to check for event emission
+        vm.expectEmit(true, true, true, true);
+        emit LogRemovePolicy(policy);
+        // Action: Remove the policy
+        capitalAgent.removePolicy();
     }
 
     function testLogUpdatePoolCapitalEvent() public {
-        // TODO: Verify LogUpdatePoolCapital event emission
+        address pool = address(0x5);
+        address currency = address(0x6);
+        uint256 initialStakingAmount = 100 ether;
+        
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+        
+        vm.expectEmit(true, true, true, true);
+        emit LogUpdatePoolCapital(pool, initialStakingAmount, initialStakingAmount);
+        // Action: Simulate staking
+        vm.prank(pool);
+        capitalAgent.SSIPStaking(initialStakingAmount);
+        
+        (uint256 poolCapital, address poolCurrency, bool exists, ) = capitalAgent.getPoolInfo(pool);
+        assertEq(poolCapital, initialStakingAmount, "Pool capital not updated correctly");
+        assertEq(currency, poolCurrency, "Pool currency mismatch");
+        assertTrue(exists, "Pool should exist");
+        
+        uint256 totalCapitalStaked = capitalAgent.totalCapitalStakedByCurrency(currency);
+        assertEq(totalCapitalStaked, initialStakingAmount, "Total capital staked not updated correctly");
     }
 
     function testLogUpdatePolicyCoverageEvent() public {
