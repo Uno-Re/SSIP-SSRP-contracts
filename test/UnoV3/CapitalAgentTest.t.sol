@@ -2,23 +2,38 @@
 pragma solidity ^0.8.23;
 
 import "lib/forge-std/src/Test.sol";
+
 import "../../contracts/CapitalAgent.sol";
+import "../../contracts/SalesPolicy.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract CapitalAgentTest is Test {
+    IERC20 public iERC20;
     CapitalAgent public capitalAgent;
+    SalesPolicy public salesPolicy;
     address public admin;
     address public operator;
     address public exchangeAgent;
     address public usdcToken;
+    address public factory;
     address public multiSigWallet;
     address public salesPolicyFactory;
+    address public policyBuyer;
+    address public premiumPool;
+    address[] public assets;
+    address[] public protocols;
+    uint256[] public coverageAmount;
+    uint256[] public coverageDuration;
+    uint256 public policyPriceInUSDC;
+    uint256 public signedTime;
+    address public premiumCurrency;
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     event LogRemovePool(address indexed);
     event LogSetPolicy(address indexed);
     event LogRemovePolicy(address indexed);
     event LogUpdatePoolCapital(address indexed, uint256, uint256);
-    event LogUpdatePolicyCoverage(address indexed,uint256, uint256, uint256);
+    event LogUpdatePolicyCoverage(address indexed, uint256, uint256, uint256);
 
     function setUp() public {
         admin = address(this);
@@ -27,11 +42,48 @@ contract CapitalAgentTest is Test {
         usdcToken = address(0x3);
         multiSigWallet = address(0x4);
         salesPolicyFactory = address(0x99);
+        premiumPool = address(0x894);
+        factory = address(0x111);
         vm.prank(admin);
+
         capitalAgent = new CapitalAgent();
         capitalAgent.initialize(exchangeAgent, usdcToken, multiSigWallet, operator);
         vm.prank(multiSigWallet);
         capitalAgent.setSalesPolicyFactory(salesPolicyFactory);
+
+        policyBuyer = address(0x1234);
+        assets = new address[](1);
+        assets[0] = address(0x2345);
+        protocols = new address[](1);
+        protocols[0] = address(0x3456);
+        coverageAmount = new uint256[](1);
+        coverageAmount[0] = 1000 * 1e6; // 1000 USDC
+        coverageDuration = new uint256[](1);
+        coverageDuration[0] = 30 days;
+        policyPriceInUSDC = 50 * 1e6; // 50 USDC
+        signedTime = block.timestamp;
+        premiumCurrency = usdcToken;
+
+        salesPolicy = new SalesPolicy(factory, exchangeAgent, premiumPool, address(capitalAgent), usdcToken);
+    }
+
+    // helper
+    function generateSignature(uint256 nonce) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+        bytes32 messageHash = keccak256(
+            abi.encodePacked(
+                policyPriceInUSDC,
+                protocols,
+                coverageDuration,
+                coverageAmount,
+                signedTime,
+                premiumCurrency,
+                nonce,
+                policyBuyer,
+                block.chainid
+            )
+        );
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+        return vm.sign(uint256(keccak256(abi.encodePacked("signer_private_key"))), ethSignedMessageHash);
     }
 
     // 1. Initialization
@@ -72,37 +124,29 @@ contract CapitalAgentTest is Test {
     function testOnlyAdminCanAddPool() public {
         address pool = address(0x5);
         address currency = address(0x6);
-        
+
         vm.prank(address(0x7)); // Non-admin address
         // Use the expected revert for AccessControl
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.addPoolByAdmin(pool, currency);
 
         // Test with a valid admin account
         vm.prank(multiSigWallet); // Admin address
         capitalAgent.addPoolByAdmin(pool, currency);
-        (,,bool exist,) = capitalAgent.getPoolInfo(pool);
+        (, , bool exist, ) = capitalAgent.getPoolInfo(pool);
         assertTrue(exist);
     }
 
     function testOnlyAdminCanRemovePool() public {
         address poolToRemove = address(0x6);
-        
+
         // Add a pool first
         vm.prank(multiSigWallet);
         capitalAgent.addPoolByAdmin(poolToRemove, usdcToken);
 
         // Non-admin should not be able to remove pool
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));        
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.removePool(poolToRemove);
 
         // Admin should be able to remove pool
@@ -115,11 +159,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to set policy
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));        
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.setPolicyByAdmin(newPolicy);
 
         // Admin should be able to set policy
@@ -136,11 +176,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to remove policy
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
 
         capitalAgent.removePolicy();
 
@@ -150,25 +186,50 @@ contract CapitalAgentTest is Test {
     }
 
     function testOnlyAdminCanMarkPolicyToClaim() public {
-        address policy = address(0x7);
-        uint256 policyId = 1;
+        address policy = address(salesPolicy);
+        uint256 nonce = 0;
+
+        // Generate signature
+        (uint8 v, bytes32 r, bytes32 s) = generateSignature(nonce);
 
         // Set a policy first
         vm.prank(multiSigWallet);
         capitalAgent.setPolicyByAdmin(policy);
 
+        // Buy a policy
+        vm.startPrank(policyBuyer);
+        deal(usdcToken, policyBuyer, policyPriceInUSDC);
+        IERC20(usdcToken).approve(address(salesPolicy), policyPriceInUSDC);
+        salesPolicy.buyPolicy(
+            assets,
+            protocols,
+            coverageAmount,
+            coverageDuration,
+            policyPriceInUSDC,
+            signedTime,
+            premiumCurrency,
+            r,
+            s,
+            v,
+            nonce
+        );
+        vm.stopPrank();
+
+        // Get the policy ID
+        uint256 policyId = salesPolicy.allPoliciesLength() - 1;
+
         // Non-admin should not be able to mark policy to claim
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert("UnoRe: Capital Agent Forbidden");
         capitalAgent.markToClaimPolicy(policyId);
 
         // Admin should be able to mark policy to claim
         vm.prank(multiSigWallet);
         capitalAgent.markToClaimPolicy(policyId);
+
+        // Verify that the policy is marked as claimed
+        (, , , bool exist, ) = salesPolicy.getPolicyData(policyId);
+        assertFalse(exist, "Policy should be marked as claimed (not exist)");
     }
 
     function testOnlyAdminCanSetExchangeAgent() public {
@@ -176,11 +237,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to set exchange agent
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.setExchangeAgent(newExchangeAgent);
 
         // Admin should be able to set exchange agent
@@ -193,11 +250,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to set sales policy factory
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.setSalesPolicyFactory(newSalesPolicyFactory);
 
         // Admin should be able to set sales policy factory
@@ -210,11 +263,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to set operator
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.setOperator(newOperator);
 
         // Admin should be able to set operator
@@ -227,11 +276,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to set USDC token
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.setUSDCToken(newUSDCToken);
 
         // Admin should be able to set USDC token
@@ -244,11 +289,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to add pool to whitelist
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.addPoolWhiteList(poolToWhitelist);
 
         // Admin should be able to add pool to whitelist
@@ -265,11 +306,7 @@ contract CapitalAgentTest is Test {
 
         // Non-admin should not be able to remove pool from whitelist
         vm.prank(address(0x7));
-        vm.expectRevert(abi.encodeWithSelector(
-            0xe2517d3f, 
-            address(0x7), 
-            ADMIN_ROLE
-        ));
+        vm.expectRevert(abi.encodeWithSelector(0xe2517d3f, address(0x7), ADMIN_ROLE));
         capitalAgent.removePoolWhiteList(poolToWhitelist);
 
         // Admin should be able to remove pool from whitelist
@@ -331,7 +368,7 @@ contract CapitalAgentTest is Test {
         capitalAgent.removePool(pool);
         vm.stopPrank();
 
-        (,, bool exist,) = capitalAgent.getPoolInfo(pool);
+        (, , bool exist, ) = capitalAgent.getPoolInfo(pool);
         assertFalse(exist);
     }
 
@@ -426,7 +463,7 @@ contract CapitalAgentTest is Test {
         capitalAgent.setPoolCapital(nonExistentPool, capitalAmount);
     }
 
- // 4. Policy Management
+    // 4. Policy Management
     function testSetPolicy() public {
         address policy = address(0x7);
 
@@ -444,13 +481,13 @@ contract CapitalAgentTest is Test {
         address policy2 = address(0x8);
 
         vm.startPrank(multiSigWallet);
-        
+
         // Set the first policy
         capitalAgent.setPolicyByAdmin(policy1);
-        
+
         // Attempt to set a second policy, which should fail
         capitalAgent.setPolicyByAdmin(policy2);
-        
+
         vm.stopPrank();
 
         // Verify that the policy is still set to policy1
@@ -467,13 +504,54 @@ contract CapitalAgentTest is Test {
         capitalAgent.removePolicy();
         vm.stopPrank();
 
-        (address policyAddress,, bool exist) = capitalAgent.getPolicyInfo();
+        (address policyAddress, , bool exist) = capitalAgent.getPolicyInfo();
         assertEq(policyAddress, address(0));
         assertFalse(exist);
     }
 
     function testRemoveNonExistentPolicy() public {
-        // TODO: Test removing non-existent policy
+        vm.expectRevert("UnoRe: non existing policy on Capital Agent");
+        vm.prank(multiSigWallet);
+        capitalAgent.removePolicy();
+    }
+
+    function testSSIPStaking() public {
+        address ssipAddress = address(0x123); // Dummy address for the SSIP
+        address currency = address(0x456); // Dummy address for the currency
+        uint256 stakingAmount = 1000; // Amount to stake
+
+        //Set up the pool
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(ssipAddress, currency);
+
+        //Whitelist the pool
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(ssipAddress);
+
+        //Get initial pool info
+        (uint256 initialCapital, address poolCurrency, bool exists, uint256 initialPendingCapital) = capitalAgent.getPoolInfo(
+            ssipAddress
+        );
+        assertEq(initialCapital, 0, "Initial capital should be zero");
+        assertEq(poolCurrency, currency, "Pool currency should match");
+        assertTrue(exists, "Pool should exist");
+        assertEq(initialPendingCapital, 0, "Initial pending capital should be zero");
+
+        //Expect event emission
+        vm.expectEmit(true, false, false, true);
+        emit LogUpdatePoolCapital(ssipAddress, stakingAmount, stakingAmount);
+
+        //Perform staking
+        vm.prank(ssipAddress);
+        capitalAgent.SSIPStaking(stakingAmount);
+
+        //Verify updated pool info
+        (uint256 updatedCapital, , , ) = capitalAgent.getPoolInfo(ssipAddress);
+        assertEq(updatedCapital, stakingAmount, "Updated capital should match staking amount");
+
+        //Verify total capital staked for the currency
+        uint256 totalCapitalStaked = capitalAgent.totalCapitalStakedByCurrency(currency);
+        assertEq(totalCapitalStaked, stakingAmount, "Total capital staked for currency should match staking amount");
     }
 
     function testPolicyInfoUpdated() public {
@@ -499,10 +577,6 @@ contract CapitalAgentTest is Test {
 
     function testSSIPPolicyClaimExceedingCoverage() public {
         // TODO: Test SSIP policy claim with amount exceeding coverage
-    }
-
-    function testSSIPStaking() public {
-        // TODO: Test SSIP staking with valid amount
     }
 
     function testUpdatePoolWithdrawPendingCapitalAdd() public {
@@ -576,7 +650,7 @@ contract CapitalAgentTest is Test {
         // TODO: Verify correct calculation of total pending capital
     }
 
- // 9. Event Emissions
+    // 9. Event Emissions
     function testLogAddPoolEvent() public {
         address pool = address(0x5);
         address currency = address(0x6);
@@ -584,7 +658,7 @@ contract CapitalAgentTest is Test {
         vm.prank(multiSigWallet);
         vm.recordLogs();
         capitalAgent.addPoolByAdmin(pool, currency);
-        
+
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 1);
         assertEq(entries[0].topics[0], keccak256("LogAddPool(address,address)"));
@@ -599,7 +673,7 @@ contract CapitalAgentTest is Test {
         vm.startPrank(multiSigWallet);
         capitalAgent.addPoolByAdmin(pool, currency);
         vm.expectEmit(true, false, false, true);
-        emit LogRemovePool(pool);  
+        emit LogRemovePool(pool);
         capitalAgent.removePool(pool);
         vm.stopPrank();
     }
@@ -618,7 +692,7 @@ contract CapitalAgentTest is Test {
 
         vm.prank(salesPolicyFactory);
         capitalAgent.setPolicy(policy);
-        
+
         vm.prank(multiSigWallet);
         // Prepare to check for event emission
         vm.expectEmit(true, true, true, true);
@@ -631,21 +705,21 @@ contract CapitalAgentTest is Test {
         address pool = address(0x5);
         address currency = address(0x6);
         uint256 initialStakingAmount = 100 ether;
-        
+
         vm.prank(multiSigWallet);
         capitalAgent.addPoolByAdmin(pool, currency);
-        
+
         vm.expectEmit(true, true, true, true);
         emit LogUpdatePoolCapital(pool, initialStakingAmount, initialStakingAmount);
         // Action: Simulate staking
         vm.prank(pool);
         capitalAgent.SSIPStaking(initialStakingAmount);
-        
+
         (uint256 poolCapital, address poolCurrency, bool exists, ) = capitalAgent.getPoolInfo(pool);
         assertEq(poolCapital, initialStakingAmount, "Pool capital not updated correctly");
         assertEq(currency, poolCurrency, "Pool currency mismatch");
         assertTrue(exists, "Pool should exist");
-        
+
         uint256 totalCapitalStaked = capitalAgent.totalCapitalStakedByCurrency(currency);
         assertEq(totalCapitalStaked, initialStakingAmount, "Total capital staked not updated correctly");
     }
@@ -703,8 +777,13 @@ contract CapitalAgentTest is Test {
         // TODO: Test with minimum (1) values where applicable
     }
 
-    function testZeroValues() public {
-        // TODO: Test with zero values where applicable and should be rejected
+    function testZeroValueOnMLR() public {
+        uint256 invalidMLR = 0;
+
+        vm.expectRevert("UnoRe: MLR cannot be zero");
+
+        vm.prank(operator);
+        capitalAgent.setMLR(invalidMLR);
     }
 
     // 11. Integration Tests

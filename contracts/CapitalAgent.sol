@@ -45,7 +45,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     uint256 public totalUtilizedAmount;
 
-    // Maximum Leverage Ratio 
+    // Maximum Leverage Ratio
     uint256 public MLR;
 
     uint256 public constant CALC_PRECISION = 1e18;
@@ -199,7 +199,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
             }
         }
 
-        if(!contains){
+        if (!contains) {
             poolList.push(_ssip);
             emit LogAddPool(_ssip);
         }
@@ -291,7 +291,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @dev remove sales policy from capital agent, can only be call by admin role
      **/
     function removePolicy() external onlyRole(ADMIN_ROLE) nonReentrant {
-        require(policyInfo.exist, "UnoRe: no exit pool");
+        require(policyInfo.exist, "UnoRe: non existing policy on Capital Agent");
         totalUtilizedAmount = 0;
         address _policy = policyInfo.policy;
         policyInfo.policy = address(0);
@@ -453,7 +453,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         address currency = poolInfo[_pool].currency;
         uint256 totalCapitalStakedInUSDC;
         uint256 totalWithdrawPendingCapital;
-        
+
         //Withdraw amount in USDC
         uint256 withdrawInUSDC = _convertTokenToUSDC(currency, _withdrawAmount);
         //Total Capital Staked in Pools
@@ -462,7 +462,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         totalWithdrawPendingCapital = _getTotalPendingCapitalInUSDC();
         uint256 totalInPoolInUSDC = totalCapitalStakedInUSDC - totalWithdrawPendingCapital;
 
-        bool isMLRPass = totalUtilizedAmount <= (totalInPoolInUSDC - withdrawInUSDC) * MLR / CALC_PRECISION;
+        bool isMLRPass = totalUtilizedAmount <= ((totalInPoolInUSDC - withdrawInUSDC) * MLR) / CALC_PRECISION;
 
         return isMLRPass;
     }
@@ -510,17 +510,20 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
         uint256 totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();
         uint256 totalCapitalPendingInUSDC = _getTotalPendingCapitalInUSDC();
-        return totalUtilizedAmount + _newCoverageAmount <= ((totalCapitalStakedInUSDC - totalCapitalPendingInUSDC) * MLR) / CALC_PRECISION;
+        return
+            totalUtilizedAmount + _newCoverageAmount <=
+            ((totalCapitalStakedInUSDC - totalCapitalPendingInUSDC) * MLR) / CALC_PRECISION;
     }
 
     /**
      * @dev set new MLR, can only be called by operator
-     * @dev MLR(Maximum Leverage Ratio) is a percentage value that defines the amount of coverage 
+     * @dev MLR(Maximum Leverage Ratio) is a percentage value that defines the amount of coverage
      * we can sell based on the amount of tokens staked in all pools. ie. MLR = 2000000000000000000 means that
-     * we can sell an amount of coverage(in USD) <= to 2X the amount(in USD) of tokens Staked in all pools 
+     * we can sell an amount of coverage(in USD) <= to 2X the amount(in USD) of tokens Staked in all pools
      * @param _MLR new value to update
      **/
     function setMLR(uint256 _MLR) external onlyOperator nonReentrant {
+        require(_MLR > 0, "UnoRe: MLR cannot be zero");
         MLR = _MLR;
         emit LogSetMLR(msg.sender, address(this), _MLR);
     }
