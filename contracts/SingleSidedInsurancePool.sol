@@ -239,15 +239,14 @@ contract SingleSidedInsurancePool is
         string calldata _symbol,
         address _factory,
         address _currency,
-        uint256 _rewardMultiplier,
-        uint256 _SCR
+        uint256 _rewardMultiplier
     ) external nonReentrant onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_factory != address(0), "UnoRe: zero factory address");
         riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
         poolInfo.lastRewardBlock = block.number;
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
-        ICapitalAgent(capitalAgent).addPool(address(this), _currency, _SCR);
+        ICapitalAgent(capitalAgent).addPool(address(this), _currency);
         emit RiskPoolCreated(address(this), riskPool);
     }
 
@@ -327,7 +326,7 @@ contract SingleSidedInsurancePool is
      */
     function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused isStartTime nonReentrant {
         _harvest(msg.sender);
-        require(ICapitalAgent(capitalAgent).checkCapitalByMCR(address(this), _amount), "UnoRe: minimum capital underflow");
+        require(ICapitalAgent(capitalAgent).checkCapitalByMLR(address(this), _amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
         uint256 amount = userInfo[msg.sender].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();

@@ -2,7 +2,7 @@
 pragma solidity =0.8.23;
 
 interface ICapitalAgent {
-    function addPool(address _ssip, address _currency, uint256 _scr) external;
+    function addPool(address _ssip, address _currency) external;
 
     function setPolicy(address _policy) external;
 
@@ -12,7 +12,7 @@ interface ICapitalAgent {
 
     function SSIPPolicyCaim(uint256 _withdrawAmount, uint256 _policyId, bool _isMigrate) external;
 
-    function checkCapitalByMCR(address _pool, uint256 _withdrawAmount) external view returns (bool);
+    function checkCapitalByMLR(address _pool, uint256 _withdrawAmount) external view returns (bool);
 
     function checkCoverageByMLR(uint256 _coverageAmount) external view returns (bool);
 
@@ -26,7 +26,7 @@ interface ICapitalAgent {
 
     function exchangeAgent() external view returns (address);
 
-    function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool, uint256);
+    function getPoolInfo(address _pool) external view returns (uint256, address, bool, uint256);
 
     function updatePoolWithdrawPendingCapital(address _pool, uint256 _amount, bool) external;
 }
