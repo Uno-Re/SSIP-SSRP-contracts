@@ -115,6 +115,16 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         return (_poolInfo.totalCapital, _poolInfo.currency, _poolInfo.exist, _poolInfo.totalWithdrawPendingCapital);
     }
 
+    // Getter function to return the poolList array
+    function getPoolList() public view returns (address[] memory) {
+        return poolList;
+    }
+
+    // Getter function to return the curencyList array
+    function getCurrencyList() public view returns (address[] memory) {
+        return currencyList;
+    }
+
     /**
      * @dev set sales policy factory, can only be call by admin role
      * @param _factory new sales policy factory address
