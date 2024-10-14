@@ -5,7 +5,7 @@ import "lib/forge-std/src/Test.sol";
 
 import "../../contracts/CapitalAgent.sol";
 import "../../contracts/SalesPolicy.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../contracts/Mocks/MockUSDC.sol";
 
 contract CapitalAgentTest is Test {
     IERC20 public iERC20;
@@ -26,6 +26,7 @@ contract CapitalAgentTest is Test {
     uint256[] public coverageDuration;
     uint256 public policyPriceInUSDC;
     uint256 public signedTime;
+    address user = address(14574);
     address public premiumCurrency;
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
@@ -210,8 +211,8 @@ contract CapitalAgentTest is Test {
 
         // Buy a policy
         vm.startPrank(policyBuyer);
-        deal(usdcToken, policyBuyer, policyPriceInUSDC);
-        IERC20(usdcToken).approve(address(salesPolicy), policyPriceInUSDC);
+        deal(usdcToken, policyBuyer, policyPriceInUSDC, true);
+        MockUSDC(usdcToken).approve(address(salesPolicy), policyPriceInUSDC);
         salesPolicy.buyPolicy(
             assets,
             protocols,
@@ -586,16 +587,79 @@ contract CapitalAgentTest is Test {
     }
 
     function testUpdateWithdrawPendingCapitalNonExistentPool() public {
-        // TODO: Test updating withdraw pending capital for non-existent pool
+        address nonExistentPool = address(0x123);
+        uint256 pendingAmount = 1000 * 1e6; // 1,000 USDC
+
+        vm.expectRevert("UnoRe: no exist ssip");
+        capitalAgent.updatePoolWithdrawPendingCapital(nonExistentPool, pendingAmount, true);
     }
 
-    // 6. MLR Checks
     function testCheckCapitalByMLRPass() public {
-        // TODO: Test check capital by MLR (should pass)
+        address pool = address(0x5);
+        address currency = address(usdcToken);
+        uint256 initialCapital = 1000000 * 1e6; // 1,000,000 USDC
+        uint256 utilizedAmount = 500000 * 1e6; // 500,000 USDC
+        uint256 mlr = 800000000000000000; // 0.8 in 1e18 format (80% MLR)
+
+        // Setup: Add pool, set initial capital, and set MLR
+        vm.startPrank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+        capitalAgent.setPoolCapital(pool, initialCapital);
+        vm.stopPrank();
+
+        vm.prank(operator);
+        capitalAgent.setMLR(mlr);
+
+        // Setup: Set policy
+        address policyAddress = address(0x456);
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(policyAddress);
+
+        // Calculate maximum allowed utilized amount
+        uint256 maxAllowedUtilized = (initialCapital * mlr) / 1e18;
+        assertTrue(utilizedAmount <= maxAllowedUtilized, "Utilized amount should be within MLR limit");
+
+        // Test with utilized amount at the MLR limit
+        uint256 utilizedAtLimit = maxAllowedUtilized;
+
+        bool result = capitalAgent.checkCapitalByMLR(pool, utilizedAtLimit);
+        assertTrue(result, "Capital check should pass when utilized amount is at MLR limit");
     }
 
     function testCheckCapitalByMLRFail() public {
-        // TODO: Test check capital by MLR (should fail)
+        address pool = address(0x5);
+        address currency = address(usdcToken);
+        uint256 initialCapital = 1000000 * 1e6; // 1,000,000 USDC
+        uint256 mlr = 800000000000000000; // 0.8 in 1e18 format (80% MLR)
+
+        // Setup: Add pool, set initial capital, and set MLR
+        vm.startPrank(multiSigWallet);
+        capitalAgent.addPoolByAdmin(pool, currency);
+        capitalAgent.setPoolCapital(pool, initialCapital);
+        vm.stopPrank();
+
+        vm.prank(operator);
+        capitalAgent.setMLR(mlr);
+
+        // Setup: Set policy
+        address policyAddress = address(0x456);
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(policyAddress);
+
+        // Calculate maximum allowed utilized amount
+        uint256 maxAllowedUtilized = (initialCapital * mlr) / 1e18;
+
+        // Set utilized amount slightly above the MLR limit
+        uint256 excessiveUtilizedAmount = maxAllowedUtilized + 1e18; // 1 USDC above the limit
+
+        vm.expectRevert();
+        capitalAgent.checkCapitalByMLR(pool, excessiveUtilizedAmount);
+
+        // Test with utilized amount slightly below the MLR limit (should pass)
+        uint256 belowLimitAmount = maxAllowedUtilized - 1 * 1e6; // 1 USDC below the limit
+
+        bool result = capitalAgent.checkCapitalByMLR(pool, belowLimitAmount);
+        assertTrue(result, "Capital check should pass when utilized amount is below MLR limit");
     }
 
     function testCheckCoverageByMLRPass() public {
