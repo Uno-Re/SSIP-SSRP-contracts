@@ -707,19 +707,51 @@ contract CapitalAgentTest is Test {
 
         // Attempt to withdraw more than staked
         vm.prank(user);
-        vm.expectRevert();
+        vm.expectRevert(); //TODO add MLR error handler
         ssip.leaveFromPoolInPending(excessiveWithdrawAmount);
 
         // Verify that the total pending capital in USDC is still zero
         uint256 totalPending = capitalAgent.getTotalPendingCapitalInUSDC();
         assertEq(totalPending, 0, "Total pending should be zero after failed withdrawal attempt");
         // Verify that the user's balance in the contract remains the same
-        uint256 userBalance = RiskPool(payable(ssip.riskPool())).balanceOf(user);
-        assertEq(userBalance, stakingAmount, "SSIP contract balance should remain unchanged");
+        uint256 userLPBalance = RiskPool(payable(ssip.riskPool())).balanceOf(user);
+        assertEq(userLPBalance, stakingAmount, "SSIP contract balance should remain unchanged");
     }
 
     function testSSIPWithdrawViolatingMLR() public {
-        // TODO: Test SSIP withdraw that violates MLR
+        uint256 stakingAmount = 1000 ether;
+        uint256 withdrawAmount = 8000 ether;
+        uint256 mlr = 0.3 ether; // 30% MLR
+
+        // Set MLR
+        vm.prank(operator);
+        capitalAgent.setMLR(mlr);
+
+        // Mint and approve tokens for the user
+        vm.startPrank(user);
+        testToken.mint(stakingAmount);
+        testToken.approve(address(ssip), stakingAmount);
+
+        // User stakes tokens
+        ssip.enterInPool(stakingAmount);
+        vm.stopPrank();
+
+        // Advance time
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1 * 7200);
+
+        // Attempt to withdraw an amount that would violate MLR
+        vm.prank(user);
+        vm.expectRevert(); //TODO add MLR error handler
+        ssip.leaveFromPoolInPending(withdrawAmount);
+
+        // Verify that the staked amount remains unchanged
+        uint256 userLPBalance = RiskPool(payable(ssip.riskPool())).balanceOf(user);
+        assertEq(userLPBalance, stakingAmount, "Staked amount should remain unchanged");
+
+        // Verify that the total pending capital in USDC is still zero
+        uint256 totalPending = capitalAgent.getTotalPendingCapitalInUSDC();
+        assertEq(totalPending, 0, "Total pending should be zero after failed withdrawal attempt");
     }
 
     function testSSIPPolicyClaim() public {
