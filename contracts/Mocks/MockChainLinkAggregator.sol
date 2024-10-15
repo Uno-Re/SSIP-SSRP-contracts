@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import {AggregatorV3Interface} from "../interfaces/IAggregatorV3.sol";
 
-contract MockChainlinkAggregator is AggregatorV3Interface {
+contract MockChainLinkAggregator is AggregatorV3Interface {
     int256 private price;
     uint8 private decimals_;
 
@@ -24,17 +24,13 @@ contract MockChainlinkAggregator is AggregatorV3Interface {
         return 1;
     }
 
-    function getRoundData(uint80 _roundId)
+    function getRoundData(
+        uint80 _roundId
+    )
         external
         pure
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         return (_roundId, 0, 0, 0, 0);
     }
@@ -43,13 +39,7 @@ contract MockChainlinkAggregator is AggregatorV3Interface {
         external
         view
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         return (0, price, 0, block.timestamp, 0);
     }

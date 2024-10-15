@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import "lib/forge-std/src/Test.sol";
 
-import "../../contracts/Mocks/MockChainlinkAggregator.sol";
+import "../../contracts/Mocks/MockChainLinkAggregator.sol";
 import "../../contracts/factories/RiskPoolFactory.sol";
 import "../../contracts/SingleSidedInsurancePool.sol";
 import "../../contracts/Mocks/OraclePriceFeed.sol";
@@ -16,7 +16,7 @@ import "../../contracts/RiskPool.sol";
 
 contract CapitalAgentTest is Test {
     IERC20 public iERC20;
-    MockChainlinkAggregator public mockEthUsdAggregator;
+    MockChainLinkAggregator public mockEthUsdAggregator;
     SingleSidedInsurancePool public ssip;
     CapitalAgent public capitalAgent;
     SalesPolicy public salesPolicy;
@@ -88,9 +88,8 @@ contract CapitalAgentTest is Test {
         signedTime = block.timestamp;
         premiumCurrency = address(usdcToken);
 
-
         // Deploy mock Chainlink aggregator for ETH/USD
-        mockEthUsdAggregator = new MockChainlinkAggregator(1 * 1e8, 8); // $2000 per ETH, 8 decimals
+        mockEthUsdAggregator = new MockChainLinkAggregator(1 * 1e8, 8); // $2000 per ETH, 8 decimals
 
         // Deploy PriceOracle
         priceOracle = new PriceOracle(multiSigWallet);
@@ -105,12 +104,11 @@ contract CapitalAgentTest is Test {
         priceOracle.addStableCoin(address(usdcToken));
         vm.stopPrank();
 
-
         // Set up addresses for ExchangeAgent constructor
-        wethAddress = address(0x4321);  // Replace with actual or mock WETH address
-        uniswapRouterAddress = address(0x5432);  // Replace with actual or mock Uniswap Router address
-        uniswapFactoryAddress = address(0x6543);  // Replace with actual or mock Uniswap Factory address
-        swapDeadline = 1800;  // 30 minutes, adjust as needed
+        wethAddress = address(0x4321); // Replace with actual or mock WETH address
+        uniswapRouterAddress = address(0x5432); // Replace with actual or mock Uniswap Router address
+        uniswapFactoryAddress = address(0x6543); // Replace with actual or mock Uniswap Factory address
+        swapDeadline = 1800; // 30 minutes, adjust as needed
 
         // Deploy ExchangeAgent
         exchangeAgentContract = new ExchangeAgent(
@@ -123,21 +121,23 @@ contract CapitalAgentTest is Test {
             swapDeadline
         );
 
-
         vm.prank(multiSigWallet);
         capitalAgent = new CapitalAgent();
         capitalAgent.initialize(address(exchangeAgentContract), address(usdcToken), multiSigWallet, operator);
         vm.prank(multiSigWallet);
         capitalAgent.setSalesPolicyFactory(salesPolicyFactory);
 
-        salesPolicy = new SalesPolicy(factory, address(exchangeAgentContract), premiumPool, address(capitalAgent), address(usdcToken));
-
-         // Deploy SingleSidedInsurancePool
-        ssip = new SingleSidedInsurancePool();
-        ssip.initialize(
+        salesPolicy = new SalesPolicy(
+            factory,
+            address(exchangeAgentContract),
+            premiumPool,
             address(capitalAgent),
-            multiSigWallet
+            address(usdcToken)
         );
+
+        // Deploy SingleSidedInsurancePool
+        ssip = new SingleSidedInsurancePool();
+        ssip.initialize(address(capitalAgent), multiSigWallet);
 
         // Deploy RiskPoolFactory
         riskPoolFactory = new RiskPoolFactory();
@@ -145,7 +145,6 @@ contract CapitalAgentTest is Test {
         // Whitelist the SSIP in CapitalAgent
         vm.prank(multiSigWallet);
         capitalAgent.addPoolWhiteList(address(ssip));
-
 
         vm.startPrank(multiSigWallet);
         // Create RiskPool
@@ -161,7 +160,7 @@ contract CapitalAgentTest is Test {
         ssip.setStakingStartTime(block.timestamp);
         vm.stopPrank();
         vm.prank(user);
-        testToken.mint( 2000 ether);
+        testToken.mint(2000 ether);
         vm.prank(address(user));
         testToken.approve(address(ssip), 2000 ether);
         vm.warp(stakingStartTime + 1);
@@ -644,13 +643,79 @@ contract CapitalAgentTest is Test {
         assertTrue(updatedExists, "Policy should now exist");
     }
 
-    // 5. Capital Operations
     function testSSIPWithdraw() public {
-        // TODO: Test SSIP withdraw with valid amount
+        uint256 stakingAmount = 2000 ether;
+
+        vm.prank(user);
+        testToken.mint(stakingAmount);
+
+        vm.prank(user);
+        testToken.approve(address(ssip), stakingAmount);
+
+        vm.prank(user);
+        ssip.enterInPool(stakingAmount);
+
+        uint256 afterStakeUserBalance = testToken.balanceOf(user);
+
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1 * 7200); // Assuming ~7200 blocks per day
+
+        // Perform withdrawal
+        vm.startPrank(user);
+        ssip.leaveFromPoolInPending(stakingAmount / 4);
+
+        // Skip 11 days and mint the blocks
+        vm.warp(block.timestamp + 11 days);
+        vm.roll(block.number + 11 * 7200); // Assuming ~7200 blocks per day
+
+        ssip.leaveFromPending(stakingAmount / 4);
+        vm.stopPrank();
+
+        // Get final balances
+        uint256 finalUserBalance = testToken.balanceOf(user);
+
+        // Assert
+        assertApproxEqAbs(
+            finalUserBalance,
+            afterStakeUserBalance + (stakingAmount / 4),
+            1e18,
+            "User balance should increase by withdraw amount"
+        );
+
+        // Check capital agent state
+        uint256 totalPending = capitalAgent.getTotalPendingCapitalInUSDC();
+
+        assertEq(totalPending, 0, "Total pending should be zero after withdrawal");
     }
 
     function testSSIPWithdrawExceedingCapital() public {
-        // TODO: Test SSIP withdraw with amount exceeding pool capital
+        uint256 stakingAmount = 1000 ether;
+        uint256 excessiveWithdrawAmount = 1500 ether;
+
+        // Mint and approve tokens for the user
+        vm.startPrank(user);
+        testToken.mint(stakingAmount);
+        testToken.approve(address(ssip), stakingAmount);
+
+        // User stakes tokens
+        ssip.enterInPool(stakingAmount);
+        vm.stopPrank();
+
+        // Advance time
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1 * 7200);
+
+        // Attempt to withdraw more than staked
+        vm.prank(user);
+        vm.expectRevert();
+        ssip.leaveFromPoolInPending(excessiveWithdrawAmount);
+
+        // Verify that the total pending capital in USDC is still zero
+        uint256 totalPending = capitalAgent.getTotalPendingCapitalInUSDC();
+        assertEq(totalPending, 0, "Total pending should be zero after failed withdrawal attempt");
+        // Verify that the user's balance in the contract remains the same
+        uint256 userBalance = RiskPool(payable(ssip.riskPool())).balanceOf(user);
+        assertEq(userBalance, stakingAmount, "SSIP contract balance should remain unchanged");
     }
 
     function testSSIPWithdrawViolatingMLR() public {
@@ -776,11 +841,11 @@ contract CapitalAgentTest is Test {
         // Assert
         assertTrue(canCover, "Should be able to cover this amount");
 
-        bool cannotCover = capitalAgent.checkCoverageByMLR(coverageAmountTest*3);
+        bool cannotCover = capitalAgent.checkCoverageByMLR(coverageAmountTest * 3);
 
         // Assert
         assertFalse(cannotCover, "Should not be able to cover this amount");
-}
+    }
 
     // 7. Policy Operations
     function testPolicySale() public {
