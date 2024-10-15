@@ -55,7 +55,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     mapping(address => mapping(uint256 => uint256)) public claimedAmount;
 
     event LogAddPool(address indexed _ssip, address _currency);
-    event LogAddPool(address indexed _ssip);
+    event LogAddPoolToList(address indexed _ssip);
     event LogRemovePool(address indexed _ssip);
     event LogSetPolicy(address indexed _salesPolicy);
     event LogRemovePolicy(address indexed _salesPolicy);
@@ -201,7 +201,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
         if (!contains) {
             poolList.push(_ssip);
-            emit LogAddPool(_ssip);
+            emit LogAddPoolToList(_ssip);
         }
     }
 
@@ -457,7 +457,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         //Withdraw amount in USDC
         uint256 withdrawInUSDC = _convertTokenToUSDC(currency, _withdrawAmount);
         //Total Capital Staked in Pools
-        totalCapitalStakedInUSDC = _convertTokenToUSDC(currency, totalCapitalStaked());
+        totalCapitalStakedInUSDC = _convertTokenToUSDC(currency, _getTotalCapitalStakedInUSDC());
         //Total Capital pending in withdraw
         totalWithdrawPendingCapital = _getTotalPendingCapitalInUSDC();
         uint256 totalInPoolInUSDC = totalCapitalStakedInUSDC - totalWithdrawPendingCapital;
@@ -488,8 +488,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
                 totalCapitalStakedInUSDC +
                 _convertTokenToUSDC(currency, totalCapitalStakedByCurrency[currency]);
         }
-
         return totalCapitalStakedInUSDC;
+    }
+
+    function getTotalPendingCapitalInUSDC() public view returns (uint256) {
+        return _getTotalPendingCapitalInUSDC();
     }
 
     /**
@@ -510,9 +513,10 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
         uint256 totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();
         uint256 totalCapitalPendingInUSDC = _getTotalPendingCapitalInUSDC();
-        return
+        uint256 scaledMLR = MLR / CALC_PRECISION;
+       return
             totalUtilizedAmount + _newCoverageAmount <=
-            ((totalCapitalStakedInUSDC - totalCapitalPendingInUSDC) * MLR) / CALC_PRECISION;
+            ((totalCapitalStakedInUSDC - totalCapitalPendingInUSDC) * scaledMLR);
     }
 
     /**
