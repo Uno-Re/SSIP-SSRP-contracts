@@ -3,18 +3,36 @@ pragma solidity ^0.8.23;
 
 import "lib/forge-std/src/Test.sol";
 
+import "../../contracts/Mocks/MockChainlinkAggregator.sol";
+import "../../contracts/factories/RiskPoolFactory.sol";
+import "../../contracts/SingleSidedInsurancePool.sol";
+import "../../contracts/Mocks/OraclePriceFeed.sol";
+import "../../contracts/Mocks/MockUSDC.sol";
+import "../../contracts/Mocks/MockUNO.sol";
+import "../../contracts/ExchangeAgent.sol";
 import "../../contracts/CapitalAgent.sol";
 import "../../contracts/SalesPolicy.sol";
-import "../../contracts/Mocks/MockUSDC.sol";
+import "../../contracts/RiskPool.sol";
 
 contract CapitalAgentTest is Test {
     IERC20 public iERC20;
+    MockChainlinkAggregator public mockEthUsdAggregator;
+    SingleSidedInsurancePool public ssip;
     CapitalAgent public capitalAgent;
     SalesPolicy public salesPolicy;
+    RiskPoolFactory public riskPoolFactory;
+    ExchangeAgent public exchangeAgentContract;
+    PriceOracle public priceOracle;
+    address public wethAddress;
+    address public uniswapRouterAddress;
+    address public uniswapFactoryAddress;
+    address public oraclePriceFeedAddress;
+    uint256 public swapDeadline;
+    MockUNO public testToken;
     address public admin;
+    address public user;
     address public operator;
-    address public exchangeAgent;
-    address public usdcToken;
+    MockUSDC public usdcToken;
     address public factory;
     address public multiSigWallet;
     address public salesPolicyFactory;
@@ -26,12 +44,11 @@ contract CapitalAgentTest is Test {
     uint256[] public coverageDuration;
     uint256 public policyPriceInUSDC;
     uint256 public signedTime;
-    address user = address(14574);
     address public premiumCurrency;
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     event LogAddPool(address indexed, address);
-    event LogAddPool(address indexed);
+    event LogAddPoolToList(address indexed);
     event LogRemovePool(address indexed);
     event LogSetPolicy(address indexed);
     event LogRemovePolicy(address indexed);
@@ -49,21 +66,15 @@ contract CapitalAgentTest is Test {
     event LogupdatePoolWithdrawPendingCapital(address indexed, uint256);
 
     function setUp() public {
+        user = address(0x666);
         admin = address(this);
         operator = address(0x1);
-        exchangeAgent = address(0x2);
-        usdcToken = address(0x3);
+        usdcToken = new MockUSDC();
+        testToken = new MockUNO();
         multiSigWallet = address(0x4);
         salesPolicyFactory = address(0x99);
         premiumPool = address(0x894);
         factory = address(0x111);
-        vm.prank(admin);
-
-        capitalAgent = new CapitalAgent();
-        capitalAgent.initialize(exchangeAgent, usdcToken, multiSigWallet, operator);
-        vm.prank(multiSigWallet);
-        capitalAgent.setSalesPolicyFactory(salesPolicyFactory);
-
         policyBuyer = address(0x1234);
         assets = new address[](1);
         assets[0] = address(0x2345);
@@ -75,9 +86,85 @@ contract CapitalAgentTest is Test {
         coverageDuration[0] = 30 days;
         policyPriceInUSDC = 50 * 1e6; // 50 USDC
         signedTime = block.timestamp;
-        premiumCurrency = usdcToken;
+        premiumCurrency = address(usdcToken);
 
-        salesPolicy = new SalesPolicy(factory, exchangeAgent, premiumPool, address(capitalAgent), usdcToken);
+
+        // Deploy mock Chainlink aggregator for ETH/USD
+        mockEthUsdAggregator = new MockChainlinkAggregator(1 * 1e8, 8); // $2000 per ETH, 8 decimals
+
+        // Deploy PriceOracle
+        priceOracle = new PriceOracle(multiSigWallet);
+
+        // Set the mock aggregator in PriceOracle
+        vm.prank(multiSigWallet);
+        priceOracle.setETHUSDAggregator(address(mockEthUsdAggregator));
+
+        // Set prices in PriceOracle
+        vm.startPrank(multiSigWallet);
+        priceOracle.setAssetEthPrice(address(testToken), 1e18); // 1:1 with ETH
+        priceOracle.addStableCoin(address(usdcToken));
+        vm.stopPrank();
+
+
+        // Set up addresses for ExchangeAgent constructor
+        wethAddress = address(0x4321);  // Replace with actual or mock WETH address
+        uniswapRouterAddress = address(0x5432);  // Replace with actual or mock Uniswap Router address
+        uniswapFactoryAddress = address(0x6543);  // Replace with actual or mock Uniswap Factory address
+        swapDeadline = 1800;  // 30 minutes, adjust as needed
+
+        // Deploy ExchangeAgent
+        exchangeAgentContract = new ExchangeAgent(
+            address(usdcToken),
+            wethAddress,
+            address(priceOracle),
+            uniswapRouterAddress,
+            uniswapFactoryAddress,
+            multiSigWallet,
+            swapDeadline
+        );
+
+
+        vm.prank(multiSigWallet);
+        capitalAgent = new CapitalAgent();
+        capitalAgent.initialize(address(exchangeAgentContract), address(usdcToken), multiSigWallet, operator);
+        vm.prank(multiSigWallet);
+        capitalAgent.setSalesPolicyFactory(salesPolicyFactory);
+
+        salesPolicy = new SalesPolicy(factory, address(exchangeAgentContract), premiumPool, address(capitalAgent), address(usdcToken));
+
+         // Deploy SingleSidedInsurancePool
+        ssip = new SingleSidedInsurancePool();
+        ssip.initialize(
+            address(capitalAgent),
+            multiSigWallet
+        );
+
+        // Deploy RiskPoolFactory
+        riskPoolFactory = new RiskPoolFactory();
+
+        // Whitelist the SSIP in CapitalAgent
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(address(ssip));
+
+
+        vm.startPrank(multiSigWallet);
+        // Create RiskPool
+        ssip.createRiskPool(
+            "Test Risk Pool",
+            "TRP",
+            address(riskPoolFactory),
+            address(testToken),
+            1e18 // reward multiplier
+        );
+        uint256 stakingStartTime = block.timestamp + 1 hours;
+        // Set staking start time to now
+        ssip.setStakingStartTime(block.timestamp);
+        vm.stopPrank();
+        vm.prank(user);
+        testToken.mint( 2000 ether);
+        vm.prank(address(user));
+        testToken.approve(address(ssip), 2000 ether);
+        vm.warp(stakingStartTime + 1);
     }
 
     // helper
@@ -101,8 +188,8 @@ contract CapitalAgentTest is Test {
 
     // 1. Initialization
     function testInitialize() public {
-        assertEq(capitalAgent.exchangeAgent(), exchangeAgent);
-        assertEq(capitalAgent.usdcToken(), usdcToken);
+        assertEq(capitalAgent.exchangeAgent(), address(exchangeAgentContract));
+        assertEq(capitalAgent.usdcToken(), address(usdcToken));
         assertEq(capitalAgent.operator(), operator);
         assertTrue(capitalAgent.hasRole(capitalAgent.ADMIN_ROLE(), multiSigWallet));
     }
@@ -110,19 +197,19 @@ contract CapitalAgentTest is Test {
     function testInitializeZeroExchangeAgent() public {
         CapitalAgent newCapitalAgent = new CapitalAgent();
         vm.expectRevert("UnoRe: zero exchangeAgent address");
-        newCapitalAgent.initialize(address(0), usdcToken, multiSigWallet, operator);
+        newCapitalAgent.initialize(address(0), address(usdcToken), multiSigWallet, operator);
     }
 
     function testInitializeZeroUSDCToken() public {
         CapitalAgent newCapitalAgent = new CapitalAgent();
         vm.expectRevert("UnoRe: zero USDC address");
-        newCapitalAgent.initialize(exchangeAgent, address(0), multiSigWallet, operator);
+        newCapitalAgent.initialize(address(exchangeAgentContract), address(0), multiSigWallet, operator);
     }
 
     function testInitializeZeroMultiSigWallet() public {
         CapitalAgent newCapitalAgent = new CapitalAgent();
         vm.expectRevert("UnoRe: zero multisigwallet address");
-        newCapitalAgent.initialize(exchangeAgent, usdcToken, address(0), operator);
+        newCapitalAgent.initialize(address(exchangeAgentContract), address(usdcToken), address(0), operator);
     }
 
     function testAdminRoleGranted() public {
@@ -155,7 +242,7 @@ contract CapitalAgentTest is Test {
 
         // Add a pool first
         vm.prank(multiSigWallet);
-        capitalAgent.addPoolByAdmin(poolToRemove, usdcToken);
+        capitalAgent.addPoolByAdmin(poolToRemove, address(usdcToken));
 
         // Non-admin should not be able to remove pool
         vm.prank(address(0x7));
@@ -211,8 +298,8 @@ contract CapitalAgentTest is Test {
 
         // Buy a policy
         vm.startPrank(policyBuyer);
-        deal(usdcToken, policyBuyer, policyPriceInUSDC, true);
-        MockUSDC(usdcToken).approve(address(salesPolicy), policyPriceInUSDC);
+        deal(address(usdcToken), policyBuyer, policyPriceInUSDC, true);
+        MockUSDC(address(usdcToken)).approve(address(salesPolicy), policyPriceInUSDC);
         salesPolicy.buyPolicy(
             assets,
             protocols,
@@ -441,7 +528,7 @@ contract CapitalAgentTest is Test {
         capitalAgent.addPoolByAdmin(anotherPool, newCurrency);
 
         // Check that the currency list length hasn't changed
-        assertEq(currencyList.length, 1, "Currency list length should not change for existing currency");
+        assertEq(currencyList.length, 2, "Currency list length should not change for existing currency");
     }
 
     function testSetPoolCapital() public {
@@ -662,13 +749,38 @@ contract CapitalAgentTest is Test {
         assertTrue(result, "Capital check should pass when utilized amount is below MLR limit");
     }
 
-    function testCheckCoverageByMLRPass() public {
-        // TODO: Test check coverage by MLR (should pass)
-    }
+    function testCheckCoverageByMLRWorksAsExpected() public {
+        // Use the SSIP address instead of a random address
+        address testPool = address(ssip);
+        uint256 initialStakingAmount = 1000 ether; // Adjust based on token decimals
+        uint256 coverageAmountTest = 1500 ether;
+        uint256 mlr = 2 ether; // 200%
+        // Set MLR
+        vm.prank(operator);
+        capitalAgent.setMLR(mlr);
 
-    function testCheckCoverageByMLRFail() public {
-        // TODO: Test check coverage by MLR (should fail)
-    }
+        // Simulate staking
+        vm.prank(user);
+        ssip.enterInPool(initialStakingAmount);
+
+        // Get total capital staked and pending
+        uint256 totalStaked = capitalAgent.totalCapitalStaked();
+        uint256 totalPending = capitalAgent.getTotalPendingCapitalInUSDC();
+
+        // Ensure staked amount is greater than pending amount
+        assertGt(totalStaked, totalPending, "Staked amount should be greater than pending amount");
+
+        // Check if coverage is within MLR limits
+        bool canCover = capitalAgent.checkCoverageByMLR(coverageAmountTest);
+
+        // Assert
+        assertTrue(canCover, "Should be able to cover this amount");
+
+        bool cannotCover = capitalAgent.checkCoverageByMLR(coverageAmountTest*3);
+
+        // Assert
+        assertFalse(cannotCover, "Should not be able to cover this amount");
+}
 
     // 7. Policy Operations
     function testPolicySale() public {
