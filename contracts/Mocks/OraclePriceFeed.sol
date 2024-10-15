@@ -4,13 +4,7 @@ pragma solidity =0.8.23;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {AggregatorV3Interface} from "../interfaces/IAggregatorV3.sol";
-
-interface IERC20Metadata {
-    /**
-     * @dev Returns the decimals places of the token.
-     */
-    function decimals() external view returns (uint8);
-}
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract PriceOracle is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
