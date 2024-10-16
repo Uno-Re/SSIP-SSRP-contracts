@@ -763,11 +763,95 @@ contract CapitalAgentTest is Test {
     }
 
     function testUpdatePoolWithdrawPendingCapitalAdd() public {
-        // TODO: Test updating pool withdraw pending capital (add)
+        address testPool = address(ssip);
+        uint256 initialStakingAmount = 1000 ether;
+        uint256 pendingAmount = 100 ether;
+
+        // Setup: Add pool and set initial capital
+        vm.startPrank(multiSigWallet);
+        capitalAgent.setPoolCapital(testPool, initialStakingAmount);
+        vm.stopPrank();
+
+        // Get initial pool info
+        (uint256 initialTotalCapital, , , uint256 initialPendingCapital) = capitalAgent.getPoolInfo(testPool);
+
+        // Simulate user staking
+        vm.startPrank(user);
+        testToken.mint(initialStakingAmount);
+        testToken.approve(address(ssip), initialStakingAmount);
+        ssip.enterInPool(initialStakingAmount);
+        vm.stopPrank();
+
+        // Advance time
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1 * 7200); // Assuming ~7200 blocks per day
+
+        // User requests to leave from pool (which should update pending capital)
+        vm.prank(user);
+        ssip.leaveFromPoolInPending(pendingAmount);
+
+        // Advance time
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1 * 7200); // Assuming ~7200 blocks per day
+
+        // Get updated pool info
+        (, , , uint256 updatedPendingCapital) = capitalAgent.getPoolInfo(testPool);
+
+        // Assertions
+        assertEq(
+            updatedPendingCapital,
+            initialPendingCapital + pendingAmount,
+            "Pending capital should increase by pendingAmount"
+        );
     }
 
     function testUpdatePoolWithdrawPendingCapitalSubtract() public {
-        // TODO: Test updating pool withdraw pending capital (subtract)
+        address testPool = address(ssip);
+        uint256 initialStakingAmount = 1000 ether;
+        uint256 pendingAmount = 100 ether;
+
+        // Setup: Add pool and set initial capital
+        vm.startPrank(multiSigWallet);
+        capitalAgent.setPoolCapital(testPool, initialStakingAmount);
+        vm.stopPrank();
+
+        // Simulate user staking
+        vm.startPrank(user);
+        testToken.mint(initialStakingAmount);
+        testToken.approve(address(ssip), initialStakingAmount);
+        ssip.enterInPool(initialStakingAmount);
+        vm.stopPrank();
+
+        // Advance time
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1 * 7200); // Assuming ~7200 blocks per day
+
+        // User requests to leave from pool (which should update pending capital)
+        vm.prank(user);
+        ssip.leaveFromPoolInPending(pendingAmount);
+
+        // Get pending capital after requesting withdrawal
+        (, , , uint256 pendingCapitalAfterRequest) = capitalAgent.getPoolInfo(testPool);
+
+        // Advance time to allow for withdrawal completion
+        vm.warp(block.timestamp + 11 days);
+        vm.roll(block.number + 11 * 7200); // Assuming ~7200 blocks per day
+
+        // User completes the withdrawal
+        vm.prank(user);
+        ssip.leaveFromPending(pendingAmount);
+
+        // Get pending capital after completing withdrawal
+        (, , , uint256 pendingCapitalAfterWithdrawal) = capitalAgent.getPoolInfo(testPool);
+
+        // Assertions
+        assertEq(
+            pendingCapitalAfterWithdrawal,
+            pendingCapitalAfterRequest - pendingAmount,
+            "Pending capital should decrease by pendingAmount after withdrawal"
+        );
+
+        assertEq(pendingCapitalAfterWithdrawal, 0, "Pending capital should be zero after completing withdrawal");
     }
 
     function testUpdateWithdrawPendingCapitalNonExistentPool() public {
@@ -847,8 +931,6 @@ contract CapitalAgentTest is Test {
     }
 
     function testCheckCoverageByMLRWorksAsExpected() public {
-        // Use the SSIP address instead of a random address
-        address testPool = address(ssip);
         uint256 initialStakingAmount = 1000 ether; // Adjust based on token decimals
         uint256 coverageAmountTest = 1500 ether;
         uint256 mlr = 2 ether; // 200%
