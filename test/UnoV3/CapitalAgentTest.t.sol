@@ -992,7 +992,101 @@ contract CapitalAgentTest is Test {
 
     // 8. Calculations and Conversions
     function testTotalCapitalStakedCalculation() public {
-        // TODO: Verify correct calculation of total capital staked
+        // Deploy two new SSIPs
+        SingleSidedInsurancePool ssip1 = new SingleSidedInsurancePool();
+        SingleSidedInsurancePool ssip2 = new SingleSidedInsurancePool();
+
+        ssip1.initialize(address(capitalAgent), multiSigWallet);
+        ssip2.initialize(address(capitalAgent), multiSigWallet);
+        // Whitelist the SSIP in CapitalAgent
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(address(ssip1)); // Whitelist the SSIP in CapitalAgent
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(address(ssip2));
+
+        // Create RiskPools for each SSIP
+        vm.prank(multiSigWallet);
+        ssip1.createRiskPool(
+            "Test Risk Pool 1",
+            "TRP1",
+            address(riskPoolFactory),
+            address(testToken),
+            1e18 // reward multiplier
+        );
+        vm.prank(multiSigWallet);
+        ssip2.createRiskPool(
+            "Test Risk Pool 2",
+            "TRP2",
+            address(riskPoolFactory),
+            address(usdcToken),
+            1e18 // reward multiplier
+        );
+
+        // Setup staking amounts
+        uint256 amount1 = 1000 ether;
+        uint256 amount2 = 2000 * 10 ** 6; // Assuming USDC has 6 decimals
+
+        // Simulate staking in both pools
+        vm.startPrank(user);
+        testToken.mint(amount1);
+        testToken.approve(address(ssip1), amount1);
+        ssip1.enterInPool(amount1);
+
+        usdcToken.faucetToken(amount2);
+        usdcToken.approve(address(ssip2), amount2);
+        ssip2.enterInPool(amount2);
+        vm.stopPrank();
+
+        // Set pool capitals in CapitalAgent
+        vm.startPrank(multiSigWallet);
+        capitalAgent.setPoolCapital(address(ssip1), amount1);
+        capitalAgent.setPoolCapital(address(ssip2), amount2);
+        vm.stopPrank();
+
+        // Calculate expected total staked in USDC
+        uint256 amount1InUSDC = exchangeAgentContract.getTokenAmountForUSDC(address(testToken), amount1);
+        uint256 amount2InUSDC = amount2; // USDC amount is already in USDC
+        uint256 expectedTotalStaked = amount1InUSDC + amount2InUSDC;
+
+        // Get actual total staked from CapitalAgent
+        uint256 actualTotalStaked = capitalAgent.totalCapitalStaked();
+
+        // Assert
+        assertEq(actualTotalStaked, expectedTotalStaked, "Total capital staked calculation is incorrect");
+
+        // Test adding more capital to an existing pool
+        uint256 additionalAmount = 500 ether;
+        vm.startPrank(user);
+        testToken.mint(additionalAmount);
+        testToken.approve(address(ssip1), additionalAmount);
+        ssip1.enterInPool(additionalAmount);
+        vm.stopPrank();
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setPoolCapital(address(ssip1), amount1 + additionalAmount);
+
+        // Recalculate expected total staked
+        amount1InUSDC = exchangeAgentContract.getTokenAmountForUSDC(address(testToken), amount1 + additionalAmount);
+        expectedTotalStaked = amount1InUSDC + amount2InUSDC;
+
+        // Get updated actual total staked
+        actualTotalStaked = capitalAgent.totalCapitalStaked();
+
+        // Assert again
+        assertEq(actualTotalStaked, expectedTotalStaked, "Total capital staked calculation is incorrect after adding capital");
+
+        // Test removing a pool
+        vm.prank(multiSigWallet);
+        capitalAgent.removePool(address(ssip2));
+
+        // Recalculate expected total staked (only ssip1 should remain)
+        expectedTotalStaked = amount1InUSDC;
+
+        // Get updated actual total staked
+        actualTotalStaked = capitalAgent.totalCapitalStaked();
+
+        // Assert one more time
+        assertEq(actualTotalStaked, expectedTotalStaked, "Total capital staked calculation is incorrect after removing a pool");
     }
 
     function testTokenToUSDCConversion() public {
@@ -1000,7 +1094,115 @@ contract CapitalAgentTest is Test {
     }
 
     function testTotalPendingCapitalCalculation() public {
-        // TODO: Verify correct calculation of total pending capital
+        // Deploy two new SSIPs
+        SingleSidedInsurancePool ssip1 = new SingleSidedInsurancePool();
+        SingleSidedInsurancePool ssip2 = new SingleSidedInsurancePool();
+
+        ssip1.initialize(address(capitalAgent), multiSigWallet);
+        ssip2.initialize(address(capitalAgent), multiSigWallet);
+
+        // Whitelist the SSIPs in CapitalAgent
+        vm.startPrank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(address(ssip1));
+        capitalAgent.addPoolWhiteList(address(ssip2));
+        vm.stopPrank();
+
+        // Create RiskPools for each SSIP
+        vm.startPrank(multiSigWallet);
+        ssip1.createRiskPool(
+            "Test Risk Pool 1",
+            "TRP1",
+            address(riskPoolFactory),
+            address(testToken),
+            1e18 // reward multiplier
+        );
+        ssip2.createRiskPool(
+            "Test Risk Pool 2",
+            "TRP2",
+            address(riskPoolFactory),
+            address(usdcToken),
+            1e18 // reward multiplier
+        );
+        vm.stopPrank();
+
+        // Setup staking amounts
+        uint256 amount1 = 1000 ether;
+        uint256 amount2 = 2000 * 10 ** 6; // Assuming USDC has 6 decimals
+
+        // Simulate staking in both pools
+        vm.startPrank(user);
+        testToken.mint(amount1);
+        testToken.approve(address(ssip1), amount1);
+        ssip1.enterInPool(amount1);
+
+        usdcToken.faucetToken(amount2);
+        usdcToken.approve(address(ssip2), amount2);
+        ssip2.enterInPool(amount2);
+        vm.stopPrank();
+
+        // Set pool capitals in CapitalAgent
+        vm.startPrank(multiSigWallet);
+        capitalAgent.setPoolCapital(address(ssip1), amount1);
+        capitalAgent.setPoolCapital(address(ssip2), amount2);
+        vm.stopPrank();
+
+        // Advance time
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1 * 7200); // Assuming ~7200 blocks per day
+
+        // Request withdrawals from both pools
+        uint256 pendingAmount1 = 300 ether;
+        uint256 pendingAmount2 = 500 * 10 ** 6;
+
+        vm.prank(user);
+        ssip1.leaveFromPoolInPending(pendingAmount1);
+
+        vm.prank(user);
+        ssip2.leaveFromPoolInPending(pendingAmount2);
+
+        // Calculate expected total pending capital in USDC
+        uint256 pendingAmount1InUSDC = exchangeAgentContract.getTokenAmountForUSDC(address(testToken), pendingAmount1);
+        uint256 pendingAmount2InUSDC = pendingAmount2; // USDC amount is already in USDC
+        uint256 expectedTotalPending = pendingAmount1InUSDC + pendingAmount2InUSDC;
+
+        // Get actual total pending capital from CapitalAgent
+        uint256 actualTotalPending = capitalAgent.getTotalPendingCapitalInUSDC();
+
+        // Assert
+        assertEq(actualTotalPending, expectedTotalPending, "Total pending capital calculation is incorrect");
+
+        // Test completing withdrawal from one pool
+        vm.warp(block.timestamp + 11 days);
+        vm.roll(block.number + 11 * 7200);
+
+        vm.prank(user);
+        ssip1.leaveFromPending(pendingAmount1);
+
+        // Recalculate expected total pending
+        expectedTotalPending = pendingAmount2InUSDC;
+
+        // Get updated actual total pending
+        actualTotalPending = capitalAgent.getTotalPendingCapitalInUSDC();
+
+        // Assert again
+        assertEq(
+            actualTotalPending,
+            expectedTotalPending,
+            "Total pending capital calculation is incorrect after completing withdrawal"
+        );
+
+        // Test removing a pool with pending withdrawals
+        vm.prank(multiSigWallet);
+        capitalAgent.removePool(address(ssip2));
+
+        // Expect total pending to be zero after removing all pools
+        expectedTotalPending = 0;
+
+        // Get updated actual total pending
+        actualTotalPending = capitalAgent.getTotalPendingCapitalInUSDC();
+
+        // Assert one more time
+        assertEq(actualTotalPending, expectedTotalPending, "Total pending capital should be zero after removing all pools");
     }
 
     // 9. Event Emissions
@@ -1196,10 +1398,80 @@ contract CapitalAgentTest is Test {
     // 10. Edge Cases and Boundary Testing
     function testMaxUint256Values() public {
         // TODO: Test with maximum uint256 values where applicable
-    }
+}
 
     function testMinValues() public {
-        // TODO: Test with minimum (1) values where applicable
+        address user7 = address(0x56526);
+
+        // Setup: Deploy a new SSIP with minimum stake
+        SingleSidedInsurancePool minSsip = new SingleSidedInsurancePool();
+        minSsip.initialize(address(capitalAgent), multiSigWallet);
+
+        // Whitelist the new SSIP
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(address(minSsip));
+
+        // Create RiskPool with minimum values
+        vm.prank(multiSigWallet);
+        minSsip.createRiskPool(
+            "Min Risk Pool",
+            "MRP",
+            address(riskPoolFactory),
+            address(testToken),
+            1 // Minimum reward multiplier
+        );
+
+        // Stake minimum amount (1 wei)
+        uint256 minStake = 1;
+        vm.startPrank(user7);
+        testToken.mint(minStake);
+        testToken.approve(address(minSsip), minStake);
+        minSsip.enterInPool(minStake);
+        vm.stopPrank();
+
+        // Set minimum pool capital
+        vm.prank(multiSigWallet);
+        capitalAgent.setPoolCapital(address(minSsip), minStake);
+
+        // Set minimum MLR (1 wei)
+        uint256 minMlr = 1;
+        vm.prank(operator);
+        capitalAgent.setMLR(minMlr);
+
+        // Set policy
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(address(salesPolicy));
+
+        // Stake more so withdrawl works
+        uint256 moreStake = 1500 ether;
+        vm.startPrank(user7);
+        testToken.mint(moreStake);
+        testToken.approve(address(minSsip), moreStake);
+        minSsip.enterInPool(moreStake);
+        vm.stopPrank();
+
+        // Test minimum withdrawal
+        vm.prank(user7);
+        minSsip.leaveFromPoolInPending(1);
+
+        // Advance time to allow withdrawal
+        vm.warp(block.timestamp + 11 days);
+        vm.roll(block.number + 11 * 7200);
+
+        vm.prank(user7);
+        minSsip.leaveFromPending(1);
+
+        // Verify pool info after withdrawal
+        (, , , uint256 pendingCapital) = capitalAgent.getPoolInfo(address(minSsip));
+        assertEq(pendingCapital, 0, "Pending capital should be 0 after withdrawal");
+
+        // Test removing pool with minimum values
+        vm.prank(multiSigWallet);
+        capitalAgent.removePool(address(minSsip));
+
+        // Verify pool no longer exists
+        (, , bool poolExists, ) = capitalAgent.getPoolInfo(address(minSsip));
+        assertFalse(poolExists, "Pool should no longer exist");
     }
 
     function testZeroValueOnMLR() public {
@@ -1213,7 +1485,42 @@ contract CapitalAgentTest is Test {
 
     // 11. Integration Tests
     function testExchangeAgentInteraction() public {
-        // TODO: Verify correct interaction with ExchangeAgent contract
+        // Setup: Create a new token pair for testing
+        MockUNO newToken = new MockUNO();
+
+        // Set up mock price data
+        uint256 newTokenPrice = 2 ether; // 1 NTK = 2 USDC
+        vm.prank(multiSigWallet);
+        priceOracle.setAssetEthPrice(address(newToken), newTokenPrice);
+
+        // Test getNeededTokenAmount function
+        uint256 usdcAmount = 100 ether;
+        uint256 expectedNewTokenAmount = 50 ether; // 100 USDC / 2 USDC per NTK = 50 NTK
+
+        uint256 actualNewTokenAmount = exchangeAgentContract.getNeededTokenAmount(
+            address(testToken),
+            address(newToken),
+            usdcAmount
+        );
+
+        assertEq(actualNewTokenAmount, expectedNewTokenAmount, "Incorrect token conversion amount");
+
+        // Test edge cases
+        vm.expectRevert("PO: Prices of both tokens should be set");
+        exchangeAgentContract.getNeededTokenAmount(address(testToken), address(0x1234), usdcAmount);
+
+        uint256 zeroAmount = exchangeAgentContract.getNeededTokenAmount(address(testToken), address(newToken), 0);
+        assertEq(zeroAmount, 0);
+
+        // Test with very large amounts
+        uint256 largeAmount = 100000 ether;
+
+        uint256 convertedLargeAmount = exchangeAgentContract.getNeededTokenAmount(
+            address(testToken),
+            address(newToken),
+            largeAmount
+        );
+        assertLt(convertedLargeAmount, largeAmount, "Large amount conversion failed");
     }
 
     function testSalesPolicyInteraction() public {
@@ -1221,7 +1528,77 @@ contract CapitalAgentTest is Test {
     }
 
     function testSSIPInteraction() public {
-        // TODO: Verify correct interaction with SSIP (pool) contracts
+        uint256 initialStake = 1000 ether;
+        uint256 additionalStake = 500 ether;
+        uint256 unstakeAmount = 200 ether;
+
+        // Setup: Mint tokens for the user
+        vm.startPrank(user);
+        testToken.mint(initialStake + additionalStake);
+        testToken.approve(address(ssip), initialStake + additionalStake);
+        vm.stopPrank();
+
+        // Test 1: Initial staking
+        vm.prank(user);
+        ssip.enterInPool(initialStake);
+
+        // Verify pool capital update in CapitalAgent
+        (uint256 poolCapital, , , ) = capitalAgent.getPoolInfo(address(ssip));
+        assertEq(poolCapital, initialStake, "Pool capital should match initial stake");
+
+        // Test 2: Additional staking
+        vm.prank(user);
+        ssip.enterInPool(additionalStake);
+
+        // Verify pool capital update after additional stake
+        (poolCapital, , , ) = capitalAgent.getPoolInfo(address(ssip));
+        assertEq(poolCapital, initialStake + additionalStake, "Pool capital should match total staked amount");
+
+        // Test 3: Unstaking (pending withdrawal)
+        vm.prank(user);
+        ssip.leaveFromPoolInPending(unstakeAmount);
+
+        // Verify pending withdrawal in CapitalAgent
+        uint256 pendingWithdrawal = capitalAgent.getTotalPendingCapitalInUSDC();
+        assertEq(pendingWithdrawal, unstakeAmount, "Pending withdrawal should match unstake amount");
+
+        // Test 4: Completing withdrawal after waiting period
+        // Simulate time passing
+        vm.warp(block.timestamp + 10 days);
+        vm.roll(block.number + (7200 * 10)); // Assuming 7200 blocks per day
+
+        vm.prank(user);
+        ssip.leaveFromPending(unstakeAmount);
+
+        // Verify pool capital and pending withdrawal updates
+        (poolCapital, , , ) = capitalAgent.getPoolInfo(address(ssip));
+        assertEq(poolCapital, initialStake + additionalStake - unstakeAmount, "Pool capital should be reduced after withdrawal");
+
+        pendingWithdrawal = capitalAgent.getTotalPendingCapitalInUSDC();
+        assertEq(pendingWithdrawal, 0, "Pending withdrawal should be zero after completing withdrawal");
+
+        // Test 5: Attempt to unstake more than staked amount
+        uint256 excessiveUnstake = initialStake + additionalStake;
+        vm.prank(user);
+        vm.expectRevert(); // The exact error message might vary
+        ssip.leaveFromPoolInPending(excessiveUnstake);
+
+        // Test 6: Verify SSIP balance matches CapitalAgent's record
+        uint256 ssipBalance = testToken.balanceOf(ssip.riskPool());
+        (poolCapital, , , ) = capitalAgent.getPoolInfo(address(ssip));
+        assertEq(ssipBalance, poolCapital, "SSIP balance should match CapitalAgent's pool capital record");
+
+        // Test 7: Update pool capital directly (admin function)
+        uint256 newCapital = 2000 ether;
+        vm.prank(multiSigWallet);
+        capitalAgent.setPoolCapital(address(ssip), newCapital);
+
+        (poolCapital, , , ) = capitalAgent.getPoolInfo(address(ssip));
+        assertEq(poolCapital, newCapital, "Pool capital should match new capital set by admin");
+
+        // Test 8: Verify total capital staked across all pools
+        uint256 totalCapital = capitalAgent.totalCapitalStaked();
+        assertEq(totalCapital, newCapital, "Total capital staked should match the new capital of the single pool");
     }
 
     // 12. Upgradeability
