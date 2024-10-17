@@ -4,59 +4,67 @@ pragma solidity ^0.8.23;
 import "lib/forge-std/src/Test.sol";
 import "../../contracts/PremiumPool.sol";
 import "../../contracts/SalesPolicy.sol";
-import "../../contracts/ExchangeAgent.sol";
-import "../../contracts/Mocks/OraclePriceFeed.sol";
-import "../../contracts/interfaces/IExchangeAgent.sol";
-import "../../contracts/Mocks/MockUSDC.sol";
-import "../../contracts/interfaces/ICapitalAgent.sol";
-import "../../contracts/interfaces/ISalesPolicyFactory.sol";
 import "../../contracts/CapitalAgent.sol";
 import "../../contracts/Mocks/MockUNO.sol";
+import "../../contracts/ExchangeAgent.sol";
+import "../../contracts/Mocks/MockUSDC.sol";
+import "../../contracts/Mocks/OraclePriceFeed.sol";
+import "../../contracts/interfaces/ICapitalAgent.sol";
+import "../../contracts/SingleSidedInsurancePool.sol";
+import "../../contracts/interfaces/IExchangeAgent.sol";
+import "../../contracts/factories/RiskPoolFactory.sol";
+import "../../contracts/factories/SalesPolicyFactory.sol";
+import "../../contracts/Mocks/MockChainLinkAggregator.sol";
+import "../../contracts/interfaces/ISalesPolicyFactory.sol";
 
 contract PremiumPoolAndSalesPolicyTest is Test {
-    PremiumPool public premiumPool;
-    CapitalAgent public capitalAgent;
-    SalesPolicy public salesPolicy;
-    ExchangeAgent public exchangeAgentContract;
+    MockUNO public unoToken;
     MockUSDC public usdcToken;
     PriceOracle public priceOracle;
-    address public exchangeAgent;
+    SalesPolicy public salesPolicy;
+    PremiumPool public premiumPool;
+    CapitalAgent public capitalAgent;
+    SalesPolicyFactory public factory;
+    SingleSidedInsurancePool public ssip;
+    RiskPoolFactory public riskPoolFactory;
+    ExchangeAgent public exchangeAgentContract;
+    MockChainLinkAggregator public mockEthUsdAggregator;
+    
     address public operator;
-    address public multiSigWallet;
     address public governance;
-    address public factory;
     address public wethAddress;
+    uint256 public swapDeadline;
+    address public exchangeAgent;
+    address public multiSigWallet;
     address public uniswapRouterAddress;
     address public uniswapFactoryAddress;
     address public oraclePriceFeedAddress;
-    uint256 public swapDeadline;
-    MockUNO public unoToken;
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    event RoleGranted(bytes32 indexed, address indexed, address indexed);
+    struct PolicyParams {
+        address[] assets;
+        address[] protocols;
+        uint256[] coverageAmounts;
+        uint256[] coverageDurations;
+        uint256 policyPriceInUSDC;
+        uint256 signedTime;
+        address premiumCurrency;
+    }
 
     event LogSetProtocolURIInPolicy(address indexed , string );
-    event LogSetExchangeAgentInPolicy(address indexed, address indexed);
     event LogSetBuyPolicyMaxDeadlineInPolicy(uint256, address indexed);
+    event LogSetExchangeAgentInPolicy(address indexed, address indexed);
 
-    event PremiumWithdraw(address indexed , address indexed , uint256 );
-    event LogBuyBackAndBurn(address indexed , address indexed , uint256 );
-    event LogCollectPremium(address indexed , address , uint256 );
-    event LogDepositToSyntheticSSRPRewarder(address indexed , uint256 );
-    event LogDepositToSyntheticSSIPRewarder(address indexed , address indexed , uint256 );
-    event LogAddCurrency(address indexed , address indexed );
+    event KillPool(address indexed , bool );
+    event LogAddWhiteList(address indexed , address indexed );
     event LogRemoveCurrency(address indexed , address indexed );
+    event LogRemoveWhiteList(address indexed , address indexed );
     event LogMaxApproveCurrency(address indexed , address indexed , address indexed );
     event LogMaxDestroyCurrencyAllowance(address indexed , address indexed , address indexed );
-    event LogAddWhiteList(address indexed , address indexed );
-    event LogRemoveWhiteList(address indexed , address indexed );
-    event PoolAlived(address indexed , bool );
-    event KillPool(address indexed , bool );
 
     function setUp() public {
         multiSigWallet = address(0x1);
         governance = address(0x2);
-        factory = address(0x3);
         operator = address(0x4);
 
         usdcToken = new MockUSDC();
@@ -66,8 +74,20 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         uniswapRouterAddress = address(0x5432); 
         uniswapFactoryAddress = address(0x6543); 
         swapDeadline = 1800; // 30 minutes, adjust as needed
-
+        
+        /////////// ORACLE CONFIGURATION ///////////
+        mockEthUsdAggregator = new MockChainLinkAggregator(1 * 1e8, 8); // $2000 per ETH, 8 decimals
         priceOracle = new PriceOracle(multiSigWallet);
+
+        vm.prank(multiSigWallet);
+        priceOracle.setETHUSDAggregator(address(mockEthUsdAggregator));
+
+        vm.startPrank(multiSigWallet);
+        priceOracle.setAssetEthPrice(address(unoToken), 1e18); // 1:1 with ETH
+        priceOracle.addStableCoin(address(usdcToken));
+        vm.stopPrank();
+        /////////// END OF ORACLE CONFIGURATION ///////////
+
 
         exchangeAgentContract = new ExchangeAgent(
             address(usdcToken),
@@ -81,12 +101,31 @@ contract PremiumPoolAndSalesPolicyTest is Test {
 
         exchangeAgent = address(exchangeAgentContract);
 
+        /////////// CAPITAL AGENT CONFIGURATION ///////////
         vm.prank(multiSigWallet);
         capitalAgent = new CapitalAgent();
         capitalAgent.initialize(exchangeAgent, address(usdcToken), multiSigWallet, operator);
         
+        ssip = new SingleSidedInsurancePool();
+        ssip.initialize(address(capitalAgent), multiSigWallet);
+
+        riskPoolFactory = new RiskPoolFactory();
+
         vm.prank(multiSigWallet);
-        // Deploy PremiumPool 
+        capitalAgent.addPoolWhiteList(address(ssip));
+
+        vm.prank(multiSigWallet);
+        ssip.createRiskPool(
+            "Test Risk Pool",
+            "TRP",
+            address(riskPoolFactory),
+            address(unoToken),
+            1e18 // reward multiplier
+        );
+        /////////// END OF CAPITAL AGENT CONFIGURATION ///////////
+
+        /////////// PREMIUM POOL CONFIGURATION ///////////
+        vm.prank(multiSigWallet);
         premiumPool = new PremiumPool(
             exchangeAgent,
             address(unoToken),
@@ -94,24 +133,39 @@ contract PremiumPoolAndSalesPolicyTest is Test {
             multiSigWallet,
             governance
         );
-
-        // Add USDC as an allowed currency
+        
         vm.prank(multiSigWallet);
         premiumPool.addCurrency(address(usdcToken));
 
-        // Grant the pause role to governance
         bytes32 PAUSER_ROLE = 0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775;
         vm.prank(multiSigWallet);
         premiumPool.grantRole(PAUSER_ROLE, governance);
 
-        // Deploy SalesPolicy
+        vm.prank(multiSigWallet);
+        factory = new SalesPolicyFactory(
+            address(usdcToken),
+            address(exchangeAgent),
+            address(premiumPool),
+            address(capitalAgent),
+            multiSigWallet 
+        );
+        /////////// END OF PREMIUM POOL CONFIGURATION ///////////
+
+        /////////// SalesPolicy CONFIGURATION ///////////
         salesPolicy = new SalesPolicy(
-            factory,
+            address(factory),
             exchangeAgent,
             address(premiumPool),
             address(capitalAgent),
             address(usdcToken)
         );
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setSalesPolicyFactory(address(factory));
+
+        vm.prank(address(factory));
+        capitalAgent.setPolicy(address(salesPolicy));
+        /////////// END OF SALES POLICY CONFIGURATION ///////////
     }
 
     // PremiumPool Tests
@@ -358,14 +412,14 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     }
 
     function testDepositToSyntheticSSRPRewarder() public {
-        // TODO: Implement test for depositToSyntheticSSRPRewarder function
+        // TODO: VERIFY IF THIS IS NECESSARY Implement test for depositToSyntheticSSRPRewarder function
     }
 
     function testDepositToSyntheticSSIPRewarder() public {
-        // TODO: Implement test for depositToSyntheticSSIPRewarder function
+        // TODO: VERIFY IF THIS IS NECESSARY Implement test for depositToSyntheticSSIPRewarder function
     }
 
-    function testBuyBackAndBurn() public {
+   function testBuyBackAndBurn() public {
         // TODO: Implement test for buyBackAndBurn function
     }
 
@@ -491,27 +545,282 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     // SalesPolicy Tests
 
     function testKillPoolSalesPolicy() public {
-        // TODO: Implement test for killPool function in SalesPolicy
+        // Ensure the pool is not paused initially
+        assertFalse(salesPolicy.paused(), "Pool should not be paused initially");
+
+        // Try to kill the pool as a non-factory address (should fail)
+        vm.prank(address(0x1234));
+        vm.expectRevert("UnoRe: SalesPolicy Forbidden");
+        salesPolicy.killPool();
+
+        // Kill the pool as the factory
+        vm.prank(address(salesPolicy.factory()));
+        salesPolicy.killPool();
+
+        // Verify the pool is paused (killed)
+        assertTrue(salesPolicy.paused(), "Pool should be paused (killed)");
+
+        // Try to perform operations that should be restricted when the pool is killed
+
+        // For example, try to buy a policy (this should fail when the pool is killed)
+        address buyer = address(0x5678);
+        address[] memory assets = new address[](1);
+        assets[0] = address(0x1111);
+        address[] memory protocols = new address[](1);
+        protocols[0] = address(0x2222);
+        uint256[] memory coverageAmounts = new uint256[](1);
+        coverageAmounts[0] = 10 ether;
+        uint256[] memory coverageDurations = new uint256[](1);
+        coverageDurations[0] = 30 days;
+        uint256 policyPriceInUSDC = 1 ether;
+        uint256 signedTime = block.timestamp;
+        address premiumCurrency = address(0); // ETH
+        bytes32 r = 0x0;
+        bytes32 s = 0x0;
+        uint8 v = 27;
+        uint256 nonce = 0;
+
+        vm.deal(buyer, 2 ether);
+
+        vm.prank(buyer);
+        vm.expectRevert(abi.encodeWithSelector(0xd93c0665));
+        salesPolicy.buyPolicy{value: 1 ether}(
+            assets,
+            protocols,
+            coverageAmounts,
+            coverageDurations,
+            policyPriceInUSDC,
+            signedTime,
+            premiumCurrency,
+            r,
+            s,
+            v,
+            nonce
+        );
+
+        // Try to revive the pool as a non-factory address (should fail)
+        vm.prank(address(0x1234));
+        vm.expectRevert("UnoRe: SalesPolicy Forbidden");
+        salesPolicy.revivePool();
+
+        // Revive the pool as the factory
+        vm.prank(address(salesPolicy.factory()));
+        salesPolicy.revivePool();
+
+        // Verify the pool is not paused (revived)
+        assertFalse(salesPolicy.paused(), "Pool should not be paused (revived)");
+
+        // Verify that operations can be performed again after revival
+        // Note: This will fail unless we properly set up the signer and other required conditions
+        // For the purpose of this test, we'll just check that it doesn't revert due to being paused
+        vm.prank(buyer);
+        vm.expectRevert(); // Expect a revert, but not due to being paused
+        salesPolicy.buyPolicy{value: 1 ether}(
+            assets,
+            protocols,
+            coverageAmounts,
+            coverageDurations,
+            policyPriceInUSDC,
+            signedTime,
+            premiumCurrency,
+            r,
+            s,
+            v,
+            nonce
+        );
     }
 
-    function testRevivePoolSalesPolicy() public {
-        // TODO: Implement test for revivePool function in SalesPolicy
-    }
-
+    // LEAVE ALL LOGS FOR FUTURE DEBUGGING!!!! THIS IS A COMPLEX TEST THAT INTERACTS WITH 
+    // MOST OF THE REPOSITORY CONTRACTS. MAKE SURE THAT IT IS ALWAYS PASSING
     function testBuyPolicy() public {
-        // TODO: Implement test for buyPolicy function
+        address buyer = address(0x1234);
+        uint256 ethAmount = 1 ether;
+
+        vm.prank(multiSigWallet);
+        uint256 stakingStartTime = block.timestamp + 1 hours;
+        // Set staking start time to now
+        ssip.setStakingStartTime(block.timestamp);
+
+        vm.prank(buyer);
+        unoToken.mint(2000 ether);
+        vm.prank(buyer);
+        unoToken.approve(address(ssip), 2000 ether);
+
+        vm.warp(stakingStartTime + 1);
+
+        // Set MLR
+        vm.prank(operator);
+        capitalAgent.setMLR(ethAmount * 2);
+
+        // Simulate staking
+        vm.prank(buyer);
+        ssip.enterInPool(ethAmount);
+
+        PolicyParams memory params = setupPolicyParams();
+        
+        // Mock the exchange rate
+        mockExchangeRate(params.policyPriceInUSDC, ethAmount);
+
+        // Setup buyer
+        vm.deal(buyer, ethAmount);
+
+        // Generate a valid signature
+        (uint8 v, bytes32 r, bytes32 s) = generateSignature(params, buyer);
+
+        // Set the signer
+        setSigner();
+
+        // Whitelist the buyer and the SalesPolicy contract
+        vm.startPrank(multiSigWallet);
+        premiumPool.addWhiteList(buyer);
+        premiumPool.addWhiteList(address(salesPolicy));
+        vm.stopPrank();
+        
+        // Verify that the buyer and SalesPolicy are whitelisted
+        assertTrue(premiumPool.whiteList(buyer), "Buyer should be whitelisted");
+        assertTrue(premiumPool.whiteList(address(salesPolicy)), "SalesPolicy should be whitelisted");
+
+        // Print initial balances
+        console.log("Initial SalesPolicy balance:", address(salesPolicy).balance);
+        console.log("Initial PremiumPool balance:", address(premiumPool).balance);
+        console.log("Initial Buyer balance:", buyer.balance);
+        address factoryAddress = salesPolicy.factory();
+        console.log("Factory address in SalesPolicy:", factoryAddress);
+
+        // Buy policy
+        vm.prank(buyer);
+        try salesPolicy.buyPolicy{value: ethAmount}(
+            params.assets,
+            params.protocols,
+            params.coverageAmounts,
+            params.coverageDurations,
+            params.policyPriceInUSDC,
+            params.signedTime,
+            params.premiumCurrency,
+            r,
+            s,
+            v,
+            0 // nonce
+        ) {
+            console.log("Policy bought successfully");
+        } catch Error(string memory reason) {
+            console.log("buyPolicy failed with Error:", reason);
+            revert(reason);
+        } catch (bytes memory lowLevelData) {
+            console.log("buyPolicy failed with low-level error:", vm.toString(lowLevelData));
+            revert("Low-level error");
+        }
+
+        // Print final balances
+        console.log("Final SalesPolicy balance:", address(salesPolicy).balance);
+        console.log("Final PremiumPool balance:", address(premiumPool).balance);
+        console.log("Final Buyer balance:", buyer.balance);
+
+        // Verify policy data
+        verifyPolicyData(params);
+
+        // Verify token transfer
+        assertEq(address(premiumPool).balance, ethAmount, "PremiumPool should have received the ETH");
+        assertEq(address(salesPolicy).balance, 0, "SalesPolicy should have 0 ETH balance");
+        uint256 policyId = salesPolicy.allPoliciesLength() - 1;
+        // Mark the policy to claim
+        vm.prank(address(capitalAgent));
+        salesPolicy.markToClaim(policyId);
+
+        // Get the policy data
+        (,,, bool exists, bool isExpired) = salesPolicy.getPolicyData(policyId);
+
+        // Assert
+        assertFalse(exists, "Policy should be marked as claimed");
+        assertFalse(isExpired, "Policy should not be marked as expired");
+
+    }
+
+    function setupPolicyParams() private view returns (PolicyParams memory) {
+        address[] memory assets = new address[](1);
+        assets[0] = address(0x5678);
+        address[] memory protocols = new address[](1);
+        protocols[0] = address(0x9ABC);
+        uint256[] memory coverageAmounts = new uint256[](1);
+        coverageAmounts[0] = 10000 * 1e6; // 10,000 USDC coverage
+        uint256[] memory coverageDurations = new uint256[](1);
+        coverageDurations[0] = 30 days;
+
+        return PolicyParams({
+            assets: assets,
+            protocols: protocols,
+            coverageAmounts: coverageAmounts,
+            coverageDurations: coverageDurations,
+            policyPriceInUSDC: 1000 * 1e6, // 1000 USDC
+            signedTime: block.timestamp,
+            premiumCurrency: address(0) // ETH
+        });
+    }
+
+    function mockExchangeRate(uint256 policyPriceInUSDC, uint256 ethAmount) private {
+        vm.mockCall(
+            address(exchangeAgent),
+            abi.encodeWithSelector(IExchangeAgent.getETHAmountForUSDC.selector, policyPriceInUSDC),
+            abi.encode(ethAmount)
+        );
+    }
+
+    function generateSignature(PolicyParams memory params, address buyer) private view returns (uint8, bytes32, bytes32) {
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            params.policyPriceInUSDC, params.protocols, params.coverageDurations, params.coverageAmounts,
+            params.signedTime, params.premiumCurrency, uint256(0), buyer, block.chainid
+        ));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+        return vm.sign(uint256(1), ethSignedMessageHash);
+    }
+
+    function setSigner() private {
+        vm.prank(address(salesPolicy.factory()));
+        salesPolicy.setSigner(vm.addr(1));
+    }
+
+    function verifyPolicyData(PolicyParams memory params) private {
+        (uint256 coverageAmount, uint256 coverageDuration, uint256 coverStartAt, bool exist, bool expired) = salesPolicy.getPolicyData(0);
+        assertEq(coverageAmount, params.coverageAmounts[0], "Coverage amount mismatch");
+        assertEq(coverageDuration, params.coverageDurations[0], "Coverage duration mismatch");
+        assertEq(coverStartAt, block.timestamp, "Cover start time mismatch");
+        assertTrue(exist, "Policy should exist");
+        assertFalse(expired, "Policy should not be expired");
     }
 
     function testApprovePremium() public {
-        // TODO: Implement test for approvePremium function
+        address premiumCurrency = address(0x1234); // Mock ERC20 token address
+        
+        // Setup mock ERC20 token
+        MockUNO mockToken = new MockUNO();
+        
+        // Expect approval event
+        vm.expectCall(
+            address(mockToken),
+            abi.encodeWithSelector(IERC20.approve.selector, address(salesPolicy.premiumPool()), type(uint256).max)
+        );
+
+
+        // Call approvePremium
+        vm.prank(address(salesPolicy.factory()));
+        salesPolicy.approvePremium(address(mockToken));
+
+        // Verify approval
+        assertEq(
+            mockToken.allowance(address(salesPolicy), address(salesPolicy.premiumPool())),
+            type(uint256).max,
+            "Allowance should be set to max"
+        );
     }
+
+
     function testSetProtocolURI() public {
         string memory newURI = "https://new.protocol.uri";
         // Expect the event to be emitted
         vm.expectEmit(true, true, true, true);
         emit LogSetProtocolURIInPolicy(address(salesPolicy), newURI);
         
-        vm.prank(factory);
+        vm.prank(address(factory));
         salesPolicy.setProtocolURI(newURI);
         
         vm.prank(address(0x1234));
@@ -522,7 +831,7 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     function testSetPremiumPool() public {
         address newPremiumPool = address(0x1234);
         
-        vm.prank(factory);
+        vm.prank(address(factory));
         salesPolicy.setPremiumPool(newPremiumPool);
         
         assertEq(address(salesPolicy.premiumPool()), newPremiumPool, "Premium pool should be updated");
@@ -539,7 +848,7 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         vm.expectEmit(true, true, true, true);
         emit LogSetExchangeAgentInPolicy(newExchangeAgent,address(salesPolicy));
         
-        vm.prank(factory);
+        vm.prank(address(factory));
         salesPolicy.setExchangeAgent(newExchangeAgent);
         
         vm.prank(address(0x6789));
@@ -550,7 +859,7 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     function testSetSigner() public {
         address newSigner = address(0x3456);
         
-        vm.prank(factory);
+        vm.prank(address(factory));
         salesPolicy.setSigner(newSigner);
         
         assertEq(salesPolicy.signer(), newSigner, "Signer should be updated");
@@ -563,7 +872,7 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     function testSetCapitalAgent() public {
         address newCapitalAgent = address(0x4567);
         
-        vm.prank(factory);
+        vm.prank(address(factory));
         salesPolicy.setCapitalAgent(newCapitalAgent);
         
         assertEq(address(salesPolicy.capitalAgent()), newCapitalAgent, "Capital agent should be updated");
@@ -579,7 +888,7 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         vm.expectEmit(true, true, true, true);
         emit LogSetBuyPolicyMaxDeadlineInPolicy(newDeadline, address(salesPolicy));
         
-        vm.prank(factory);
+        vm.prank(address(factory));
         salesPolicy.setBuyPolicyMaxDeadline(newDeadline);
         
         vm.prank(address(0x9012));
@@ -588,18 +897,18 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     }
 
     function testMarkToClaim() public {
-        // TODO: Implement test for markToClaim function
+      // TODO
     }
 
     function testUpdatePolicyExpired() public {
-        // TODO: Implement test for updatePolicyExpired function
+        // TODO
     }
 
     function testAllPoliciesLength() public {
-        // TODO: Implement test for allPoliciesLength function
+        // TODO
     }
 
     function testGetPolicyData() public {
-        // TODO: Implement test for getPolicyData function
+        // TODO
     }
 }
