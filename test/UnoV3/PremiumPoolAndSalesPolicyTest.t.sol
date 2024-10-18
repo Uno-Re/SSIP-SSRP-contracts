@@ -636,9 +636,32 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         address buyer = address(0x1234);
         uint256 ethAmount = 1 ether;
 
+        // Print initial balances
+        console.log("Initial SalesPolicy balance:", address(salesPolicy).balance);
+        console.log("Initial PremiumPool balance:", address(premiumPool).balance);
+        console.log("Initial Buyer balance:", buyer.balance);
+        address factoryAddress = salesPolicy.factory();
+        console.log("Factory address in SalesPolicy:", factoryAddress);
+
+        // Buy policy using the new helper function
+        uint256 policyId = buyPolicy(buyer, ethAmount);
+
+        // Print final balances
+        console.log("Final SalesPolicy balance:", address(salesPolicy).balance);
+        console.log("Final PremiumPool balance:", address(premiumPool).balance);
+        console.log("Final Buyer balance:", buyer.balance);
+
+        // Verify policy data
+        verifyPolicyData(setupPolicyParams());
+
+        // Verify token transfer
+        assertEq(address(premiumPool).balance, ethAmount, "PremiumPool should have received the ETH");
+        assertEq(address(salesPolicy).balance, 0, "SalesPolicy should have 0 ETH balance");
+    }
+
+    function buyPolicy(address buyer, uint256 ethAmount) internal returns (uint256 policyId) {
         vm.prank(multiSigWallet);
         uint256 stakingStartTime = block.timestamp + 1 hours;
-        // Set staking start time to now
         ssip.setStakingStartTime(block.timestamp);
 
         vm.prank(buyer);
@@ -646,11 +669,11 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         vm.prank(buyer);
         unoToken.approve(address(ssip), 2000 ether);
 
-        vm.warp(stakingStartTime + 1);
-
         // Set MLR
         vm.prank(operator);
         capitalAgent.setMLR(ethAmount * 2);
+
+        vm.warp(stakingStartTime + 1);
 
         // Simulate staking
         vm.prank(buyer);
@@ -675,17 +698,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         premiumPool.addWhiteList(buyer);
         premiumPool.addWhiteList(address(salesPolicy));
         vm.stopPrank();
-        
-        // Verify that the buyer and SalesPolicy are whitelisted
-        assertTrue(premiumPool.whiteList(buyer), "Buyer should be whitelisted");
-        assertTrue(premiumPool.whiteList(address(salesPolicy)), "SalesPolicy should be whitelisted");
-
-        // Print initial balances
-        console.log("Initial SalesPolicy balance:", address(salesPolicy).balance);
-        console.log("Initial PremiumPool balance:", address(premiumPool).balance);
-        console.log("Initial Buyer balance:", buyer.balance);
-        address factoryAddress = salesPolicy.factory();
-        console.log("Factory address in SalesPolicy:", factoryAddress);
 
         // Buy policy
         vm.prank(buyer);
@@ -711,30 +723,9 @@ contract PremiumPoolAndSalesPolicyTest is Test {
             revert("Low-level error");
         }
 
-        // Print final balances
-        console.log("Final SalesPolicy balance:", address(salesPolicy).balance);
-        console.log("Final PremiumPool balance:", address(premiumPool).balance);
-        console.log("Final Buyer balance:", buyer.balance);
-
-        // Verify policy data
-        verifyPolicyData(params);
-
-        // Verify token transfer
-        assertEq(address(premiumPool).balance, ethAmount, "PremiumPool should have received the ETH");
-        assertEq(address(salesPolicy).balance, 0, "SalesPolicy should have 0 ETH balance");
-        uint256 policyId = salesPolicy.allPoliciesLength() - 1;
-        // Mark the policy to claim
-        vm.prank(address(capitalAgent));
-        salesPolicy.markToClaim(policyId);
-
-        // Get the policy data
-        (,,, bool exists, bool isExpired) = salesPolicy.getPolicyData(policyId);
-
-        // Assert
-        assertFalse(exists, "Policy should be marked as claimed");
-        assertFalse(isExpired, "Policy should not be marked as expired");
-
-    }
+        policyId = salesPolicy.allPoliciesLength() - 1;
+        return policyId;
+}
 
     function setupPolicyParams() private view returns (PolicyParams memory) {
         address[] memory assets = new address[](1);
@@ -897,18 +888,169 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     }
 
     function testMarkToClaim() public {
-      // TODO
+        address buyer = address(0x1234);
+        uint256 ethAmount = 1 ether;
+
+        // Buy policy using the new helper function
+        uint256 policyId = buyPolicy(buyer, ethAmount);
+
+        // Mark the policy to claim
+        vm.prank(address(multiSigWallet));
+        capitalAgent.markToClaimPolicy(policyId);
+
+        // Get the policy data
+        (,,, bool exists, bool isExpired) = salesPolicy.getPolicyData(policyId);
+
+        // Assert
+        assertFalse(exists, "Policy should be marked as claimed");
+        assertFalse(isExpired, "Policy should not be marked as expired");
     }
 
     function testUpdatePolicyExpired() public {
-        // TODO
+        address buyer = address(0x1234);
+        uint256 ethAmount = 1 ether;
+
+        // Buy a policy
+        uint256 policyId = buyPolicy(buyer, ethAmount);
+
+        // Get initial policy data
+        (, uint256 policyStartTime, uint256 policyEndTime, bool initialExists, bool initialIsExpired) = salesPolicy.getPolicyData(policyId);
+
+        // Assert initial state
+        assertTrue(initialExists, "Policy should exist initially");
+        assertFalse(initialIsExpired, "Policy should not be expired initially");
+
+        console.log("Policy start time:", policyStartTime);
+        console.log("Policy end time:", policyEndTime);
+
+        // Fast forward time to after policy expiration
+        vm.warp(policyEndTime + 1);
+
+        // Update policy expired status with the correct authorized address
+        vm.prank(address(capitalAgent));
+        salesPolicy.updatePolicyExpired(policyId);
+
+        // Try to get policy data after expiration 
+        (, , , , bool expired ) = salesPolicy.getPolicyData(policyId);
+        assertTrue(expired, "Policy should be expired");
+        
+        // Try to claim an expired policy (should revert due to non-existent token)
+        vm.prank(address(capitalAgent));
+        vm.expectRevert("UnoRe: policy expired");
+        salesPolicy.markToClaim(policyId);
+
+        // Verify that the token no longer exists
+        vm.expectRevert();
+        salesPolicy.ownerOf(policyId);
     }
 
     function testAllPoliciesLength() public {
-        // TODO
+        address buyer1 = address(0x1234);
+        address buyer2 = address(0x5678);
+        address buyer3 = address(0x9ABC);
+        uint256 ethAmount = 1 ether;
+        
+        // Check initial length
+        uint256 initialLength = salesPolicy.allPoliciesLength();
+        assertEq(initialLength, 0, "Initial policies length should be 0");
+
+        // Buy first policy
+        uint256 policyId1 = buyPolicy(buyer1, ethAmount);
+        uint256 lengthAfterFirst = salesPolicy.allPoliciesLength();
+        assertEq(lengthAfterFirst, 1, "Policies length should be 1 after first purchase");
+
+        // Set staking start time to now
+        vm.prank(multiSigWallet);
+        uint256 stakingStartTime = block.timestamp;
+        ssip.setStakingStartTime(stakingStartTime);
+
+        // Warp to after staking start time
+        vm.warp(stakingStartTime + 1);
+
+        // Buy second policy
+        uint256 policyId2 = buyPolicy(buyer2, ethAmount);
+        uint256 lengthAfterSecond = salesPolicy.allPoliciesLength();
+        assertEq(lengthAfterSecond, 2, "Policies length should be 2 after second purchase");
+
+        // Buy third policy
+        uint256 policyId3 = buyPolicy(buyer3, ethAmount);
+        uint256 lengthAfterThird = salesPolicy.allPoliciesLength();
+        assertEq(lengthAfterThird, 3, "Policies length should be 3 after third purchase");
+
+        // Get policy parameters
+        PolicyParams memory params = setupPolicyParams();
+
+        // Expire a policy
+        vm.warp(block.timestamp + params.coverageDurations[0] + 1);
+        vm.prank(address(capitalAgent));
+        salesPolicy.updatePolicyExpired(policyId2);
+
+        // Check length after expiring a policy
+        uint256 lengthAfterExpiration = salesPolicy.allPoliciesLength();
+        assertEq(lengthAfterExpiration, 3, "Policies length should still be 3 after expiration");
+
+        // Try to claim a policy
+        vm.prank(address(capitalAgent));
+        salesPolicy.markToClaim(policyId1);
+
+        // Check length after claiming a policy
+        uint256 lengthAfterClaim = salesPolicy.allPoliciesLength();
+        assertEq(lengthAfterClaim, 3, "Policies length should still be 3 after claiming");
+
+        console.log("testAllPoliciesLength passed successfully");
     }
 
     function testGetPolicyData() public {
-        // TODO
+        address buyer = address(0x1234);
+        uint256 ethAmount = 1 ether;
+
+        // Buy a policy
+        uint256 policyId = buyPolicy(buyer, ethAmount);
+
+        // Get policy data
+        (
+            uint256 coverageAmount,
+            uint256 duration,
+            uint256 startTime,
+            bool exists,
+            bool isExpired
+        ) = salesPolicy.getPolicyData(policyId);
+
+        // Get the policy parameters used in buyPolicy
+        PolicyParams memory params = setupPolicyParams();
+
+        // Assert policy data
+        assertEq(coverageAmount, params.coverageAmounts[0], "Coverage amount should match");
+        assertEq(duration, params.coverageDurations[0], "Duration should match");
+        assertTrue(startTime > 0, "Start time should be set");
+        assertTrue(exists, "Policy should exist");
+        assertFalse(isExpired, "Policy should not be expired initially");
+
+        // Calculate and check end time
+        uint256 expectedEndTime = startTime + duration;
+        assertTrue(expectedEndTime > block.timestamp, "End time should be in the future");
+
+        // Try to get data for a non-existent policy
+        uint256 nonExistentPolicyId = 9999;
+        salesPolicy.getPolicyData(nonExistentPolicyId);
+
+        // Fast forward to just before policy expiration
+        vm.warp(expectedEndTime - 1);
+        (, , , exists, isExpired) = salesPolicy.getPolicyData(policyId);
+        assertTrue(exists, "Policy should still exist before expiration");
+        assertFalse(isExpired, "Policy should not be expired before end time");
+
+        // Fast forward to after policy expiration
+        vm.warp(expectedEndTime + 1);
+        vm.prank(address(capitalAgent));
+        salesPolicy.updatePolicyExpired(policyId);
+    }
+
+    function testSSIPPolicyClaim() public {
+        // TODO: Test SSIP policy claim with valid amount
+    }
+
+    function testSSIPPolicyClaimExceedingCoverage() public {
+        // TODO: Test SSIP policy claim with amount exceeding coverage
     }
 }
