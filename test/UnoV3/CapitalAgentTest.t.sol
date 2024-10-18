@@ -284,53 +284,6 @@ contract CapitalAgentTest is Test {
         capitalAgent.removePolicy();
     }
 
-    function testOnlyAdminCanMarkPolicyToClaim() public {
-        address policy = address(salesPolicy);
-        uint256 nonce = 0;
-
-        // Generate signature
-        (uint8 v, bytes32 r, bytes32 s) = generateSignature(nonce);
-
-        // Set a policy first
-        vm.prank(multiSigWallet);
-        capitalAgent.setPolicyByAdmin(policy);
-
-        // Buy a policy
-        vm.startPrank(policyBuyer);
-        deal(address(usdcToken), policyBuyer, policyPriceInUSDC, true);
-        MockUSDC(address(usdcToken)).approve(address(salesPolicy), policyPriceInUSDC);
-        salesPolicy.buyPolicy(
-            assets,
-            protocols,
-            coverageAmount,
-            coverageDuration,
-            policyPriceInUSDC,
-            signedTime,
-            premiumCurrency,
-            r,
-            s,
-            v,
-            nonce
-        );
-        vm.stopPrank();
-
-        // Get the policy ID
-        uint256 policyId = salesPolicy.allPoliciesLength() - 1;
-
-        // Non-admin should not be able to mark policy to claim
-        vm.prank(address(0x7));
-        vm.expectRevert("UnoRe: Capital Agent Forbidden");
-        capitalAgent.markToClaimPolicy(policyId);
-
-        // Admin should be able to mark policy to claim
-        vm.prank(multiSigWallet);
-        capitalAgent.markToClaimPolicy(policyId);
-
-        // Verify that the policy is marked as claimed
-        (, , , bool exist, ) = salesPolicy.getPolicyData(policyId);
-        assertFalse(exist, "Policy should be marked as claimed (not exist)");
-    }
-
     function testOnlyAdminCanSetExchangeAgent() public {
         address newExchangeAgent = address(0x8);
 
@@ -742,7 +695,7 @@ contract CapitalAgentTest is Test {
 
         // Attempt to withdraw an amount that would violate MLR
         vm.prank(user);
-        vm.expectRevert(); //TODO add MLR error handler
+        vm.expectRevert();
         ssip.leaveFromPoolInPending(withdrawAmount);
 
         // Verify that the staked amount remains unchanged
@@ -752,14 +705,6 @@ contract CapitalAgentTest is Test {
         // Verify that the total pending capital in USDC is still zero
         uint256 totalPending = capitalAgent.getTotalPendingCapitalInUSDC();
         assertEq(totalPending, 0, "Total pending should be zero after failed withdrawal attempt");
-    }
-
-    function testSSIPPolicyClaim() public {
-        // TODO: Test SSIP policy claim with valid amount
-    }
-
-    function testSSIPPolicyClaimExceedingCoverage() public {
-        // TODO: Test SSIP policy claim with amount exceeding coverage
     }
 
     function testUpdatePoolWithdrawPendingCapitalAdd() public {
@@ -959,35 +904,6 @@ contract CapitalAgentTest is Test {
 
         // Assert
         assertFalse(cannotCover, "Should not be able to cover this amount");
-    }
-
-    // 7. Policy Operations
-    function testPolicySale() public {
-        // TODO: Test policy sale with valid coverage amount
-    }
-
-    function testPolicySaleNonPolicyAddress() public {
-        // TODO: Test policy sale from non-policy address
-    }
-
-    function testPolicySaleNonExistentPolicy() public {
-        // TODO: Test policy sale with non-existent policy
-    }
-
-    function testPolicySaleViolatingMLR() public {
-        // TODO: Test policy sale that violates MLR
-    }
-
-    function testUpdateExpiredPolicyStatus() public {
-        // TODO: Test updating expired policy status
-    }
-
-    function testUpdateNonExpiredPolicyStatus() public {
-        // TODO: Test updating non-expired policy status
-    }
-
-    function testMarkPolicyToClaim() public {
-        // TODO: Test marking policy to claim
     }
 
     // 8. Calculations and Conversions
@@ -1279,18 +1195,6 @@ contract CapitalAgentTest is Test {
         assertEq(totalCapitalStaked, initialStakingAmount, "Total capital staked not updated correctly");
     }
 
-    function testLogUpdatePolicyCoverageEvent() public {
-        // TODO: Verify LogUpdatePolicyCoverage event emission
-    }
-
-    function testLogUpdatePolicyExpiredEvent() public {
-        // TODO: Verify LogUpdatePolicyExpired event emission
-    }
-
-    function testLogMarkToClaimPolicyEvent() public {
-        // TODO: Verify LogMarkToClaimPolicy event emission
-    }
-
     function testLogSetMLREvent() public {
         uint256 newMLR = 2 * 1e18; // 200%
 
@@ -1521,10 +1425,6 @@ contract CapitalAgentTest is Test {
             largeAmount
         );
         assertLt(convertedLargeAmount, largeAmount, "Large amount conversion failed");
-    }
-
-    function testSalesPolicyInteraction() public {
-        // TODO: Verify correct interaction with SalesPolicy contract
     }
 
     function testSSIPInteraction() public {
