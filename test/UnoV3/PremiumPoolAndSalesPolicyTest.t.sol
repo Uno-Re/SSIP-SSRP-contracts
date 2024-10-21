@@ -27,7 +27,10 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     SalesPolicyFactory public factory;
     SingleSidedInsurancePool public ssip;
     RiskPoolFactory public riskPoolFactory;
+    MockUniswapPair public mockUniswapPair;
     ExchangeAgent public exchangeAgentContract;
+    MockUniswapFactory public mockUniswapFactory;
+    MockUniswapRouter public uniswapRouterAddress;
     MockChainLinkAggregator public mockEthUsdAggregator;
     
     address public operator;
@@ -36,7 +39,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     uint256 public swapDeadline;
     address public exchangeAgent;
     address public multiSigWallet;
-    address public uniswapRouterAddress;
     address public uniswapFactoryAddress;
     address public oraclePriceFeedAddress;
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -69,12 +71,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
 
         usdcToken = new MockUSDC();
         unoToken = new MockUNO();
-
-        wethAddress = address(0x4321); 
-        uniswapRouterAddress = address(0x5432); 
-        uniswapFactoryAddress = address(0x6543); 
-        swapDeadline = 1800; // 30 minutes, adjust as needed
-        
         /////////// ORACLE CONFIGURATION ///////////
         mockEthUsdAggregator = new MockChainLinkAggregator(1 * 1e8, 8); // $2000 per ETH, 8 decimals
         priceOracle = new PriceOracle(multiSigWallet);
@@ -88,21 +84,41 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         vm.stopPrank();
         /////////// END OF ORACLE CONFIGURATION ///////////
 
+        /////////// START OF EXCHANGE AGENT CONFIGURATION ///////////
+
+        wethAddress = address(0x4321); 
+        MockUniswapRouter uniswapRouterAddress = new MockUniswapRouter();
+        swapDeadline = 1800; // 30 minutes, adjust as needed
+
+        // Deploy mock Uniswap contracts
+        mockUniswapFactory = new MockUniswapFactory();
+        mockUniswapPair = new MockUniswapPair(address(usdcToken), address(unoToken));
+
+        // Configure the mock factory to return our mock pair
+        mockUniswapFactory.setPair(address(usdcToken), address(unoToken), address(mockUniswapPair));
 
         exchangeAgentContract = new ExchangeAgent(
             address(usdcToken),
             wethAddress,
             address(priceOracle),
-            uniswapRouterAddress,
-            uniswapFactoryAddress,
+            address(uniswapRouterAddress),
+            address(mockUniswapFactory),
             multiSigWallet,
             swapDeadline
         ); 
 
         exchangeAgent = address(exchangeAgentContract);
 
+        // Add liquidity to the mock pair
+        vm.startPrank(address(mockUniswapPair));
+        usdcToken.faucetToken(1000000 ether);
+        unoToken.mint(1000000 ether);
+        mockUniswapPair.sync();
+        vm.stopPrank();
+        /////////// END OF EXCHANGE AGENT CONFIGURATION ///////////
+
         /////////// CAPITAL AGENT CONFIGURATION ///////////
-        vm.prank(multiSigWallet);
+        vm.startPrank(multiSigWallet);
         capitalAgent = new CapitalAgent();
         capitalAgent.initialize(exchangeAgent, address(usdcToken), multiSigWallet, operator);
         
@@ -111,10 +127,8 @@ contract PremiumPoolAndSalesPolicyTest is Test {
 
         riskPoolFactory = new RiskPoolFactory();
 
-        vm.prank(multiSigWallet);
         capitalAgent.addPoolWhiteList(address(ssip));
 
-        vm.prank(multiSigWallet);
         ssip.createRiskPool(
             "Test Risk Pool",
             "TRP",
@@ -122,6 +136,11 @@ contract PremiumPoolAndSalesPolicyTest is Test {
             address(unoToken),
             1e18 // reward multiplier
         );
+
+        uint256 stakingStartTime = block.timestamp + 1 hours;
+        ssip.setStakingStartTime(block.timestamp);
+        vm.warp(stakingStartTime);
+        vm.stopPrank();
         /////////// END OF CAPITAL AGENT CONFIGURATION ///////////
 
         /////////// PREMIUM POOL CONFIGURATION ///////////
@@ -165,6 +184,10 @@ contract PremiumPoolAndSalesPolicyTest is Test {
 
         vm.prank(address(factory));
         capitalAgent.setPolicy(address(salesPolicy));
+
+        vm.startPrank(multiSigWallet);
+        premiumPool.addWhiteList(address(salesPolicy));
+        vm.stopPrank();
         /////////// END OF SALES POLICY CONFIGURATION ///////////
     }
 
@@ -369,7 +392,7 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         premiumPool.addWhiteList(user);
         // Mint tokens to the user
         vm.prank(user);
-        usdcToken.faucetToken( premiumAmount);
+        usdcToken.faucetToken(premiumAmount);
 
         // Record initial balances
         uint256 initialPoolBalance = usdcToken.balanceOf(address(premiumPool));
@@ -419,12 +442,174 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         // TODO: VERIFY IF THIS IS NECESSARY Implement test for depositToSyntheticSSIPRewarder function
     }
 
-   function testBuyBackAndBurn() public {
-        // TODO: Implement test for buyBackAndBurn function
+    function testBuyBackAndBurn() public {
+        address user = address(0x1234);
+        uint256 initialDeposit = 1000 ether;
+        address burnAddress = address(0x000000000000000000000000000000000000dEaD);
+        // Setup: Add user to whitelist and let them deposit some funds
+        vm.prank(multiSigWallet);
+        premiumPool.addWhiteList(user);
+
+        vm.startPrank(user);
+        usdcToken.faucetToken(initialDeposit);
+        usdcToken.approve(address(premiumPool), initialDeposit);
+        premiumPool.collectPremium(address(usdcToken), initialDeposit);
+        vm.stopPrank();
+
+        // Get the correct Uniswap router address from the ExchangeAgent
+        address correctUniswapRouterAddress = exchangeAgentContract.UNISWAP_ROUTER_V3();
+
+        // Ensure MockUniswapRouter has enough UNO tokens for the swap
+        vm.startPrank(address(correctUniswapRouterAddress));
+        unoToken.mint(1000000 ether);
+        vm.stopPrank();
+
+        // Add PremiumPool to ExchangeAgent's whitelist
+        vm.prank(multiSigWallet);
+        exchangeAgentContract.addWhiteList(address(premiumPool));
+
+        // Ensure ExchangeAgent has enough tokens for the swap
+        vm.startPrank(address(exchangeAgent));
+        usdcToken.faucetToken(1000000 ether);
+        unoToken.mint(1000000 ether);
+        
+        // Approve the correct Uniswap router to spend tokens
+        usdcToken.approve(correctUniswapRouterAddress, type(uint256).max);
+        unoToken.approve(correctUniswapRouterAddress, type(uint256).max);
+        vm.stopPrank();
+
+        uint256 initialPoolUSDCBalance = usdcToken.balanceOf(address(premiumPool));
+        uint256 initialPoolUNOBalance = unoToken.balanceOf(address(premiumPool));
+        uint256 initialUNOTotalSupply = unoToken.balanceOf(address(burnAddress));
+
+        // Ensure the test contract has enough USDC for the conversion
+        usdcToken.faucetToken(1000000 ether);
+
+        // Approve ExchangeAgent to spend USDC
+        usdcToken.approve(address(exchangeAgentContract), type(uint256).max);
+
+        // Test conversion
+        uint256 testConvertAmount = 1000 ether;
+        uint256 convertedUNO = exchangeAgentContract.convertForToken(address(usdcToken), address(unoToken), testConvertAmount);
+        console.log("Test conversion: 1000 USDC to UNO:", convertedUNO);
+
+        vm.prank(governance);
+        premiumPool.buyBackAndBurn();
+
+        uint256 finalPoolUSDCBalance = usdcToken.balanceOf(address(premiumPool));
+        uint256 finalPoolUNOBalance = unoToken.balanceOf(address(premiumPool));
+        uint256 finalUNOTotalSupply = unoToken.balanceOf(address(burnAddress));
+
+        assertLt(
+            finalPoolUSDCBalance,
+            initialPoolUSDCBalance,
+            "Pool USDC balance should decrease"
+        );
+        assertEq(
+            finalPoolUNOBalance,
+            initialPoolUNOBalance,
+            "Pool UNO balance should remain the same"
+        );
+        assertEq(
+            finalUNOTotalSupply,
+            initialUNOTotalSupply + finalUNOTotalSupply - initialPoolUNOBalance,
+            "UNO total supply should decrease"
+        );
+
+        // Test 2: Attempt to buy back as non-governance address
+        vm.prank(user);
+        vm.expectRevert();
+        premiumPool.buyBackAndBurn();
     }
 
     function testWithdrawPremium() public {
-        // TODO: Implement test for withdrawPremium function
+        address user = address(0x1234);
+        address governance = address(0x5678);
+        uint256 initialDeposit = 1000 ether;
+        uint256 withdrawAmount = 500 ether;
+
+        // Setup: Add user to whitelist and let them deposit some funds
+        vm.prank(multiSigWallet);
+        premiumPool.addWhiteList(user);
+
+        vm.startPrank(user);
+        usdcToken.faucetToken(initialDeposit);
+        usdcToken.approve(address(premiumPool), initialDeposit);
+        premiumPool.collectPremium(address(usdcToken), initialDeposit);
+        vm.stopPrank();
+
+        // Grant GOVERNANCE_ROLE to the governance address
+        bytes32 GOVERNANCE_ROLE = keccak256("GOVERNANCE_ROLE");
+        vm.prank(multiSigWallet);
+        premiumPool.grantRole(GOVERNANCE_ROLE, governance);
+
+        // Record initial balances
+        uint256 initialPoolBalance = usdcToken.balanceOf(address(premiumPool));
+        uint256 initialGovernanceBalance = usdcToken.balanceOf(governance);
+
+        // Test 1: Successful withdrawal
+        vm.prank(governance);
+        premiumPool.withdrawPremium(address(usdcToken), governance, withdrawAmount);
+
+        assertEq(
+            usdcToken.balanceOf(address(premiumPool)),
+            initialPoolBalance - withdrawAmount,
+            "Pool balance should decrease by withdrawal amount"
+        );
+        assertEq(
+            usdcToken.balanceOf(governance),
+            initialGovernanceBalance + withdrawAmount,
+            "Governance balance should increase by withdrawal amount"
+        );
+
+        // Test 2: Attempt to withdraw more than available
+        vm.prank(governance);
+        vm.expectRevert("UnoRe: Insufficient Premium");
+        premiumPool.withdrawPremium(address(usdcToken), governance, initialDeposit);
+
+        // Test 3: Attempt to withdraw as non-governance address
+        vm.prank(user);
+        vm.expectRevert();
+        premiumPool.withdrawPremium(address(usdcToken), user, withdrawAmount);
+
+        // Test 4: Attempt to withdraw non-allowed currency
+        MockUNO nonAllowedToken = new MockUNO();
+        vm.prank(governance);
+        vm.expectRevert("UnoRe: Insufficient Premium");
+        premiumPool.withdrawPremium(address(nonAllowedToken), governance, withdrawAmount);
+
+        // Test 5: Withdraw to a different address
+        address recipient = address(0x9ABC);
+        uint256 initialRecipientBalance = usdcToken.balanceOf(recipient);
+
+        vm.prank(governance);
+        premiumPool.withdrawPremium(address(usdcToken), recipient, withdrawAmount);
+
+        assertEq(
+            usdcToken.balanceOf(recipient),
+            initialRecipientBalance + withdrawAmount,
+            "Recipient balance should increase by withdrawal amount"
+        );
+
+        // Test 6: Withdraw when pool is paused (should fail)
+        vm.prank(multiSigWallet);
+        premiumPool.pausePool();
+
+        vm.prank(governance);
+        vm.expectRevert();
+        premiumPool.withdrawPremium(address(usdcToken), governance, withdrawAmount);
+
+        // Unpause the pool
+        vm.prank(multiSigWallet);
+        premiumPool.unpausePool();
+
+        // Test 7: Withdraw when pool is killed (should fail)
+        vm.prank(multiSigWallet);
+        premiumPool.killPool();
+
+        vm.prank(governance);
+        vm.expectRevert("UnoRe: pool is killed");
+        premiumPool.withdrawPremium(address(usdcToken), governance, withdrawAmount);        
     }
 
     function testAddCurrency() public {
@@ -660,9 +845,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     }
 
     function buyPolicy(address buyer, uint256 ethAmount) internal returns (uint256 policyId) {
-        vm.prank(multiSigWallet);
-        uint256 stakingStartTime = block.timestamp + 1 hours;
-        ssip.setStakingStartTime(block.timestamp);
 
         vm.prank(buyer);
         unoToken.mint(2000 ether);
@@ -672,8 +854,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         // Set MLR
         vm.prank(operator);
         capitalAgent.setMLR(ethAmount * 2);
-
-        vm.warp(stakingStartTime + 1);
 
         // Simulate staking
         vm.prank(buyer);
@@ -696,7 +876,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         // Whitelist the buyer and the SalesPolicy contract
         vm.startPrank(multiSigWallet);
         premiumPool.addWhiteList(buyer);
-        premiumPool.addWhiteList(address(salesPolicy));
         vm.stopPrank();
 
         // Buy policy
@@ -959,14 +1138,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         uint256 lengthAfterFirst = salesPolicy.allPoliciesLength();
         assertEq(lengthAfterFirst, 1, "Policies length should be 1 after first purchase");
 
-        // Set staking start time to now
-        vm.prank(multiSigWallet);
-        uint256 stakingStartTime = block.timestamp;
-        ssip.setStakingStartTime(stakingStartTime);
-
-        // Warp to after staking start time
-        vm.warp(stakingStartTime + 1);
-
         // Buy second policy
         uint256 policyId2 = buyPolicy(buyer2, ethAmount);
         uint256 lengthAfterSecond = salesPolicy.allPoliciesLength();
@@ -1047,10 +1218,140 @@ contract PremiumPoolAndSalesPolicyTest is Test {
     }
 
     function testSSIPPolicyClaim() public {
-        // TODO: Test SSIP policy claim with valid amount
+        // Setup: Create a policy and add some funds to the SSIP
+        address policyholder = address(0x1234);
+        uint256 ethAmount = 1 ether;
+        bool expired;
+        
+        // Mint UNO tokens for the policyholder (for staking)
+        vm.prank(policyholder);
+        unoToken.mint(2000 ether);
+
+        // Create a policy
+        uint256 policyId = buyPolicy(policyholder, ethAmount);
+        (uint256 coverageAmount,,,bool exists,) = salesPolicy.getPolicyData(policyId);
+        uint256 claimAmount = coverageAmount / 2;
+
+        // Add funds to SSIP
+        vm.startPrank(multiSigWallet);
+        unoToken.mint(10000 ether);
+        unoToken.approve(address(ssip), 10000 ether);
+        ssip.enterInPool(10000 ether);
+        vm.stopPrank();
+
+        // Fast forward to make the policy active
+        vm.warp(block.timestamp + 1 days);
+
+        // Prepare for the claim
+        vm.prank(multiSigWallet);
+        capitalAgent.markToClaimPolicy(policyId);
+
+        // Execute the claim
+        vm.prank(address(ssip));
+        capitalAgent.SSIPPolicyCaim(claimAmount,policyId,true);
+
+        // Verify policy status
+        (,,,exists,expired) = salesPolicy.getPolicyData(policyId);
+        assertFalse(exists, "Policy should no longer exist after claim");
+        assertFalse(expired, "Policy should not be marked as expired");
+
+        // Try to claim again (should fail)
+        vm.expectRevert("UnoRe: no exist ssip");
+        vm.prank(multiSigWallet);
+        capitalAgent.SSIPPolicyCaim(claimAmount,policyId,true);
     }
 
     function testSSIPPolicyClaimExceedingCoverage() public {
-        // TODO: Test SSIP policy claim with amount exceeding coverage
+        // Setup: Create a policy and add some funds to the SSIP
+        address policyholder = address(0x1234);
+        uint256 ethAmount = 1 ether;
+        bool expired;
+        
+        // Mint UNO tokens for the policyholder (for staking)
+        vm.prank(policyholder);
+        unoToken.mint(2000 ether);
+
+        // Create a policy
+        uint256 policyId = buyPolicy(policyholder, ethAmount);
+        (uint256 coverageAmount,,,bool exists,) = salesPolicy.getPolicyData(policyId);
+        uint256 excessiveClaimAmount = coverageAmount + 1 ether; // Claim amount exceeding coverage
+
+        // Add funds to SSIP
+        vm.startPrank(multiSigWallet);
+        unoToken.mint(10000 ether);
+        unoToken.approve(address(ssip), 10000 ether);
+        ssip.enterInPool(10000 ether);
+        vm.stopPrank();
+
+        // Fast forward to make the policy active
+        vm.warp(block.timestamp + 1 days);
+
+        // Prepare for the claim
+        vm.prank(multiSigWallet);
+        capitalAgent.markToClaimPolicy(policyId);
+
+        // Attempt to execute the claim with excessive amount (should fail)
+        vm.prank(address(ssip));
+        vm.expectRevert("UnoRe: coverage amount is less");
+        capitalAgent.SSIPPolicyCaim(excessiveClaimAmount, policyId, true);
+    }
+}
+
+contract MockUniswapRouter {
+    using SafeERC20 for IERC20;
+
+    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params) external returns (uint256 amountOut) {
+        // Transfer tokenIn from msg.sender to this contract
+        IERC20(params.tokenIn).safeTransferFrom(msg.sender, address(this), params.amountIn);
+        
+        // Transfer tokenOut to the recipient
+        IERC20(params.tokenOut).safeTransfer(params.recipient, params.amountOutMinimum);
+        
+        return params.amountOutMinimum;
+    }
+
+    // Function to allow the contract to receive ERC20 tokens
+    function rescueTokens(address token, address to, uint256 amount) external {
+        IERC20(token).safeTransfer(to, amount);
+    }
+
+    // Function to allow the contract to receive ETH
+    receive() external payable {}
+
+}
+
+contract MockUniswapFactory {
+    mapping(address => mapping(address => address)) public getPair;
+
+    function setPair(address tokenA, address tokenB, address pair) external {
+        getPair[tokenA][tokenB] = pair;
+        getPair[tokenB][tokenA] = pair;
+    }
+}
+
+contract MockUniswapPair {
+    address public token0;
+    address public token1;
+    uint112 private reserve0;
+    uint112 private reserve1;
+
+    constructor(address _token0, address _token1) {
+        token0 = _token0;
+        token1 = _token1;
+    }
+
+    function getReserves() external view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast) {
+        return (reserve0, reserve1, uint32(block.timestamp));
+    }
+
+    function sync() public {
+        reserve0 = uint112(IERC20(token0).balanceOf(address(this)));
+        reserve1 = uint112(IERC20(token1).balanceOf(address(this)));
+    }
+
+    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external {
+        if (amount0Out > 0) IERC20(token0).transfer(to, amount0Out);
+        if (amount1Out > 0) IERC20(token1).transfer(to, amount1Out);
+        sync();
     }
 }
