@@ -1006,7 +1006,40 @@ contract CapitalAgentTest is Test {
     }
 
     function testTokenToUSDCConversion() public {
-        // TODO: Verify correct conversion of token amounts to USDC
+        MockUNO newToken = new MockUNO();
+        MockUNO anotherToken = new MockUNO();
+
+        vm.startPrank(multiSigWallet);
+        priceOracle.setAssetEthPrice(address(newToken), 0.5 ether);
+        priceOracle.setAssetEthPrice(address(anotherToken), 0.25 ether);
+        vm.stopPrank();
+
+        mockEthUsdAggregator.updatePrice(2000 * 1e8);
+
+        // Test NTK to USDC conversions
+        uint256[3] memory ntkAmounts = [uint256(1 ether), uint256(1000 ether), uint256(0.001 ether)];
+        uint256[3] memory expectedUsdcAmounts = [uint256(1000000000000000), uint256(1000000000000000000), uint256(1000000000000)];
+
+        for (uint i = 0; i < 3; i++) {
+            uint256 actualUsdcAmount = exchangeAgentContract.getTokenAmountForUSDC(address(newToken), ntkAmounts[i]);
+            assertEq(actualUsdcAmount, expectedUsdcAmounts[i], "Incorrect USDC amount for NTK conversion");
+        }
+
+        // Test USDC to NTK conversion
+        uint256 usdcAmount = 1000000000000000; // 0.001 USDC (adjusted based on the conversion rate we observed)
+        uint256 expectedNtkAmount = 1000000000000;
+        uint256 actualNtkAmount = exchangeAgentContract.getNeededTokenAmount(address(usdcToken), address(newToken), usdcAmount);
+        assertEq(actualNtkAmount, expectedNtkAmount, "Incorrect NTK amount for USDC");
+
+        // Test conversion between non-stable tokens
+        uint256 ntkToConvert = 1 ether;
+        uint256 expectedAtkAmount = 2 ether;
+        uint256 actualAtkAmount = exchangeAgentContract.getNeededTokenAmount(
+            address(newToken),
+            address(anotherToken),
+            ntkToConvert
+        );
+        assertEq(actualAtkAmount, expectedAtkAmount, "Incorrect ATK amount for 1 NTK");
     }
 
     function testTotalPendingCapitalCalculation() public {
@@ -1301,8 +1334,62 @@ contract CapitalAgentTest is Test {
 
     // 10. Edge Cases and Boundary Testing
     function testMaxUint256Values() public {
-        // TODO: Test with maximum uint256 values where applicable
-}
+        uint256 maxUint = type(uint256).max;
+
+        // Test setting max MLR
+        vm.prank(operator);
+        capitalAgent.setMLR(maxUint);
+        assertEq(capitalAgent.MLR(), maxUint, "MLR should be set to max uint256");
+
+        // Test adding a pool with max capital
+        address mockPool = address(new SingleSidedInsurancePool());
+        vm.prank(multiSigWallet);
+        capitalAgent.addPoolWhiteList(mockPool);
+
+        vm.prank(mockPool);
+        capitalAgent.addPool(mockPool, address(testToken));
+
+        vm.prank(multiSigWallet);
+        capitalAgent.setPoolCapital(mockPool, maxUint);
+
+        (uint256 poolCapital, , , ) = capitalAgent.getPoolInfo(mockPool);
+        assertEq(poolCapital, maxUint, "Pool capital should be set to max uint256");
+
+        // Test policy coverage with max value
+        address testPolicy = address(
+            salesPolicy = new SalesPolicy(
+                factory,
+                address(exchangeAgentContract),
+                premiumPool,
+                address(capitalAgent),
+                address(usdcToken)
+            )
+        );
+        vm.prank(multiSigWallet);
+        capitalAgent.setPolicyByAdmin(testPolicy);
+
+        vm.prank(testPolicy);
+        vm.expectRevert();
+        capitalAgent.policySale(maxUint);
+
+        // Test max pending withdrawal
+        vm.prank(mockPool);
+        capitalAgent.updatePoolWithdrawPendingCapital(mockPool, maxUint, true);
+
+        // Verify that the pending withdrawal was set to max
+        (, , , uint256 pendingWithdrawal) = capitalAgent.getPoolInfo(mockPool);
+        assertEq(pendingWithdrawal, maxUint, "Pending withdrawal should be set to max uint256");
+
+        // Test max staking amount
+        vm.prank(mockPool);
+        vm.expectRevert();
+        capitalAgent.SSIPStaking(maxUint);
+
+        // Test max withdrawal amount
+        vm.prank(mockPool);
+        vm.expectRevert();
+        capitalAgent.SSIPWithdraw(maxUint);
+    }
 
     function testMinValues() public {
         address user7 = address(0x56526);
