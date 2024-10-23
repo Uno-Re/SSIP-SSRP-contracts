@@ -35,8 +35,6 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
     event PremiumWithdraw(address indexed _currency, address indexed _to, uint256 _amount);
     event LogBuyBackAndBurn(address indexed _operator, address indexed _premiumPool, uint256 _unoAmount);
     event LogCollectPremium(address indexed _from, address _premiumCurrency, uint256 _premiumAmount);
-    event LogDepositToSyntheticSSRPRewarder(address indexed _rewarder, uint256 _amountDeposited);
-    event LogDepositToSyntheticSSIPRewarder(address indexed _rewarder, address indexed _currency, uint256 _amountDeposited);
     event LogAddCurrency(address indexed _premiumPool, address indexed _currency);
     event LogRemoveCurrency(address indexed _premiumPool, address indexed _currency);
     event LogMaxApproveCurrency(address indexed _premiumPool, address indexed _currency, address indexed _to);
@@ -131,59 +129,6 @@ contract PremiumPool is IPremiumPool, ReentrancyGuard, AccessControl, Pausable {
             backBurnUnoPremium[_premiumCurrency] +
             (_premiumAmount - _premium_SSRP - _premium_SSIP);
         emit LogCollectPremium(msg.sender, _premiumCurrency, _premiumAmount);
-    }
-
-    function depositToSyntheticSSRPRewarder(address _rewarder) external onlyRole(ADMIN_ROLE) whenNotPaused nonReentrant {
-        require(_rewarder != address(0), "UnoRe: zero address");
-        enforceHasContractCode(_rewarder, "UnoRe: no contract address");
-        uint256 usdcAmountToDeposit = 0;
-        if (ssrpPremiumEth > 0) {
-            TransferHelper.safeTransferETH(exchangeAgent, ssrpPremiumEth);
-            uint256 convertedAmount = IExchangeAgent(exchangeAgent).convertForToken(address(0), usdcToken, ssrpPremiumEth);
-            usdcAmountToDeposit += convertedAmount;
-            ssrpPremiumEth = 0;
-        }
-        for (uint256 ii = 0; ii < availableCurrencyList.length; ii++) {
-            if (ssrpPremium[availableCurrencyList[ii]] > 0) {
-                if (availableCurrencyList[ii] == usdcToken) {
-                    usdcAmountToDeposit += ssrpPremium[availableCurrencyList[ii]];
-                } else {
-                    uint256 convertedUSDCAmount = IExchangeAgent(exchangeAgent).convertForToken(
-                        availableCurrencyList[ii],
-                        usdcToken,
-                        ssrpPremium[availableCurrencyList[ii]]
-                    );
-                    usdcAmountToDeposit += convertedUSDCAmount;
-                }
-                ssrpPremium[availableCurrencyList[ii]] = 0;
-            }
-        }
-        if (usdcAmountToDeposit > 0) {
-            TransferHelper.safeTransfer(usdcToken, _rewarder, usdcAmountToDeposit);
-            emit LogDepositToSyntheticSSRPRewarder(_rewarder, usdcAmountToDeposit);
-        }
-    }
-
-    function depositToSyntheticSSIPRewarder(
-        address _currency,
-        address _rewarder,
-        uint256 _amount
-    ) external onlyRole(ADMIN_ROLE) whenNotPaused nonReentrant {
-        require(_rewarder != address(0), "UnoRe: zero address");
-        enforceHasContractCode(_rewarder, "UnoRe: no contract address");
-        if (_currency == address(0) && ssipPremiumEth > 0) {
-            require(_amount <= ssipPremiumEth, "UnoRe: premium balance overflow");
-            TransferHelper.safeTransferETH(_rewarder, _amount);
-            ssipPremiumEth -= _amount;
-            emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);
-        } else {
-            if (availableCurrencies[_currency] && ssipPremium[_currency] > 0) {
-                require(_amount <= ssipPremium[_currency], "UnoRe: premium balance overflow");
-                TransferHelper.safeTransfer(_currency, _rewarder, _amount);
-                ssipPremium[_currency] -= _amount;
-                emit LogDepositToSyntheticSSIPRewarder(_rewarder, _currency, _amount);
-            }
-        }
     }
 
     function buyBackAndBurn() external onlyRole(ADMIN_ROLE) isAlive whenNotPaused {

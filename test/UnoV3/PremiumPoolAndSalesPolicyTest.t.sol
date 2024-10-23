@@ -434,14 +434,6 @@ contract PremiumPoolAndSalesPolicyTest is Test {
         vm.stopPrank();
     }
 
-    function testDepositToSyntheticSSRPRewarder() public {
-        // TODO: VERIFY IF THIS IS NECESSARY Implement test for depositToSyntheticSSRPRewarder function
-    }
-
-    function testDepositToSyntheticSSIPRewarder() public {
-        // TODO: VERIFY IF THIS IS NECESSARY Implement test for depositToSyntheticSSIPRewarder function
-    }
-
     function testBuyBackAndBurn() public {
         address user = address(0x1234);
         uint256 initialDeposit = 1000 ether;
