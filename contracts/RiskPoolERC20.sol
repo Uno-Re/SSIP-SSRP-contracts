@@ -34,14 +34,6 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
 
     mapping(address => mapping(address => uint256)) internal _allowances;
 
-    struct UserWithdrawRequestInfo {
-        uint256 pendingAmount;
-        uint256 requestTime;
-        uint256 pendingUno;
-    }
-    mapping(address => UserWithdrawRequestInfo) internal withdrawRequestPerUser;
-    uint256 internal totalWithdrawPending;
-
     uint256 private _totalSupply;
 
     uint256[30] __gap;
@@ -299,49 +291,6 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual {}
-
-    function _withdrawRequest(address _user, uint256 _amount, uint256 _amountInUno) internal {
-        require(balanceOf(_user) >= _amount, "UnoRe: balance overflow");
-        require(_amount <= type(uint128).max, "Amount exceeds max uint128");
-        if (withdrawRequestPerUser[_user].pendingAmount == 0 && withdrawRequestPerUser[_user].requestTime == 0) {
-            withdrawRequestPerUser[_user] = UserWithdrawRequestInfo({
-                pendingAmount: _amount,
-                requestTime: block.timestamp,
-                pendingUno: _amountInUno
-            });
-        } else {
-            withdrawRequestPerUser[_user].pendingAmount += _amount;
-            withdrawRequestPerUser[_user].pendingUno += _amountInUno;
-            withdrawRequestPerUser[_user].requestTime = block.timestamp;
-        }
-        totalWithdrawPending += _amount;
-    }
-
-    function _withdrawImplement(address _user) internal {
-        require(uint256(withdrawRequestPerUser[_user].pendingAmount) > 0, "UnoRe: zero claim amount");
-        uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
-        totalWithdrawPending -= _pendingAmount;
-        _burn(_user, _pendingAmount);
-        delete withdrawRequestPerUser[_user];
-    }
-
-    function _withdrawImplementIrregular(address _user, uint256 _amount) internal {
-        require(uint256(withdrawRequestPerUser[_user].pendingAmount) > 0, "UnoRe: zero claim amount");
-        require(uint256(withdrawRequestPerUser[_user].pendingAmount) >= _amount, "UnoRe: pending amount overflow");
-        uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
-        totalWithdrawPending -= _pendingAmount;
-        _burn(_user, _amount);
-        delete withdrawRequestPerUser[_user];
-    }
-
-    function _emergencyWithdraw(address _user) internal {
-        uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
-        totalWithdrawPending -= _pendingAmount;
-        if (_pendingAmount > 0) {
-            _burn(_user, _pendingAmount);
-        }
-        delete withdrawRequestPerUser[_user];
-    }
 
     function _cancelWithdrawRequest(address _user) internal {
         uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;

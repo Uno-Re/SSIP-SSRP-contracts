@@ -26,7 +26,7 @@ interface ICapitalAgent {
 
     function exchangeAgent() external view returns (address);
 
-    function getPoolInfo(address _pool) external view returns (uint256, address, bool, uint256);
+    function getPoolInfo(address _pool) external view returns (uint256, address, bool);
 
     function updatePoolWithdrawPendingCapital(address _pool, uint256 _amount, bool) external;
 }

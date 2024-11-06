@@ -71,7 +71,7 @@ contract SingleSidedInsurancePool is
     event LeftPool(address indexed _staker, address indexed _pool, uint256 _requestAmount);
     event LogUpdatePool(uint256 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
-    event LogLeaveFromPendingSSIP(
+    event LogWithdrawSSIP(
         address indexed _user,
         address indexed _riskPool,
         uint256 _withdrawLpAmount,
@@ -322,36 +322,16 @@ contract SingleSidedInsurancePool is
     }
 
     /**
-     * @dev WR will be in pending for 10 days at least
-     */
-    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused isStartTime nonReentrant {
-        _harvest(msg.sender);
-        require(ICapitalAgent(capitalAgent).checkCapitalByMLR(address(this), _amount), "UnoRe: minimum capital underflow");
-        // Withdraw desired amount from pool
-        uint256 amount = userInfo[msg.sender].amount;
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
-        require(amount - pendingAmount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
-        IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
-
-        userInfo[msg.sender].lastWithdrawTime = block.timestamp;
-        //As user is starting the withdraw we add the value to pending capital
-        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), _amount, true);
-        emit LeftPool(msg.sender, riskPool, _amount);
-    }
-
-    /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
-        require(_amount > 0, "Withdraw amount should be greator than zero");
-        require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
+    function withdraw(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
+        require(_amount > 0, "Unore: Withdraw amount should be greator than zero");
+        require(userInfo[msg.sender].amount >= _amount, "Unore: Not enough funds");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
 
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender, _amount);
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).withdraw(msg.sender, _amount);
 
-        //As user is finishing the withdraw we subtract the value of pending capital (done inside SSIPWithdraw)
         ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
 
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
@@ -361,7 +341,7 @@ contract SingleSidedInsurancePool is
 
         userInfo[msg.sender].amount = amount - withdrawAmount;
 
-        emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
+        emit LogWithdrawSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
@@ -379,8 +359,7 @@ contract SingleSidedInsurancePool is
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         _harvest(_from);
         uint256 amount = userInfo[_from].amount;
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(_from);
-        require(amount - pendingAmount >= _amount, "UnoRe: balance overflow");
+        require(amount >= _amount, "UnoRe: balance overflow");
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[_from].rewardDebt = accumulatedUno - ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
         userInfo[_from].amount = amount - _amount;
@@ -442,43 +421,12 @@ contract SingleSidedInsurancePool is
     }
 
     /**
-     * @dev user can cancel its pending withdraw request
-     */
-    function cancelWithdrawRequest() external nonReentrant whenNotPaused isAlive {
-        (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
-
-        //if user return the pending value into staking again by canceling withdraw,
-        //we remove the amount from the pending capital
-        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), cancelAmount, false);
-
-        emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
-    }
-
-    /**
      * @dev return user staked currency corresponding to current lp price of uno
      */
     function getStakedAmountPerUser(address _to) external view returns (uint256 unoAmount, uint256 lpAmount) {
         lpAmount = userInfo[_to].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
         unoAmount = (lpAmount * lpPriceUno) / 1e18;
-    }
-
-    /**
-     * @dev get withdraw request amount in pending per user in UNO
-     */
-    function getWithdrawRequestPerUser(
-        address _user
-    ) external view returns (uint256 pendingAmount, uint256 pendingAmountInUno, uint256 originUnoAmount, uint256 requestTime) {
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (pendingAmount, requestTime, originUnoAmount) = IRiskPool(riskPool).getWithdrawRequest(_user);
-        pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
-    }
-
-    /**
-     * @dev get total withdraw request amount in pending for the risk pool in UNO
-     */
-    function getTotalWithdrawPendingAmount() external view returns (uint256) {
-        return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
     }
 
     /**
@@ -549,12 +497,6 @@ contract SingleSidedInsurancePool is
     }
 
     function _updateReward(address _to) internal returns (uint256, uint256) {
-        uint256 requestTime;
-        (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
-        if (requestTime > 0) {
-            return (0, 0);
-        }
-
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;

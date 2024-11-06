@@ -15,13 +15,13 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
 
     address public SSRP;
     address public override currency; // for now we should accept only UNO
-    uint256 public override lpPriceUno;
+    uint256 public override lpPriceUno; // UNO value per lp
     uint256 public MIN_LP_CAPITAL = 1e7;
 
     event LogCancelWithdrawRequest(address indexed _user, uint256 _amount, uint256 _amountInUno);
     event LogPolicyClaim(address indexed _user, uint256 _amount);
     event LogMigrateLP(address indexed _user, address indexed _migrateTo, uint256 _unoAmount);
-    event LogLeaveFromPending(address indexed _user, uint256 _withdrawLpAmount, uint256 _withdrawUnoAmount);
+    event LogLeaveFromPending(address indexed _user, uint256 _withdrawUnoAmount);
 
     constructor(string memory _name, string memory _symbol, address _SSRP, address _currency) {
         require(_SSRP != address(0), "UnoRe: zero pool address");
@@ -54,59 +54,34 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     }
 
     /**
-     * @param _amount UNO amount to withdraw
-     */
-    function leaveFromPoolInPending(address _to, uint256 _amount) external override onlySSRP {
-        require(totalSupply() > 0, "UnoRe: There's no remaining in the pool");
-        uint256 requestAmountInLP = (_amount * 1e18) / lpPriceUno;
-        require(
-            (requestAmountInLP + uint256(withdrawRequestPerUser[_to].pendingAmount)) <= balanceOf(_to),
-            "UnoRe: lp balance overflow"
-        );
-        _withdrawRequest(_to, requestAmountInLP, _amount);
-    }
-
-    /**
      * @dev withdraw from pending, only pool contract can call this function
      */
-    function leaveFromPending(address _to, uint256 _amount) external override onlySSRP returns (uint256, uint256) {
-        uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
-        uint256 pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
-        require(_amount <= pendingAmount, "Amount should less than pending amount");
-        require(cryptoBalance > 0, "UnoRe: zero uno balance");
+    function withdraw(address _to, uint256 _amount) external override onlySSRP returns (uint256) {
+        uint256 contractBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
+        require(contractBalance > 0, "UnoRe: zero uno balance");
         require(balanceOf(_to) >= _amount, "UnoRe: lp balance overflow");
         uint256 amountInUno = (_amount * lpPriceUno) / 1e18;
-        if (cryptoBalance - MIN_LP_CAPITAL > amountInUno) {
-            _withdrawImplement(_to);
+        if (contractBalance - MIN_LP_CAPITAL > amountInUno) {
+            _burn(_to, _amount);
             if (currency != address(0)) {
                 TransferHelper.safeTransfer(currency, _to, amountInUno);
             } else {
                 TransferHelper.safeTransferETH(_to, amountInUno);
             }
-            emit LogLeaveFromPending(_to, pendingAmount, amountInUno);
-            return (pendingAmount, amountInUno);
+            emit LogLeaveFromPending(_to, amountInUno);
+            return (amountInUno);
         } else {
-            _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
+            _burn(_to, ((contractBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
             if (currency != address(0)) {
-                TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
+                TransferHelper.safeTransfer(currency, _to, contractBalance - MIN_LP_CAPITAL);
             } else {
-                TransferHelper.safeTransferETH(_to, cryptoBalance - MIN_LP_CAPITAL);
+                TransferHelper.safeTransferETH(_to, contractBalance - MIN_LP_CAPITAL);
             }
-            emit LogLeaveFromPending(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
-            return (((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, cryptoBalance - MIN_LP_CAPITAL);
+            emit LogLeaveFromPending(_to, contractBalance - MIN_LP_CAPITAL);
+            return (((contractBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, contractBalance - MIN_LP_CAPITAL);
         }
     }
 
-    /**
-     * @dev cancel pending request, only pool contract can call this function
-     */
-    function cancelWithdrawRequest(address _to) external override onlySSRP returns (uint256, uint256) {
-        uint256 _pendingAmount = uint256(withdrawRequestPerUser[_to].pendingAmount);
-        require(_pendingAmount > 0, "UnoRe: zero amount");
-        _cancelWithdrawRequest(_to);
-        emit LogCancelWithdrawRequest(_to, _pendingAmount, (_pendingAmount * lpPriceUno) / 1e18);
-        return (_pendingAmount, (_pendingAmount * lpPriceUno) / 1e18);
-    }
 
     /**
      * @dev claim policy to `_to` by `_amount`, only pool contract can call this function
@@ -142,7 +117,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
     function emergencyWithdraw(address _to, uint256 _amount) external override onlySSRP returns (bool) {
         uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         require(cryptoBalance > 0, "UnoRe: zero uno balance");
-        _emergencyWithdraw(_to);
+        _burn(_to, _amount);
         uint256 amount = (_amount * lpPriceUno) / 1e18;
         if (currency != address(0)) {
             TransferHelper.safeTransfer(currency, _to, amount);
@@ -156,28 +131,14 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         require(_migrateTo != address(0), "UnoRe: zero address");
         uint256 migratedAmount;
         uint256 cryptoBalance;
-        if (_isUnLocked && withdrawRequestPerUser[_to].pendingAmount > 0) {
-            uint256 pendingAmountInUno = (uint256(withdrawRequestPerUser[_to].pendingAmount) * lpPriceUno) / 1e18;
+        if (_isUnLocked) {
             cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
-            if (pendingAmountInUno < cryptoBalance - MIN_LP_CAPITAL) {
-                if (currency != address(0)) {
-                    TransferHelper.safeTransfer(currency, _to, pendingAmountInUno);
-                } else {
-                    TransferHelper.safeTransferETH(_to, pendingAmountInUno);
-                }
-                _withdrawImplement(_to);
+            if (currency != address(0)) {
+                TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
             } else {
-                if (currency != address(0)) {
-                    TransferHelper.safeTransfer(currency, _to, cryptoBalance - MIN_LP_CAPITAL);
-                } else {
-                    TransferHelper.safeTransferETH(_to, cryptoBalance - MIN_LP_CAPITAL);
-                }
-                _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
+                TransferHelper.safeTransferETH(_to, cryptoBalance - MIN_LP_CAPITAL);
             }
-        } else {
-            if (withdrawRequestPerUser[_to].pendingAmount > 0) {
-                _cancelWithdrawRequest(_to);
-            }
+            _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
         }
         cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         uint256 unoBalance = (balanceOf(_to) * lpPriceUno) / 1e18;
@@ -210,25 +171,10 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         MIN_LP_CAPITAL = _minLPCapital;
     }
 
-    /**
-     * @dev return user withdraw request amount, amount in uno and time
-     */
-    function getWithdrawRequest(address _to) external view override onlySSRP returns (uint256, uint256, uint256) {
-        return (
-            uint256(withdrawRequestPerUser[_to].pendingAmount),
-            uint256(withdrawRequestPerUser[_to].requestTime),
-            withdrawRequestPerUser[_to].pendingUno
-        );
-    }
-
-    function getTotalWithdrawRequestAmount() external view override onlySSRP returns (uint256) {
-        return totalWithdrawPending;
-    }
-
     function transfer(address recipient, uint256 amount) external override returns (bool) {
         require(
-            balanceOf(msg.sender) - uint256(withdrawRequestPerUser[msg.sender].pendingAmount) >= amount,
-            "ERC20: transfer amount exceeds balance or pending WR"
+            balanceOf(msg.sender) >= amount,
+            "ERC20: transfer amount exceeds balance"
         );
         _transfer(msg.sender, recipient, amount);
 
@@ -238,8 +184,8 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
 
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         require(
-            balanceOf(sender) - uint256(withdrawRequestPerUser[sender].pendingAmount) >= amount,
-            "ERC20: transfer amount exceeds balance or pending WR"
+            balanceOf(sender)>= amount,
+            "ERC20: transfer amount exceeds balance"
         );
         _transfer(sender, recipient, amount);
 

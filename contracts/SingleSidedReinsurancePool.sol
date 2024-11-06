@@ -16,6 +16,7 @@ import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./libraries/TransferHelper.sol";
 
+// TODO UPDATE THIS CONTRACT BASED ON CHANGES MADE ON SSIP
 contract SingleSidedReinsurancePool is
     ISingleSidedReinsurancePool,
     ReentrancyGuardUpgradeable,
@@ -313,7 +314,6 @@ contract SingleSidedReinsurancePool is
         // Withdraw desired amount from pool
         uint256 amount = userInfo[msg.sender].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
         require(amount - pendingAmount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
         IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
 
@@ -345,7 +345,6 @@ contract SingleSidedReinsurancePool is
         if (_from != syntheticSSRP && _to != syntheticSSRP) {
             _harvest(_from);
             uint256 amount = userInfo[_from].amount;
-            (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(_from);
             require(amount - pendingAmount >= _amount, "UnoRe: balance overflow");
             uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
             userInfo[_from].rewardDebt = accumulatedUno - ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
@@ -455,24 +454,6 @@ contract SingleSidedReinsurancePool is
         unoAmount = (lpAmount * lpPriceUno) / 1e18;
     }
 
-    /**
-     * @dev get withdraw request amount in pending per user in UNO
-     */
-    function getWithdrawRequestPerUser(
-        address _user
-    ) external view returns (uint256 pendingAmount, uint256 pendingAmountInUno, uint256 originUnoAmount, uint256 requestTime) {
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (pendingAmount, requestTime, originUnoAmount) = IRiskPool(riskPool).getWithdrawRequest(_user);
-        pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
-    }
-
-    /**
-     * @dev get total withdraw request amount in pending for the risk pool in UNO
-     */
-    function getTotalWithdrawPendingAmount() external view returns (uint256) {
-        return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
-    }
-
     function setUserDetails(
         address _user,
         uint256 _amount,
@@ -515,12 +496,6 @@ contract SingleSidedReinsurancePool is
     }
 
     function _updateReward(address _to) internal returns (uint256, uint256) {
-        uint256 requestTime;
-        (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
-        if (requestTime > 0) {
-            return (0,0);
-        }
-
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;

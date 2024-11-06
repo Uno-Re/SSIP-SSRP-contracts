@@ -18,10 +18,6 @@ interface IRiskPool {
 
     function currency() external view returns (address);
 
-    function getTotalWithdrawRequestAmount() external view returns (uint256);
-
-    function getWithdrawRequest(address _to) external view returns (uint256, uint256, uint256);
-
     function lpPriceUno() external view returns (uint256);
 
     function emergencyWithdraw(address _to, uint256 _amount) external returns (bool);
