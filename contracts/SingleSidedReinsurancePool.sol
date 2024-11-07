@@ -11,7 +11,7 @@ import "./interfaces/IMigration.sol";
 import "./interfaces/IRiskPoolFactory.sol";
 import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/ISingleSidedReinsurancePool.sol";
-import "./interfaces/ISyntheticSSRPFactory.sol";
+import "./deprecated/ISyntheticSSRPFactory.sol";
 import "./interfaces/IRewarder.sol";
 import "./interfaces/IRiskPool.sol";
 import "./libraries/TransferHelper.sol";
@@ -314,7 +314,7 @@ contract SingleSidedReinsurancePool is
         // Withdraw desired amount from pool
         uint256 amount = userInfo[msg.sender].amount;
         uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        require(amount - pendingAmount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
+        require(amount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
         IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
 
         userInfo[msg.sender].lastWithdrawTime = block.timestamp;
@@ -345,7 +345,7 @@ contract SingleSidedReinsurancePool is
         if (_from != syntheticSSRP && _to != syntheticSSRP) {
             _harvest(_from);
             uint256 amount = userInfo[_from].amount;
-            require(amount - pendingAmount >= _amount, "UnoRe: balance overflow");
+            require(amount >= _amount, "UnoRe: balance overflow");
             uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
             userInfo[_from].rewardDebt = accumulatedUno - ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
             userInfo[_from].amount = amount - _amount;

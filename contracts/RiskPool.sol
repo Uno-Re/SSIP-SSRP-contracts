@@ -15,7 +15,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
 
     address public SSRP;
     address public override currency; // for now we should accept only UNO
-    uint256 public override lpPriceUno; // UNO value per lp
+    uint256 public override lpPrice; // UNO value per lp
     uint256 public MIN_LP_CAPITAL = 1e7;
 
     event LogCancelWithdrawRequest(address indexed _user, uint256 _amount, uint256 _amountInUno);
@@ -29,7 +29,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         symbol = _symbol;
         SSRP = _SSRP;
         currency = _currency;
-        lpPriceUno = 1e18;
+        lpPrice = 1e18;
         if (_currency == address(0)) {
             MIN_LP_CAPITAL = 7 * 1e15;
         }
@@ -50,17 +50,18 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
      * @dev Users can stake only through Cohort
      */
     function enter(address _from, uint256 _amount) external override onlySSRP {
-        _mint(_from, (_amount * 1e18) / lpPriceUno);
+        _mint(_from, (_amount * 1e18) / lpPrice);
     }
 
     /**
-     * @dev withdraw from pending, only pool contract can call this function
+     * @dev withdraw tokens from pool. only pool contract can call this function
+     * @returns lp Amount and token amount
      */
-    function withdraw(address _to, uint256 _amount) external override onlySSRP returns (uint256) {
+    function withdraw(address _to, uint256 _amount) external override onlySSRP returns (uint256,uint256) {
         uint256 contractBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         require(contractBalance > 0, "UnoRe: zero uno balance");
         require(balanceOf(_to) >= _amount, "UnoRe: lp balance overflow");
-        uint256 amountInUno = (_amount * lpPriceUno) / 1e18;
+        uint256 amountInUno = (_amount * lpPrice) / 1e18;
         if (contractBalance - MIN_LP_CAPITAL > amountInUno) {
             _burn(_to, _amount);
             if (currency != address(0)) {
@@ -69,16 +70,16 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
                 TransferHelper.safeTransferETH(_to, amountInUno);
             }
             emit LogLeaveFromPending(_to, amountInUno);
-            return (amountInUno);
+            return (_amount,amountInUno);
         } else {
-            _burn(_to, ((contractBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
+            _burn(_to, ((contractBalance - MIN_LP_CAPITAL) * 1e18) / lpPrice);
             if (currency != address(0)) {
                 TransferHelper.safeTransfer(currency, _to, contractBalance - MIN_LP_CAPITAL);
             } else {
                 TransferHelper.safeTransferETH(_to, contractBalance - MIN_LP_CAPITAL);
             }
             emit LogLeaveFromPending(_to, contractBalance - MIN_LP_CAPITAL);
-            return (((contractBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno, contractBalance - MIN_LP_CAPITAL);
+            return (((contractBalance - MIN_LP_CAPITAL) * 1e18) / lpPrice, contractBalance - MIN_LP_CAPITAL);
         }
     }
 
@@ -108,7 +109,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
             emit LogPolicyClaim(_to, cryptoBalance - MIN_LP_CAPITAL);
         }
         cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
-        lpPriceUno = (cryptoBalance * 1e18) / totalSupply(); // UNO value per lp
+        lpPrice = (cryptoBalance * 1e18) / totalSupply(); // UNO value per lp
     }
 
     /**
@@ -118,7 +119,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
         require(cryptoBalance > 0, "UnoRe: zero uno balance");
         _burn(_to, _amount);
-        uint256 amount = (_amount * lpPriceUno) / 1e18;
+        uint256 amount = (_amount * lpPrice) / 1e18;
         if (currency != address(0)) {
             TransferHelper.safeTransfer(currency, _to, amount);
         } else {
@@ -138,10 +139,10 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
             } else {
                 TransferHelper.safeTransferETH(_to, cryptoBalance - MIN_LP_CAPITAL);
             }
-            _withdrawImplementIrregular(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPriceUno);
+            _burn(_to, ((cryptoBalance - MIN_LP_CAPITAL) * 1e18) / lpPrice);
         }
         cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
-        uint256 unoBalance = (balanceOf(_to) * lpPriceUno) / 1e18;
+        uint256 unoBalance = (balanceOf(_to) * lpPrice) / 1e18;
         if (unoBalance < cryptoBalance - MIN_LP_CAPITAL) {
             if (currency != address(0)) {
                 TransferHelper.safeTransfer(currency, _migrateTo, unoBalance);
@@ -196,7 +197,7 @@ contract RiskPool is IRiskPool, RiskPoolERC20 {
         return true;
     }
 
-    function setLpPriceUno(uint256 _lpPriceUno) external onlySSRP {
-        lpPriceUno = _lpPriceUno;
+    function setlpPrice(uint256 _lpPrice) external onlySSRP {
+        lpPrice = _lpPrice;
     }
 }

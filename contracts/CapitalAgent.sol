@@ -16,7 +16,7 @@ import "./interfaces/ICapitalAgent.sol";
  **/
 contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
+    using Strings for uint256;
     address public exchangeAgent;
     address public salesPolicyFactory;
     address public usdcToken;
@@ -190,7 +190,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      * @dev return total capital in usdc staked in capital agent by pools
      **/
     function totalCapitalStaked() public view returns (uint256) {
-        return _getTotalCapitalStakedInUSDC();
+        return _getTotalCapitalAvailableInUSDC();
     }
 
     /**
@@ -471,7 +471,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         return tokenInUSDC;
     }
 
-    function _getTotalCapitalStakedInUSDC() private view returns (uint256) {
+    function _getTotalCapitalAvailableInUSDC() private view returns (uint256) {
         uint256 totalCapitalStakedInUSDC;
         for (uint256 i = 0; i < currencyList.length; i++) {
             address currency = currencyList[i];
@@ -483,7 +483,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     }
 
     function _checkCoverageByMLR(uint256 _newCoverageAmount) private view returns (bool) {
-        uint256 totalCapitalStakedInUSDC = _getTotalCapitalStakedInUSDC();
+        uint256 totalCapitalStakedInUSDC = _getTotalCapitalAvailableInUSDC();
         uint256 availableCoverage = totalCapitalStakedInUSDC * MLR  / CALC_PRECISION;
 
        return

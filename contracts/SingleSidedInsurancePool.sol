@@ -330,18 +330,18 @@ contract SingleSidedInsurancePool is
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
 
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).withdraw(msg.sender, _amount);
+        (uint256 lpWithdrawAmount, uint256 tokenWithdrawAmount) = IRiskPool(riskPool).withdraw(msg.sender, _amount);
 
-        ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
+        ICapitalAgent(capitalAgent).SSIPWithdraw(tokenWithdrawAmount);
 
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
-            ((withdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
+            ((lpWithdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
 
-        userInfo[msg.sender].amount = amount - withdrawAmount;
+        userInfo[msg.sender].amount = amount - lpWithdrawAmount;
 
-        emit LogWithdrawSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
+        emit LogWithdrawSSIP(msg.sender, riskPool, lpWithdrawAmount, tokenWithdrawAmount);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.

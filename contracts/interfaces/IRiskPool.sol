@@ -4,9 +4,7 @@ pragma solidity =0.8.23;
 interface IRiskPool {
     function enter(address _from, uint256 _amount) external;
 
-    function leaveFromPoolInPending(address _to, uint256 _amount) external;
-
-    function leaveFromPending(address _to, uint256 _amount) external returns (uint256, uint256);
+    function withdraw(address _to, uint256 _amount) external returns (uint256,uint256);
 
     function cancelWithdrawRequest(address _to) external returns (uint256, uint256);
 

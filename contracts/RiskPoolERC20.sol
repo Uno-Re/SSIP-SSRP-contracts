@@ -291,10 +291,4 @@ contract RiskPoolERC20 is Context, IRiskPoolERC20 {
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual {}
-
-    function _cancelWithdrawRequest(address _user) internal {
-        uint256 _pendingAmount = withdrawRequestPerUser[_user].pendingAmount;
-        totalWithdrawPending -= _pendingAmount;
-        delete withdrawRequestPerUser[_user];
-    }
 }

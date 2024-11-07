@@ -5,11 +5,11 @@ pragma solidity =0.8.23;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import "./interfaces/IMigration.sol";
-import "./interfaces/IRewarderFactory.sol";
-import "./interfaces/ISyntheticSSRP.sol";
-import "./interfaces/IRewarder.sol";
-import "./libraries/TransferHelper.sol";
+import "../interfaces/IMigration.sol";
+import "../interfaces/IRewarderFactory.sol";
+import "./ISyntheticSSRP.sol";
+import "../interfaces/IRewarder.sol";
+import "../libraries/TransferHelper.sol";
 
 contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
