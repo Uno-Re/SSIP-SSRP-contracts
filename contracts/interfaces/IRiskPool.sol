@@ -4,9 +4,7 @@ pragma solidity =0.8.23;
 interface IRiskPool {
     function enter(address _from, uint256 _amount) external;
 
-    function leaveFromPoolInPending(address _to, uint256 _amount) external;
-
-    function leaveFromPending(address _to, uint256 _amount) external returns (uint256, uint256);
+    function withdraw(address _to, uint256 _amount) external returns (uint256,uint256);
 
     function cancelWithdrawRequest(address _to) external returns (uint256, uint256);
 
@@ -17,10 +15,6 @@ interface IRiskPool {
     function setMinLPCapital(uint256 _minLPCapital) external;
 
     function currency() external view returns (address);
-
-    function getTotalWithdrawRequestAmount() external view returns (uint256);
-
-    function getWithdrawRequest(address _to) external view returns (uint256, uint256, uint256);
 
     function lpPriceUno() external view returns (uint256);
 

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity =0.8.23;
 
-import "../SyntheticSSIP.sol";
-import "../interfaces/ISyntheticSSIPFactory.sol";
+import "./SyntheticSSIP.sol";
+import "./ISyntheticSSIPFactory.sol";
 
 contract SyntheticSSIPFactory is ISyntheticSSIPFactory {
     constructor() {}

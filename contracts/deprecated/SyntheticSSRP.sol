@@ -5,13 +5,13 @@ pragma solidity =0.8.23;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import "./interfaces/IMigration.sol";
-import "./interfaces/IRewarderFactory.sol";
-import "./interfaces/ISyntheticSSIP.sol";
-import "./interfaces/IRewarder.sol";
-import "./libraries/TransferHelper.sol";
+import "../interfaces/IMigration.sol";
+import "../interfaces/IRewarderFactory.sol";
+import "./ISyntheticSSRP.sol";
+import "../interfaces/IRewarder.sol";
+import "../libraries/TransferHelper.sol";
 
-contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausable {
+contract SyntheticSSRP is ISyntheticSSRP, ReentrancyGuard, AccessControl, Pausable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BOT_ROLE = keccak256("BOT_ROLE");
 
@@ -47,14 +47,14 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     event LogUpdatePool(uint256 _lastRewardBlock, uint256 _lpSupply, uint256 _accRewardPerShare);
     event LogHarvest(address indexed _user, address indexed _receiver, uint256 _amount);
     event LogCancelWithdrawRequest(address indexed _user, address indexed _pool, uint256 _cancelAmount);
-    event LogCreateRewarder(address indexed _SSIP, address indexed _rewarder, address _currency);
+    event LogCreateRewarder(address indexed _SSRP, address indexed _rewarder, address _currency);
     event LogSetRewardPerBlock(address indexed _pool, uint256 _rewardPerBlock);
     event LogSetMigrateTo(address indexed _pool, address indexed _migrateTo);
     event LogSetLockTime(address indexed _pool, uint256 _lockTime);
     event LogMigrate(address indexed _user, address indexed _pool, address indexed _migrateTo, uint256 amount);
     event PoolAlived(address indexed _owner, bool _alive);
     event KillPool(address indexed _owner, bool _killed);
-    event RollOverReward(address indexed _pool, address[] _staker, uint256 _amount);
+    event RollOverReward(address indexed _pool, address[] indexed _staker, uint256 _amount);
 
     constructor(address _lpToken, address _multiSigWallet) {
         require(_multiSigWallet != address(0), "UnoRe: zero multiSigWallet address");
@@ -71,11 +71,11 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         _;
     }
 
-    function pausePool() external onlyRole(ADMIN_ROLE) {
+    function pause() external onlyRole(ADMIN_ROLE) {
         _pause();
     }
 
-    function unpausePool() external onlyRole(ADMIN_ROLE) {
+    function unPause() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
 
@@ -90,7 +90,7 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
     }
 
     function setRewardPerBlock(uint256 _rewardPerBlock) external onlyRole(ADMIN_ROLE) {
-        require(_rewardPerBlock > 0 && _rewardPerBlock <= 1000 * 1e18, "UnoRe: invalid value, should be between 0 and 1000 * 1e18");
+        require(_rewardPerBlock > 0, "UnoRe: zero value");
         rewardPerBlock = _rewardPerBlock;
         emit LogSetRewardPerBlock(address(this), _rewardPerBlock);
     }
@@ -136,8 +136,8 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         uint256 currentAccRewardPerShare = accRewardPerShare;
         if (block.number > lastRewardBlock && totalStakedLPAmount != 0) {
             uint256 blocks = block.number - lastRewardBlock;
-            uint256 rewards = blocks * rewardPerBlock;
-            currentAccRewardPerShare = accRewardPerShare + (rewards * ACC_REWARD_PRECISION) / totalStakedLPAmount;
+            uint256 rewardAmount = blocks * rewardPerBlock;
+            currentAccRewardPerShare = accRewardPerShare + (rewardAmount * ACC_REWARD_PRECISION) / totalStakedLPAmount;
         }
         uint256 userBalance = userInfo[_to].amount;
         pending = (userBalance * currentAccRewardPerShare) / ACC_REWARD_PRECISION - userInfo[_to].rewardDebt;
@@ -147,12 +147,16 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         if (block.number > lastRewardBlock) {
             if (totalStakedLPAmount > 0) {
                 uint256 blocks = block.number - lastRewardBlock;
-                uint256 rewards = blocks * rewardPerBlock;
-                accRewardPerShare = accRewardPerShare + ((rewards * ACC_REWARD_PRECISION) / totalStakedLPAmount);
+                uint256 rewardAmount = blocks * rewardPerBlock;
+                accRewardPerShare = accRewardPerShare + ((rewardAmount * ACC_REWARD_PRECISION) / totalStakedLPAmount);
             }
             lastRewardBlock = block.number;
             emit LogUpdatePool(lastRewardBlock, totalStakedLPAmount, accRewardPerShare);
         }
+    }
+
+    function toggleRollOver() external {
+        userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
     }
 
     function enterInPool(uint256 _amount) external override isAlive nonReentrant {
@@ -161,29 +165,26 @@ contract SyntheticSSIP is ISyntheticSSIP, ReentrancyGuard, AccessControl, Pausab
         emit LogStakedInPool(msg.sender, address(this), _amount);
     }
 
-    function toggleRollOver() external {
-        userInfo[msg.sender].isNotRollOver = !userInfo[msg.sender].isNotRollOver;
-    }
-
     function rollOverReward(address[] memory _to) external isAlive onlyRole(BOT_ROLE) nonReentrant {
         require(lpToken == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
-
         updatePool();
-        uint256 _totalPendingUno;
+
+        uint256 _totalPendingReward;
         uint256 _accumulatedAmount;
         for (uint256 i; i < _to.length; i++) {
             require(!userInfo[_to[i]].isNotRollOver, "UnoRe: rollover is not set");
 
             uint256 _pendingReward = _updateReward(_to[i]);
-            _totalPendingUno += _pendingReward;
+            _totalPendingReward += _pendingReward;
             _accumulatedAmount += userInfo[_to[i]].amount;
             _enterInPool(_pendingReward, _to[i]);
         }
 
-        if (rewarder != address(0) && _totalPendingUno > 0 && _accumulatedAmount > 0) {
-            IRewarder(rewarder).onReward(address(this), _totalPendingUno, _accumulatedAmount);
+        if (rewarder != address(0) && _totalPendingReward > 0 && _accumulatedAmount > 0) {
+            IRewarder(rewarder).onReward(address(this), _totalPendingReward, _accumulatedAmount);
         }
-        emit RollOverReward(address(this), _to, _totalPendingUno);
+
+        emit RollOverReward(address(this), _to, _totalPendingReward);
     }
 
     /**

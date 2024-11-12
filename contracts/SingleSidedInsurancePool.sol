@@ -30,7 +30,6 @@ contract SingleSidedInsurancePool is
     address public migrateTo;
     address public capitalAgent;
 
-    bool public killed;
     bool public emergencyWithdrawAllowed;
     address public rewarder;
 
@@ -71,7 +70,7 @@ contract SingleSidedInsurancePool is
     event LeftPool(address indexed _staker, address indexed _pool, uint256 _requestAmount);
     event LogUpdatePool(uint256 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
-    event LogLeaveFromPendingSSIP(
+    event LogWithdrawSSIP(
         address indexed _user,
         address indexed _riskPool,
         uint256 _withdrawLpAmount,
@@ -89,9 +88,6 @@ contract SingleSidedInsurancePool is
     event LogSetMinLPCapital(address indexed _SSIP, uint256 _minLPCapital);
     event LogSetLockTime(address indexed _SSIP, uint256 _lockTime);
     event LogSetStakingStartTime(address indexed _SSIP, uint256 _startTime);
-    event PoolAlived(address indexed _owner, bool _alive);
-    event PoolFailed(address indexed _owner, bool _fail);
-    event KillPool(address indexed _owner, bool _killed);
     event InsurancePayoutSettled(uint256 indexed policyId, address indexed payout, uint256 amount);
     event RollOverReward(address[] indexed _staker, address indexed _pool, uint256 _amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
@@ -121,11 +117,6 @@ contract SingleSidedInsurancePool is
         _;
     }
 
-    modifier isAlive() {
-        require(!killed, "UnoRe: pool is killed");
-        _;
-    }
-
     /**
      * @dev pause pool to restrict pool functionality, can only by called by admin role
      */
@@ -140,26 +131,10 @@ contract SingleSidedInsurancePool is
         _unpause();
     }
 
-    /**
-     * @dev kill pool to restrict pool functionality, can only by called by admin role
-     */
-    function killPool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
-        killed = true;
-        emit KillPool(msg.sender, true);
-    }
-
-    /**
-     * @dev revive pool, can only by called by admin role
-     */
-    function revivePool() external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
-        killed = false;
-        emit PoolAlived(msg.sender, false);
-    }
-
     function setRole(
         bytes32 _role,
         address _account
-    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) whenNotPaused isAlive {
+    ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) whenNotPaused {
         require(_account != address(0), "UnoRe: zero address");
         roleLockTime[_role][_account] = block.timestamp + lockTime;
         _grantRole(_role, _account);
@@ -267,7 +242,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev migrate user to new version
      */
-    function migrate() external nonReentrant whenNotPaused isAlive {
+    function migrate() external nonReentrant whenNotPaused {
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
@@ -315,53 +290,33 @@ contract SingleSidedInsurancePool is
      * @dev stake user collateral, update user reward per block
      * @param _amount amount to deposit to pool
      */
-    function enterInPool(uint256 _amount) external payable override whenNotPaused isAlive isStartTime nonReentrant {
+    function enterInPool(uint256 _amount) external payable override whenNotPaused isStartTime nonReentrant {
         _depositIn(_amount);
         _enterInPool(_amount, msg.sender);
         emit StakedInPool(msg.sender, riskPool, _amount);
     }
 
     /**
-     * @dev WR will be in pending for 10 days at least
-     */
-    function leaveFromPoolInPending(uint256 _amount) external override whenNotPaused isStartTime nonReentrant {
-        _harvest(msg.sender);
-        require(ICapitalAgent(capitalAgent).checkCapitalByMLR(address(this), _amount), "UnoRe: minimum capital underflow");
-        // Withdraw desired amount from pool
-        uint256 amount = userInfo[msg.sender].amount;
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
-        require(amount - pendingAmount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
-        IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
-
-        userInfo[msg.sender].lastWithdrawTime = block.timestamp;
-        //As user is starting the withdraw we add the value to pending capital
-        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), _amount, true);
-        emit LeftPool(msg.sender, riskPool, _amount);
-    }
-
-    /**
      * @dev user can submit claim again and receive his funds into his wallet after 10 days since last WR.
      */
-    function leaveFromPending(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
-        require(_amount > 0, "Withdraw amount should be greator than zero");
-        require(block.timestamp - userInfo[msg.sender].lastWithdrawTime >= lockTime, "UnoRe: Locked time");
+    function withdraw(uint256 _amount) external override isStartTime whenNotPaused nonReentrant {
+        require(_amount > 0, "Unore: Withdraw amount should be greator than zero");
+        require(userInfo[msg.sender].amount >= _amount, "Unore: Not enough funds");
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
 
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender, _amount);
+        (uint256 lpWithdrawAmount, uint256 tokenWithdrawAmount) = IRiskPool(riskPool).withdraw(msg.sender, _amount);
 
-        //As user is finishing the withdraw we subtract the value of pending capital (done inside SSIPWithdraw)
-        ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
+        ICapitalAgent(capitalAgent).SSIPWithdraw(tokenWithdrawAmount);
 
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[msg.sender].rewardDebt =
             accumulatedUno -
-            ((withdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
+            ((lpWithdrawAmount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
 
-        userInfo[msg.sender].amount = amount - withdrawAmount;
+        userInfo[msg.sender].amount = amount - lpWithdrawAmount;
 
-        emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
+        emit LogWithdrawSSIP(msg.sender, riskPool, lpWithdrawAmount, tokenWithdrawAmount);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
@@ -375,12 +330,11 @@ contract SingleSidedInsurancePool is
         emit EmergencyWithdraw(msg.sender, amount);
     }
 
-    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused isAlive {
+    function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         _harvest(_from);
         uint256 amount = userInfo[_from].amount;
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(_from);
-        require(amount - pendingAmount >= _amount, "UnoRe: balance overflow");
+        require(amount >= _amount, "UnoRe: balance overflow");
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[_from].rewardDebt = accumulatedUno - ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
         userInfo[_from].amount = amount - _amount;
@@ -395,7 +349,7 @@ contract SingleSidedInsurancePool is
      * @dev withdraw user pending uno
      * @param _to user address
      */
-    function harvest(address _to) external override whenNotPaused isAlive isStartTime nonReentrant {
+    function harvest(address _to) external override whenNotPaused isStartTime nonReentrant {
         _harvest(_to);
     }
 
@@ -421,7 +375,7 @@ contract SingleSidedInsurancePool is
     /**
      * @dev user roll over its pending uno to stake
      */
-    function rollOverReward(address[] memory _to) external isStartTime whenNotPaused isAlive onlyRole(BOT_ROLE) nonReentrant {
+    function rollOverReward(address[] memory _to) external isStartTime whenNotPaused onlyRole(BOT_ROLE) nonReentrant {
         require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
@@ -442,19 +396,6 @@ contract SingleSidedInsurancePool is
     }
 
     /**
-     * @dev user can cancel its pending withdraw request
-     */
-    function cancelWithdrawRequest() external nonReentrant whenNotPaused isAlive {
-        (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
-
-        //if user return the pending value into staking again by canceling withdraw,
-        //we remove the amount from the pending capital
-        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), cancelAmount, false);
-
-        emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
-    }
-
-    /**
      * @dev return user staked currency corresponding to current lp price of uno
      */
     function getStakedAmountPerUser(address _to) external view returns (uint256 unoAmount, uint256 lpAmount) {
@@ -464,31 +405,13 @@ contract SingleSidedInsurancePool is
     }
 
     /**
-     * @dev get withdraw request amount in pending per user in UNO
-     */
-    function getWithdrawRequestPerUser(
-        address _user
-    ) external view returns (uint256 pendingAmount, uint256 pendingAmountInUno, uint256 originUnoAmount, uint256 requestTime) {
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (pendingAmount, requestTime, originUnoAmount) = IRiskPool(riskPool).getWithdrawRequest(_user);
-        pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
-    }
-
-    /**
-     * @dev get total withdraw request amount in pending for the risk pool in UNO
-     */
-    function getTotalWithdrawPendingAmount() external view returns (uint256) {
-        return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
-    }
-
-    /**
      * @dev claim policy to payout, can only be called by claim processor role
      */
     function settlePayout(
         uint256 _policyId,
         address _payout,
         uint256 _amount
-    ) public whenNotPaused isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
+    ) public whenNotPaused onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
         uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_payout, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
 
@@ -522,14 +445,14 @@ contract SingleSidedInsurancePool is
     function grantRole(
         bytes32 role,
         address account
-    ) public override isAlive whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
+    ) public override whenNotPaused onlyRole(getRoleAdmin(role)) roleLockTimePassed(getRoleAdmin(role)) {
         _grantRole(role, account);
     }
 
     function _revokeRole(
         bytes32 role,
         address account
-    ) internal override isAlive whenNotPaused roleLockTimePassed(getRoleAdmin(role)) returns (bool) {
+    ) internal override whenNotPaused roleLockTimePassed(getRoleAdmin(role)) returns (bool) {
         return super._revokeRole(role, account);
     }
 
@@ -549,12 +472,6 @@ contract SingleSidedInsurancePool is
     }
 
     function _updateReward(address _to) internal returns (uint256, uint256) {
-        uint256 requestTime;
-        (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
-        if (requestTime > 0) {
-            return (0, 0);
-        }
-
         uint256 amount = userInfo[_to].amount;
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
