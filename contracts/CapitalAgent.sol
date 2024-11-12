@@ -43,8 +43,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
 
     PolicyInfo public policyInfo;
 
-    uint256 public totalUtilizedAmount;
-
     // Maximum Leverage Ratio
     uint256 public MLR;
 
@@ -74,8 +72,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
     event LogUpdatePolicyCoverage(
         address indexed _policy,
         uint256 _amount,
-        uint256 _policyUtilized,
-        uint256 _totalUtilizedAmount
+        uint256 _policyUtilized
     );
     event LogUpdatePolicyExpired(address indexed _policy, uint256 _policyTokenId);
     event LogMarkToClaimPolicy(address indexed _policy, uint256 _policyTokenId);
@@ -302,7 +299,6 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
      **/
     function removePolicy() external onlyRole(ADMIN_ROLE) nonReentrant {
         require(policyInfo.exist, "UnoRe: non existing policy on Capital Agent");
-        totalUtilizedAmount = 0;
         address _policy = policyInfo.policy;
         policyInfo.policy = address(0);
         policyInfo.exist = false;
@@ -439,8 +435,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
             require(policyInfo.utilizedAmount >= _amount, "UnoRe: policy coverage overflow");
         }
         policyInfo.utilizedAmount = isAdd ? policyInfo.utilizedAmount + _amount : policyInfo.utilizedAmount - _amount;
-        totalUtilizedAmount = isAdd ? totalUtilizedAmount + _amount : totalUtilizedAmount - _amount;
-        emit LogUpdatePolicyCoverage(policyInfo.policy, _amount, policyInfo.utilizedAmount, totalUtilizedAmount);
+        emit LogUpdatePolicyCoverage(policyInfo.policy, _amount, policyInfo.utilizedAmount);
     }
 
     function _checkCapitalByMLR(address _pool, uint256 _withdrawAmount) private view returns (bool) {
@@ -451,11 +446,11 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         //Total Capital Staked in Pools
         totalCapitalAvailableInUSDC = _convertTokenToUSDC(currency, _getTotalCapitalAvailableInUSDC());
 
-        uint256 maxWithdrawAmountInUSDC = (((totalCapitalAvailableInUSDC) * MLR) / CALC_PRECISION) - totalUtilizedAmount;
+        uint256 maxWithdrawAmountInUSDC = (((totalCapitalAvailableInUSDC) * MLR) / CALC_PRECISION) - policyInfo.utilizedAmount;
 
         require(maxWithdrawAmountInUSDC >= withdrawInUSDC, string.concat("UnoRe: max ammount is", maxWithdrawAmountInUSDC.toString()));
 
-        return totalUtilizedAmount <= ((totalCapitalAvailableInUSDC - withdrawInUSDC) * MLR) / CALC_PRECISION;
+        return policyInfo.utilizedAmount <= ((totalCapitalAvailableInUSDC - withdrawInUSDC) * MLR) / CALC_PRECISION;
     }
 
     function _convertTokenToUSDC(address _currency, uint256 _amount) private view returns (uint256) {
@@ -487,7 +482,7 @@ contract CapitalAgent is ICapitalAgent, ReentrancyGuardUpgradeable, AccessContro
         uint256 availableCoverage = totalCapitalStakedInUSDC * MLR  / CALC_PRECISION;
 
        return
-            totalUtilizedAmount + _newCoverageAmount <= (availableCoverage * MLR_THRESHOLD / 100);
+            policyInfo.utilizedAmount + _newCoverageAmount <= (availableCoverage * MLR_THRESHOLD / 100);
     }
 
     /**
