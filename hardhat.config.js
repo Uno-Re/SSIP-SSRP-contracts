@@ -1,9 +1,8 @@
+require('@matterlabs/hardhat-zksync')
 require("hardhat-deploy")
 require("hardhat-deploy-ethers")
 require("hardhat-contract-sizer")
 require("hardhat-gas-reporter")
-require("@openzeppelin/hardhat-upgrades")
-require("@nomicfoundation/hardhat-ethers")
 require("@nomicfoundation/hardhat-verify")
 require("@nomicfoundation/hardhat-foundry")
 require("@nomicfoundation/hardhat-chai-matchers")
@@ -82,7 +81,13 @@ module.exports = {
       accounts,
       live: true,
     },
-
+    zkSyncSepoliaTestnet: {
+      url: 'https://sepolia.era.zksync.dev',
+      ethNetwork: 'sepolia',
+      zksync: true,
+      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification',
+      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+    },
     sepolia: {
       url: process.env.SEPOLIA_URL,
       accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
