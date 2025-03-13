@@ -12,7 +12,7 @@ import "./interfaces/IRewarderFactory.sol";
 import "./interfaces/IRiskPoolFactory.sol";
 import "./interfaces/ISingleSidedInsurancePool.sol";
 import "./interfaces/IRewarder.sol";
-import "./interfaces/IRiskPool.sol";
+import "./interfaces/IRiskPoolUSDM.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IUSDM.sol";
 
@@ -72,7 +72,7 @@ contract SingleSidedInsurancePoolUSDM is
     uint256 public totalShares;
 
     event RiskPoolCreated(address indexed _SSIP, address indexed _pool);
-    event StakedInPool(address indexed user, uint256 amount, uint256 shares, uint256 lpTokens);
+    event StakedInPool(address indexed user, uint256 amount, uint256 shares);
     event LeftPool(address indexed _staker, address indexed _pool, uint256 _requestAmount);
     event LogUpdatePool(uint256 _lastRewardBlock, uint256 _lpSupply, uint256 _accUnoPerShare);
     event Harvest(address indexed _user, address indexed _receiver, uint256 _amount);
@@ -207,7 +207,7 @@ contract SingleSidedInsurancePoolUSDM is
      */
     function setMinLPCapital(uint256 _minLPCapital) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_minLPCapital > 0, "UnoRe: not allow zero value");
-        IRiskPool(riskPool).setMinLPCapital(_minLPCapital);
+        IRiskPoolUSDM(riskPool).setMinLPCapital(_minLPCapital);
         emit LogSetMinLPCapital(address(this), _minLPCapital);
     }
 
@@ -278,7 +278,7 @@ contract SingleSidedInsurancePoolUSDM is
         require(migrateTo != address(0), "UnoRe: zero address");
         _harvest(msg.sender);
         bool isUnLocked = block.timestamp - userInfo[msg.sender].lastWithdrawTime > lockTime;
-        uint256 migratedAmount = IRiskPool(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
+        uint256 migratedAmount = IRiskPoolUSDM(riskPool).migrateLP(msg.sender, migrateTo, isUnLocked);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(migratedAmount, 0, false);
         IMigration(migrateTo).onMigration(msg.sender, migratedAmount, "");
         userInfo[msg.sender].amount = 0;
@@ -335,10 +335,10 @@ contract SingleSidedInsurancePoolUSDM is
         require(ICapitalAgent(capitalAgent).checkCapitalByMCR(address(this), _amount), "UnoRe: minimum capital underflow");
         // Withdraw desired amount from pool
         uint256 amount = userInfo[msg.sender].amount;
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(msg.sender);
+        uint256 lpPriceUno = IRiskPoolUSDM(riskPool).lpPriceUno();
+        (uint256 pendingAmount, , ) = IRiskPoolUSDM(riskPool).getWithdrawRequest(msg.sender);
         require(amount - pendingAmount >= (_amount * 1e18) / lpPriceUno, "UnoRe: withdraw amount overflow");
-        IRiskPool(riskPool).leaveFromPoolInPending(msg.sender, _amount);
+        IRiskPoolUSDM(riskPool).leaveFromPoolInPending(msg.sender, _amount);
 
         userInfo[msg.sender].lastWithdrawTime = block.timestamp;
         //As user is starting the withdraw we add the value to pending capital
@@ -355,7 +355,7 @@ contract SingleSidedInsurancePoolUSDM is
         _harvest(msg.sender);
         uint256 amount = userInfo[msg.sender].amount;
 
-        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPool(riskPool).leaveFromPending(msg.sender, _amount);
+        (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPoolUSDM(riskPool).leaveFromPending(msg.sender, _amount);
 
         //As user is finishing the withdraw we subtract the value of pending capital (done inside SSIPWithdraw)
         ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
@@ -377,7 +377,7 @@ contract SingleSidedInsurancePoolUSDM is
         uint256 amount = user.amount;
         require(amount > 0, "Unore: Zero user amount");
         delete userInfo[msg.sender];
-        IRiskPool(riskPool).emergencyWithdraw(msg.sender, amount);
+        IRiskPoolUSDM(riskPool).emergencyWithdraw(msg.sender, amount);
         emit EmergencyWithdraw(msg.sender, amount);
     }
 
@@ -385,7 +385,7 @@ contract SingleSidedInsurancePoolUSDM is
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         _harvest(_from);
         uint256 amount = userInfo[_from].amount;
-        (uint256 pendingAmount, , ) = IRiskPool(riskPool).getWithdrawRequest(_from);
+        (uint256 pendingAmount, , ) = IRiskPoolUSDM(riskPool).getWithdrawRequest(_from);
         require(amount - pendingAmount >= _amount, "UnoRe: balance overflow");
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         userInfo[_from].rewardDebt = accumulatedUno - ((_amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION);
@@ -420,7 +420,7 @@ contract SingleSidedInsurancePoolUSDM is
 
         // Send USDM rewards directly
         if (_pendingUSDM != 0) {
-            IRiskPool(riskPool).transferUSDMReward(_to, _pendingUSDM);
+            IRiskPoolUSDM(riskPool).transferUSDMReward(_to, _pendingUSDM);
         }
 
         emit Harvest(msg.sender, _to, _pendingUno);
@@ -431,7 +431,7 @@ contract SingleSidedInsurancePoolUSDM is
 
     function _updateReward(address _to) internal returns (uint256, uint256, uint256) {
         uint256 requestTime;
-        (, requestTime, ) = IRiskPool(riskPool).getWithdrawRequest(_to);
+        (, requestTime, ) = IRiskPoolUSDM(riskPool).getWithdrawRequest(_to);
         if (requestTime > 0) {
             return (0, 0, 0);
         }
@@ -450,7 +450,7 @@ contract SingleSidedInsurancePoolUSDM is
 
         // Effects
         userInfo[_to].rewardDebt = accumulatedUno;
-        userInfo[_to].lastRewardMultiplier = IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier();
+        userInfo[_to].lastRewardMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
 
         return (_pendingUno, amount, _pendingUSDM);
     }
@@ -488,7 +488,7 @@ contract SingleSidedInsurancePoolUSDM is
      * @dev user roll over its pending uno to stake
      */
     function rollOverReward(address[] memory _to) external isStartTime whenNotPaused isAlive onlyRole(BOT_ROLE) nonReentrant {
-        require(IRiskPool(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
+        require(IRiskPoolUSDM(riskPool).currency() == IRewarder(rewarder).currency(), "UnoRe: currency not matched");
         updatePool();
         uint256 _totalPendingUno;
         uint256 _accumulatedAmount;
@@ -511,7 +511,7 @@ contract SingleSidedInsurancePoolUSDM is
      * @dev user can cancel its pending withdraw request
      */
     function cancelWithdrawRequest() external nonReentrant whenNotPaused isAlive {
-        (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPool(riskPool).cancelWithdrawRequest(msg.sender);
+        (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPoolUSDM(riskPool).cancelWithdrawRequest(msg.sender);
 
         //if user return the pending value into staking again by canceling withdraw,
         //we remove the amount from the pending capital
@@ -525,7 +525,7 @@ contract SingleSidedInsurancePoolUSDM is
      */
     function getStakedAmountPerUser(address _to) external view returns (uint256 unoAmount, uint256 lpAmount) {
         lpAmount = userInfo[_to].amount;
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
+        uint256 lpPriceUno = IRiskPoolUSDM(riskPool).lpPriceUno();
         unoAmount = (lpAmount * lpPriceUno) / 1e18;
     }
 
@@ -535,8 +535,8 @@ contract SingleSidedInsurancePoolUSDM is
     function getWithdrawRequestPerUser(
         address _user
     ) external view returns (uint256 pendingAmount, uint256 pendingAmountInUno, uint256 originUnoAmount, uint256 requestTime) {
-        uint256 lpPriceUno = IRiskPool(riskPool).lpPriceUno();
-        (pendingAmount, requestTime, originUnoAmount) = IRiskPool(riskPool).getWithdrawRequest(_user);
+        uint256 lpPriceUno = IRiskPoolUSDM(riskPool).lpPriceUno();
+        (pendingAmount, requestTime, originUnoAmount) = IRiskPoolUSDM(riskPool).getWithdrawRequest(_user);
         pendingAmountInUno = (pendingAmount * lpPriceUno) / 1e18;
     }
 
@@ -544,7 +544,7 @@ contract SingleSidedInsurancePoolUSDM is
      * @dev get total withdraw request amount in pending for the risk pool in UNO
      */
     function getTotalWithdrawPendingAmount() external view returns (uint256) {
-        return IRiskPool(riskPool).getTotalWithdrawRequestAmount();
+        return IRiskPoolUSDM(riskPool).getTotalWithdrawRequestAmount();
     }
 
     /**
@@ -555,7 +555,7 @@ contract SingleSidedInsurancePoolUSDM is
         address _payout,
         uint256 _amount
     ) public whenNotPaused isAlive onlyRole(CLAIM_PROCESSOR_ROLE) roleLockTimePassed(CLAIM_PROCESSOR_ROLE) {
-        uint256 realClaimAmount = IRiskPool(riskPool).policyClaim(_payout, _amount);
+        uint256 realClaimAmount = IRiskPoolUSDM(riskPool).policyClaim(_payout, _amount);
         ICapitalAgent(capitalAgent).SSIPPolicyCaim(realClaimAmount, uint256(_policyId), true);
 
         emit InsurancePayoutSettled(_policyId, _payout, _amount);
@@ -568,13 +568,13 @@ contract SingleSidedInsurancePoolUSDM is
     ) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         userInfo[_user].amount = _amount;
         userInfo[_user].rewardDebt = _rewardDebt;
-        IRiskPool(riskPool).enter(_user, _amount);
+        IRiskPoolUSDM(riskPool).enter(_user, _amount);
 
         emit LogUserUpdated(address(this), _user, _amount);
     }
 
     function setLpPriceInRiskPool(uint256 _lpPriceUno) external onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
-        IRiskPool(riskPool).setLpPriceUno(_lpPriceUno);
+        IRiskPoolUSDM(riskPool).setLpPriceUno(_lpPriceUno);
     }
 
     function setAccUnoPerShare(
@@ -600,7 +600,7 @@ contract SingleSidedInsurancePoolUSDM is
     }
 
     function _depositIn(uint256 _amount) internal {
-        address token = IRiskPool(riskPool).currency();
+        address token = IRiskPoolUSDM(riskPool).currency();
 
         require(_amount > 0, "UnoRe: zero deposit amount");
         TransferHelper.safeTransferFrom(token, msg.sender, riskPool, _amount);
@@ -610,7 +610,7 @@ contract SingleSidedInsurancePoolUSDM is
         require(_amount != 0, "UnoRe: Deposit amount must be greater than 0");
 
         // Calculate shares based on USDM reward multiplier
-        uint256 sharesToMint = (_amount * 1e18) / IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier();
+        uint256 sharesToMint = (_amount * 1e18) / IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
         require(sharesToMint > 0, "UnoRe: Resulting shares too small");
 
         // Update user shares and total shares
@@ -620,29 +620,31 @@ contract SingleSidedInsurancePoolUSDM is
         updatePool();
 
         // Mint LP tokens in RiskPool
-        IRiskPool(riskPool).enter(_to, _amount);
+        IRiskPoolUSDM(riskPool).enter(_to, _amount);
         UserInfo memory _userInfo = userInfo[_to];
+
+        uint256 lpPriceUno = IRiskPoolUSDM(riskPool).lpPriceUno();
         _userInfo.rewardDebt =
             _userInfo.rewardDebt +
             ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
             ACC_UNO_PRECISION;
         _userInfo.amount = _userInfo.amount + ((_amount * 1e18) / lpPriceUno);
         userInfo[_to] = _userInfo;
-        userInfo[_to].lastRewardMultiplier = IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier();
+        userInfo[_to].lastRewardMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
 
         ICapitalAgent(capitalAgent).SSIPStaking(_amount);
 
-        emit StakedInPool(_to, _amount, sharesToMint, lpTokens);
+        emit StakedInPool(_to, _amount, sharesToMint);
     }
 
     function getUserUSDMAmount(address _user) public view returns (uint256) {
         uint256 userShareAmount = userShares[_user];
-        uint256 usdmMultiplier = IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier();
+        uint256 usdmMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
         return (userShareAmount * usdmMultiplier) / 1e18;
     }
 
     function getShareValue(uint256 _shares) public view returns (uint256) {
         if (_shares == 0 || totalShares == 0) return 0;
-        return (_shares * IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier()) / 1e18;
+        return (_shares * IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier()) / 1e18;
     }
 }
