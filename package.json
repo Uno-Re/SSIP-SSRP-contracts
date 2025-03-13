@@ -23,12 +23,18 @@
     "bscMain:deploy": "hardhat --network bscMain deploy",
     "bscMain:verify": "hardhat --network bscMain etherscan-verify --solc-input",
     "hardhat:deploy": "hardhat --network hardhat deploy",
-    "prettier": "prettier --write test/**/*.js && prettier --write scripts/**/*.js && prettier --write contracts/**/*.sol"
+    "prettier": "prettier --write test/**/*.js && prettier --write scripts/**/*.js && prettier --write contracts/**/*.sol",
+    "test:odos": "jest odos_swap/"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "chai": "^4.3.8",
     "chai-eventemitter2": "^0.2.1",
     "dotenv": "^10.0.0",
@@ -39,8 +45,11 @@
     "hardhat-deploy": "^0.11.44",
     "hardhat-deploy-ethers": "^0.4.1",
     "hardhat-gas-reporter": "^1.0.9",
+    "jest": "^29.7.0",
     "prettier": "^2.3.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.16"
+    "prettier-plugin-solidity": "^1.0.0-beta.16",
+    "ts-jest": "^29.2.6",
+    "typescript": "^5.8.2"
   },
   "dependencies": {
     "@biconomy/mexa": "^2.0.24",
@@ -59,6 +68,7 @@
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.4",
     "@uniswap/v3-sdk": "^3.11.0",
+    "axios": "^1.8.3",
     "bignumber.js": "^9.1.2",
     "eth-sig-util": "^3.0.1",
     "zksync-web3": "^0.17.1"
