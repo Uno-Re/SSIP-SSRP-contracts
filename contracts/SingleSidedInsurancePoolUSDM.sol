@@ -66,9 +66,9 @@ contract SingleSidedInsurancePoolUSDM is
 
     mapping(address => UserInfo) public userInfo;
 
-    PoolInfo public poolInfo;
-
     mapping(address => uint256) public userShares;
+
+    PoolInfo public poolInfo;
     uint256 public totalShares;
 
     event RiskPoolCreated(address indexed _SSIP, address indexed _pool);
@@ -102,7 +102,6 @@ contract SingleSidedInsurancePoolUSDM is
     event EmergencyWithdraw(address indexed user, uint256 amount);
     event EmergencyWithdrawToggled(address indexed user, bool EmergencyWithdraw);
     event LogUserUpdated(address indexed pool, address indexed user, uint256 amount);
-    event Withdraw(address indexed user, uint256 amount, uint256 shares, uint256 usdmAmount);
     event USDMRewardHarvested(address indexed caller, address indexed user, uint256 amount);
 
     function initialize(address _capitalAgent, address _multiSigWallet) external initializer {
@@ -326,7 +325,6 @@ contract SingleSidedInsurancePoolUSDM is
     function enterInPool(uint256 _amount) external payable override whenNotPaused isAlive isStartTime nonReentrant {
         _depositIn(_amount);
         _enterInPool(_amount, msg.sender);
-        emit StakedInPool(msg.sender, _amount, 0, 0);
     }
 
     /**
@@ -383,30 +381,6 @@ contract SingleSidedInsurancePoolUSDM is
         emit EmergencyWithdraw(msg.sender, amount);
     }
 
-    function sharesTransfer(address recipient, uint256 amount) public returns (bool) {
-        // Check sender's share balance
-        uint256 senderShares = userShares[msg.sender];
-        require(senderShares >= amount, "UnoRe: transfer amount exceeds share balance");
-
-        // Update share accounting
-        userShares[msg.sender] -= amount;
-        userShares[recipient] += amount;
-
-        // Update user info for rewards
-        _harvest(msg.sender);
-
-        uint256 lpAmount = (amount * IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier()) / 1e18;
-        userInfo[msg.sender].amount -= lpAmount;
-        userInfo[recipient].amount += lpAmount;
-
-        // Update reward debts
-        userInfo[msg.sender].rewardDebt = (userInfo[msg.sender].amount * poolInfo.accUnoPerShare) / ACC_UNO_PRECISION;
-        userInfo[recipient].rewardDebt = (userInfo[recipient].amount * poolInfo.accUnoPerShare) / ACC_UNO_PRECISION;
-
-        emit LogLpTransferInSSIP(msg.sender, recipient, lpAmount);
-        return true;
-    }
-
     function lpTransfer(address _from, address _to, uint256 _amount) external override nonReentrant whenNotPaused isAlive {
         require(msg.sender == address(riskPool), "UnoRe: not allow others transfer");
         _harvest(_from);
@@ -440,16 +414,13 @@ contract SingleSidedInsurancePoolUSDM is
 
         (uint256 _pendingUno, uint256 _amount, uint256 _pendingUSDM) = _updateReward(_to);
 
-        if (rewarder != address(0)) {
-            // Send UNO rewards through rewarder
-            if (_pendingUno != 0) {
-                IRewarder(rewarder).onReward(_to, _pendingUno, _amount);
-            }
+        if (_pendingUno != 0) {
+            IRewarder(rewarder).onReward(_to, _pendingUno, _amount);
+        }
 
-            // Send USDM rewards directly
-            if (_pendingUSDM != 0) {
-                TransferHelper.safeTransfer(IRiskPool(riskPool).currency(), _to, _pendingUSDM);
-            }
+        // Send USDM rewards directly
+        if (_pendingUSDM != 0) {
+            IRiskPool(riskPool).transferUSDMReward(_to, _pendingUSDM);
         }
 
         emit Harvest(msg.sender, _to, _pendingUno);
@@ -470,7 +441,7 @@ contract SingleSidedInsurancePoolUSDM is
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
         // Calculate USDM rewards based on share value difference using stored multiplier
-        uint256 currentUSDMValue = getUserUSDMValue(_to);
+        uint256 currentUSDMValue = getUserUSDMAmount(_to);
         uint256 previousUSDMValue = (userShares[_to] * userInfo[_to].lastRewardMultiplier) / 1e18;
         uint256 _pendingUSDM = 0;
         if (currentUSDMValue > previousUSDMValue) {
@@ -499,8 +470,8 @@ contract SingleSidedInsurancePoolUSDM is
         unoRewards = (userBalance * uint256(accUnoPerShare)) / ACC_UNO_PRECISION - userInfo[_to].rewardDebt;
 
         // Calculate pending USDM rewards
-        uint256 currentUSDMValue = getUserUSDMValue(_to);
-        uint256 previousUSDMValue = (userShares[_to] * IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier()) / 1e18;
+        uint256 currentUSDMValue = getUserUSDMAmount(_to);
+        uint256 previousUSDMValue = (userShares[_to] * userInfo[_to].lastRewardMultiplier) / 1e18;
         if (currentUSDMValue > previousUSDMValue) {
             pendingUSDM = currentUSDMValue - previousUSDMValue;
         }
@@ -648,15 +619,15 @@ contract SingleSidedInsurancePoolUSDM is
 
         updatePool();
 
-        uint256 lpTokens = (_amount * 1e18) / IRiskPool(riskPool).lpPriceUno();
-        require(lpTokens > 0, "UnoRe: No LP tokens would be minted");
-
         // Mint LP tokens in RiskPool
-        IRiskPool(riskPool).enter(msg.sender, _amount);
-
-        // Update user info for rewards
-        userInfo[_to].amount += lpTokens;
-        userInfo[_to].rewardDebt = (lpTokens * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
+        IRiskPool(riskPool).enter(_to, _amount);
+        UserInfo memory _userInfo = userInfo[_to];
+        _userInfo.rewardDebt =
+            _userInfo.rewardDebt +
+            ((_amount * 1e18 * uint256(poolInfo.accUnoPerShare)) / lpPriceUno) /
+            ACC_UNO_PRECISION;
+        _userInfo.amount = _userInfo.amount + ((_amount * 1e18) / lpPriceUno);
+        userInfo[_to] = _userInfo;
         userInfo[_to].lastRewardMultiplier = IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier();
 
         ICapitalAgent(capitalAgent).SSIPStaking(_amount);
@@ -664,10 +635,10 @@ contract SingleSidedInsurancePoolUSDM is
         emit StakedInPool(_to, _amount, sharesToMint, lpTokens);
     }
 
-    function getUserUSDMValue(address _user) public view returns (uint256) {
+    function getUserUSDMAmount(address _user) public view returns (uint256) {
         uint256 userShareAmount = userShares[_user];
-        uint256 usdmPrice = IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier();
-        return (userShareAmount * usdmPrice) / 1e18;
+        uint256 usdmMultiplier = IUSDM(IRiskPool(riskPool).currency()).rewardMultiplier();
+        return (userShareAmount * usdmMultiplier) / 1e18;
     }
 
     function getShareValue(uint256 _shares) public view returns (uint256) {
