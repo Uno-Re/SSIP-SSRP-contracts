@@ -113,7 +113,7 @@ contract SingleSidedInsurancePoolUSDM is
         __AccessControl_init();
         _grantRole(ADMIN_ROLE, _multiSigWallet);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setRoleAdmin(CLAIM_PROCESSOR_ROLE, ADMIN_ROLE); // TODO
+        _setRoleAdmin(CLAIM_PROCESSOR_ROLE, ADMIN_ROLE);
         _setRoleAdmin(BOT_ROLE, ADMIN_ROLE);
     }
 
@@ -249,7 +249,7 @@ contract SingleSidedInsurancePoolUSDM is
         uint256 _SCR
     ) external nonReentrant onlyRole(ADMIN_ROLE) roleLockTimePassed(ADMIN_ROLE) {
         require(_factory != address(0), "UnoRe: zero factory address");
-        riskPool = IRiskPoolFactory(_factory).newRiskPool(_name, _symbol, address(this), _currency);
+        riskPool = IRiskPoolFactory(_factory).newRiskPoolUSDM(_name, _symbol, address(this), _currency);
         poolInfo.lastRewardBlock = block.number;
         poolInfo.accUnoPerShare = 0;
         poolInfo.unoMultiplierPerBlock = _rewardMultiplier;
@@ -357,7 +357,6 @@ contract SingleSidedInsurancePoolUSDM is
 
         (uint256 withdrawAmount, uint256 withdrawAmountInUNO) = IRiskPoolUSDM(riskPool).leaveFromPending(msg.sender, _amount);
 
-        //As user is finishing the withdraw we subtract the value of pending capital (done inside SSIPWithdraw)
         ICapitalAgent(capitalAgent).SSIPWithdraw(withdrawAmountInUNO);
 
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
@@ -370,7 +369,6 @@ contract SingleSidedInsurancePoolUSDM is
         emit LogLeaveFromPendingSSIP(msg.sender, riskPool, withdrawAmount, withdrawAmountInUNO);
     }
 
-    // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw() public nonReentrant whenNotPaused {
         require(emergencyWithdrawAllowed, "Unore: emergencyWithdraw is not allowed");
         UserInfo memory user = userInfo[msg.sender];
@@ -437,20 +435,30 @@ contract SingleSidedInsurancePoolUSDM is
         }
 
         uint256 amount = userInfo[_to].amount;
+        if (amount == 0) {
+            return (0, 0, 0);
+        }
+
+        // Get current multiplier first
+        uint256 currentMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
+
+        // Calculate UNO rewards
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
-        // Calculate USDM rewards based on share value difference using stored multiplier
+        // Calculate USDM rewards
         uint256 currentUSDMValue = getUserUSDMAmount(_to);
         uint256 previousUSDMValue = (userShares[_to] * userInfo[_to].lastRewardMultiplier) / 1e18;
+
         uint256 _pendingUSDM = 0;
         if (currentUSDMValue > previousUSDMValue) {
             _pendingUSDM = currentUSDMValue - previousUSDMValue;
+            require(_pendingUSDM <= currentUSDMValue, "Invalid USDM reward calculation");
         }
 
         // Effects
         userInfo[_to].rewardDebt = accumulatedUno;
-        userInfo[_to].lastRewardMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
+        userInfo[_to].lastRewardMultiplier = currentMultiplier;
 
         return (_pendingUno, amount, _pendingUSDM);
     }
