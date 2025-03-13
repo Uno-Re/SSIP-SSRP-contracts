@@ -2,6 +2,7 @@
 pragma solidity =0.8.23;
 
 import "../RiskPool.sol";
+import "../RiskPoolUSDM.sol";
 import "../interfaces/IRiskPoolFactory.sol";
 
 contract RiskPoolFactory is IRiskPoolFactory {
@@ -25,5 +26,17 @@ contract RiskPoolFactory is IRiskPoolFactory {
         address _riskPoolAddr = address(_riskPool);
 
         return _riskPoolAddr;
+    }
+
+    function newRiskPoolUSDM(
+        string calldata _name,
+        string calldata _symbol,
+        address _cohort,
+        address _currency
+    ) external override returns (address) {
+        RiskPoolUSDM _riskPoolUSDM = new RiskPoolUSDM(_name, _symbol, _cohort, _currency);
+        address _riskPoolUSDMAddr = address(_riskPoolUSDM);
+
+        return _riskPoolUSDMAddr;
     }
 }

@@ -7,8 +7,9 @@ import "./RiskPoolERC20.sol";
 import "./interfaces/ISingleSidedReinsurancePool.sol";
 import "./interfaces/IRiskPool.sol";
 import "./libraries/TransferHelper.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract RiskPoolUSDM is IRiskPool, RiskPoolERC20 {
+contract RiskPoolUSDM is IRiskPool, RiskPoolERC20, ReentrancyGuard {
     // ERC20 attributes
     string public name;
     string public symbol;
@@ -259,13 +260,15 @@ contract RiskPoolUSDM is IRiskPool, RiskPoolERC20 {
      * @param _to recipient address
      * @param _amount amount of USDM to transfer
      */
-    function transferUSDMReward(address _to, uint256 _amount) external onlySSRP {
+    function transferUSDMReward(address _to, uint256 _amount) external {
+        uint256 currentBalance = IERC20(currency).balanceOf(address(this));
+
         require(_to != address(0), "UnoRe: zero address");
-        require(_amount > 0, "UnoRe: zero amount");
+        require(currentBalance >= _amount, "UnoRe: Insufficient USDM balance");
 
-        uint256 cryptoBalance = currency != address(0) ? IERC20(currency).balanceOf(address(this)) : address(this).balance;
-        require(cryptoBalance >= _amount + MIN_LP_CAPITAL, "UnoRe: insufficient balance");
-
-        TransferHelper.safeTransfer(currency, _to, _amount);
+        if (_amount > 0) {
+            require(currentBalance >= (_amount + MIN_LP_CAPITAL), "UnoRe: insufficient balance");
+            TransferHelper.safeTransfer(currency, _to, _amount);
+        }
     }
 }
