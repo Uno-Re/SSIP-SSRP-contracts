@@ -7,4 +7,6 @@ interface IPremiumPool {
     function collectPremiumInETH() external payable;
 
     function withdrawPremium(address _currency, address _to, uint256 _amount) external;
+
+    function addCurrency(address _currency) external;
 }

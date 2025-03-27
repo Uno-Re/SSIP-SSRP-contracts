@@ -29,4 +29,8 @@ interface ICapitalAgent {
     function getPoolInfo(address _pool) external view returns (uint256, uint256, address, bool, uint256);
 
     function updatePoolWithdrawPendingCapital(address _pool, uint256 _amount, bool) external;
+
+    function addPoolWhiteList(address _pool) external;
+
+    function poolWhiteList(address _pool) external view returns (bool);
 }
