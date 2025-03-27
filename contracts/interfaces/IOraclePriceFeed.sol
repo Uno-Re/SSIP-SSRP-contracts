@@ -7,4 +7,6 @@ interface IOraclePriceFeed {
     function getAssetEthPrice(address _asset) external view returns (uint256);
 
     function consult(address tokenA, address tokenB, uint256 amountIn) external view returns (uint256);
+
+    function setAssetEthPrice(address _asset, uint256 _price) external;
 }
