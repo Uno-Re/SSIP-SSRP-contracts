@@ -6,14 +6,14 @@ import "../interfaces/IUSDM.sol";
 contract MockUSDM is IUSDM {
     string public constant name = "Mock USDM";
     string public constant symbol = "mUSDM";
-    uint8 public constant decimals = 18;
+    uint8 public constant decimals = 6;
 
     uint256 private _totalShares;
     mapping(address => uint256) private _shares;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    uint256 private constant _BASE = 1e18;
-    uint256 public rewardMultiplier = 1e18;
+    uint256 private constant _BASE = 1e6;
+    uint256 public rewardMultiplier = 1e6;
 
     // Helper function to track share holders
     mapping(address => bool) private _isShareHolder;

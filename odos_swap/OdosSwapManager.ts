@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { OdosSwapService } from "./OdosSwapService";
 import { abi as ERC20_ABI } from "@openzeppelin/contracts/build/contracts/ERC20.json";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = process.env.ODOS_API_URL || "";
 
 export class OdosSwapManager {
   private odosService: OdosSwapService;

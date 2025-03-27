@@ -414,15 +414,12 @@ contract SingleSidedInsurancePoolUSDM is
 
         if (_pendingUno != 0) {
             IRewarder(rewarder).onReward(_to, _pendingUno, _amount);
+            emit Harvest(msg.sender, _to, _pendingUno);
         }
 
         // Send USDM rewards directly
         if (_pendingUSDM != 0) {
             IRiskPoolUSDM(riskPool).transferUSDMReward(_to, _pendingUSDM);
-        }
-
-        emit Harvest(msg.sender, _to, _pendingUno);
-        if (_pendingUSDM != 0) {
             emit USDMRewardHarvested(msg.sender, _to, _pendingUSDM);
         }
     }
@@ -439,26 +436,26 @@ contract SingleSidedInsurancePoolUSDM is
             return (0, 0, 0);
         }
 
-        // Get current multiplier first
-        uint256 currentMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
-
         // Calculate UNO rewards
         uint256 accumulatedUno = (amount * uint256(poolInfo.accUnoPerShare)) / ACC_UNO_PRECISION;
         uint256 _pendingUno = accumulatedUno - userInfo[_to].rewardDebt;
 
         // Calculate USDM rewards
         uint256 currentUSDMValue = getUserUSDMAmount(_to);
-        uint256 previousUSDMValue = (userShares[_to] * userInfo[_to].lastRewardMultiplier) / 1e18;
+        uint256 previousUSDMValue = (userShares[_to] * userInfo[_to].lastRewardMultiplier) / 1e6;
 
         uint256 _pendingUSDM = 0;
         if (currentUSDMValue > previousUSDMValue) {
             _pendingUSDM = currentUSDMValue - previousUSDMValue;
             require(_pendingUSDM <= currentUSDMValue, "Invalid USDM reward calculation");
+
+            // Get current multiplier and update only when there are USDM rewards
+            uint256 currentMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
+            userInfo[_to].lastRewardMultiplier = currentMultiplier;
         }
 
         // Effects
         userInfo[_to].rewardDebt = accumulatedUno;
-        userInfo[_to].lastRewardMultiplier = currentMultiplier;
 
         return (_pendingUno, amount, _pendingUSDM);
     }
@@ -479,7 +476,7 @@ contract SingleSidedInsurancePoolUSDM is
 
         // Calculate pending USDM rewards
         uint256 currentUSDMValue = getUserUSDMAmount(_to);
-        uint256 previousUSDMValue = (userShares[_to] * userInfo[_to].lastRewardMultiplier) / 1e18;
+        uint256 previousUSDMValue = (userShares[_to] * userInfo[_to].lastRewardMultiplier) / 1e6;
         if (currentUSDMValue > previousUSDMValue) {
             pendingUSDM = currentUSDMValue - previousUSDMValue;
         }
@@ -618,7 +615,7 @@ contract SingleSidedInsurancePoolUSDM is
         require(_amount != 0, "UnoRe: Deposit amount must be greater than 0");
 
         // Calculate shares based on USDM reward multiplier
-        uint256 sharesToMint = (_amount * 1e18) / IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
+        uint256 sharesToMint = (_amount * 1e18) / (IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier() * 1e12);
         require(sharesToMint > 0, "UnoRe: Resulting shares too small");
 
         // Update user shares and total shares
@@ -648,7 +645,7 @@ contract SingleSidedInsurancePoolUSDM is
     function getUserUSDMAmount(address _user) public view returns (uint256) {
         uint256 userShareAmount = userShares[_user];
         uint256 usdmMultiplier = IUSDM(IRiskPoolUSDM(riskPool).currency()).rewardMultiplier();
-        return (userShareAmount * usdmMultiplier) / 1e18;
+        return (userShareAmount * usdmMultiplier) / 1e6;
     }
 
     function getShareValue(uint256 _shares) public view returns (uint256) {
