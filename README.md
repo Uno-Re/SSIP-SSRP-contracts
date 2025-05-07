@@ -1,3 +1,9 @@
+# Readme
+
+This repository contains outdated contract for Lunos. The contracts presented here are a mix of Uno v1 and v2.
+
+Before deploying any new pools you should check for the current version of the capital agent available on the required chain.
+
 # Uno Re v2.1 [Relaunch version]
 
 Full docs can be viewed here - https://unore.gitbook.io/uno-re/investor-app/v2-penta-launch-dapp
