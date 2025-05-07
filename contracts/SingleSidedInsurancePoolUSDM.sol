@@ -341,8 +341,6 @@ contract SingleSidedInsurancePoolUSDM is
         IRiskPoolUSDM(riskPool).leaveFromPoolInPending(msg.sender, _amount);
 
         userInfo[msg.sender].lastWithdrawTime = block.timestamp;
-        //As user is starting the withdraw we add the value to pending capital
-        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), _amount, true);
         emit LeftPool(msg.sender, riskPool, _amount);
     }
 
@@ -517,11 +515,6 @@ contract SingleSidedInsurancePoolUSDM is
      */
     function cancelWithdrawRequest() external nonReentrant whenNotPaused isAlive {
         (uint256 cancelAmount, uint256 cancelAmountInUno) = IRiskPoolUSDM(riskPool).cancelWithdrawRequest(msg.sender);
-
-        //if user return the pending value into staking again by canceling withdraw,
-        //we remove the amount from the pending capital
-        ICapitalAgent(capitalAgent).updatePoolWithdrawPendingCapital(address(this), cancelAmount, false);
-
         emit LogCancelWithdrawRequest(msg.sender, cancelAmount, cancelAmountInUno);
     }
 

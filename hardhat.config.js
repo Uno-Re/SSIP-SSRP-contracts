@@ -83,32 +83,33 @@ module.exports = {
       live: true,
     },
 
-    sepolia: {
-      url: process.env.SEPOLIA_URL,
-      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
-    },
-    rolluxTestnet: {
-      url: process.env.ROLLUXTEST_URL,
-      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
-      allowUnlimitedContractSize: true,
-      saveDeployments: true,
-    },
-    rolluxMainnet: {
-      url: process.env.ROLLUXMAIN_URL,
-      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
-      allowUnlimitedContractSize: true,
-      saveDeployments: true,
-      evmVersion: "paris",
-    },
+    // sepolia: {
+    //   url: process.env.SEPOLIA_URL,
+    //   accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+    // },
+    // rolluxTestnet: {
+    //   url: process.env.ROLLUXTEST_URL,
+    //   accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+    //   allowUnlimitedContractSize: true,
+    //   saveDeployments: true,
+    // },
+    // rolluxMainnet: {
+    //   url: process.env.ROLLUXMAIN_URL,
+    //   accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2],
+    //   allowUnlimitedContractSize: true,
+    //   saveDeployments: true,
+    //   evmVersion: "paris",
+    // },
   },
   etherscan: {
     apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
       rolluxMainnet: "abc",
       rolluxTestnet: "abc",
       tanenbaum: "abc",
       syscoin: "abc",
       bsc: process.env.BSCSCAN_API_KEY,
-      sepolia: process.env.API_SEP,
+      sepolia: process.env.ETHERSCAN_API_KEY,
     },
     customChains: [
       {
